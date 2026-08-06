@@ -1,7 +1,7 @@
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import Lottie from 'lottie-react'
-import { Activity, ArrowDown, ArrowDownUp, ArrowUp, BadgeDollarSign, CalendarClock, CheckCircle2, ChevronDown, Clock, Cpu, Gauge, Globe2, HardDrive, LayoutGrid, List, MapPin, MemoryStick, Moon, Palette, PieChart, Rows3, Rows4, Search, Server, Sun, Trophy, Wallet, Wifi, XCircle } from 'lucide-react'
+import { Activity, ArrowDown, ArrowDownUp, ArrowUp, BadgeDollarSign, CalendarClock, CheckCircle2, ChevronDown, ChevronUp, Clock, Cpu, Gauge, Globe2, HardDrive, LayoutGrid, List, MapPin, MemoryStick, Moon, Palette, PieChart, Rows3, Rows4, Search, Server, Sun, Trophy, Wallet, Wifi, XCircle } from 'lucide-react'
 import { Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import type { ProbeBucket, ProbePingSeries, ProbeReturnRoute, ProbeServer, ThemeName } from './types'
 import { cycleTheme, getDarkOverride, getThemeOverride, setDarkOverride, useProbe } from './use-probe'
@@ -219,14 +219,25 @@ function AssetsSummary({ servers }: { servers: ProbeServer[] }) {
     return { totalValue, totalMonthly, priced }
   }, [servers])
   if (stats.priced === 0) return null
+  const [collapsed, setCollapsed] = useState(() => localStorage.getItem('probe-summary-assets') === '1')
+  const toggle = () => {
+    setCollapsed((value) => {
+      const next = !value
+      localStorage.setItem('probe-summary-assets', next ? '1' : '0')
+      return next
+    })
+  }
   return (
-    <article className="summary-card">
+    <article className={`summary-card${collapsed ? ' collapsed' : ''}`}>
       <header>
         <span>
           <BadgeDollarSign size={18} />
           资产总揽
         </span>
         <small>按剩余天数折算</small>
+        <button className="collapse-btn" type="button" aria-label={collapsed ? '展开资产总揽' : '折叠资产总揽'} title={collapsed ? '展开' : '折叠'} onClick={toggle}>
+          <ChevronUp size={14} />
+        </button>
       </header>
       <div className="assets-stats">
         <div className="assets-main">
@@ -241,6 +252,14 @@ function AssetsSummary({ servers }: { servers: ProbeServer[] }) {
             覆盖 <b>{stats.priced}</b> / {servers.length} 台
           </span>
         </div>
+      </div>
+      <div className="summary-folded">
+        <span>
+          <BadgeDollarSign size={13} />
+          资产总揽
+        </span>
+        <strong>{formatMoney(stats.totalValue, 'CNY', true)}</strong>
+        <em>月均 {formatMoney(stats.totalMonthly, 'CNY', true)}</em>
       </div>
     </article>
   )
@@ -1069,6 +1088,23 @@ export function App() {
   const [region, setRegion] = useState('all')
   const [search, setSearch] = useState('')
   const [globeOpen, setGlobeOpen] = useState(false)
+  const [summaryCollapsed, setSummaryCollapsed] = useState<Set<string>>(() => {
+    try {
+      const raw = JSON.parse(localStorage.getItem('probe-summary-collapsed') || '[]')
+      return new Set(Array.isArray(raw) ? raw.filter((k): k is string => typeof k === 'string') : [])
+    } catch {
+      return new Set()
+    }
+  })
+  const toggleSummary = (key: string) => {
+    setSummaryCollapsed((prev) => {
+      const next = new Set(prev)
+      if (next.has(key)) next.delete(key)
+      else next.add(key)
+      localStorage.setItem('probe-summary-collapsed', JSON.stringify([...next]))
+      return next
+    })
+  }
   const [theme, setTheme] = useState<ThemeName | null>(() => getThemeOverride())
   const [darkMode, setDarkMode] = useState<string | null>(() => getDarkOverride())
   const [detailIndex, setDetailIndex] = useState<number | null>(() => {
@@ -1181,7 +1217,7 @@ export function App() {
         </nav>
       </header>
       <section className="dashboard-summary">
-        <article className="summary-card">
+        <article className={`summary-card${summaryCollapsed.has('nodes') ? ' collapsed' : ''}`}>
           <header>
             <span>
               <Server size={18} />
@@ -1193,6 +1229,15 @@ export function App() {
                 待续费 <b>{renewalCount}</b>
               </button>
             )}
+            <button
+              className="collapse-btn"
+              type="button"
+              aria-label={summaryCollapsed.has('nodes') ? '展开节点情况' : '折叠节点情况'}
+              title={summaryCollapsed.has('nodes') ? '展开' : '折叠'}
+              onClick={() => toggleSummary('nodes')}
+            >
+              <ChevronUp size={14} />
+            </button>
           </header>
           <div className="node-stats">
             <button onClick={() => setFilter('all')}>
@@ -1217,19 +1262,51 @@ export function App() {
               </span>
             </button>
           </div>
+          <div className="summary-folded">
+            <span>
+              <Server size={13} />
+              节点情况
+            </span>
+            <strong>{servers.length} 总</strong>
+            <b className="ok">{onlineCount} 在线</b>
+            <b className="bad">{servers.length - onlineCount} 离线</b>
+            {hasExpiry && (
+              <em>
+                <CalendarClock size={12} />
+                待续费 {renewalCount}
+              </em>
+            )}
+          </div>
         </article>
         {hasSpeed && (
-          <article className="summary-card">
+          <article className={`summary-card${summaryCollapsed.has('network') ? ' collapsed' : ''}`}>
             <header>
               <span>
                 <Gauge size={18} />
                 网络情况
               </span>
               <small>实时汇总</small>
+              <button
+                className="collapse-btn"
+                type="button"
+                aria-label={summaryCollapsed.has('network') ? '展开网络情况' : '折叠网络情况'}
+                title={summaryCollapsed.has('network') ? '展开' : '折叠'}
+                onClick={() => toggleSummary('network')}
+              >
+                <ChevronUp size={14} />
+              </button>
             </header>
             <div className="network-stats">
               <SpeedSummary label="总下行网速" value={totalDownload} direction="down" />
               <SpeedSummary label="总上行网速" value={totalUpload} direction="up" />
+            </div>
+            <div className="summary-folded">
+              <span>
+                <Gauge size={13} />
+                网络情况
+              </span>
+              <strong>↓{speed(totalDownload)}</strong>
+              <b>↑{speed(totalUpload)}</b>
             </div>
           </article>
         )}
