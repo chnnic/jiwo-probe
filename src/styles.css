@@ -1617,6 +1617,9 @@ footer a:hover {
   align-items: center;
   gap: 7px;
 }
+.globe-toggle span:first-child {
+  font-weight: 650;
+}
 .globe-toggle span:last-child {
   color: var(--muted);
   font-size: 12px;
