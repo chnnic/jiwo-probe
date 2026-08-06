@@ -1305,8 +1305,8 @@ export function App() {
               <span className="summary-toggle-info">
                 {summaryCollapsed.has('network') && (
                   <>
-                    <b>↓{speed(totalDownload)}</b>
-                    <b>↑{speed(totalUpload)}</b>
+                    <b>↓{bitSpeed(totalDownload)}</b>
+                    <b>↑{bitSpeed(totalUpload)}</b>
                   </>
                 )}
                 <ChevronDown size={17} />
