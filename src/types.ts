@@ -33,12 +33,25 @@ export interface ProbeServer {
   traffic_limit?: number
   cumulative_up?: number
   cumulative_down?: number
+  daily_traffic?: Array<{
+    date: string
+    uplink: number
+    downlink: number
+    total: number
+  }>
   cpu_pct?: number
   loadavg?: string
   mem_used?: number
   mem_total?: number
   disk_used?: number
   disk_total?: number
+  uptime?: number
+  cpu_model?: string
+  cpu_cores?: number
+  cpu_threads?: number
+  os?: string
+  kernel?: string
+  arch?: string
   ping?: ProbePingSeries[]
   expires_at?: string
   renewal_price?: number

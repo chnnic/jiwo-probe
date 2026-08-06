@@ -1,7 +1,8 @@
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import Lottie from 'lottie-react'
-import { Activity, ArrowDown, ArrowDownUp, ArrowUp, BadgeDollarSign, CalendarClock, CheckCircle2, ChevronDown, ChevronUp, Clock, Cpu, Gauge, Globe2, HardDrive, LayoutGrid, List, MapPin, MemoryStick, Moon, Palette, PieChart, Rows3, Rows4, Search, Server, Sun, Trophy, Wallet, Wifi, XCircle } from 'lucide-react'
+import { Activity, ArrowDown, ArrowDownUp, ArrowUp, BadgeDollarSign, CalendarClock, CheckCircle2, ChevronDown, ChevronUp, Clock, Cpu, Gauge, Globe2, HardDrive, LayoutGrid, List, MapPin, MemoryStick, Monitor, Moon, Palette, PieChart, Rows3, Rows4, Search, Server, Sun, Trophy, Wallet, Wifi, XCircle } from 'lucide-react'
+import { siAlmalinux, siAlpinelinux, siApple, siArchlinux, siCentos, siDebian, siFedora, siFreebsd, siGentoo, siKalilinux, siLinux, siLinuxmint, siNixos, siOpensuse, siProxmox, siRedhat, siRockylinux, siUbuntu } from 'simple-icons'
 import { Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import type { ProbeBucket, ProbePingSeries, ProbeReturnRoute, ProbeServer, ThemeName } from './types'
 import { cycleTheme, getDarkOverride, getThemeOverride, setDarkOverride, useProbe } from './use-probe'
@@ -31,6 +32,55 @@ const ranges = [
   },
 ] as const
 type RangeKey = (typeof ranges)[number]['key']
+
+export function formatAxisDateTime(unixSeconds: number): string {
+  return new Intl.DateTimeFormat('zh-CN', {
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  }).format(new Date(unixSeconds * 1000))
+}
+
+export function HorizontalChart({ children, width }: { children: React.ReactNode; width: number }) {
+  const ref = useRef<HTMLDivElement>(null)
+  const drag = useRef<{ x: number; left: number } | null>(null)
+  return (
+    <div className="chart-scroll-frame">
+      <div className="chart-fixed-y-axis" aria-hidden="true">
+        <div className="chart-scroll-inner" style={{ width, minWidth: '100%' }}>
+          {children}
+        </div>
+      </div>
+      <div
+        ref={ref}
+        className="chart-scroll"
+        style={{ touchAction: 'pan-x pan-y' }}
+        onPointerDown={(e) => {
+          if (e.pointerType !== 'mouse' || !ref.current) return
+          drag.current = { x: e.clientX, left: ref.current.scrollLeft }
+          ref.current.setPointerCapture(e.pointerId)
+        }}
+        onPointerMove={(e) => {
+          if (drag.current && ref.current)
+            ref.current.scrollLeft = drag.current.left - (e.clientX - drag.current.x)
+        }}
+        onPointerUp={(e) => {
+          drag.current = null
+          ref.current?.releasePointerCapture(e.pointerId)
+        }}
+        onPointerCancel={() => {
+          drag.current = null
+        }}
+      >
+        <div className="chart-scroll-inner" style={{ width, minWidth: '100%' }}>
+          {children}
+        </div>
+      </div>
+    </div>
+  )
+}
 
 export function bytes(value = 0, decimal = true): string {
   const units = ['B', 'KB', 'MB', 'GB', 'TB']
@@ -445,12 +495,130 @@ function Leaderboard({ servers }: { servers: ProbeServer[] }) {
   )
 }
 
+function lossScale(rows: Array<Record<string, string | number | null>>) {
+  const peak = Math.max(
+    0,
+    ...rows.flatMap((row) =>
+      Object.entries(row)
+        .filter(([key]) => key !== 'time')
+        .map(([, value]) => (typeof value === 'number' ? value : 0)),
+    ),
+  )
+  const scales = [
+    { max: 0.1, step: 0.025 },
+    { max: 0.2, step: 0.05 },
+    { max: 0.5, step: 0.1 },
+    { max: 1, step: 0.25 },
+    { max: 2, step: 0.5 },
+    { max: 5, step: 1 },
+    { max: 10, step: 2 },
+    { max: 20, step: 5 },
+    { max: 50, step: 10 },
+    { max: 100, step: 25 },
+  ]
+  const selected = scales.find((item) => peak <= item.max) ?? scales[scales.length - 1]
+  return {
+    max: selected.max,
+    ticks: Array.from(
+      { length: Math.round(selected.max / selected.step) + 1 },
+      (_, index) => Number((index * selected.step).toFixed(3)),
+    ),
+  }
+}
+
+function formatLossTick(value: number): string {
+  const digits = value < 0.1 ? 3 : value < 1 ? 2 : value < 10 ? 1 : 0
+  return `${value.toFixed(digits).replace(/\.?0+$/, '')}%`
+}
+
+function TrafficDialog({ server, close }: { server: ProbeServer; close: () => void }) {
+  const rows = server.daily_traffic || []
+  return createPortal(
+    <div className="modal-backdrop" role="presentation" onMouseDown={close}>
+      <section className="modal" onMouseDown={(e) => e.stopPropagation()}>
+        <header>
+          <h2>{server.name} · 日流量趋势</h2>
+          <button aria-label="关闭" onClick={close}>
+            ×
+          </button>
+        </header>
+        <div className="chart">
+          <HorizontalChart width={Math.max(760, rows.length * 82)}>
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={rows} margin={{ top: 8, right: 12, bottom: 0, left: 8 }}>
+                <XAxis dataKey="date" tick={{ fontSize: 10 }} axisLine={false} tickLine={false} interval={0} minTickGap={28} />
+                <YAxis width={62} tick={{ fontSize: 10 }} axisLine={false} tickLine={false} tickFormatter={(value) => bytes(Number(value), false)} />
+                <Tooltip
+                  contentStyle={{ fontSize: 11, borderRadius: 8 }}
+                  labelFormatter={(value) => String(value)}
+                  formatter={(value, name) => [bytes(Number(value)), name === 'uplink' ? '上行' : '下行']}
+                />
+                <Line type="monotone" dataKey="uplink" name="上行" stroke="#f97316" strokeWidth={2} dot={false} isAnimationActive={false} />
+                <Line type="monotone" dataKey="downlink" name="下行" stroke="#22c55e" strokeWidth={2} dot={false} isAnimationActive={false} />
+              </LineChart>
+            </ResponsiveContainer>
+          </HorizontalChart>
+        </div>
+      </section>
+    </div>,
+    document.body,
+  )
+}
+
+function systemTitle(server: ProbeServer): string {
+  return (
+    [server.os, server.kernel, server.arch].filter(Boolean).join(' · ') ||
+    '系统信息未上报'
+  )
+}
+const systemIcons = [
+  { terms: ['alma'], icon: siAlmalinux },
+  { terms: ['alpine'], icon: siAlpinelinux },
+  { terms: ['arch'], icon: siArchlinux },
+  { terms: ['centos'], icon: siCentos },
+  { terms: ['debian'], icon: siDebian },
+  { terms: ['fedora'], icon: siFedora },
+  { terms: ['freebsd'], icon: siFreebsd },
+  { terms: ['gentoo'], icon: siGentoo },
+  { terms: ['kali'], icon: siKalilinux },
+  { terms: ['mint'], icon: siLinuxmint },
+  { terms: ['nixos', 'nix os'], icon: siNixos },
+  { terms: ['opensuse', 'open suse', 'suse'], icon: siOpensuse },
+  { terms: ['proxmox'], icon: siProxmox },
+  { terms: ['red hat', 'redhat', 'rhel'], icon: siRedhat },
+  { terms: ['rocky'], icon: siRockylinux },
+  { terms: ['ubuntu'], icon: siUbuntu },
+  { terms: ['darwin', 'macos', 'mac os'], icon: siApple },
+]
+function SystemIcon({ server }: { server: ProbeServer }) {
+  const os = (server.os || '').toLowerCase()
+  if (os.includes('windows')) return <Monitor size={16} />
+  const icon =
+    systemIcons.find(({ terms }) => terms.some((term) => os.includes(term)))?.icon ?? siLinux
+  return (
+    <svg
+      aria-hidden="true"
+      width="16"
+      height="16"
+      role="img"
+      viewBox="0 0 24 24"
+      fill={`#${icon.hex}`}
+    >
+      <path d={icon.path} />
+    </svg>
+  )
+}
+
 function TrendDialog({ serverIndex, initial, targetKey, title, mode, close }: { serverIndex: number; initial: ProbePingSeries[]; targetKey: string; title: string; mode: 'latency' | 'loss'; close: () => void }) {
   const [range, setRange] = useState<RangeKey>('1h')
   const [group, setGroup] = useState<'all' | 'cn' | 'idc'>('all')
   const [hidden, setHidden] = useState<Set<string>>(new Set())
   const [series, setSeries] = useState<ProbePingSeries[]>(initial)
   const [loading, setLoading] = useState(false)
+  const [timeMeta, setTimeMeta] = useState({
+    generatedAt: Math.floor(Date.now() / 1000),
+    bucketSec: 300,
+  })
 
   const isCnLabel = (label: string) => /电信|联通|移动/.test(label)
   const groupSeries = useMemo(() => {
@@ -485,10 +653,18 @@ function TrendDialog({ serverIndex, initial, targetKey, title, mode, close }: { 
           success: boolean
           series?: ProbePingSeries
           all_series?: ProbePingSeries[]
+          generated_at?: number
+          bucket_sec?: number
         }>
       })
       .then((payload) => {
-        if (payload.success) setSeries([...(payload.series ? [{ ...payload.series, key: '__avg__', label: '平均' }] : []), ...(payload.all_series || [])])
+        if (payload.success) {
+          setSeries([...(payload.series ? [{ ...payload.series, key: '__avg__', label: '平均' }] : []), ...(payload.all_series || [])])
+          setTimeMeta({
+            generatedAt: payload.generated_at ?? Math.floor(Date.now() / 1000),
+            bucketSec: payload.bucket_sec ?? (range === '1h' ? 300 : range === '6h' ? 600 : 1800),
+          })
+        }
       })
       .finally(() => {
         if (!controller.signal.aborted) setLoading(false)
@@ -496,12 +672,15 @@ function TrendDialog({ serverIndex, initial, targetKey, title, mode, close }: { 
     return () => controller.abort()
   }, [range, serverIndex])
 
-  const rangeMeta = ranges.find((item) => item.key === range) || ranges[0]
   const rows = useMemo(
     () =>
       Array.from({ length: displaySeries[0]?.item.buckets.length || 0 }, (_, index) => {
         const row: Record<string, string | number | null> = {
-          time: rangeMeta.bucketLabel(index, displaySeries[0]?.item.buckets.length || 0),
+          time: formatAxisDateTime(
+            timeMeta.generatedAt -
+              (timeMeta.generatedAt % timeMeta.bucketSec) -
+              ((displaySeries[0]?.item.buckets.length || 0) - 1 - index) * timeMeta.bucketSec,
+          ),
         }
         for (const { item } of displaySeries) {
           const bucket = item.buckets[index]
@@ -510,8 +689,9 @@ function TrendDialog({ serverIndex, initial, targetKey, title, mode, close }: { 
         }
         return row
       }),
-    [displaySeries, mode, rangeMeta],
+    [displaySeries, mode, timeMeta],
   )
+  const dynamicLossScale = useMemo(() => lossScale(rows), [rows])
 
   return createPortal(
     <div className="modal-backdrop" role="presentation" onMouseDown={close}>
@@ -548,18 +728,29 @@ function TrendDialog({ serverIndex, initial, targetKey, title, mode, close }: { 
               该服务器未配置{group === 'cn' ? '内地' : '海外'}探测点
             </div>
           )}
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={rows} margin={{ top: 8, right: 12, bottom: 0, left: 0 }}>
-              <XAxis dataKey="time" tick={{ fontSize: 10 }} axisLine={false} tickLine={false} interval={Math.max(1, Math.floor(rows.length / 8))} />
-              <YAxis width={52} tick={{ fontSize: 10 }} axisLine={false} tickLine={false} unit={mode === 'loss' ? '%' : 'ms'} domain={mode === 'loss' ? [0, 100] : undefined} />
-              <Tooltip contentStyle={{ fontSize: 11, borderRadius: 8 }} formatter={(value, _name, item) => [`${Number(value).toFixed(mode === 'loss' ? 1 : 0)}${mode === 'loss' ? '%' : 'ms'}`, series.find((line) => (line.key || line.label) === item.dataKey)?.label || String(item.dataKey)]} />
-              {displaySeries.map(({ item, index }) => {
-                const key = item.key || item.label
-                const active = key === targetKey
-                return <Line key={key} type="monotone" dataKey={key} name={item.label} stroke={key === '__avg__' ? 'var(--foreground, #2f2350)' : colors[index % colors.length]} strokeWidth={active ? 2.5 : 1} strokeOpacity={active ? 1 : 0.45} dot={false} connectNulls={false} isAnimationActive={false} />
-              })}
-            </LineChart>
-          </ResponsiveContainer>
+          <HorizontalChart width={Math.max(760, rows.length * 82)}>
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={rows} margin={{ top: 8, right: 12, bottom: 0, left: 0 }}>
+                <XAxis dataKey="time" tick={{ fontSize: 10 }} axisLine={false} tickLine={false} interval={0} minTickGap={28} />
+                <YAxis
+                  width={52}
+                  tick={{ fontSize: 10 }}
+                  axisLine={false}
+                  tickLine={false}
+                  unit={mode === 'loss' ? undefined : 'ms'}
+                  domain={mode === 'loss' ? [0, dynamicLossScale.max] : undefined}
+                  ticks={mode === 'loss' ? dynamicLossScale.ticks : undefined}
+                  tickFormatter={mode === 'loss' ? (value) => formatLossTick(Number(value)) : undefined}
+                />
+                <Tooltip contentStyle={{ fontSize: 11, borderRadius: 8 }} formatter={(value, _name, item) => [`${Number(value).toFixed(mode === 'loss' ? 1 : 0)}${mode === 'loss' ? '%' : 'ms'}`, series.find((line) => (line.key || line.label) === item.dataKey)?.label || String(item.dataKey)]} />
+                {displaySeries.map(({ item, index }) => {
+                  const key = item.key || item.label
+                  const active = key === targetKey
+                  return <Line key={key} type="monotone" dataKey={key} name={item.label} stroke={key === '__avg__' ? 'var(--foreground, #2f2350)' : colors[index % colors.length]} strokeWidth={active ? 2.5 : 1} strokeOpacity={active ? 1 : 0.45} dot={false} connectNulls={false} isAnimationActive={false} />
+                })}
+              </LineChart>
+            </ResponsiveContainer>
+          </HorizontalChart>
         </div>
         {groupSeries.length > 0 && (
           <div className="legend">
@@ -677,15 +868,20 @@ export function ReturnRouteBadges({ routes, telecomPaidPeer }: { routes: ProbeRe
 }
 
 function ServerCard({ server, index }: { server: ProbeServer; index: number }) {
+  const [trafficOpen, setTrafficOpen] = useState(false)
   const name = server.name || `服务器 ${index + 1}`
   const flag = regionFlag(server.region)
   return (
+    <>
     <article className="server-card" onClick={() => { location.hash = `#/server/${index}` }} role="button" tabIndex={0} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); location.hash = `#/server/${index}` } }} title="点击查看详情">
       <div className="server-title">
         <span className={server.online ? 'status online' : 'status'} />
         <h2>
           <Twemoji>{flag && !hasLeadingFlag(name) ? `${flag} ${name}` : name}</Twemoji>
         </h2>
+        <span title={systemTitle(server)} onClick={(event) => event.stopPropagation()}>
+          <SystemIcon server={server} />
+        </span>
         <span>
           {server.online ? '在线' : '离线'}
           <i className="detail-hint">详情 ›</i>
@@ -695,7 +891,30 @@ function ServerCard({ server, index }: { server: ProbeServer; index: number }) {
         {server.cpu_pct !== undefined && <Meter icon={<Cpu size={14} />} label="CPU" value={`${server.cpu_pct.toFixed(1)}%`} percent={server.cpu_pct} />}
         {server.mem_total !== undefined && <Meter icon={<MemoryStick size={14} />} label="内存" value={`${pct(server.mem_used, server.mem_total).toFixed(1)}%`} percent={pct(server.mem_used, server.mem_total)} />}
         {server.disk_total !== undefined && <Meter icon={<HardDrive size={14} />} label="硬盘" value={`${pct(server.disk_used, server.disk_total).toFixed(1)}%`} percent={pct(server.disk_used, server.disk_total)} />}
-        {server.traffic_used !== undefined && <Meter icon={<PieChart size={14} />} label="流量" value={server.traffic_limit ? `${bytes(server.traffic_used, false)} / ${bytes(server.traffic_limit, false)}` : bytes(server.traffic_used, false)} percent={pct(server.traffic_used, server.traffic_limit)} />}
+        {server.traffic_used !== undefined && (
+          <button
+            type="button"
+            className="metric metric-button"
+            title="查看日流量趋势"
+            onClick={(event) => {
+              event.stopPropagation()
+              setTrafficOpen(true)
+            }}
+          >
+            <div className="metric-head">
+              <span>
+                <PieChart size={14} />
+                流量
+              </span>
+              <strong>
+                {server.traffic_limit ? `${bytes(server.traffic_used, false)} / ${bytes(server.traffic_limit, false)}` : bytes(server.traffic_used, false)}
+              </strong>
+            </div>
+            <div className="meter">
+              <i style={{ width: `${pct(server.traffic_used, server.traffic_limit)}%` }} />
+            </div>
+          </button>
+        )}
       </div>
       {(server.upload_speed !== undefined || server.download_speed !== undefined) && (
         <div className="speed">
@@ -739,6 +958,8 @@ function ServerCard({ server, index }: { server: ProbeServer; index: number }) {
         </div>
       )}
     </article>
+    {trafficOpen && <TrafficDialog server={server} close={() => setTrafficOpen(false)} />}
+    </>
   )
 }
 
@@ -1075,8 +1296,103 @@ function ServerTable({ servers }: { servers: ProbeServer[] }) {
 
 function ProbeLicenseNameplate({ name, displayName }: { name?: string; displayName?: string }) {
   const label = [name?.trim(), displayName?.trim()].filter(Boolean).join(' · ')
+  const plateRef = useRef<HTMLSpanElement>(null)
+  const textRef = useRef<HTMLSpanElement>(null)
+  const starsRef = useRef<HTMLSpanElement>(null)
+  const shineRef = useRef<HTMLSpanElement>(null)
+
+  useEffect(() => {
+    const plate = plateRef.current
+    const text = textRef.current
+    const stars = starsRef.current
+    const shine = shineRef.current
+    if (!plate || !text || !stars || !shine) return
+
+    const palette = ['#f9a8d4', '#f472b6', '#ec4899', '#fbcfe8', '#ff8fc7']
+    const random = (min: number, max: number) => min + Math.random() * (max - min)
+    const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(max, value))
+    const easeOutBack = (value: number) => {
+      const c1 = 1.70158
+      const c3 = c1 + 1
+      return 1 + c3 * Math.pow(value - 1, 3) + c1 * Math.pow(value - 1, 2)
+    }
+    const easeInBack = (value: number) => {
+      const c1 = 1.70158
+      return (c1 + 1) * value * value * value - c1 * value * value
+    }
+
+    stars.innerHTML = ''
+    const height = stars.clientHeight || 24
+    const makeStar = (topFor: (size: number) => number) => {
+      const star = document.createElement('i')
+      star.className = 'spark'
+      star.style.color = palette[Math.floor(Math.random() * palette.length)]
+      const size = Math.round(random(8, 13))
+      star.style.width = `${size}px`
+      star.style.height = `${size}px`
+      star.style.top = `${Math.round(topFor(size))}px`
+      star.style.left = `${Math.round(random(0, 12))}px`
+      stars.appendChild(star)
+    }
+    for (let index = 0; index < 5; index++) makeStar((size) => random(0, Math.max(0, height - size)))
+    makeStar((size) => -size * 0.6)
+    makeStar((size) => height - size * 0.4)
+
+    let width = plate.offsetWidth
+    const updateWidth = () => { width = plate.offsetWidth }
+    window.addEventListener('resize', updateWidth)
+    let frameID = 0
+    const start = performance.now()
+    const frame = (now: number) => {
+      const progress = ((now - start) % 5500) / 5500
+      const reveal = clamp(progress / 0.36, 0, 1)
+      let rotateX = 0
+      let scale = 1
+      let opacity = 1
+      if (progress < 0.08) {
+        const amount = progress / 0.08
+        const eased = easeOutBack(amount)
+        rotateX = -92 * (1 - eased)
+        scale = 0.86 + 0.14 * eased
+        opacity = clamp(amount * 2.2, 0, 1)
+      } else if (progress > 0.85) {
+        const amount = (progress - 0.85) / 0.15
+        const eased = easeInBack(amount)
+        rotateX = 84 * eased
+        scale = 1 - 0.14 * eased
+        opacity = clamp(1 - amount * 1.5, 0, 1)
+      }
+      const starOpacity = progress < 0.04 ? progress / 0.04 : progress < 0.32 ? 1 : progress < 0.37 ? clamp(1 - (progress - 0.32) / 0.05, 0, 1) : 0
+      const shineProgress = clamp((progress - 0.42) / 0.28, 0, 1)
+      const shineActive = progress >= 0.42 && progress <= 0.7
+      const shineOpacity = shineActive ? (shineProgress < 0.1 ? shineProgress / 0.1 : shineProgress > 0.85 ? clamp((1 - shineProgress) / 0.15, 0, 1) : 1) : 0
+
+      plate.style.opacity = String(opacity)
+      plate.style.transform = `perspective(340px) rotateX(${rotateX.toFixed(2)}deg) scale(${scale.toFixed(3)})`
+      text.style.clipPath = `inset(0 ${((1 - reveal) * 100).toFixed(2)}% 0 0)`
+      stars.style.transform = `translateX(${(13 + reveal * (width - 26)).toFixed(1)}px)`
+      stars.style.opacity = String(starOpacity)
+      shine.style.transform = `translateX(${(((-55 + shineProgress * 165) / 100) * width).toFixed(1)}px) skewX(-16deg)`
+      shine.style.opacity = String(shineOpacity)
+      frameID = requestAnimationFrame(frame)
+    }
+    frameID = requestAnimationFrame(frame)
+    return () => {
+      cancelAnimationFrame(frameID)
+      window.removeEventListener('resize', updateWidth)
+    }
+  }, [])
+
   if (!label) return null
-  return <span className="probe-license-nameplate"><span className="probe-license-stars" aria-hidden="true">✦ ✦</span><strong>{label}</strong><i aria-hidden="true" /></span>
+  return (
+    <span ref={plateRef} className="probe-license-nameplate">
+      <strong ref={textRef} className="probe-license-text">{label}</strong>
+      <span className="probe-license-shine-clip" aria-hidden="true">
+        <span ref={shineRef} className="probe-license-shine" />
+      </span>
+      <span ref={starsRef} className="probe-license-stars" aria-hidden="true" />
+    </span>
+  )
 }
 
 // 主控端仅支持单个许可证，这里补充展示其它已获得的许可证铭牌（按 name 去重合并）。

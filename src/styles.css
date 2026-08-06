@@ -117,7 +117,8 @@ button {
   margin: 0 auto;
   padding: 24px 0 50px;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr));
+  /* 保证指标和回程铭牌有足够空间；不足 380px 时自动降列，手机端不溢出。 */
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 380px), 1fr));
   gap: 16px;
 }
 .servers.list {
@@ -1084,7 +1085,10 @@ footer a:hover {
   height: 26px;
   max-width: min(88vw, 420px);
   align-items: center;
-  overflow: hidden;
+  overflow: visible;
+  opacity: 0;
+  transform-origin: center bottom;
+  will-change: transform, opacity;
   padding: 0 13px;
   border: 1px solid rgba(217, 119, 87, .45);
   border-radius: 3px;
@@ -1092,30 +1096,63 @@ footer a:hover {
   box-shadow: 2px 2px 0 rgba(0, 0, 0, .25), inset 0 1px 0 rgba(255, 255, 255, .1);
   color: #f4cd9c;
 }
-.probe-license-nameplate strong {
+.probe-license-text {
+  position: relative;
+  z-index: 2;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   font-size: 13px;
+  font-weight: 600;
   letter-spacing: .02em;
+  clip-path: inset(0 100% 0 0);
+  will-change: clip-path;
 }
 .probe-license-stars {
-  margin-right: 7px;
-  color: #f472b6;
-  font-size: 11px;
-  text-shadow: 0 0 5px currentColor;
-  animation: probe-license-stars 2.2s ease-in-out infinite;
-}
-.probe-license-nameplate > i {
+  pointer-events: none;
   position: absolute;
+  z-index: 3;
   top: 0;
   bottom: 0;
-  left: -55%;
+  left: 0;
+  width: 22px;
+  margin-left: -15px;
+  opacity: 0;
+  will-change: transform, opacity;
+}
+.probe-license-stars .spark {
+  position: absolute;
+}
+.probe-license-stars .spark::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: currentColor;
+  -webkit-mask: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><path d='M50 10 L58 42 L90 50 L58 58 L50 90 L42 58 L10 50 L42 42 Z' fill='white' stroke='white' stroke-width='7' stroke-linejoin='round' stroke-linecap='round'/></svg>") center / contain no-repeat;
+  mask: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><path d='M50 10 L58 42 L90 50 L58 58 L50 90 L42 58 L10 50 L42 42 Z' fill='white' stroke='white' stroke-width='7' stroke-linejoin='round' stroke-linecap='round'/></svg>") center / contain no-repeat;
+  filter: drop-shadow(0 0 3px currentColor) drop-shadow(0 0 7px currentColor);
+}
+.probe-license-shine-clip {
+  pointer-events: none;
+  position: absolute;
+  z-index: 4;
+  inset: 0;
+  overflow: hidden;
+  border-radius: inherit;
+}
+.probe-license-shine {
+  pointer-events: none;
+  position: absolute;
+  z-index: 4;
+  top: 0;
+  bottom: 0;
+  left: 0;
   width: 45%;
   background: linear-gradient(100deg, transparent, rgba(255, 255, 255, .62), transparent);
   transform: skewX(-16deg);
-  animation: probe-license-shine 5.5s ease-in-out infinite;
+  opacity: 0;
+  will-change: transform, opacity;
 }
 :root.theme-flat .probe-license-nameplate {
   border-color: rgba(255, 255, 255, .12);
@@ -1131,16 +1168,6 @@ footer a:hover {
   color: #fff5fb;
   box-shadow: 0 2px 12px rgba(201, 79, 156, .32), inset 0 1px 0 rgba(255, 255, 255, .32);
 }
-@keyframes probe-license-shine {
-  0%, 38% { transform: translateX(0) skewX(-16deg); opacity: 0; }
-  46% { opacity: 1; }
-  70% { transform: translateX(350%) skewX(-16deg); opacity: 0; }
-  100% { transform: translateX(350%) skewX(-16deg); opacity: 0; }
-}
-@keyframes probe-license-stars {
-  0%, 100% { transform: translateY(0) scale(.9); opacity: .65; }
-  50% { transform: translateY(-1px) scale(1.12); opacity: 1; }
-}
 .modal-backdrop {
   position: fixed;
   inset: 0;
@@ -1153,7 +1180,9 @@ footer a:hover {
 .modal {
   position: relative;
   overflow: hidden;
-  width: min(760px, 100%);
+  width: 85vw;
+  min-width: 0;
+  max-width: 100%;
   padding: 24px;
   border: 1px solid var(--border);
   border-radius: var(--radius);
@@ -1178,6 +1207,31 @@ footer a:hover {
   background: none;
   font-size: 28px;
   cursor: pointer;
+}
+.metric-button {
+  appearance: none;
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  color: inherit;
+  background: transparent;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.chart-scroll-frame { position: relative; overflow: hidden; width: 100%; min-width: 0; max-width: 100%; height: 100%; }
+.chart-fixed-y-axis { pointer-events: none; position: absolute; inset: 0 auto 0 0; z-index: 2; overflow: hidden; width: 68px; background: var(--surface); }
+.chart-fixed-y-axis .recharts-xAxis,
+.chart-fixed-y-axis .recharts-cartesian-grid,
+.chart-fixed-y-axis .recharts-line,
+.chart-fixed-y-axis .recharts-tooltip-wrapper { display: none; }
+.chart-scroll { overflow-x: auto; overflow-y: hidden; width: 100%; min-width: 0; max-width: 100%; height: 100%; overscroll-behavior-x: contain; cursor: grab; user-select: none; scrollbar-width: thin; }
+.chart-scroll:active { cursor: grabbing; }
+.chart-scroll-inner { height: 100%; }
+@media (max-width: 640px) {
+  .modal { width: 90vw; padding: 18px 14px; }
 }
 .ranges {
   display: flex;

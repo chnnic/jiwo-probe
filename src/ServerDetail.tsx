@@ -4,7 +4,7 @@ import { Activity, ArrowDown, ArrowUp, BadgeDollarSign, CalendarClock, ChevronLe
 import { Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import type { ProbePingSeries, ProbeServer } from './types'
 import { Twemoji } from './Twemoji'
-import { Meter, ReturnRouteBadges, averagePing, bytes, expiring, expired, hasLeadingFlag, pct, regionFlag, regionLabel, remainingDays, speed } from './App'
+import { Meter, ReturnRouteBadges, averagePing, bytes, expiring, expired, formatAxisDateTime, hasLeadingFlag, HorizontalChart, pct, regionFlag, regionLabel, remainingDays, speed } from './App'
 import { computeRemainingValue, formatMoney } from './value'
 
 const cycleLabel = {
@@ -56,6 +56,10 @@ function PingTrendChart({ serverIndex, initial, targetKey }: { serverIndex: numb
   const [hidden, setHidden] = useState<Set<string>>(new Set())
   const [series, setSeries] = useState<ProbePingSeries[]>(initial)
   const [loading, setLoading] = useState(false)
+  const [timeMeta, setTimeMeta] = useState({
+    generatedAt: Math.floor(Date.now() / 1000),
+    bucketSec: 300,
+  })
 
   const isCnLabel = (label: string) => /电信|联通|移动/.test(label)
   const groupSeries = useMemo(() => {
@@ -90,10 +94,18 @@ function PingTrendChart({ serverIndex, initial, targetKey }: { serverIndex: numb
           success: boolean
           series?: ProbePingSeries
           all_series?: ProbePingSeries[]
+          generated_at?: number
+          bucket_sec?: number
         }>
       })
       .then((payload) => {
-        if (payload.success) setSeries([...(payload.series ? [{ ...payload.series, key: '__avg__', label: '平均' }] : []), ...(payload.all_series || [])])
+        if (payload.success) {
+          setSeries([...(payload.series ? [{ ...payload.series, key: '__avg__', label: '平均' }] : []), ...(payload.all_series || [])])
+          setTimeMeta({
+            generatedAt: payload.generated_at ?? Math.floor(Date.now() / 1000),
+            bucketSec: payload.bucket_sec ?? (range === '1h' ? 300 : range === '6h' ? 600 : 1800),
+          })
+        }
       })
       .finally(() => {
         if (!controller.signal.aborted) setLoading(false)
@@ -101,12 +113,15 @@ function PingTrendChart({ serverIndex, initial, targetKey }: { serverIndex: numb
     return () => controller.abort()
   }, [range, serverIndex])
 
-  const rangeMeta = RANGES.find((item) => item.key === range) || RANGES[0]
   const rows = useMemo(
     () =>
       Array.from({ length: displaySeries[0]?.item.buckets.length || 0 }, (_, index) => {
         const row: Record<string, string | number | null> = {
-          time: rangeMeta.bucketLabel(index, displaySeries[0]?.item.buckets.length || 0),
+          time: formatAxisDateTime(
+            timeMeta.generatedAt -
+              (timeMeta.generatedAt % timeMeta.bucketSec) -
+              ((displaySeries[0]?.item.buckets.length || 0) - 1 - index) * timeMeta.bucketSec,
+          ),
         }
         for (const { item } of displaySeries) {
           const bucket = item.buckets[index]
@@ -114,7 +129,7 @@ function PingTrendChart({ serverIndex, initial, targetKey }: { serverIndex: numb
         }
         return row
       }),
-    [displaySeries, rangeMeta],
+    [displaySeries, timeMeta],
   )
 
   return (
@@ -143,18 +158,20 @@ function PingTrendChart({ serverIndex, initial, targetKey }: { serverIndex: numb
             该服务器未配置{group === 'cn' ? '内地' : '海外'}探测点
           </div>
         )}
-        <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={rows} margin={{ top: 8, right: 12, bottom: 0, left: 0 }}>
-            <XAxis dataKey="time" tick={{ fontSize: 10 }} axisLine={false} tickLine={false} interval={Math.max(1, Math.floor(rows.length / 8))} />
-            <YAxis width={52} tick={{ fontSize: 10 }} axisLine={false} tickLine={false} unit="ms" />
-            <Tooltip contentStyle={{ fontSize: 11, borderRadius: 8 }} formatter={(value, _name, item) => [`${Number(value).toFixed(0)}ms`, series.find((line) => (line.key || line.label) === item.dataKey)?.label || String(item.dataKey)]} />
-            {displaySeries.map(({ item, index }) => {
-              const key = item.key || item.label
-              const active = key === targetKey
-              return <Line key={key} type="monotone" dataKey={key} name={item.label} stroke={key === '__avg__' ? 'var(--foreground, #2f2350)' : colors[index % colors.length]} strokeWidth={active ? 2.5 : 1} strokeOpacity={active ? 1 : 0.45} dot={false} connectNulls={false} isAnimationActive={false} />
-            })}
-          </LineChart>
-        </ResponsiveContainer>
+        <HorizontalChart width={Math.max(760, rows.length * 82)}>
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={rows} margin={{ top: 8, right: 12, bottom: 0, left: 0 }}>
+              <XAxis dataKey="time" tick={{ fontSize: 10 }} axisLine={false} tickLine={false} interval={0} minTickGap={28} />
+              <YAxis width={52} tick={{ fontSize: 10 }} axisLine={false} tickLine={false} unit="ms" />
+              <Tooltip contentStyle={{ fontSize: 11, borderRadius: 8 }} formatter={(value, _name, item) => [`${Number(value).toFixed(0)}ms`, series.find((line) => (line.key || line.label) === item.dataKey)?.label || String(item.dataKey)]} />
+              {displaySeries.map(({ item, index }) => {
+                const key = item.key || item.label
+                const active = key === targetKey
+                return <Line key={key} type="monotone" dataKey={key} name={item.label} stroke={key === '__avg__' ? 'var(--foreground, #2f2350)' : colors[index % colors.length]} strokeWidth={active ? 2.5 : 1} strokeOpacity={active ? 1 : 0.45} dot={false} connectNulls={false} isAnimationActive={false} />
+              })}
+            </LineChart>
+          </ResponsiveContainer>
+        </HorizontalChart>
       </div>
       {groupSeries.length > 0 && (
         <div className="legend">
