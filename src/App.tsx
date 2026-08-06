@@ -1255,14 +1255,6 @@ export function App() {
           </button>
           {!summaryCollapsed.has('nodes') && (
             <div className="collapse-body">
-              {hasExpiry && (
-                <div className="expiry-shortcut-row">
-                  <button className="expiry-shortcut" onClick={() => setFilter('renewal')}>
-                    <CalendarClock size={14} />
-                    待续费 <b>{renewalCount}</b>
-                  </button>
-                </div>
-              )}
               <div className="node-stats">
                 <button onClick={() => setFilter('all')}>
                   <strong>{servers.length}</strong>

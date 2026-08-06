@@ -372,11 +372,43 @@ button {
   flex: 0 0 auto;
   transition: transform 0.2s ease;
 }
+.collapse-card {
+  display: flex;
+  flex-direction: column;
+}
 .collapse-card.open .summary-toggle svg:last-child {
   transform: rotate(180deg);
 }
 .collapse-card .collapse-body {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
   padding: 0 18px 16px;
+}
+.collapse-card .collapse-body > .node-stats {
+  flex: 1;
+  align-content: stretch;
+  min-height: 105px;
+}
+.collapse-card .collapse-body > .node-stats button {
+  height: 100%;
+}
+.collapse-card .collapse-body > .network-stats,
+.collapse-card .collapse-body > .assets-stats {
+  flex: 1;
+  align-content: stretch;
+  min-height: 105px;
+}
+.collapse-card .collapse-body > .assets-stats {
+  display: flex;
+  flex-direction: column;
+}
+.collapse-card .collapse-body > .assets-stats .assets-main {
+  flex: 1;
+  align-content: center;
+}
+.collapse-card .collapse-body > .network-stats .speed-summary {
+  justify-content: center;
 }
 .expiry-shortcut-row {
   display: flex;
