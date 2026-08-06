@@ -346,6 +346,22 @@ button {
   min-height: 0;
   margin-bottom: 0;
 }
+.summary-card.collapsed {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+.summary-card.collapsed > header {
+  order: 2;
+  flex: 0 0 auto;
+  margin-left: 0;
+}
+.summary-card.collapsed .collapse-btn {
+  margin-left: 0;
+}
 .summary-card.collapsed .node-stats,
 .summary-card.collapsed .network-stats,
 .summary-card.collapsed .assets-stats {
@@ -358,9 +374,10 @@ button {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 6px 12px;
-  padding: 4px 0 0;
-  font-size: 12px;
+  order: 1;
+  gap: 6px 14px;
+  padding: 0;
+  font-size: 13px;
   color: var(--muted);
 }
 .summary-folded > span {
@@ -368,9 +385,9 @@ button {
   align-items: center;
   gap: 5px;
   color: var(--foreground);
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 650;
-  margin-right: 4px;
+  margin-right: 2px;
 }
 .summary-folded > span svg {
   color: var(--primary);
@@ -378,6 +395,7 @@ button {
 .summary-folded strong,
 .summary-folded b {
   font-weight: 650;
+  font-size: 14px;
   color: var(--foreground);
   font-variant-numeric: tabular-nums;
 }
@@ -397,10 +415,16 @@ button {
 @media (max-width: 640px) {
   .summary-card.collapsed .summary-folded {
     gap: 4px 10px;
-    font-size: 11px;
+    font-size: 12px;
   }
-  .summary-card {
-    padding: 12px 14px;
+  .summary-folded > span,
+  .summary-folded strong,
+  .summary-folded b {
+    font-size: 13px;
+  }
+  .summary-card.collapsed {
+    padding-top: 8px;
+    padding-bottom: 8px;
   }
 }
 .summary-card > header > span,
