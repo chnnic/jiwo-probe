@@ -228,39 +228,46 @@ function AssetsSummary({ servers }: { servers: ProbeServer[] }) {
     })
   }
   return (
-    <article className={`summary-card${collapsed ? ' collapsed' : ''}`}>
-      <header>
+    <article className={`summary-card collapse-card${collapsed ? ' collapsed' : ' open'}`}>
+      <button
+        className="summary-toggle"
+        type="button"
+        aria-expanded={!collapsed}
+        aria-label={collapsed ? '展开资产总揽' : '折叠资产总揽'}
+        onClick={toggle}
+      >
         <span>
           <BadgeDollarSign size={18} />
           资产总揽
         </span>
-        <small>按剩余天数折算</small>
-        <button className="collapse-btn" type="button" aria-label={collapsed ? '展开资产总揽' : '折叠资产总揽'} title={collapsed ? '展开' : '折叠'} onClick={toggle}>
-          <ChevronUp size={14} />
-        </button>
-      </header>
-      <div className="assets-stats">
-        <div className="assets-main">
-          <span>总剩余价值</span>
-          <strong>{formatMoney(stats.totalValue, 'CNY', true)}</strong>
-        </div>
-        <div className="assets-sub">
-          <span>
-            月均成本 <b>{formatMoney(stats.totalMonthly, 'CNY', true)}</b>
-          </span>
-          <span>
-            覆盖 <b>{stats.priced}</b> / {servers.length} 台
-          </span>
-        </div>
-      </div>
-      <div className="summary-folded">
-        <span>
-          <BadgeDollarSign size={13} />
-          资产总揽
+        <span className="summary-toggle-info">
+          {collapsed && (
+            <>
+              <b>{formatMoney(stats.totalValue, 'CNY', true)}</b>
+              <em>月均 {formatMoney(stats.totalMonthly, 'CNY', true)}</em>
+            </>
+          )}
+          <ChevronDown size={17} />
         </span>
-        <strong>{formatMoney(stats.totalValue, 'CNY', true)}</strong>
-        <em>月均 {formatMoney(stats.totalMonthly, 'CNY', true)}</em>
-      </div>
+      </button>
+      {!collapsed && (
+        <div className="collapse-body">
+          <div className="assets-stats">
+            <div className="assets-main">
+              <span>总剩余价值</span>
+              <strong>{formatMoney(stats.totalValue, 'CNY', true)}</strong>
+            </div>
+            <div className="assets-sub">
+              <span>
+                月均成本 <b>{formatMoney(stats.totalMonthly, 'CNY', true)}</b>
+              </span>
+              <span>
+                覆盖 <b>{stats.priced}</b> / {servers.length} 台
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
     </article>
   )
 }
@@ -1217,97 +1224,102 @@ export function App() {
         </nav>
       </header>
       <section className="dashboard-summary">
-        <article className={`summary-card${summaryCollapsed.has('nodes') ? ' collapsed' : ''}`}>
-          <header>
+        <article className={`summary-card collapse-card${summaryCollapsed.has('nodes') ? ' collapsed' : ' open'}`}>
+          <button
+            className="summary-toggle"
+            type="button"
+            aria-expanded={!summaryCollapsed.has('nodes')}
+            aria-label={summaryCollapsed.has('nodes') ? '展开节点情况' : '折叠节点情况'}
+            onClick={() => toggleSummary('nodes')}
+          >
             <span>
               <Server size={18} />
               节点情况
             </span>
-            {hasExpiry && (
-              <button className="expiry-shortcut" onClick={() => setFilter('renewal')}>
-                <CalendarClock size={14} />
-                待续费 <b>{renewalCount}</b>
-              </button>
-            )}
-            <button
-              className="collapse-btn"
-              type="button"
-              aria-label={summaryCollapsed.has('nodes') ? '展开节点情况' : '折叠节点情况'}
-              title={summaryCollapsed.has('nodes') ? '展开' : '折叠'}
-              onClick={() => toggleSummary('nodes')}
-            >
-              <ChevronUp size={14} />
-            </button>
-          </header>
-          <div className="node-stats">
-            <button onClick={() => setFilter('all')}>
-              <strong>{servers.length}</strong>
-              <span>
-                <Server size={14} />
-                总节点
-              </span>
-            </button>
-            <button onClick={() => setFilter('online')} className="online">
-              <strong>{onlineCount}</strong>
-              <span>
-                <CheckCircle2 size={14} />
-                在线节点
-              </span>
-            </button>
-            <button onClick={() => setFilter('offline')} className="offline">
-              <strong>{servers.length - onlineCount}</strong>
-              <span>
-                <XCircle size={14} />
-                离线节点
-              </span>
-            </button>
-          </div>
-          <div className="summary-folded">
-            <span>
-              <Server size={13} />
-              节点情况
+            <span className="summary-toggle-info">
+              {summaryCollapsed.has('nodes') && (
+                <>
+                  <b>{servers.length} 总</b>
+                  <b className="ok">{onlineCount} 在线</b>
+                  <b className="bad">{servers.length - onlineCount} 离线</b>
+                  {hasExpiry && (
+                    <em>
+                      <CalendarClock size={12} />
+                      待续费 {renewalCount}
+                    </em>
+                  )}
+                </>
+              )}
+              <ChevronDown size={17} />
             </span>
-            <strong>{servers.length} 总</strong>
-            <b className="ok">{onlineCount} 在线</b>
-            <b className="bad">{servers.length - onlineCount} 离线</b>
-            {hasExpiry && (
-              <em>
-                <CalendarClock size={12} />
-                待续费 {renewalCount}
-              </em>
-            )}
-          </div>
+          </button>
+          {!summaryCollapsed.has('nodes') && (
+            <div className="collapse-body">
+              {hasExpiry && (
+                <div className="expiry-shortcut-row">
+                  <button className="expiry-shortcut" onClick={() => setFilter('renewal')}>
+                    <CalendarClock size={14} />
+                    待续费 <b>{renewalCount}</b>
+                  </button>
+                </div>
+              )}
+              <div className="node-stats">
+                <button onClick={() => setFilter('all')}>
+                  <strong>{servers.length}</strong>
+                  <span>
+                    <Server size={14} />
+                    总节点
+                  </span>
+                </button>
+                <button onClick={() => setFilter('online')} className="online">
+                  <strong>{onlineCount}</strong>
+                  <span>
+                    <CheckCircle2 size={14} />
+                    在线节点
+                  </span>
+                </button>
+                <button onClick={() => setFilter('offline')} className="offline">
+                  <strong>{servers.length - onlineCount}</strong>
+                  <span>
+                    <XCircle size={14} />
+                    离线节点
+                  </span>
+                </button>
+              </div>
+            </div>
+          )}
         </article>
         {hasSpeed && (
-          <article className={`summary-card${summaryCollapsed.has('network') ? ' collapsed' : ''}`}>
-            <header>
+          <article className={`summary-card collapse-card${summaryCollapsed.has('network') ? ' collapsed' : ' open'}`}>
+            <button
+              className="summary-toggle"
+              type="button"
+              aria-expanded={!summaryCollapsed.has('network')}
+              aria-label={summaryCollapsed.has('network') ? '展开网络情况' : '折叠网络情况'}
+              onClick={() => toggleSummary('network')}
+            >
               <span>
                 <Gauge size={18} />
                 网络情况
               </span>
-              <small>实时汇总</small>
-              <button
-                className="collapse-btn"
-                type="button"
-                aria-label={summaryCollapsed.has('network') ? '展开网络情况' : '折叠网络情况'}
-                title={summaryCollapsed.has('network') ? '展开' : '折叠'}
-                onClick={() => toggleSummary('network')}
-              >
-                <ChevronUp size={14} />
-              </button>
-            </header>
-            <div className="network-stats">
-              <SpeedSummary label="总下行网速" value={totalDownload} direction="down" />
-              <SpeedSummary label="总上行网速" value={totalUpload} direction="up" />
-            </div>
-            <div className="summary-folded">
-              <span>
-                <Gauge size={13} />
-                网络情况
+              <span className="summary-toggle-info">
+                {summaryCollapsed.has('network') && (
+                  <>
+                    <b>↓{speed(totalDownload)}</b>
+                    <b>↑{speed(totalUpload)}</b>
+                  </>
+                )}
+                <ChevronDown size={17} />
               </span>
-              <strong>↓{speed(totalDownload)}</strong>
-              <b>↑{speed(totalUpload)}</b>
-            </div>
+            </button>
+            {!summaryCollapsed.has('network') && (
+              <div className="collapse-body">
+                <div className="network-stats">
+                  <SpeedSummary label="总下行网速" value={totalDownload} direction="down" />
+                  <SpeedSummary label="总上行网速" value={totalUpload} direction="up" />
+                </div>
+              </div>
+            )}
           </article>
         )}
         <AssetsSummary servers={servers} />

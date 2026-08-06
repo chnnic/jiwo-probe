@@ -298,7 +298,8 @@ button {
   box-shadow: var(--shadow);
 }
 .summary-card {
-  padding: 18px;
+  padding: 0;
+  overflow: hidden;
 }
 .summary-card > header {
   display: flex;
@@ -311,121 +312,76 @@ button {
   font-size: 15px;
   font-weight: 650;
 }
-.summary-card .collapse-btn {
-  flex: 0 0 auto;
-  width: 26px;
-  height: 26px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  margin-left: auto;
-  border: 1px solid var(--border);
-  border-radius: calc(var(--radius) - 4px);
-  color: var(--muted);
-  background: transparent;
-  cursor: pointer;
-  transition: transform 0.15s, background 0.15s, border-color 0.15s;
-}
-.summary-card .collapse-btn:hover {
-  background: color-mix(in srgb, var(--foreground) 6%, transparent);
-  border-color: var(--accent, #8b5cf6);
-  color: var(--foreground);
-}
-.summary-card .collapse-btn svg {
-  transition: transform 0.2s;
-}
-.summary-card.collapsed .collapse-btn svg {
-  transform: rotate(180deg);
-}
-.summary-card.collapsed > header > span:first-child,
-.summary-card.collapsed > header small,
-.summary-card.collapsed .expiry-shortcut {
-  display: none;
-}
-.summary-card.collapsed > header {
-  min-height: 0;
-  margin-bottom: 0;
-}
-.summary-card.collapsed {
+.summary-toggle {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  min-height: 54px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding-top: 10px;
-  padding-bottom: 10px;
+  padding: 12px 18px;
+  border: 0;
+  color: var(--foreground, #172033);
+  background: transparent;
+  cursor: pointer;
 }
-.summary-card.collapsed > header {
-  order: 2;
-  flex: 0 0 auto;
-  margin-left: 0;
-}
-.summary-card.collapsed .collapse-btn {
-  margin-left: 0;
-}
-.summary-card.collapsed .node-stats,
-.summary-card.collapsed .network-stats,
-.summary-card.collapsed .assets-stats {
-  display: none;
-}
-.summary-folded {
-  display: none;
-}
-.summary-card.collapsed .summary-folded {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  order: 1;
-  gap: 6px 14px;
-  padding: 0;
-  font-size: 13px;
-  color: var(--muted);
-}
-.summary-folded > span {
+.summary-toggle > span:first-child {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  color: var(--foreground);
-  font-size: 14px;
+  gap: 7px;
+  font-size: 15px;
   font-weight: 650;
-  margin-right: 2px;
 }
-.summary-folded > span svg {
+.summary-toggle > span:first-child svg {
   color: var(--primary);
 }
-.summary-folded strong,
-.summary-folded b {
+.summary-toggle .summary-toggle-info {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--muted);
+  font-size: 13px;
+  min-width: 0;
+  overflow: hidden;
+}
+.summary-toggle .summary-toggle-info b {
+  color: var(--foreground);
   font-weight: 650;
   font-size: 14px;
-  color: var(--foreground);
   font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
-.summary-folded b.ok {
+.summary-toggle .summary-toggle-info b.ok {
   color: #16a34a;
 }
-.summary-folded b.bad {
+.summary-toggle .summary-toggle-info b.bad {
   color: #dc2626;
 }
-.summary-folded em {
+.summary-toggle .summary-toggle-info em {
   display: inline-flex;
   align-items: center;
   gap: 4px;
   font-style: normal;
   color: var(--muted);
+  font-size: 12px;
+  white-space: nowrap;
 }
-@media (max-width: 640px) {
-  .summary-card.collapsed .summary-folded {
-    gap: 4px 10px;
-    font-size: 12px;
-  }
-  .summary-folded > span,
-  .summary-folded strong,
-  .summary-folded b {
-    font-size: 13px;
-  }
-  .summary-card.collapsed {
-    padding-top: 8px;
-    padding-bottom: 8px;
-  }
+.summary-toggle svg:last-child {
+  flex: 0 0 auto;
+  transition: transform 0.2s ease;
+}
+.collapse-card.open .summary-toggle svg:last-child {
+  transform: rotate(180deg);
+}
+.collapse-card .collapse-body {
+  padding: 0 18px 16px;
+}
+.expiry-shortcut-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 8px;
 }
 .summary-card > header > span,
 .expiry-shortcut {
@@ -1986,7 +1942,13 @@ footer a:hover {
     gap: 10px;
   }
   .summary-card {
-    padding: 13px;
+    padding: 0;
+  }
+  .collapse-card .collapse-body {
+    padding: 0 13px 12px;
+  }
+  .summary-toggle {
+    padding: 10px 13px;
   }
   .summary-card > header {
     margin-bottom: 10px;
