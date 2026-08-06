@@ -1,7 +1,7 @@
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import Lottie from 'lottie-react'
-import { Activity, ArrowDown, ArrowDownUp, ArrowUp, BadgeDollarSign, CalendarClock, CheckCircle2, ChevronDown, ChevronUp, Clock, Cpu, Gauge, Globe2, HardDrive, LayoutGrid, List, MapPin, MemoryStick, Monitor, Moon, Palette, PieChart, Rows3, Rows4, Search, Server, Sun, Trophy, Wallet, Wifi, XCircle } from 'lucide-react'
+import { Activity, ArrowDown, ArrowDownUp, ArrowUp, BadgeDollarSign, CalendarClock, CheckCircle2, ChevronDown, ChevronUp, Clock, Cpu, Gauge, Globe2, HardDrive, LayoutGrid, List, MapPin, MemoryStick, Monitor, Moon, Palette, PieChart, Rows3, Rows4, Search, Server, Sun, Trophy, Wallet, Wifi, XCircle, ZoomIn, ZoomOut } from 'lucide-react'
 import { siAlmalinux, siAlpinelinux, siApple, siArchlinux, siCentos, siDebian, siFedora, siFreebsd, siGentoo, siKalilinux, siLinux, siLinuxmint, siNixos, siOpensuse, siProxmox, siRedhat, siRockylinux, siUbuntu } from 'simple-icons'
 import { Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import type { ProbeBucket, ProbePingSeries, ProbeReturnRoute, ProbeServer, ThemeName } from './types'
@@ -615,6 +615,7 @@ function TrendDialog({ serverIndex, initial, targetKey, title, mode, close }: { 
   const [hidden, setHidden] = useState<Set<string>>(new Set())
   const [series, setSeries] = useState<ProbePingSeries[]>(initial)
   const [loading, setLoading] = useState(false)
+  const [zoom, setZoom] = useState(1)
   const [timeMeta, setTimeMeta] = useState({
     generatedAt: Math.floor(Date.now() / 1000),
     bucketSec: 300,
@@ -720,6 +721,25 @@ function TrendDialog({ serverIndex, initial, targetKey, title, mode, close }: { 
           <button type="button" className={group === 'idc' ? 'active' : ''} onClick={() => setGroup('idc')}>
             海外
           </button>
+          <span className="ranges-sep" />
+          <button
+            type="button"
+            className="zoom-btn"
+            aria-label="缩小横轴"
+            title={`缩小横轴（当前 ${Math.round(zoom * 100)}%）`}
+            onClick={() => setZoom((value) => Math.max(0.25, Math.round(value / 0.25) * 0.25 - 0.25))}
+          >
+            <ZoomOut size={13} />
+          </button>
+          <button
+            type="button"
+            className="zoom-btn"
+            aria-label="放大横轴"
+            title={`放大横轴（当前 ${Math.round(zoom * 100)}%）`}
+            onClick={() => setZoom((value) => Math.min(4, Math.round(value / 0.25) * 0.25 + 0.25))}
+          >
+            <ZoomIn size={13} />
+          </button>
         </div>
         <div className="chart">
           {loading && <div className="loading-overlay">加载中…</div>}
@@ -728,7 +748,7 @@ function TrendDialog({ serverIndex, initial, targetKey, title, mode, close }: { 
               该服务器未配置{group === 'cn' ? '内地' : '海外'}探测点
             </div>
           )}
-          <HorizontalChart width={Math.max(760, rows.length * 82)}>
+          <HorizontalChart width={Math.max(760, rows.length * 82 * zoom)}>
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={rows} margin={{ top: 8, right: 12, bottom: 0, left: 0 }}>
                 <XAxis dataKey="time" tick={{ fontSize: 10 }} axisLine={false} tickLine={false} interval={0} minTickGap={28} />

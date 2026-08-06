@@ -1246,6 +1246,21 @@ footer a:hover {
   font-size: 11px;
   white-space: nowrap;
 }
+.ranges .zoom-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  padding: 1px 0;
+}
+.ranges .zoom-btn svg {
+  width: 13px;
+  height: 13px;
+}
+.ranges .zoom-btn:hover {
+  border-color: color-mix(in srgb, var(--primary) 60%, transparent);
+  color: var(--primary);
+}
 .ranges-sep {
   width: 1px;
   align-self: stretch;
@@ -2836,5 +2851,20 @@ footer a:hover {
   .server-mini-card.expanded .mini-detail {
     gap: 3px 8px;
     font-size: 10px;
+  }
+}
+/* 趋势图缩放按钮手机压缩（追加在文件末尾，避免被基础规则覆盖） */
+@media (max-width: 640px) {
+  .ranges {
+    gap: 3px;
+  }
+  .ranges button {
+    padding: 1px 4px;
+  }
+  .ranges .zoom-btn {
+    width: 20px;
+  }
+  .ranges-sep {
+    margin: 0 2px;
   }
 }
