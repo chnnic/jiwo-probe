@@ -3227,7 +3227,7 @@ footer a:hover {
 .lumina-metrics {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 9px 14px;
+  gap: 14px;
 }
 .lumina-metric {
   display: flex;
@@ -3433,7 +3433,7 @@ footer a:hover {
   background: color-mix(in srgb, var(--hover-bg, #f4f4f5) 38%, var(--surface));
 }
 .lumina-card .return-route-badges {
-  margin: 0;
+  margin: -4px 0 0;
   padding: 0;
   border-top: 0;
   gap: 6px;
