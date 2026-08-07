@@ -1275,6 +1275,7 @@ function LuminaHealthBars({ buckets, kind }: { buckets: ProbeBucket[]; kind: 'la
         return (
           <span
             key={index}
+            title={raw >= 0 ? (kind === 'latency' ? `延迟 ${Math.round(raw)} ms` : `丢包 ${raw.toFixed(1)}%`) : '无数据'}
             style={
               {
                 '--bar-h': `${height}%`,
