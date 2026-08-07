@@ -1608,6 +1608,12 @@ footer a:hover {
   -webkit-overflow-scrolling: touch;
   padding-bottom: 2px;
 }
+@media (min-width: 641px) {
+  .leaderboard-tabs {
+    flex-wrap: wrap;
+    overflow-x: visible;
+  }
+}
 .leaderboard-tabs::-webkit-scrollbar {
   display: none;
 }

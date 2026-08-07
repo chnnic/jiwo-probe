@@ -142,6 +142,15 @@ function PingTrendChart({ serverIndex, initial, targetKey, mode }: { serverIndex
     const target = el.clientWidth / (rows.length * 82)
     setZoom(Math.max(0.05, Math.min(8, target)))
   }
+  // 每个时间范围默认适应屏幕宽度；用户手动 +/- 后不再自动覆盖
+  useEffect(() => {
+    if (!loading && displaySeries.length) {
+      const raf = requestAnimationFrame(fitZoom)
+      return () => cancelAnimationFrame(raf)
+    }
+    return undefined
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [range, loading])
 
   return (
     <>
