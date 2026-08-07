@@ -76,6 +76,16 @@ export function cycleTheme(): ThemeName | null {
   return next
 }
 
+export function setTheme(name: ThemeName | null): ThemeName | null {
+  if (name) {
+    localStorage.setItem(THEME_OVERRIDE, name)
+  } else {
+    localStorage.removeItem(THEME_OVERRIDE)
+  }
+  applyAppearance()
+  return name
+}
+
 export function useProbe(): { data?: ProbePayload; error?: string } {
   const [data, setData] = useState<ProbePayload>()
   const [error, setError] = useState<string>()

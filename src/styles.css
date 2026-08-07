@@ -112,6 +112,22 @@ button {
   border-color: var(--primary);
   background: var(--primary);
 }
+.theme-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+.theme-trigger .rotated {
+  transform: rotate(180deg);
+  transition: transform 0.15s;
+}
+.theme-menu {
+  min-width: 132px;
+}
+.theme-menu-check {
+  margin-left: auto;
+  flex-shrink: 0;
+}
 .servers {
   width: min(1600px, calc(100% - 48px));
   margin: 0 auto;

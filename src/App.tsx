@@ -1,11 +1,11 @@
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import Lottie from 'lottie-react'
-import { Activity, ArrowDown, ArrowDownUp, ArrowUp, BadgeDollarSign, Calendar, CalendarClock, CheckCircle2, ChevronDown, ChevronUp, CircleDollarSign, Clock, Clock3, Cpu, Database, Gauge, Globe2, HardDrive, LayoutGrid, List, MapPin, MemoryStick, Monitor, Moon, MoveHorizontal, Palette, PieChart, RefreshCw, Rows3, Rows4, Search, Server, Sun, Trophy, Unplug, Wallet, Wifi, XCircle, ZoomIn, ZoomOut } from 'lucide-react'
+import { Activity, ArrowDown, ArrowDownUp, ArrowUp, BadgeDollarSign, Calendar, CalendarClock, Check, CheckCircle2, ChevronDown, ChevronUp, CircleDollarSign, Clock, Clock3, Cpu, Database, Gauge, Globe2, HardDrive, LayoutGrid, List, MapPin, MemoryStick, Monitor, Moon, MoveHorizontal, Palette, PieChart, RefreshCw, Rows3, Rows4, Search, Server, Sun, Trophy, Unplug, Wallet, Wifi, XCircle, ZoomIn, ZoomOut } from 'lucide-react'
 import { siAlmalinux, siAlpinelinux, siApple, siArchlinux, siCentos, siDebian, siFedora, siFreebsd, siGentoo, siKalilinux, siLinux, siLinuxmint, siNixos, siOpensuse, siProxmox, siRedhat, siRockylinux, siUbuntu } from 'simple-icons'
 import { Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import type { ProbeBucket, ProbePingSeries, ProbeReturnRoute, ProbeServer, ThemeName } from './types'
-import { cycleTheme, getDarkOverride, getThemeOverride, setDarkOverride, useProbe } from './use-probe'
+import { getDarkOverride, getThemeOverride, setDarkOverride, setTheme, useProbe } from './use-probe'
 import { Twemoji } from './Twemoji'
 import { ServerDetail } from './ServerDetail'
 import { computeRemainingValue, formatMoney } from './value'
@@ -226,6 +226,86 @@ function RegionSelect({ regions, value, onChange }: { regions: string[]; value: 
               <button type="button" role="option" aria-selected={value === item} key={item} onClick={() => { onChange(item); setOpen(false) }}>
                 <Twemoji>{item}</Twemoji>
                 <span>{item}</span>
+              </button>
+            ))}
+          </div>,
+          document.body,
+        )}
+    </div>
+  )
+}
+
+const THEME_OPTIONS: { value: ThemeName; label: string }[] = [
+  { value: 'pixel', label: '像素' },
+  { value: 'flat', label: '扁平' },
+  { value: 'anime', label: '动漫' },
+  { value: 'glass', label: '玻璃' },
+  { value: 'lumina', label: 'Lumina' },
+]
+
+function ThemeSelect({ value, onChange }: { value: ThemeName | null; onChange: (name: ThemeName | null) => void }) {
+  const [open, setOpen] = useState(false)
+  const [pos, setPos] = useState({ top: 0, left: 0, width: 0 })
+  const wrapRef = useRef<HTMLDivElement>(null)
+  const menuRef = useRef<HTMLDivElement>(null)
+
+  const close = useCallback(() => setOpen(false), [])
+  const toggle = useCallback(() => {
+    if (!open && wrapRef.current) {
+      const rect = wrapRef.current.getBoundingClientRect()
+      const estHeight = Math.min(320, (THEME_OPTIONS.length + 1) * 29 + 10)
+      let top = rect.bottom + 5
+      if (top + estHeight > window.innerHeight - 8 && rect.top - estHeight - 5 > 0) {
+        top = rect.top - estHeight - 5
+      }
+      setPos({ top, left: rect.left, width: rect.width })
+    }
+    setOpen((v) => !v)
+  }, [open])
+
+  useEffect(() => {
+    if (!open) return
+    const handle = (event: MouseEvent) => {
+      if (wrapRef.current?.contains(event.target as Node)) return
+      if (menuRef.current?.contains(event.target as Node)) return
+      setOpen(false)
+    }
+    document.addEventListener('mousedown', handle)
+    window.addEventListener('scroll', close, true)
+    window.addEventListener('resize', close)
+    return () => {
+      document.removeEventListener('mousedown', handle)
+      window.removeEventListener('scroll', close, true)
+      window.removeEventListener('resize', close)
+    }
+  }, [open, close])
+
+  const selectedLabel = value ? THEME_OPTIONS.find((opt) => opt.value === value)?.label || value : '跟随主控'
+  return (
+    <div className="theme-select" ref={wrapRef}>
+      <button
+        type="button"
+        className="theme-trigger"
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        aria-label="切换主题"
+        title={`主题: ${selectedLabel}`}
+        onClick={toggle}
+      >
+        <Palette size={18} />
+        <ChevronDown size={13} className={open ? 'rotated' : ''} />
+      </button>
+      {open &&
+        createPortal(
+          <div className="region-menu theme-menu" ref={menuRef} style={{ top: pos.top, left: pos.left }} role="listbox">
+            <button type="button" role="option" aria-selected={value === null} onClick={() => { onChange(null); setOpen(false) }}>
+              <span>跟随主控</span>
+              {value === null && <Check size={14} className="theme-menu-check" />}
+            </button>
+            {THEME_OPTIONS.map((opt) => (
+              <button type="button" role="option" aria-selected={value === opt.value} key={opt.value} onClick={() => { onChange(opt.value); setOpen(false) }}>
+                <span>{opt.label}</span>
+                {value === opt.value && <Check size={14} className="theme-menu-check" />}
               </button>
             ))}
           </div>,
@@ -1957,7 +2037,7 @@ export function App() {
       return next
     })
   }
-  const [theme, setTheme] = useState<ThemeName | null>(() => getThemeOverride())
+  const [theme, setThemeState] = useState<ThemeName | null>(() => getThemeOverride())
   const [darkMode, setDarkMode] = useState<string | null>(() => getDarkOverride())
   const [detailIndex, setDetailIndex] = useState<number | null>(() => {
     const match = /^#\/server\/(\d+)$/.exec(window.location.hash)
@@ -1990,9 +2070,6 @@ export function App() {
     const next = isDark ? 'light' : 'dark'
     setDarkOverride(next)
     setDarkMode(next)
-  }
-  const toggleTheme = () => {
-    setTheme(cycleTheme())
   }
   const setMode = (next: 'card' | 'list' | 'mini') => {
     setView(next)
@@ -2063,9 +2140,7 @@ export function App() {
           <button aria-label="切换暗色模式" title={isDark ? '切换浅色模式' : '切换暗色模式'} onClick={toggleDark}>
             {isDark ? <Sun size={18} /> : <Moon size={18} />}
           </button>
-          <button aria-label="切换主题" title={`主题: ${theme || '跟随主控'}`} onClick={toggleTheme}>
-            <Palette size={18} />
-          </button>
+          <ThemeSelect value={theme} onChange={(name) => { setTheme(name); setThemeState(name) }} />
         </nav>
       </header>
       <section className="dashboard-summary">
