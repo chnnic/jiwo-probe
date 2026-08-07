@@ -2342,14 +2342,42 @@ footer a:hover {
   gap: 10px;
   min-width: 0;
 }
-.detail-trends {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-  align-items: start;
+.detail-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
 }
-.detail-trends .detail-panel {
-  min-width: 0;
+.detail-panel-head h3 {
+  margin: 0;
+}
+.trend-mode-switch {
+  display: inline-flex;
+  gap: 4px;
+}
+.trend-mode-switch button {
+  min-width: auto;
+  min-height: 24px;
+  padding: 1px 10px;
+  font-size: 11px;
+  white-space: nowrap;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+}
+.trend-mode-switch button:hover {
+  border-color: color-mix(in srgb, var(--primary) 60%, transparent);
+  color: var(--foreground);
+}
+.trend-mode-switch button.active {
+  border-color: var(--primary);
+  color: var(--primary);
+  background: color-mix(in srgb, var(--primary) 12%, transparent);
+  font-weight: 600;
 }
 .detail-metric-head {
   display: flex;
@@ -2485,9 +2513,6 @@ footer a:hover {
     padding: 10px;
   }
   .detail-cols {
-    grid-template-columns: 1fr;
-  }
-  .detail-trends {
     grid-template-columns: 1fr;
   }
   .detail-chart {
@@ -2868,15 +2893,20 @@ footer a:hover {
 /* 趋势图缩放按钮手机压缩（追加在文件末尾，避免被基础规则覆盖） */
 @media (max-width: 640px) {
   .ranges {
-    gap: 3px;
+    gap: 2px;
   }
   .ranges button {
-    padding: 1px 4px;
+    padding: 1px 3px;
   }
   .ranges .zoom-btn {
-    width: 20px;
+    width: 16px;
+    padding: 1px 0;
+  }
+  .ranges .zoom-btn svg {
+    width: 12px;
+    height: 12px;
   }
   .ranges-sep {
-    margin: 0 2px;
+    margin: 0 1px;
   }
 }

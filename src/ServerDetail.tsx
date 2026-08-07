@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { Activity, ArrowDown, ArrowUp, BadgeDollarSign, CalendarClock, ChevronLeft, Cpu, HardDrive, MemoryStick, PieChart, Wallet, Wifi, X, ZoomIn, ZoomOut } from 'lucide-react'
+import { Activity, ArrowDown, ArrowUp, BadgeDollarSign, CalendarClock, ChevronLeft, Cpu, HardDrive, MemoryStick, MoveHorizontal, PieChart, Wallet, Wifi, X, ZoomIn, ZoomOut } from 'lucide-react'
 import { Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import type { ProbePingSeries, ProbeServer } from './types'
 import { Twemoji } from './Twemoji'
@@ -57,6 +57,7 @@ function PingTrendChart({ serverIndex, initial, targetKey, mode }: { serverIndex
   const [series, setSeries] = useState<ProbePingSeries[]>(initial)
   const [loading, setLoading] = useState(false)
   const [zoom, setZoom] = useState(1)
+  const chartRef = useRef<HTMLDivElement>(null)
   const [timeMeta, setTimeMeta] = useState({
     generatedAt: Math.floor(Date.now() / 1000),
     bucketSec: 300,
@@ -134,6 +135,12 @@ function PingTrendChart({ serverIndex, initial, targetKey, mode }: { serverIndex
     [displaySeries, timeMeta, mode],
   )
   const dynamicLossScale = useMemo(() => lossScale(rows), [rows])
+  const fitZoom = () => {
+    const el = chartRef.current
+    if (!el || !rows.length) return
+    const target = el.clientWidth / (rows.length * 82)
+    setZoom(Math.max(0.05, Math.min(8, target)))
+  }
 
   return (
     <>
@@ -159,28 +166,37 @@ function PingTrendChart({ serverIndex, initial, targetKey, mode }: { serverIndex
           className="zoom-btn"
           aria-label="缩小横轴"
           title={`缩小横轴（当前 ${Math.round(zoom * 100)}%）`}
-          onClick={() => setZoom((value) => Math.max(0.25, Math.round(value / 0.25) * 0.25 - 0.25))}
+          onClick={() => setZoom((value) => Math.max(0.05, Math.round((value - 0.1) * 10) / 10))}
         >
           <ZoomOut size={13} />
         </button>
         <button
           type="button"
           className="zoom-btn"
+          aria-label="适应屏幕宽度"
+          title="适应屏幕宽度"
+          onClick={fitZoom}
+        >
+          <MoveHorizontal size={13} />
+        </button>
+        <button
+          type="button"
+          className="zoom-btn"
           aria-label="放大横轴"
           title={`放大横轴（当前 ${Math.round(zoom * 100)}%）`}
-          onClick={() => setZoom((value) => Math.min(4, Math.round(value / 0.25) * 0.25 + 0.25))}
+          onClick={() => setZoom((value) => Math.min(8, Math.round((value + 0.1) * 10) / 10))}
         >
           <ZoomIn size={13} />
         </button>
       </div>
-      <div className="detail-chart">
+      <div className="detail-chart" ref={chartRef}>
         {loading && <div className="loading-overlay">加载中…</div>}
         {!loading && !displaySeries.length && (
           <div className="chart-empty">
             该服务器未配置{group === 'cn' ? '内地' : '海外'}探测点
           </div>
         )}
-        <HorizontalChart width={Math.max(760, rows.length * 82 * zoom)}>
+        <HorizontalChart width={Math.max(120, rows.length * 82 * zoom)}>
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={rows} margin={{ top: 8, right: 12, bottom: 0, left: 0 }}>
               <XAxis dataKey="time" tick={{ fontSize: 10 }} axisLine={false} tickLine={false} interval={0} minTickGap={28} />
@@ -247,6 +263,7 @@ function DetailMetric({ icon, label, value, percent }: { icon: React.ReactNode; 
 
 export function ServerDetail({ server, index, onClose }: { server: ProbeServer; index: number; onClose: () => void }) {
   const [selected, setSelected] = useState('__avg__')
+  const [trendMode, setTrendMode] = useState<'latency' | 'loss'>('latency')
   const name = server.name || `服务器 ${index + 1}`
   const flag = regionFlag(server.region)
   const ping = server.ping || []
@@ -368,38 +385,31 @@ export function ServerDetail({ server, index, onClose }: { server: ProbeServer; 
           </div>
 
           {!!ping.length && (
-            <div className="detail-trends">
-              <section className="detail-panel">
-                <h3>延迟趋势</h3>
-                <div className="detail-ping-picker">
-                  <Wifi size={14} />
-                  <select value={selected} onChange={(event) => setSelected(event.target.value)}>
-                    <option value="__avg__">平均</option>
-                    {ping.map((item) => (
-                      <option key={item.key || item.label} value={item.key || item.label}>
-                        {item.label}
-                      </option>
-                    ))}
-                  </select>
+            <section className="detail-panel">
+              <div className="detail-panel-head">
+                <h3>{trendMode === 'latency' ? '延迟趋势' : '丢包趋势'}</h3>
+                <div className="trend-mode-switch" role="tablist" aria-label="趋势类型">
+                  <button type="button" role="tab" aria-selected={trendMode === 'latency'} className={trendMode === 'latency' ? 'active' : ''} onClick={() => setTrendMode('latency')}>
+                    延迟
+                  </button>
+                  <button type="button" role="tab" aria-selected={trendMode === 'loss'} className={trendMode === 'loss' ? 'active' : ''} onClick={() => setTrendMode('loss')}>
+                    丢包
+                  </button>
                 </div>
-                <PingTrendChart serverIndex={index} initial={lines} targetKey={selected} mode="latency" />
-              </section>
-              <section className="detail-panel">
-                <h3>丢包趋势</h3>
-                <div className="detail-ping-picker">
-                  <Wifi size={14} />
-                  <select value={selected} onChange={(event) => setSelected(event.target.value)}>
-                    <option value="__avg__">平均</option>
-                    {ping.map((item) => (
-                      <option key={item.key || item.label} value={item.key || item.label}>
-                        {item.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <PingTrendChart serverIndex={index} initial={lines} targetKey={selected} mode="loss" />
-              </section>
-            </div>
+              </div>
+              <div className="detail-ping-picker">
+                <Wifi size={14} />
+                <select value={selected} onChange={(event) => setSelected(event.target.value)}>
+                  <option value="__avg__">平均</option>
+                  {ping.map((item) => (
+                    <option key={item.key || item.label} value={item.key || item.label}>
+                      {item.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <PingTrendChart serverIndex={index} initial={lines} targetKey={selected} mode={trendMode} />
+            </section>
           )}
         </div>
       </section>
