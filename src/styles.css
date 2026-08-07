@@ -1469,6 +1469,74 @@ footer a:hover {
 .theme-anime .server-table td {
   border-color: #e6dcfa;
 }
+:root.theme-anime .leaderboard-card,
+:root.theme-anime .globe-card {
+  position: relative;
+  border: 0;
+  border-radius: 0;
+  box-shadow: 0 4px 18px -6px rgba(139, 92, 246, 0.28);
+}
+:root.theme-anime .leaderboard-card::after,
+:root.theme-anime .globe-card::after {
+  content: '';
+  pointer-events: none;
+  position: absolute;
+  inset: 4px;
+  border: 19px solid transparent;
+  border-image: url('/anime-lace.svg') 30 round;
+}
+:root.theme-anime .leaderboard-card > :not(.modal-backdrop),
+:root.theme-anime .globe-card > :not(.modal-backdrop) {
+  position: relative;
+  z-index: 1;
+}
+:root.theme-anime .leaderboard-tabs button {
+  border-color: #eadffc;
+  border-radius: 0;
+}
+:root.theme-anime .leaderboard-tabs button.active {
+  border-color: #8b5cf6;
+  background: rgba(139, 92, 246, 0.1);
+}
+:root.theme-anime .server-detail {
+  border: 0;
+  border-radius: 0;
+  box-shadow: 0 4px 18px -6px rgba(139, 92, 246, 0.28);
+}
+:root.theme-anime .server-detail::after {
+  content: '';
+  pointer-events: none;
+  position: absolute;
+  inset: 4px;
+  border: 19px solid transparent;
+  border-image: url('/anime-lace.svg') 30 round;
+}
+:root.theme-anime .server-detail > * {
+  position: relative;
+  z-index: 1;
+}
+:root.theme-anime .server-detail-header {
+  border-radius: 0;
+}
+:root.theme-anime .detail-panel {
+  position: relative;
+  border: 0;
+  border-radius: 0;
+  box-shadow: 0 4px 18px -6px rgba(139, 92, 246, 0.28);
+}
+:root.theme-anime .detail-panel > * {
+  position: relative;
+  z-index: 1;
+}
+:root.theme-anime .detail-ping-picker select,
+:root.theme-anime .ranges button,
+:root.theme-anime .trend-mode-switch button {
+  border-radius: 0;
+}
+:root.theme-anime .detail-online,
+:root.theme-anime .detail-offline {
+  border-radius: 0;
+}
 
 :root.dark {
   color: #e5e7eb;

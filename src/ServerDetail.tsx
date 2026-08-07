@@ -123,6 +123,7 @@ function PingTrendChart({ serverIndex, initial, targetKey, mode }: { serverIndex
             timeMeta.generatedAt -
               (timeMeta.generatedAt % timeMeta.bucketSec) -
               ((displaySeries[0]?.item.buckets.length || 0) - 1 - index) * timeMeta.bucketSec,
+            range === '1h',
           ),
         }
         for (const { item } of displaySeries) {
@@ -132,7 +133,7 @@ function PingTrendChart({ serverIndex, initial, targetKey, mode }: { serverIndex
         }
         return row
       }),
-    [displaySeries, timeMeta, mode],
+    [displaySeries, timeMeta, mode, range],
   )
   const dynamicLossScale = useMemo(() => lossScale(rows), [rows])
   const fitZoom = () => {
@@ -199,7 +200,7 @@ function PingTrendChart({ serverIndex, initial, targetKey, mode }: { serverIndex
         <HorizontalChart width={Math.max(120, rows.length * 82 * zoom)}>
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={rows} margin={{ top: 8, right: 12, bottom: 0, left: 0 }}>
-              <XAxis dataKey="time" tick={{ fontSize: 10 }} axisLine={false} tickLine={false} interval={0} minTickGap={28} />
+              <XAxis dataKey="time" tick={{ fontSize: 10 }} axisLine={false} tickLine={false} interval="preserveStartEnd" minTickGap={28} />
               <YAxis
                 width={52}
                 tick={{ fontSize: 10 }}
