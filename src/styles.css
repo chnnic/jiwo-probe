@@ -3163,7 +3163,7 @@ footer a:hover {
 .lumina-card {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 14px;
   padding: 16px 16px 13px;
 }
 .lumina-card.is-offline {
@@ -3322,7 +3322,7 @@ footer a:hover {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  margin-top: 6px;
+  margin-top: 10px;
 }
 .lumina-quota-head {
   display: flex;
@@ -3473,6 +3473,6 @@ footer a:hover {
   }
   :root.theme-lumina .lumina-card {
     padding: 13px 13px 11px;
-    gap: 10px;
+    gap: 12px;
   }
 }
