@@ -283,9 +283,35 @@ function DetailMetric({ icon, label, value, percent }: { icon: React.ReactNode; 
   )
 }
 
+function DetailTrafficChart({ daily }: { daily: ProbeServer['daily_traffic'] }) {
+  const rows = daily || []
+  if (!rows.length) {
+    return <div className="chart-empty">暂无日流量数据</div>
+  }
+  return (
+    <div className="detail-chart">
+      <HorizontalChart width={Math.max(120, rows.length * 82)}>
+        <ResponsiveContainer width="100%" height="100%">
+          <LineChart data={rows} margin={{ top: 8, right: 12, bottom: 0, left: 0 }}>
+            <XAxis dataKey="date" tick={{ fontSize: 10 }} axisLine={false} tickLine={false} interval="preserveStartEnd" minTickGap={28} />
+            <YAxis width={52} tick={{ fontSize: 10 }} axisLine={false} tickLine={false} tickFormatter={(value) => bytes(Number(value), false)} />
+            <Tooltip
+              contentStyle={{ fontSize: 11, borderRadius: 8 }}
+              labelFormatter={(value) => String(value)}
+              formatter={(value, name) => [bytes(Number(value)), name === 'uplink' ? '上行' : '下行']}
+            />
+            <Line type="monotone" dataKey="uplink" name="上行" stroke="#f97316" strokeWidth={2} dot={false} isAnimationActive={false} />
+            <Line type="monotone" dataKey="downlink" name="下行" stroke="#22c55e" strokeWidth={2} dot={false} isAnimationActive={false} />
+          </LineChart>
+        </ResponsiveContainer>
+      </HorizontalChart>
+    </div>
+  )
+}
+
 export function ServerDetail({ server, index, onClose }: { server: ProbeServer; index: number; onClose: () => void }) {
   const [selected, setSelected] = useState('__avg__')
-  const [trendMode, setTrendMode] = useState<'latency' | 'loss'>('latency')
+  const [trendMode, setTrendMode] = useState<'latency' | 'loss' | 'traffic'>('latency')
   const name = server.name || `服务器 ${index + 1}`
   const flag = regionFlag(server.region)
   const ping = server.ping || []
@@ -409,7 +435,7 @@ export function ServerDetail({ server, index, onClose }: { server: ProbeServer; 
           {!!ping.length && (
             <section className="detail-panel">
               <div className="detail-panel-head">
-                <h3>{trendMode === 'latency' ? '延迟趋势' : '丢包趋势'}</h3>
+                <h3>{trendMode === 'latency' ? '延迟趋势' : trendMode === 'loss' ? '丢包趋势' : '日流量趋势'}</h3>
                 <div className="trend-mode-switch" role="tablist" aria-label="趋势类型">
                   <button type="button" role="tab" aria-selected={trendMode === 'latency'} className={trendMode === 'latency' ? 'active' : ''} onClick={() => setTrendMode('latency')}>
                     延迟
@@ -417,20 +443,29 @@ export function ServerDetail({ server, index, onClose }: { server: ProbeServer; 
                   <button type="button" role="tab" aria-selected={trendMode === 'loss'} className={trendMode === 'loss' ? 'active' : ''} onClick={() => setTrendMode('loss')}>
                     丢包
                   </button>
+                  <button type="button" role="tab" aria-selected={trendMode === 'traffic'} className={trendMode === 'traffic' ? 'active' : ''} onClick={() => setTrendMode('traffic')}>
+                    流量
+                  </button>
                 </div>
               </div>
-              <div className="detail-ping-picker">
-                <Wifi size={14} />
-                <select value={selected} onChange={(event) => setSelected(event.target.value)}>
-                  <option value="__avg__">平均</option>
-                  {ping.map((item) => (
-                    <option key={item.key || item.label} value={item.key || item.label}>
-                      {item.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <PingTrendChart serverIndex={index} initial={lines} targetKey={selected} mode={trendMode} />
+              {trendMode === 'traffic' ? (
+                <DetailTrafficChart daily={server.daily_traffic || []} />
+              ) : (
+                <>
+                  <div className="detail-ping-picker">
+                    <Wifi size={14} />
+                    <select value={selected} onChange={(event) => setSelected(event.target.value)}>
+                      <option value="__avg__">平均</option>
+                      {ping.map((item) => (
+                        <option key={item.key || item.label} value={item.key || item.label}>
+                          {item.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <PingTrendChart serverIndex={index} initial={lines} targetKey={selected} mode={trendMode} />
+                </>
+              )}
             </section>
           )}
         </div>
