@@ -1389,7 +1389,6 @@ function ServerCardLumina({ server, index }: { server: ProbeServer; index: numbe
             <div className="lumina-traffic-stat" title="上行速率与当前周期上行流量">
               <span className="lumina-traffic-direction">
                 <ArrowUp size={15} />
-                上行
               </span>
               <strong className="tabular" style={{ color: 'var(--traffic-up)' }}>
                 {speed(upRate)}
@@ -1399,7 +1398,6 @@ function ServerCardLumina({ server, index }: { server: ProbeServer; index: numbe
             <div className="lumina-traffic-stat" title="下行速率与当前周期下行流量">
               <span className="lumina-traffic-direction">
                 <ArrowDown size={15} />
-                下行
               </span>
               <strong className="tabular" style={{ color: 'var(--traffic-down)' }}>
                 {speed(downRate)}
