@@ -2632,6 +2632,9 @@ footer a:hover {
   position: relative;
   height: 280px;
 }
+.detail-chart.detail-chart-traffic {
+  height: 335px;
+}
 .server-detail .legend {
   display: flex;
   flex-wrap: wrap;

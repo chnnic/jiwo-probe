@@ -479,7 +479,7 @@ export function ServerDetail({ server, index, onClose }: { server: ProbeServer; 
                 </div>
               </div>
               {trendMode === 'traffic' ? (
-                <TrafficChart daily={server.daily_traffic || []} />
+                <TrafficChart daily={server.daily_traffic || []} containerClass="detail-chart detail-chart-traffic" />
               ) : (
                 <>
                   <div className="detail-ping-picker">
