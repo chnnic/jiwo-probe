@@ -1263,19 +1263,19 @@ function LuminaTrafficPulse({ samples }: { samples: ProbeServer['daily_traffic']
 }
 
 function luminaHeatColor(kind: 'latency' | 'loss', value: number): string {
-  // 仿原版 heatRamp 分段热力色(浅色系, 阈值按原版 latency/loss bounds)
+  // 与延迟/丢包数值同色系(status tokens, 阈值仿原版 latency/loss bounds)
   if (kind === 'latency') {
-    if (value < 100) return '#6ee7b7'
-    if (value < 150) return '#bef264'
-    if (value < 200) return '#fde047'
-    if (value < 300) return '#fdba74'
-    return '#fca5a5'
+    if (value < 100) return 'var(--status-success)'
+    if (value < 150) return '#a3e635'
+    if (value < 200) return 'var(--status-warning)'
+    if (value < 300) return '#fb923c'
+    return 'var(--status-error)'
   }
-  if (value < 1) return '#6ee7b7'
-  if (value < 3) return '#bef264'
-  if (value < 5) return '#fde047'
-  if (value < 10) return '#fdba74'
-  return '#fca5a5'
+  if (value < 1) return 'var(--status-success)'
+  if (value < 3) return '#a3e635'
+  if (value < 5) return 'var(--status-warning)'
+  if (value < 10) return '#fb923c'
+  return 'var(--status-error)'
 }
 
 function LuminaHealthBars({ buckets, kind }: { buckets: ProbeBucket[]; kind: 'latency' | 'loss' }) {
@@ -1304,48 +1304,10 @@ function LuminaHealthBars({ buckets, kind }: { buckets: ProbeBucket[]; kind: 'la
   )
 }
 
-function LuminaHealthPop({ anchor, title, value, unit, buckets, kind, close }: {
-  anchor: HTMLDivElement | null
-  title: string
-  value: string
-  unit: string
-  buckets: ProbeBucket[]
-  kind: 'latency' | 'loss'
-  close: () => void
-}) {
-  useEffect(() => {
-    const onDown = (event: MouseEvent) => {
-      const target = event.target as Node
-      if (!popRef.current?.contains(target)) close()
-    }
-    document.addEventListener('mousedown', onDown)
-    return () => document.removeEventListener('mousedown', onDown)
-  }, [close])
-  const popRef = useRef<HTMLElement>(null)
-  if (!anchor) return null
-  return createPortal(
-    <section ref={popRef} className="lumina-health-pop" onMouseDown={(event) => event.stopPropagation()}>
-      <header>
-        <span className="lumina-health-pop-title">{title}</span>
-        <button type="button" aria-label="关闭" onClick={close}>×</button>
-      </header>
-      <div className="lumina-health-pop-chart">
-        <LuminaHealthBars buckets={buckets} kind={kind} />
-      </div>
-      <footer>
-        当前 <strong className="tabular">{value}</strong>
-        <span className="lumina-health-pop-unit">{unit}</span>
-      </footer>
-    </section>,
-    anchor,
-  )
-}
-
 function ServerCardLumina({ server, index }: { server: ProbeServer; index: number }) {
   const [trafficOpen, setTrafficOpen] = useState(false)
   const [healthTarget, setHealthTarget] = useState('__avg__')
   const [healthTrend, setHealthTrend] = useState<'latency' | 'loss' | null>(null)
-  const healthAnchorRef = useRef<HTMLDivElement>(null)
   const name = server.name || `服务器 ${index + 1}`
   const flag = regionFlag(server.region)
   const isOffline = !server.online
@@ -1495,7 +1457,7 @@ function ServerCardLumina({ server, index }: { server: ProbeServer; index: numbe
           </div>
         )}
 
-        <div className="lumina-health" ref={healthAnchorRef}>
+        <div className="lumina-health">
           <div className="lumina-health-item">
             <div className="lumina-health-head">
               <span className="lumina-health-label">
@@ -1589,15 +1551,12 @@ function ServerCardLumina({ server, index }: { server: ProbeServer; index: numbe
         </footer>
       </article>
       {healthTrend && (
-        <LuminaHealthPop
-          anchor={healthAnchorRef.current}
-          title={`${pingCurrent.label} · ${healthTrend === 'latency' ? '延迟趋势' : '丢包率趋势'}`}
-          value={healthTrend === 'latency'
-            ? (currentMs === null ? '—' : `${Math.round(currentMs)}`)
-            : (lossAvg < 0 ? '—' : lossAvg.toFixed(1))}
-          unit={healthTrend === 'latency' ? ' ms' : ' %'}
-          buckets={pingCurrent.buckets}
-          kind={healthTrend}
+        <TrendDialog
+          serverIndex={index}
+          initial={[{ ...averagePing(pingList), key: '__avg__' }, ...pingList]}
+          targetKey={healthTarget}
+          title={pingCurrent.label}
+          mode={healthTrend}
           close={() => setHealthTrend(null)}
         />
       )}
