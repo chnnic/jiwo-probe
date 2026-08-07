@@ -1,4 +1,4 @@
-export type ThemeName = 'pixel' | 'flat' | 'anime' | 'glass'
+export type ThemeName = 'pixel' | 'flat' | 'anime' | 'glass' | 'lumina'
 
 export interface ProbeAppearance {
   theme: ThemeName

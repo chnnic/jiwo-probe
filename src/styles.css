@@ -3062,3 +3062,417 @@ footer a:hover {
     margin: 0 1px;
   }
 }
+
+/* ================= Lumina 主题（复刻 Komari-Theme-LuminaPlus） ================= */
+:root.theme-lumina {
+  --primary: #3b82f6;
+  --radius: 14px;
+  --page-bg: #f4f4f5;
+  --surface: #ffffff;
+  --border: rgba(24, 24, 27, 0.08);
+  --muted: #71717a;
+  --foreground: #18181b;
+  --shadow: 0 0 0 rgba(0, 0, 0, 0);
+  --progress-cpu: #3b82f6;
+  --progress-memory: #8b5cf6;
+  --progress-swap: #6366f1;
+  --progress-disk: #e97b35;
+  --progress-network: #10b981;
+  --progress-load: #ec4899;
+  --status-success: #2f9e65;
+  --status-warning: #e9a23b;
+  --status-error: #dc2626;
+  --traffic-up: #3b82f6;
+  --traffic-down: #2f9e65;
+  --lumina-heat: linear-gradient(to right in oklch, oklch(0.72 0.16 150) 0%, oklch(0.72 0.16 150) 10%, oklch(0.8 0.18 128) 28%, oklch(0.86 0.18 110) 44%, oklch(0.8 0.18 85) 58%, oklch(0.72 0.19 62) 72%, oklch(0.65 0.21 40) 86%, oklch(0.6 0.22 27) 100%);
+  --lumina-top-glow: radial-gradient(1100px 560px at 50% -8%, color-mix(in srgb, #3b82f6 5%, transparent) 0%, transparent 60%);
+}
+:root.theme-lumina.dark {
+  --page-bg: #212830;
+  --surface: #262c36;
+  --border: #3d444d;
+  --muted: #9198a1;
+  --foreground: #d1d7e0;
+  --shadow: 0 0 0 rgba(0, 0, 0, 0);
+  --progress-cpu: #539bf5;
+  --progress-memory: #b083f0;
+  --progress-swap: #986ee2;
+  --progress-disk: #e0823d;
+  --progress-network: #57ab5a;
+  --progress-load: #e275ad;
+  --status-success: #57ab5a;
+  --status-warning: #daaa3f;
+  --status-error: #f47067;
+  --traffic-up: #539bf5;
+  --traffic-down: #57ab5a;
+  --lumina-top-glow: none;
+}
+:root.theme-lumina .app-shell {
+  background: var(--page-bg);
+  background-image: var(--lumina-top-glow);
+  background-repeat: no-repeat;
+  background-size: 100% 100vh;
+}
+/* 层级靠表面色 + 描边，不用阴影 */
+:root.theme-lumina .lumina-card,
+:root.theme-lumina .summary-card,
+:root.theme-lumina .probe-toolbar,
+:root.theme-lumina .globe-card,
+:root.theme-lumina .leaderboard-card,
+:root.theme-lumina .server-detail,
+:root.theme-lumina .modal,
+:root.theme-lumina .server-mini-card {
+  box-shadow: none;
+}
+:root.theme-lumina .topbar {
+  background: color-mix(in srgb, var(--surface) 82%, transparent);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+:root.theme-lumina .server-card,
+:root.theme-lumina .summary-card,
+:root.theme-lumina .probe-toolbar,
+:root.theme-lumina .globe-card,
+:root.theme-lumina .leaderboard-card,
+:root.theme-lumina .server-mini-card,
+:root.theme-lumina .modal,
+:root.theme-lumina .server-detail {
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+
+/* —— Lumina 大卡布局 —— */
+.lumina-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px 16px 13px;
+}
+.lumina-card.is-offline {
+  background: color-mix(in srgb, var(--status-error) 5%, var(--surface));
+  border-color: color-mix(in srgb, var(--status-error) 48%, var(--border));
+}
+.lumina-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-width: 0;
+}
+.lumina-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+}
+.lumina-title {
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+.lumina-subtitle {
+  flex-shrink: 0;
+  overflow: hidden;
+  max-width: 42%;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 500;
+}
+.lumina-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.lumina-card-actions svg {
+  color: var(--muted);
+}
+.lumina-state {
+  padding: 2px 8px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 600;
+}
+.lumina-state.online {
+  border-color: color-mix(in srgb, var(--status-success) 45%, transparent);
+  color: var(--status-success);
+  background: color-mix(in srgb, var(--status-success) 8%, transparent);
+}
+.lumina-metrics {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 9px 14px;
+}
+.lumina-metric {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+}
+.lumina-metric-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+.lumina-metric-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 500;
+  min-width: 0;
+}
+.lumina-metric-head strong {
+  font-size: 12.5px;
+  font-weight: 650;
+}
+.lumina-meter {
+  position: relative;
+  height: 5px;
+  border-radius: 999px;
+  background: var(--progress-bg, #e4e4e7);
+  overflow: hidden;
+}
+.lumina-meter i {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: var(--lumina-fill);
+  border-radius: 999px;
+  background: var(--lumina-paint);
+}
+.lumina-traffic-section {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px 14px;
+}
+.lumina-traffic-stat {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  min-width: 0;
+}
+.lumina-traffic-direction {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--muted);
+  font-size: 11px;
+  flex-shrink: 0;
+}
+.lumina-traffic-stat strong {
+  font-size: 12.5px;
+  font-weight: 650;
+  white-space: nowrap;
+}
+.lumina-traffic-stat small {
+  color: var(--muted);
+  font-size: 10.5px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.lumina-traffic-pulse-wrap {
+  grid-column: 1 / -1;
+}
+.lumina-traffic-pulse {
+  display: flex;
+  gap: 3px;
+  height: 14px;
+  align-items: flex-end;
+}
+.lumina-traffic-pulse > span {
+  flex: 1 1 0;
+  height: var(--pulse-scale, 0.48);
+  min-height: 3px;
+  border-radius: 2px;
+  background: var(--pulse-color, var(--progress-bg));
+  transform: scaleY(1);
+  transform-origin: bottom;
+}
+.lumina-quota {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.lumina-quota-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+.lumina-quota-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+  color: var(--muted);
+  font-size: 11px;
+}
+.lumina-quota-label strong {
+  color: var(--foreground);
+  font-size: 12px;
+  font-weight: 650;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.lumina-quota-usage {
+  color: var(--muted);
+  font-size: 10.5px;
+  white-space: nowrap;
+}
+.lumina-quota-track {
+  display: flex;
+  gap: 2px;
+  height: 7px;
+  border-radius: 999px;
+  overflow: hidden;
+}
+.lumina-quota-track > span {
+  flex: 1 1 0;
+  border-radius: 2px;
+  background: var(--progress-bg, #e4e4e7);
+}
+.lumina-quota-track > span.lit {
+  background: var(--lumina-heat);
+  background-size: 1800% 100%;
+  background-position: 0 0;
+}
+.lumina-health {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 9px 14px;
+}
+.lumina-health-item {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+}
+.lumina-health-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+.lumina-health-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 500;
+}
+.lumina-health-head strong {
+  font-size: 12.5px;
+  font-weight: 650;
+}
+.lumina-health-head strong small {
+  margin-left: 2px;
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 500;
+}
+.lumina-health-bars {
+  display: flex;
+  gap: 2px;
+  height: 22px;
+  align-items: flex-end;
+}
+.lumina-health-bars > span {
+  flex: 1 1 0;
+  height: var(--bar-h);
+  min-height: 2px;
+  border-radius: 1.5px;
+  background: var(--bar-c);
+}
+.lumina-card-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 12px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+}
+.lumina-footer-stat {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--muted);
+  font-size: 11px;
+}
+.lumina-footer-stat strong {
+  color: var(--foreground);
+  font-weight: 600;
+}
+.lumina-footer-stat.warn strong {
+  color: var(--status-warning);
+}
+.lumina-price-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 9px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 650;
+  color: var(--foreground);
+}
+.lumina-tag-lane {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  min-width: 0;
+}
+.lumina-tag {
+  padding: 1px 8px;
+  border-radius: 999px;
+  font-size: 10.5px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.lumina-tag[data-tag='telecom'] {
+  background: rgba(244, 112, 103, 0.14);
+  color: #b91c1c;
+}
+.lumina-tag[data-tag='unicom'] {
+  background: rgba(78, 129, 238, 0.14);
+  color: #1d4ed8;
+}
+.lumina-tag[data-tag='mobile'] {
+  background: rgba(84, 180, 132, 0.14);
+  color: #15803d;
+}
+:root.theme-lumina.dark .lumina-tag[data-tag='telecom'] {
+  color: #ffb8b0;
+}
+:root.theme-lumina.dark .lumina-tag[data-tag='unicom'] {
+  color: #9db9f5;
+}
+:root.theme-lumina.dark .lumina-tag[data-tag='mobile'] {
+  color: #7dd3a8;
+}
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+@media (max-width: 640px) {
+  :root.theme-lumina .lumina-metrics,
+  :root.theme-lumina .lumina-health {
+    grid-template-columns: 1fr 1fr;
+  }
+  :root.theme-lumina .lumina-card {
+    padding: 13px 13px 11px;
+    gap: 10px;
+  }
+}

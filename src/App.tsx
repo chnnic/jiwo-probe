@@ -1,7 +1,7 @@
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import Lottie from 'lottie-react'
-import { Activity, ArrowDown, ArrowDownUp, ArrowUp, BadgeDollarSign, CalendarClock, CheckCircle2, ChevronDown, ChevronUp, Clock, Cpu, Gauge, Globe2, HardDrive, LayoutGrid, List, MapPin, MemoryStick, Monitor, Moon, MoveHorizontal, Palette, PieChart, Rows3, Rows4, Search, Server, Sun, Trophy, Wallet, Wifi, XCircle, ZoomIn, ZoomOut } from 'lucide-react'
+import { Activity, ArrowDown, ArrowDownUp, ArrowUp, BadgeDollarSign, Calendar, CalendarClock, CheckCircle2, ChevronDown, ChevronUp, CircleDollarSign, Clock, Clock3, Cpu, Database, Gauge, Globe2, HardDrive, LayoutGrid, List, MapPin, MemoryStick, Monitor, Moon, MoveHorizontal, Palette, PieChart, RefreshCw, Rows3, Rows4, Search, Server, Sun, Trophy, Unplug, Wallet, Wifi, XCircle, ZoomIn, ZoomOut } from 'lucide-react'
 import { siAlmalinux, siAlpinelinux, siApple, siArchlinux, siCentos, siDebian, siFedora, siFreebsd, siGentoo, siKalilinux, siLinux, siLinuxmint, siNixos, siOpensuse, siProxmox, siRedhat, siRockylinux, siUbuntu } from 'simple-icons'
 import { Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import type { ProbeBucket, ProbePingSeries, ProbeReturnRoute, ProbeServer, ThemeName } from './types'
@@ -1093,6 +1093,299 @@ export function ReturnRouteBadges({ routes, telecomPaidPeer }: { routes: ProbeRe
   )
 }
 
+const LUMINA_QUOTA_SEGMENTS = 18
+// 每段取 OKLCH heat 渐变(绿→黄→橙→红)的 1/18 切片作为段色,与 LuminaPlus 的
+// trafficQuotaSegmentColor 语义一致:颜色只看段的位置,与主题无关。
+const LUMINA_HEAT_GRADIENT =
+  'linear-gradient(to right in oklch, oklch(0.72 0.16 150) 0%, oklch(0.72 0.16 150) 10%, oklch(0.8 0.18 128) 28%, oklch(0.86 0.18 110) 44%, oklch(0.8 0.18 85) 58%, oklch(0.72 0.19 62) 72%, oklch(0.65 0.21 40) 86%, oklch(0.6 0.22 27) 100%)'
+
+function luminaQuotaLitCount(fraction: number): number {
+  let count = 0
+  for (let i = 0; i < LUMINA_QUOTA_SEGMENTS; i++) {
+    if ((i + 0.5) / LUMINA_QUOTA_SEGMENTS <= fraction) count += 1
+    else break
+  }
+  return count
+}
+
+function LuminaMetricBar({
+  icon,
+  label,
+  value,
+  detail,
+  paint,
+  fraction,
+}: {
+  icon: React.ReactNode
+  label: string
+  value: string
+  detail?: string
+  paint: string
+  fraction: number
+}) {
+  const fill = Math.max(0, Math.min(1, Number.isFinite(fraction) ? fraction : 0))
+  return (
+    <div className="lumina-metric" title={detail ? `${label} ${value} · ${detail}` : `${label} ${value}`}>
+      <div className="lumina-metric-head">
+        <span className="lumina-metric-label">
+          {icon}
+          <span>{label}</span>
+        </span>
+        <strong className="tabular">{value}</strong>
+      </div>
+      <div className="lumina-meter" aria-hidden>
+        <i style={{ '--lumina-fill': `${fill * 100}%`, '--lumina-paint': paint } as React.CSSProperties} />
+      </div>
+    </div>
+  )
+}
+
+function LuminaTrafficPulse({ samples }: { samples: ProbeServer['daily_traffic'] }) {
+  const dots = 16
+  const list = (samples || []).slice(-dots)
+  const max = Math.max(1, ...list.map((item) => item.total ?? 0))
+  return (
+    <span className="lumina-traffic-pulse" aria-hidden>
+      {Array.from({ length: dots }, (_, index) => {
+        const sample = list[index - Math.max(0, dots - list.length)]
+        const value = sample?.total ?? 0
+        const active = value > 0
+        const level = value / max
+        return (
+          <span
+            key={index}
+            data-active={active ? 'true' : 'false'}
+            style={
+              {
+                '--pulse-color': active ? 'var(--lumina-up, #3b82f6)' : 'var(--progress-bg)',
+                '--pulse-scale': active ? `${0.68 + level * 0.62}` : '0.48',
+                opacity: active ? 0.5 + level * 0.42 : 0.38,
+              } as React.CSSProperties
+            }
+          />
+        )
+      })}
+    </span>
+  )
+}
+
+function LuminaHealthBars({ buckets, kind }: { buckets: ProbeBucket[]; kind: 'latency' | 'loss' }) {
+  const bars = buckets.slice(-LUMINA_QUOTA_SEGMENTS)
+  const values = bars.map((b) => (kind === 'latency' ? b.ms : b.loss)).filter((v) => v >= 0)
+  const max = Math.max(1, ...values)
+  return (
+    <span className="lumina-health-bars" data-kind={kind} aria-hidden>
+      {bars.map((bucket, index) => {
+        const raw = kind === 'latency' ? bucket.ms : bucket.loss
+        const height = raw >= 0 ? (raw / max) * 100 : 8
+        const tone = raw >= 0 ? Math.max(0, Math.min(1, raw / max)) : 0
+        return (
+          <span
+            key={index}
+            style={
+              {
+                '--bar-h': `${height}%`,
+                '--bar-c': `color-mix(in srgb, ${kind === 'latency' ? '#3b82f6' : '#8b5cf6'} ${20 + tone * 80}%, var(--progress-bg))`,
+              } as React.CSSProperties
+            }
+          />
+        )
+      })}
+    </span>
+  )
+}
+
+function ServerCardLumina({ server, index }: { server: ProbeServer; index: number }) {
+  const [trafficOpen, setTrafficOpen] = useState(false)
+  const name = server.name || `服务器 ${index + 1}`
+  const flag = regionFlag(server.region)
+  const isOffline = !server.online
+  const cores = server.cpu_cores ?? 0
+  const loadParts = (server.loadavg || '').split(/\s+/).map(Number).filter((v) => Number.isFinite(v))
+  const load1 = loadParts[0]
+  const loadFraction = load1 !== undefined && cores > 0 ? Math.max(0, Math.min(1, load1 / cores)) : 0
+  const avgPingSeries = averagePing(server.ping || [])
+  const currentMs = avgPingSeries.current_ms >= 0 ? avgPingSeries.current_ms : null
+  const lossAvg = avgLossPct(server)
+  const trafficFraction = server.traffic_limit ? pct(server.traffic_used, server.traffic_limit) / 100 : 0
+  const upRate = server.upload_speed
+  const downRate = server.download_speed
+  const trafficUp = server.cumulative_up
+  const trafficDown = server.cumulative_down
+  const expireValue = server.expires_at ? remainingDays(server.expires_at) : null
+  const renewText =
+    server.renewal_price !== undefined
+      ? server.renewal_price_cny !== undefined
+        ? `¥${server.renewal_price_cny.toFixed(2)}`
+        : `${server.renewal_currency || 'CNY'} ${server.renewal_price}`
+      : null
+
+  return (
+    <>
+      <article
+        className={`server-card lumina-card${isOffline ? ' is-offline' : ''}`}
+        onClick={() => { location.hash = `#/server/${index}` }}
+        role="button"
+        tabIndex={0}
+        onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); location.hash = `#/server/${index}` } }}
+        title="点击查看详情"
+      >
+        <header className="lumina-card-header">
+          <div className="lumina-title-wrap">
+            <span className={server.online ? 'status online' : 'status'} />
+            <h2 className="lumina-title">
+              <Twemoji>{flag && !hasLeadingFlag(name) ? `${flag} ${name}` : name}</Twemoji>
+            </h2>
+            {regionLabel(server) && <span className="lumina-subtitle">{regionLabel(server)}</span>}
+          </div>
+          <span className="lumina-card-actions">
+            <span title={systemTitle(server)}>
+              <SystemIcon server={server} />
+            </span>
+            <span className={server.online ? 'lumina-state online' : 'lumina-state'}>
+              {server.online ? '在线' : '离线'}
+            </span>
+          </span>
+        </header>
+
+        <div className="lumina-metrics">
+          {server.cpu_pct !== undefined && (
+            <LuminaMetricBar icon={<Cpu size={13} />} label="CPU" value={`${server.cpu_pct.toFixed(1)}%`} detail={`${cores} 核`} paint="var(--progress-cpu)" fraction={server.cpu_pct / 100} />
+          )}
+          {server.mem_total !== undefined && (
+            <LuminaMetricBar icon={<MemoryStick size={13} />} label="内存" value={`${pct(server.mem_used, server.mem_total).toFixed(1)}%`} detail={`${bytes(server.mem_used)} / ${bytes(server.mem_total)}`} paint="var(--progress-memory)" fraction={pct(server.mem_used, server.mem_total) / 100} />
+          )}
+          {server.disk_total !== undefined && (
+            <LuminaMetricBar icon={<HardDrive size={13} />} label="磁盘" value={`${pct(server.disk_used, server.disk_total).toFixed(1)}%`} detail={`${bytes(server.disk_used)} / ${bytes(server.disk_total)}`} paint="var(--progress-disk)" fraction={pct(server.disk_used, server.disk_total) / 100} />
+          )}
+          {load1 !== undefined && (
+            <LuminaMetricBar icon={<Gauge size={13} />} label="负载" value={load1.toFixed(2)} detail={`${loadParts[1]?.toFixed(2) ?? '—'} / ${loadParts[2]?.toFixed(2) ?? '—'}`} paint="var(--progress-load)" fraction={loadFraction} />
+          )}
+        </div>
+
+        {(upRate !== undefined || downRate !== undefined) && (
+          <div className="lumina-traffic-section">
+            <div className="lumina-traffic-stat" title="上行速率与累计上行流量">
+              <span className="lumina-traffic-direction">
+                <ArrowUp size={15} />
+                上行
+              </span>
+              <strong className="tabular" style={{ color: 'var(--traffic-up)' }}>
+                {speed(upRate)}
+              </strong>
+              <small className="tabular">{trafficUp !== undefined ? `累计 ${bytes(trafficUp)}` : ''}</small>
+            </div>
+            <div className="lumina-traffic-stat" title="下行速率与累计下行流量">
+              <span className="lumina-traffic-direction">
+                <ArrowDown size={15} />
+                下行
+              </span>
+              <strong className="tabular" style={{ color: 'var(--traffic-down)' }}>
+                {speed(downRate)}
+              </strong>
+              <small className="tabular">{trafficDown !== undefined ? `累计 ${bytes(trafficDown)}` : ''}</small>
+            </div>
+            <div className="lumina-traffic-pulse-wrap">
+              <LuminaTrafficPulse samples={server.daily_traffic} />
+            </div>
+          </div>
+        )}
+
+        {server.traffic_used !== undefined && (
+          <div className="lumina-quota" title={`流量阈值 · 剩余 ${server.traffic_limit ? bytes(server.traffic_limit - server.traffic_used) : ''}`}>
+            <div className="lumina-quota-head">
+              <span className="lumina-quota-label">
+                <Database size={13} />
+                <span>剩余流量</span>
+                <strong>{server.traffic_limit ? bytes(Math.max(0, server.traffic_limit - server.traffic_used)) : bytes(server.traffic_used)}</strong>
+              </span>
+              <span className="lumina-quota-usage tabular">{server.traffic_limit ? `${bytes(server.traffic_used)} / ${bytes(server.traffic_limit)}` : ''}</span>
+            </div>
+            <div className="lumina-quota-track" aria-hidden>
+              {Array.from({ length: LUMINA_QUOTA_SEGMENTS }, (_, i) => {
+                const lit = i < luminaQuotaLitCount(trafficFraction)
+                return (
+                  <span
+                    key={i}
+                    className={lit ? 'lit' : ''}
+                    style={
+                      lit
+                        ? {
+                            background: LUMINA_HEAT_GRADIENT,
+                            backgroundSize: `${LUMINA_QUOTA_SEGMENTS * 100}% 100%`,
+                            backgroundPosition: `${(i / (LUMINA_QUOTA_SEGMENTS - 1)) * 100}% 0`,
+                          }
+                        : undefined
+                    }
+                  />
+                )
+              })}
+            </div>
+          </div>
+        )}
+
+        <div className="lumina-health">
+          <div className="lumina-health-item">
+            <div className="lumina-health-head">
+              <span className="lumina-health-label">
+                <Clock3 size={13} />
+                延迟
+              </span>
+              <strong className="tabular" style={{ color: currentMs === null ? 'var(--text-tertiary)' : currentMs < 60 ? 'var(--status-success)' : currentMs < 120 ? 'var(--status-warning)' : 'var(--status-error)' }}>
+                {currentMs === null ? '—' : `${Math.round(currentMs)}`}
+                <small>ms</small>
+              </strong>
+            </div>
+            <LuminaHealthBars buckets={avgPingSeries.buckets} kind="latency" />
+          </div>
+          <div className="lumina-health-item">
+            <div className="lumina-health-head">
+              <span className="lumina-health-label">
+                <Unplug size={13} />
+                丢包率
+              </span>
+              <strong className="tabular" style={{ color: lossAvg < 0 ? 'var(--text-tertiary)' : lossAvg < 1 ? 'var(--status-success)' : lossAvg < 5 ? 'var(--status-warning)' : 'var(--status-error)' }}>
+                {lossAvg < 0 ? '—' : lossAvg.toFixed(1)}
+                <small>%</small>
+              </strong>
+            </div>
+            <LuminaHealthBars buckets={avgPingSeries.buckets} kind="loss" />
+          </div>
+        </div>
+
+        <footer className="lumina-card-footer">
+          <span className="lumina-footer-stat" title="运行时间">
+            <RefreshCw size={13} />
+            <span>在线</span>
+            <strong className="tabular">{server.uptime !== undefined ? formatUptime(server.uptime) : '—'}</strong>
+          </span>
+          <span className={`lumina-footer-stat${expiring(server) || expired(server) ? ' warn' : ''}`} title="到期时间">
+            <Calendar size={13} />
+            <span>到期</span>
+            <strong className="tabular">{expireValue ?? '—'}</strong>
+          </span>
+          {renewText && (
+            <span className="lumina-price-chip" title="续费价格">
+              <CircleDollarSign size={12} />
+              {renewText}
+            </span>
+          )}
+          {!!server.return_routes?.length && (
+            <span className="lumina-tag-lane" title={server.return_routes.map((r) => `${r.carrier}: ${displayReturnRoute(r.route_type || '')}`).join(', ')}>
+              {server.return_routes.map((route, i) => (
+                <span key={i} className="lumina-tag" data-tag={route.carrier}>
+                  {routeCarrierLabels[route.carrier as keyof typeof routeCarrierLabels] || route.carrier} {displayReturnRoute(route.route_type || '')}
+                </span>
+              ))}
+            </span>
+          )}
+        </footer>
+      </article>
+      {trafficOpen && <TrafficDialog server={server} close={() => setTrafficOpen(false)} />}
+    </>
+  )
+}
+
 function ServerCard({ server, index }: { server: ProbeServer; index: number }) {
   const [trafficOpen, setTrafficOpen] = useState(false)
   const name = server.name || `服务器 ${index + 1}`
@@ -1919,7 +2212,7 @@ export function App() {
           </label>
         </div>
       </section>
-      <main className={`servers ${view}`}>{visible.length ? view === 'card' ? visible.map((server) => <ServerCard key={server.name} server={server} index={servers.indexOf(server)} />) : view === 'mini' ? visible.map((server) => <ServerMiniCard key={server.name} server={server} index={servers.indexOf(server)} expanded={miniExpanded} />) : <ServerTable servers={visible} /> : <div className="empty">暂无符合条件的服务器</div>}</main>
+      <main className={`servers ${view}`}>{visible.length ? view === 'card' ? visible.map((server) => theme === 'lumina' ? <ServerCardLumina key={server.name} server={server} index={servers.indexOf(server)} /> : <ServerCard key={server.name} server={server} index={servers.indexOf(server)} />) : view === 'mini' ? visible.map((server) => <ServerMiniCard key={server.name} server={server} index={servers.indexOf(server)} expanded={miniExpanded} />) : <ServerTable servers={visible} /> : <div className="empty">暂无符合条件的服务器</div>}</main>
       <footer>
         Powered by{' '}
         <a href="https://github.com/mmwx-group" target="_blank" rel="noreferrer">
