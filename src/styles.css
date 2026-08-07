@@ -3275,13 +3275,16 @@ footer a:hover {
   font-size: 12.5px;
   font-weight: 650;
   white-space: nowrap;
+  flex: 0 0 auto;
 }
 .lumina-traffic-stat small {
+  margin-left: auto;
   color: var(--muted);
   font-size: 10.5px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  text-align: right;
 }
 .lumina-traffic-pulse-wrap {
   grid-column: 1 / -1;
@@ -3289,17 +3292,15 @@ footer a:hover {
 .lumina-traffic-pulse {
   display: flex;
   gap: 3px;
-  height: 14px;
+  height: 22px;
   align-items: flex-end;
 }
 .lumina-traffic-pulse > span {
   flex: 1 1 0;
-  height: var(--pulse-scale, 0.48);
+  height: var(--pulse-h, 4px);
   min-height: 3px;
   border-radius: 2px;
   background: var(--pulse-color, var(--progress-bg));
-  transform: scaleY(1);
-  transform-origin: bottom;
 }
 .lumina-quota {
   display: flex;

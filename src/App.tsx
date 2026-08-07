@@ -1140,6 +1140,15 @@ function LuminaMetricBar({
   )
 }
 
+function luminaPulseColor(level: number): string {
+  // 相对峰值分档: 无流量灰 → 低绿 → 中蓝 → 高琥珀 → 极高红
+  if (level <= 0.01) return 'var(--progress-bg)'
+  if (level < 0.3) return 'var(--status-success)'
+  if (level < 0.6) return 'var(--traffic-up)'
+  if (level < 0.85) return 'var(--status-warning)'
+  return 'var(--status-error)'
+}
+
 function LuminaTrafficPulse({ samples }: { samples: ProbeServer['daily_traffic'] }) {
   const dots = 16
   const list = (samples || []).slice(-dots)
@@ -1149,17 +1158,16 @@ function LuminaTrafficPulse({ samples }: { samples: ProbeServer['daily_traffic']
       {Array.from({ length: dots }, (_, index) => {
         const sample = list[index - Math.max(0, dots - list.length)]
         const value = sample?.total ?? 0
-        const active = value > 0
         const level = value / max
         return (
           <span
             key={index}
-            data-active={active ? 'true' : 'false'}
+            data-active={value > 0 ? 'true' : 'false'}
             style={
               {
-                '--pulse-color': active ? 'var(--lumina-up, #3b82f6)' : 'var(--progress-bg)',
-                '--pulse-scale': active ? `${0.68 + level * 0.62}` : '0.48',
-                opacity: active ? 0.5 + level * 0.42 : 0.38,
+                '--pulse-h': `${Math.max(4, Math.round((0.45 + level * 0.95) * 20))}px`,
+                '--pulse-color': luminaPulseColor(level),
+                opacity: value > 0 ? 0.55 + level * 0.45 : 0.35,
               } as React.CSSProperties
             }
           />
