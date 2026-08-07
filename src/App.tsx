@@ -1290,6 +1290,7 @@ function LuminaHealthBars({ buckets, kind }: { buckets: ProbeBucket[]; kind: 'la
 
 function ServerCardLumina({ server, index }: { server: ProbeServer; index: number }) {
   const [trafficOpen, setTrafficOpen] = useState(false)
+  const [healthTarget, setHealthTarget] = useState('__avg__')
   const name = server.name || `服务器 ${index + 1}`
   const flag = regionFlag(server.region)
   const isOffline = !server.online
@@ -1297,9 +1298,12 @@ function ServerCardLumina({ server, index }: { server: ProbeServer; index: numbe
   const loadParts = (server.loadavg || '').split(/\s+/).map(Number).filter((v) => Number.isFinite(v))
   const load1 = loadParts[0]
   const loadFraction = load1 !== undefined && cores > 0 ? Math.max(0, Math.min(1, load1 / cores)) : 0
-  const avgPingSeries = averagePing(server.ping || [])
-  const currentMs = avgPingSeries.current_ms >= 0 ? avgPingSeries.current_ms : null
-  const lossAvg = avgLossPct(server)
+  const pingList = server.ping?.length ? server.ping : []
+  const pingCurrent = healthTarget === '__avg__' || !pingList.length
+    ? averagePing(pingList)
+    : (pingList.find((item) => (item.key || item.label) === healthTarget) || averagePing(pingList))
+  const currentMs = pingCurrent.current_ms >= 0 ? pingCurrent.current_ms : null
+  const lossAvg = !pingList.length ? -1 : (pingCurrent.loss_pct ?? 0)
   const trafficFraction = server.traffic_limit ? pct(server.traffic_used, server.traffic_limit) / 100 : 0
   const upRate = server.upload_speed
   const downRate = server.download_speed
@@ -1429,14 +1433,20 @@ function ServerCardLumina({ server, index }: { server: ProbeServer; index: numbe
             <div className="lumina-health-head">
               <span className="lumina-health-label">
                 <Clock3 size={13} />
-                延迟
+                <select className="lumina-health-select" value={healthTarget} onChange={(event) => setHealthTarget(event.target.value)} aria-label="延迟展示内容">
+                  <option value="__avg__">平均</option>
+                  {pingList.map((item) => (
+                    <option key={item.key || item.label} value={item.key || item.label}>{item.label}</option>
+                  ))}
+                </select>
+                <ChevronDown size={10} className="lumina-health-select-arrow" aria-hidden />
               </span>
               <strong className="tabular" style={{ color: currentMs === null ? 'var(--text-tertiary)' : currentMs < 60 ? 'var(--status-success)' : currentMs < 120 ? 'var(--status-warning)' : 'var(--status-error)' }}>
                 {currentMs === null ? '—' : `${Math.round(currentMs)}`}
                 <small>ms</small>
               </strong>
             </div>
-            <LuminaHealthBars buckets={avgPingSeries.buckets} kind="latency" />
+            <LuminaHealthBars buckets={pingCurrent.buckets} kind="latency" />
           </div>
           <div className="lumina-health-item">
             <div className="lumina-health-head">
@@ -1449,7 +1459,7 @@ function ServerCardLumina({ server, index }: { server: ProbeServer; index: numbe
                 <small>%</small>
               </strong>
             </div>
-            <LuminaHealthBars buckets={avgPingSeries.buckets} kind="loss" />
+            <LuminaHealthBars buckets={pingCurrent.buckets} kind="loss" />
           </div>
         </div>
 

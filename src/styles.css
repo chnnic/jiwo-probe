@@ -3400,6 +3400,31 @@ footer a:hover {
   font-weight: 600;
   letter-spacing: 0.02em;
 }
+.lumina-health-select {
+  appearance: none;
+  -webkit-appearance: none;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  outline: none;
+  padding: 0;
+  max-width: 92px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.lumina-health-select:hover {
+  color: var(--text-primary);
+}
+.lumina-health-select-arrow {
+  color: var(--muted);
+  flex-shrink: 0;
+  margin-left: -5px;
+}
 .lumina-health-head strong {
   font-size: 15px;
   font-weight: 640;
