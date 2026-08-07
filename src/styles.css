@@ -3404,6 +3404,12 @@ footer a:hover {
   padding-top: 10px;
   border-top: 1px solid var(--border);
 }
+.lumina-card .return-route-badges {
+  margin: 0;
+  padding: 0;
+  border-top: 0;
+  gap: 6px;
+}
 .lumina-footer-stat {
   display: inline-flex;
   align-items: center;
@@ -3428,40 +3434,6 @@ footer a:hover {
   font-size: 11px;
   font-weight: 650;
   color: var(--foreground);
-}
-.lumina-tag-lane {
-  display: inline-flex;
-  flex-wrap: wrap;
-  gap: 4px;
-  min-width: 0;
-}
-.lumina-tag {
-  padding: 1px 8px;
-  border-radius: 999px;
-  font-size: 10.5px;
-  font-weight: 600;
-  white-space: nowrap;
-}
-.lumina-tag[data-tag='telecom'] {
-  background: rgba(244, 112, 103, 0.14);
-  color: #b91c1c;
-}
-.lumina-tag[data-tag='unicom'] {
-  background: rgba(78, 129, 238, 0.14);
-  color: #1d4ed8;
-}
-.lumina-tag[data-tag='mobile'] {
-  background: rgba(84, 180, 132, 0.14);
-  color: #15803d;
-}
-:root.theme-lumina.dark .lumina-tag[data-tag='telecom'] {
-  color: #ffb8b0;
-}
-:root.theme-lumina.dark .lumina-tag[data-tag='unicom'] {
-  color: #9db9f5;
-}
-:root.theme-lumina.dark .lumina-tag[data-tag='mobile'] {
-  color: #7dd3a8;
 }
 .tabular {
   font-variant-numeric: tabular-nums;

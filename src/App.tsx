@@ -1353,6 +1353,10 @@ function ServerCardLumina({ server, index }: { server: ProbeServer; index: numbe
           </div>
         </div>
 
+        {!!server.return_routes?.length && (
+          <ReturnRouteBadges routes={server.return_routes} telecomPaidPeer={server.telecom_paid_peer} />
+        )}
+
         <footer className="lumina-card-footer">
           <span className="lumina-footer-stat" title="运行时间">
             <RefreshCw size={13} />
@@ -1368,15 +1372,6 @@ function ServerCardLumina({ server, index }: { server: ProbeServer; index: numbe
             <span className="lumina-price-chip" title="续费价格">
               <CircleDollarSign size={12} />
               {renewText}
-            </span>
-          )}
-          {!!server.return_routes?.length && (
-            <span className="lumina-tag-lane" title={server.return_routes.map((r) => `${r.carrier}: ${displayReturnRoute(r.route_type || '')}`).join(', ')}>
-              {server.return_routes.map((route, i) => (
-                <span key={i} className="lumina-tag" data-tag={route.carrier}>
-                  {routeCarrierLabels[route.carrier as keyof typeof routeCarrierLabels] || route.carrier} {displayReturnRoute(route.route_type || '')}
-                </span>
-              ))}
             </span>
           )}
         </footer>
