@@ -495,7 +495,7 @@ function Leaderboard({ servers }: { servers: ProbeServer[] }) {
   )
 }
 
-function lossScale(rows: Array<Record<string, string | number | null>>) {
+export function lossScale(rows: Array<Record<string, string | number | null>>) {
   const peak = Math.max(
     0,
     ...rows.flatMap((row) =>
@@ -526,7 +526,7 @@ function lossScale(rows: Array<Record<string, string | number | null>>) {
   }
 }
 
-function formatLossTick(value: number): string {
+export function formatLossTick(value: number): string {
   const digits = value < 0.1 ? 3 : value < 1 ? 2 : value < 10 ? 1 : 0
   return `${value.toFixed(digits).replace(/\.?0+$/, '')}%`
 }

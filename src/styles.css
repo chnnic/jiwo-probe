@@ -2342,6 +2342,15 @@ footer a:hover {
   gap: 10px;
   min-width: 0;
 }
+.detail-trends {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  align-items: start;
+}
+.detail-trends .detail-panel {
+  min-width: 0;
+}
 .detail-metric-head {
   display: flex;
   align-items: baseline;
@@ -2476,6 +2485,9 @@ footer a:hover {
     padding: 10px;
   }
   .detail-cols {
+    grid-template-columns: 1fr;
+  }
+  .detail-trends {
     grid-template-columns: 1fr;
   }
   .detail-chart {

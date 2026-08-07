@@ -4,7 +4,7 @@ import { Activity, ArrowDown, ArrowUp, BadgeDollarSign, CalendarClock, ChevronLe
 import { Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import type { ProbePingSeries, ProbeServer } from './types'
 import { Twemoji } from './Twemoji'
-import { Meter, ReturnRouteBadges, averagePing, bytes, expiring, expired, formatAxisDateTime, hasLeadingFlag, HorizontalChart, pct, regionFlag, regionLabel, remainingDays, speed } from './App'
+import { Meter, ReturnRouteBadges, averagePing, bytes, expiring, expired, formatAxisDateTime, formatLossTick, hasLeadingFlag, HorizontalChart, lossScale, pct, regionFlag, regionLabel, remainingDays, speed } from './App'
 import { computeRemainingValue, formatMoney } from './value'
 
 const cycleLabel = {
@@ -50,7 +50,7 @@ type RangeKey = (typeof RANGES)[number]['key']
 
 const colors = ['#8b5cf6', '#0ea5e9', '#22c55e', '#f59e0b', '#ef4444', '#ec4899']
 
-function PingTrendChart({ serverIndex, initial, targetKey }: { serverIndex: number; initial: ProbePingSeries[]; targetKey: string }) {
+function PingTrendChart({ serverIndex, initial, targetKey, mode }: { serverIndex: number; initial: ProbePingSeries[]; targetKey: string; mode: 'latency' | 'loss' }) {
   const [range, setRange] = useState<RangeKey>('1h')
   const [group, setGroup] = useState<'all' | 'cn' | 'idc'>('all')
   const [hidden, setHidden] = useState<Set<string>>(new Set())
@@ -126,12 +126,14 @@ function PingTrendChart({ serverIndex, initial, targetKey }: { serverIndex: numb
         }
         for (const { item } of displaySeries) {
           const bucket = item.buckets[index]
-          row[item.key || item.label] = bucket && bucket.ms >= 0 ? bucket.ms : null
+          const value = mode === 'loss' ? bucket?.loss : bucket?.ms
+          row[item.key || item.label] = value !== undefined && value >= 0 ? value : null
         }
         return row
       }),
-    [displaySeries, timeMeta],
+    [displaySeries, timeMeta, mode],
   )
+  const dynamicLossScale = useMemo(() => lossScale(rows), [rows])
 
   return (
     <>
@@ -182,8 +184,17 @@ function PingTrendChart({ serverIndex, initial, targetKey }: { serverIndex: numb
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={rows} margin={{ top: 8, right: 12, bottom: 0, left: 0 }}>
               <XAxis dataKey="time" tick={{ fontSize: 10 }} axisLine={false} tickLine={false} interval={0} minTickGap={28} />
-              <YAxis width={52} tick={{ fontSize: 10 }} axisLine={false} tickLine={false} unit="ms" />
-              <Tooltip contentStyle={{ fontSize: 11, borderRadius: 8 }} formatter={(value, _name, item) => [`${Number(value).toFixed(0)}ms`, series.find((line) => (line.key || line.label) === item.dataKey)?.label || String(item.dataKey)]} />
+              <YAxis
+                width={52}
+                tick={{ fontSize: 10 }}
+                axisLine={false}
+                tickLine={false}
+                unit={mode === 'loss' ? undefined : 'ms'}
+                domain={mode === 'loss' ? [0, dynamicLossScale.max] : undefined}
+                ticks={mode === 'loss' ? dynamicLossScale.ticks : undefined}
+                tickFormatter={mode === 'loss' ? (value) => formatLossTick(Number(value)) : undefined}
+              />
+              <Tooltip contentStyle={{ fontSize: 11, borderRadius: 8 }} formatter={(value, _name, item) => [`${Number(value).toFixed(mode === 'loss' ? 1 : 0)}${mode === 'loss' ? '%' : 'ms'}`, series.find((line) => (line.key || line.label) === item.dataKey)?.label || String(item.dataKey)]} />
               {displaySeries.map(({ item, index }) => {
                 const key = item.key || item.label
                 const active = key === targetKey
@@ -357,21 +368,38 @@ export function ServerDetail({ server, index, onClose }: { server: ProbeServer; 
           </div>
 
           {!!ping.length && (
-            <section className="detail-panel detail-panel-wide">
-              <h3>延迟趋势</h3>
-              <div className="detail-ping-picker">
-                <Wifi size={14} />
-                <select value={selected} onChange={(event) => setSelected(event.target.value)}>
-                  <option value="__avg__">平均</option>
-                  {ping.map((item) => (
-                    <option key={item.key || item.label} value={item.key || item.label}>
-                      {item.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <PingTrendChart serverIndex={index} initial={lines} targetKey={selected} />
-            </section>
+            <div className="detail-trends">
+              <section className="detail-panel">
+                <h3>延迟趋势</h3>
+                <div className="detail-ping-picker">
+                  <Wifi size={14} />
+                  <select value={selected} onChange={(event) => setSelected(event.target.value)}>
+                    <option value="__avg__">平均</option>
+                    {ping.map((item) => (
+                      <option key={item.key || item.label} value={item.key || item.label}>
+                        {item.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <PingTrendChart serverIndex={index} initial={lines} targetKey={selected} mode="latency" />
+              </section>
+              <section className="detail-panel">
+                <h3>丢包趋势</h3>
+                <div className="detail-ping-picker">
+                  <Wifi size={14} />
+                  <select value={selected} onChange={(event) => setSelected(event.target.value)}>
+                    <option value="__avg__">平均</option>
+                    {ping.map((item) => (
+                      <option key={item.key || item.label} value={item.key || item.label}>
+                        {item.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <PingTrendChart serverIndex={index} initial={lines} targetKey={selected} mode="loss" />
+              </section>
+            </div>
           )}
         </div>
       </section>
