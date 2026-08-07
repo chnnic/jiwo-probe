@@ -140,6 +140,11 @@ button {
 .servers.list {
   display: block;
 }
+/* 卡片最大宽度：单卡/末行时不被 1fr 轨道拉宽 */
+.server-card,
+.lumina-card {
+  max-width: 480px;
+}
 .servers.mini {
   display: grid;
   grid-template-columns: 1fr;
