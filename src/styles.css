@@ -3412,7 +3412,9 @@ footer a:hover {
   cursor: pointer;
   outline: none;
   padding: 0;
-  max-width: 92px;
+  width: 64px;
+  max-width: 64px;
+  flex: 0 0 auto;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -3423,7 +3425,29 @@ footer a:hover {
 .lumina-health-select-arrow {
   color: var(--muted);
   flex-shrink: 0;
-  margin-left: -5px;
+  margin-left: -3px;
+}
+.lumina-health-bars-btn {
+  display: block;
+  width: 100%;
+  border: none;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+}
+.lumina-health-bars-btn:hover .lumina-health-bars > span {
+  filter: brightness(1.15);
+}
+.lumina-pulse-btn {
+  display: block;
+  width: 100%;
+  border: none;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+}
+.lumina-pulse-btn:hover .lumina-traffic-pulse > span {
+  filter: brightness(1.2);
 }
 .lumina-health-head strong {
   font-size: 15px;
