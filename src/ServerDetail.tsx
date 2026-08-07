@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { Activity, ArrowDown, ArrowUp, BadgeDollarSign, CalendarClock, ChevronLeft, Cpu, HardDrive, MemoryStick, MoveHorizontal, PieChart, Wallet, Wifi, X, ZoomIn, ZoomOut } from 'lucide-react'
+import { Activity, ArrowDown, ArrowUp, BadgeDollarSign, CalendarClock, ChevronLeft, Cpu, HardDrive, MemoryStick, Monitor, MoveHorizontal, PieChart, Wallet, Wifi, X, ZoomIn, ZoomOut } from 'lucide-react'
 import { Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import type { ProbePingSeries, ProbeServer } from './types'
 import { Twemoji } from './Twemoji'
-import { Meter, ReturnRouteBadges, TrafficChart, averagePing, bytes, expiring, expired, formatAxisDateTime, formatLossTick, hasLeadingFlag, HorizontalChart, lossScale, pct, regionFlag, regionLabel, remainingDays, speed } from './App'
+import { Meter, ReturnRouteBadges, SystemIcon, TrafficChart, averagePing, bytes, expiring, expired, formatAxisDateTime, formatLossTick, hasLeadingFlag, HorizontalChart, lossScale, pct, regionFlag, regionLabel, remainingDays, speed } from './App'
 import { computeRemainingValue, formatMoney } from './value'
 
 const cycleLabel = {
@@ -358,6 +358,30 @@ export function ServerDetail({ server, index, onClose }: { server: ProbeServer; 
                   </div>
                 )}
               </div>
+              {(server.cpu_model || server.os || server.kernel) && (
+                <div className="detail-hw">
+                  {server.cpu_model && (
+                    <span title="CPU 型号">
+                      <Cpu size={13} />
+                      {server.cpu_model}
+                      {server.cpu_cores !== undefined && <small>{server.cpu_cores} 核{server.cpu_threads ? ` ${server.cpu_threads} 线程` : ''}</small>}
+                    </span>
+                  )}
+                  {server.os && (
+                    <span title="操作系统">
+                      <SystemIcon server={server} />
+                      {server.os}
+                    </span>
+                  )}
+                  {server.kernel && (
+                    <span title="内核与架构">
+                      <Monitor size={13} />
+                      {server.kernel}
+                      {server.arch && <small>{server.arch}</small>}
+                    </span>
+                  )}
+                </div>
+              )}
             </section>
 
             <div className="detail-col-stack">

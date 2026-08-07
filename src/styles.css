@@ -2589,6 +2589,30 @@ footer a:hover {
 .detail-meta .warning {
   color: #d97706;
 }
+.detail-hw {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+}
+.detail-hw > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--foreground);
+  max-width: 100%;
+}
+.detail-hw > span > svg {
+  flex-shrink: 0;
+}
+.detail-hw small {
+  margin-left: 3px;
+  color: var(--muted);
+  font-size: 11px;
+}
 .detail-ping-picker {
   display: flex;
   align-items: center;

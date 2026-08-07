@@ -758,7 +758,7 @@ const systemIcons = [
   { terms: ['ubuntu'], icon: siUbuntu },
   { terms: ['darwin', 'macos', 'mac os'], icon: siApple },
 ]
-function SystemIcon({ server }: { server: ProbeServer }) {
+export function SystemIcon({ server }: { server: ProbeServer }) {
   const os = (server.os || '').toLowerCase()
   if (os.includes('windows')) return <Monitor size={16} />
   const icon =
