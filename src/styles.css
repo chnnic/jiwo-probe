@@ -1273,6 +1273,40 @@ footer a:hover {
   background: var(--border);
   margin: 0 3px;
 }
+.traffic-line-toggle {
+  display: flex;
+  gap: 6px;
+  margin: 8px 0 2px;
+  flex-wrap: wrap;
+}
+.traffic-line-toggle button {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 22px;
+  padding: 1px 8px;
+  font-size: 11px;
+  white-space: nowrap;
+  border-radius: var(--radius);
+}
+.traffic-line-toggle .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--line-color);
+  flex-shrink: 0;
+}
+.traffic-line-toggle button.active {
+  color: var(--line-color);
+  border-color: color-mix(in srgb, var(--line-color) 55%, transparent);
+  background: color-mix(in srgb, var(--line-color) 10%, transparent);
+}
+.traffic-line-toggle button.off {
+  opacity: 0.45;
+}
+.traffic-line-toggle button.off .dot {
+  background: var(--border);
+}
 .chart {
   position: relative;
   height: 300px;
