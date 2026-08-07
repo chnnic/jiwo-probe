@@ -3280,12 +3280,18 @@ footer a:hover {
   min-width: 0;
 }
 .lumina-traffic-direction {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
+  position: relative;
+  display: inline-block;
+  padding-left: 17px;
   color: var(--muted);
   font-size: 11px;
   flex-shrink: 0;
+}
+.lumina-traffic-direction svg {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
 }
 .lumina-traffic-stat strong {
   font-size: 12.5px;
