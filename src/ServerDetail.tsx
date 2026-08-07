@@ -119,13 +119,13 @@ function PingTrendChart({ serverIndex, initial, targetKey, mode }: { serverIndex
   const rows = useMemo(
     () =>
       Array.from({ length: displaySeries[0]?.item.buckets.length || 0 }, (_, index) => {
+        const ts =
+          timeMeta.generatedAt -
+          (timeMeta.generatedAt % timeMeta.bucketSec) -
+          ((displaySeries[0]?.item.buckets.length || 0) - 1 - index) * timeMeta.bucketSec
         const row: Record<string, string | number | null> = {
-          time: formatAxisDateTime(
-            timeMeta.generatedAt -
-              (timeMeta.generatedAt % timeMeta.bucketSec) -
-              ((displaySeries[0]?.item.buckets.length || 0) - 1 - index) * timeMeta.bucketSec,
-            range === '1h',
-          ),
+          time: formatAxisDateTime(ts, range === '1h'),
+          ts,
         }
         for (const { item } of displaySeries) {
           const bucket = item.buckets[index]
@@ -228,7 +228,11 @@ function PingTrendChart({ serverIndex, initial, targetKey, mode }: { serverIndex
                 ticks={mode === 'loss' ? dynamicLossScale.ticks : undefined}
                 tickFormatter={mode === 'loss' ? (value) => formatLossTick(Number(value)) : undefined}
               />
-              <Tooltip contentStyle={{ fontSize: 11, borderRadius: 8 }} formatter={(value, _name, item) => [`${Number(value).toFixed(mode === 'loss' ? 1 : 0)}${mode === 'loss' ? '%' : 'ms'}`, series.find((line) => (line.key || line.label) === item.dataKey)?.label || String(item.dataKey)]} />
+              <Tooltip
+                contentStyle={{ fontSize: 11, borderRadius: 8 }}
+                formatter={(value, _name, item) => [`${Number(value).toFixed(mode === 'loss' ? 1 : 0)}${mode === 'loss' ? '%' : 'ms'}`, series.find((line) => (line.key || line.label) === item.dataKey)?.label || String(item.dataKey)]}
+                labelFormatter={(_value, payload) => formatAxisDateTime(Number((payload?.[0]?.payload as { ts?: number } | undefined)?.ts ?? 0), true)}
+              />
               {displaySeries.map(({ item, index }) => {
                 const key = item.key || item.label
                 const active = key === targetKey
