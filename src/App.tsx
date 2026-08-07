@@ -1243,6 +1243,11 @@ function LuminaTrafficPulse({ samples }: { samples: ProbeServer['daily_traffic']
           <span
             key={index}
             data-active={value > 0 ? 'true' : 'false'}
+            title={
+              sample
+                ? `${sample.date}\n上行 ${bytes(sample.uplink)}\n下行 ${bytes(sample.downlink)}`
+                : '无数据'
+            }
             style={
               {
                 '--pulse-h': `${Math.max(4, Math.round((0.45 + level * 0.95) * 20))}px`,
