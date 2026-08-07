@@ -3377,12 +3377,12 @@ footer a:hover {
 .lumina-health {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 9px 14px;
+  gap: 22px;
 }
 .lumina-health-item {
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 8px;
   min-width: 0;
 }
 .lumina-health-head {
@@ -3394,32 +3394,35 @@ footer a:hover {
 .lumina-health-label {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: 7px;
   color: var(--muted);
   font-size: 11px;
-  font-weight: 500;
+  font-weight: 600;
+  letter-spacing: 0.02em;
 }
 .lumina-health-head strong {
-  font-size: 12.5px;
-  font-weight: 650;
+  font-size: 15px;
+  font-weight: 640;
+  letter-spacing: -0.03em;
 }
 .lumina-health-head strong small {
   margin-left: 2px;
-  color: var(--muted);
-  font-size: 10px;
+  color: var(--text-tertiary);
+  font-size: 11px;
   font-weight: 500;
+  letter-spacing: 0;
 }
 .lumina-health-bars {
   display: flex;
   gap: 2px;
-  height: 22px;
+  height: 16px;
   align-items: flex-end;
 }
 .lumina-health-bars > span {
   flex: 1 1 0;
   height: var(--bar-h);
   min-height: 2px;
-  border-radius: 1.5px;
+  border-radius: 2px;
   background: var(--bar-c);
 }
 .lumina-card-footer {
