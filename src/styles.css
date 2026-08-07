@@ -1476,6 +1476,12 @@ footer a:hover {
   border-radius: 0;
   box-shadow: 0 4px 18px -6px rgba(139, 92, 246, 0.28);
 }
+:root.theme-anime .leaderboard-card {
+  padding: 15px 18px 20px;
+}
+:root.theme-anime .leaderboard-body {
+  padding: 0;
+}
 :root.theme-anime .leaderboard-card::after,
 :root.theme-anime .globe-card::after {
   content: '';
