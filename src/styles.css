@@ -3072,6 +3072,7 @@ footer a:hover {
   --border: rgba(24, 24, 27, 0.08);
   --muted: #71717a;
   --foreground: #18181b;
+  --hover-bg: #f4f4f5;
   --shadow: 0 0 0 rgba(0, 0, 0, 0);
   --progress-cpu: #3b82f6;
   --progress-memory: #8b5cf6;
@@ -3105,6 +3106,7 @@ footer a:hover {
   --status-error: #f47067;
   --traffic-up: #539bf5;
   --traffic-down: #57ab5a;
+  --hover-bg: #2f3742;
   --lumina-top-glow: none;
 }
 :root.theme-lumina .app-shell {
@@ -3401,8 +3403,16 @@ footer a:hover {
   flex-wrap: wrap;
   align-items: center;
   gap: 4px 12px;
-  padding-top: 10px;
+  padding: 10px 0 0;
   border-top: 1px solid var(--border);
+  text-align: left;
+}
+/* Lumina 无位移无阴影 hover：只加深边框 + 背景混 hover 色（LuminaPlus 原版哲学） */
+:root.theme-lumina .lumina-card:hover {
+  transform: none;
+  box-shadow: none;
+  border-color: var(--border-strong, rgba(24, 24, 27, 0.13));
+  background: color-mix(in srgb, var(--hover-bg, #f4f4f5) 38%, var(--surface));
 }
 .lumina-card .return-route-badges {
   margin: 0;
