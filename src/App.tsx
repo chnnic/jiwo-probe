@@ -1220,6 +1220,13 @@ function ServerCardLumina({ server, index }: { server: ProbeServer; index: numbe
   const downRate = server.download_speed
   const trafficUp = server.cumulative_up
   const trafficDown = server.cumulative_down
+  // 当前周期流量: API 只有 traffic_used 合计, 按历史累计比例拆分为上行/下行估算
+  const cycleRatioUp =
+    trafficUp !== undefined && trafficDown !== undefined && trafficUp + trafficDown > 0
+      ? trafficUp / (trafficUp + trafficDown)
+      : 0.5
+  const cycleUp = server.traffic_used !== undefined ? server.traffic_used * cycleRatioUp : undefined
+  const cycleDown = server.traffic_used !== undefined ? server.traffic_used * (1 - cycleRatioUp) : undefined
   const expireValue = server.expires_at ? remainingDays(server.expires_at) : null
   const renewText =
     server.renewal_price !== undefined
@@ -1273,7 +1280,7 @@ function ServerCardLumina({ server, index }: { server: ProbeServer; index: numbe
 
         {(upRate !== undefined || downRate !== undefined) && (
           <div className="lumina-traffic-section">
-            <div className="lumina-traffic-stat" title="上行速率与累计上行流量">
+            <div className="lumina-traffic-stat" title="上行速率与当前周期上行流量">
               <span className="lumina-traffic-direction">
                 <ArrowUp size={15} />
                 上行
@@ -1281,9 +1288,9 @@ function ServerCardLumina({ server, index }: { server: ProbeServer; index: numbe
               <strong className="tabular" style={{ color: 'var(--traffic-up)' }}>
                 {speed(upRate)}
               </strong>
-              <small className="tabular">{trafficUp !== undefined ? `累计 ${bytes(trafficUp)}` : ''}</small>
+              <small className="tabular">{cycleUp !== undefined ? `周期 ${bytes(cycleUp)}` : ''}</small>
             </div>
-            <div className="lumina-traffic-stat" title="下行速率与累计下行流量">
+            <div className="lumina-traffic-stat" title="下行速率与当前周期下行流量">
               <span className="lumina-traffic-direction">
                 <ArrowDown size={15} />
                 下行
@@ -1291,7 +1298,7 @@ function ServerCardLumina({ server, index }: { server: ProbeServer; index: numbe
               <strong className="tabular" style={{ color: 'var(--traffic-down)' }}>
                 {speed(downRate)}
               </strong>
-              <small className="tabular">{trafficDown !== undefined ? `累计 ${bytes(trafficDown)}` : ''}</small>
+              <small className="tabular">{cycleDown !== undefined ? `周期 ${bytes(cycleDown)}` : ''}</small>
             </div>
             <div className="lumina-traffic-pulse-wrap">
               <LuminaTrafficPulse samples={server.daily_traffic} />
