@@ -1262,6 +1262,22 @@ function LuminaTrafficPulse({ samples }: { samples: ProbeServer['daily_traffic']
   )
 }
 
+function luminaHeatColor(kind: 'latency' | 'loss', value: number): string {
+  // 仿原版 heatRamp 分段热力色: 绿→黄绿→黄→橙→红(阈值按原版 latency/loss bounds)
+  if (kind === 'latency') {
+    if (value < 100) return 'var(--status-success)'
+    if (value < 150) return '#a3e635'
+    if (value < 200) return 'var(--status-warning)'
+    if (value < 300) return '#fb923c'
+    return 'var(--status-error)'
+  }
+  if (value < 1) return 'var(--status-success)'
+  if (value < 3) return '#a3e635'
+  if (value < 5) return 'var(--status-warning)'
+  if (value < 10) return '#fb923c'
+  return 'var(--status-error)'
+}
+
 function LuminaHealthBars({ buckets, kind }: { buckets: ProbeBucket[]; kind: 'latency' | 'loss' }) {
   const bars = buckets.slice(-LUMINA_QUOTA_SEGMENTS)
   const values = bars.map((b) => (kind === 'latency' ? b.ms : b.loss)).filter((v) => v >= 0)
@@ -1271,7 +1287,6 @@ function LuminaHealthBars({ buckets, kind }: { buckets: ProbeBucket[]; kind: 'la
       {bars.map((bucket, index) => {
         const raw = kind === 'latency' ? bucket.ms : bucket.loss
         const height = raw >= 0 ? (raw / max) * 100 : 8
-        const tone = raw >= 0 ? Math.max(0, Math.min(1, raw / max)) : 0
         return (
           <span
             key={index}
@@ -1279,7 +1294,7 @@ function LuminaHealthBars({ buckets, kind }: { buckets: ProbeBucket[]; kind: 'la
             style={
               {
                 '--bar-h': `${height}%`,
-                '--bar-c': `color-mix(in srgb, ${kind === 'latency' ? '#3b82f6' : '#8b5cf6'} ${20 + tone * 80}%, var(--progress-bg))`,
+                '--bar-c': raw >= 0 ? luminaHeatColor(kind, raw) : 'var(--progress-bg)',
               } as React.CSSProperties
             }
           />
@@ -1434,8 +1449,19 @@ function ServerCardLumina({ server, index }: { server: ProbeServer; index: numbe
             <div className="lumina-health-head">
               <span className="lumina-health-label">
                 <Clock3 size={13} />
-                <select className="lumina-health-select" value={healthTarget} onChange={(event) => setHealthTarget(event.target.value)} aria-label="延迟展示内容">
-                  <option value="__avg__">平均</option>
+                <select
+                  className="lumina-health-select"
+                  value={healthTarget}
+                  aria-label="延迟展示内容"
+                  onMouseDown={(event) => event.stopPropagation()}
+                  onClick={(event) => event.stopPropagation()}
+                  onKeyDown={(event) => event.stopPropagation()}
+                  onChange={(event) => {
+                    event.stopPropagation()
+                    setHealthTarget(event.target.value)
+                  }}
+                >
+                  <option value="__avg__">平均延迟</option>
                   {pingList.map((item) => (
                     <option key={item.key || item.label} value={item.key || item.label}>{item.label}</option>
                   ))}

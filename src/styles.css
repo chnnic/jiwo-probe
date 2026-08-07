@@ -3446,7 +3446,7 @@ footer a:hover {
 .lumina-health-bars > span {
   flex: 1 1 0;
   height: var(--bar-h);
-  min-height: 2px;
+  min-height: 3px;
   border-radius: 2px;
   background: var(--bar-c);
 }
