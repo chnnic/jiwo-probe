@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { Activity, ArrowDown, ArrowUp, BadgeDollarSign, CalendarClock, ChevronLeft, Cpu, HardDrive, MemoryStick, Monitor, MoveHorizontal, PieChart, Wallet, Wifi, X, ZoomIn, ZoomOut } from 'lucide-react'
+import { Activity, ArrowDown, ArrowUp, BadgeDollarSign, CalendarClock, ChevronLeft, Clock, Cpu, Database, HardDrive, MemoryStick, Monitor, MoveHorizontal, PieChart, TrendingUp, Wallet, Wifi, X, ZoomIn, ZoomOut } from 'lucide-react'
 import { Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import type { ProbePingSeries, ProbeServer } from './types'
 import { Twemoji } from './Twemoji'
@@ -13,6 +13,16 @@ const cycleLabel = {
   half_year: '半年',
   year: '年',
 } as const
+
+function formatUptime(seconds: number): string {
+  const d = Math.floor(seconds / 86400)
+  const h = Math.floor((seconds % 86400) / 3600)
+  const m = Math.floor((seconds % 3600) / 60)
+  if (d > 0) return `${d} 天 ${h} 小时`
+  if (h > 0) return `${h} 小时 ${m} 分`
+  if (m > 0) return `${m} 分钟`
+  return `${seconds} 秒`
+}
 
 function RemainingValueBlock({ server }: { server: ProbeServer }) {
   const rv = computeRemainingValue(server)
@@ -378,6 +388,28 @@ export function ServerDetail({ server, index, onClose }: { server: ProbeServer; 
                       <Monitor size={13} />
                       {server.kernel}
                       {server.arch && <small>{server.arch}</small>}
+                    </span>
+                  )}
+                  {server.uptime !== undefined && (
+                    <span title="运行时间">
+                      <Clock size={13} />
+                      {formatUptime(server.uptime)}
+                    </span>
+                  )}
+                  {(() => {
+                    const last = server.daily_traffic?.length ? server.daily_traffic[server.daily_traffic.length - 1] : null
+                    if (!last?.total) return null
+                    return (
+                      <span title="今日使用流量">
+                        <TrendingUp size={13} />
+                        今日 {bytes(last.total)}
+                      </span>
+                    )
+                  })()}
+                  {server.cumulative_up !== undefined && server.cumulative_down !== undefined && (
+                    <span title="累计总流量（上行 + 下行）">
+                      <Database size={13} />
+                      累计 {bytes(server.cumulative_up + server.cumulative_down)}
                     </span>
                   )}
                 </div>
