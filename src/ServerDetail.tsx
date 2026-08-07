@@ -57,6 +57,7 @@ function PingTrendChart({ serverIndex, initial, targetKey, mode }: { serverIndex
   const [series, setSeries] = useState<ProbePingSeries[]>(initial)
   const [loading, setLoading] = useState(false)
   const [zoom, setZoom] = useState(1)
+  const [isFit, setIsFit] = useState(true)
   const chartRef = useRef<HTMLDivElement>(null)
   const [timeMeta, setTimeMeta] = useState({
     generatedAt: Math.floor(Date.now() / 1000),
@@ -141,6 +142,7 @@ function PingTrendChart({ serverIndex, initial, targetKey, mode }: { serverIndex
     if (!el || !rows.length) return
     const target = el.clientWidth / (rows.length * 82)
     setZoom(Math.max(0.05, Math.min(8, target)))
+    setIsFit(true)
   }
   // 每个时间范围默认适应屏幕宽度；用户手动 +/- 后不再自动覆盖
   useEffect(() => {
@@ -176,13 +178,16 @@ function PingTrendChart({ serverIndex, initial, targetKey, mode }: { serverIndex
           className="zoom-btn"
           aria-label="缩小横轴"
           title={`缩小横轴（当前 ${Math.round(zoom * 100)}%）`}
-          onClick={() => setZoom((value) => Math.max(0.05, Math.round((value - 0.1) * 10) / 10))}
+          onClick={() => {
+            setZoom((value) => Math.max(0.05, Math.round((value - 0.1) * 10) / 10))
+            setIsFit(false)
+          }}
         >
           <ZoomOut size={13} />
         </button>
         <button
           type="button"
-          className="zoom-btn"
+          className={`zoom-btn${isFit ? ' active' : ''}`}
           aria-label="适应屏幕宽度"
           title="适应屏幕宽度"
           onClick={fitZoom}
@@ -194,7 +199,10 @@ function PingTrendChart({ serverIndex, initial, targetKey, mode }: { serverIndex
           className="zoom-btn"
           aria-label="放大横轴"
           title={`放大横轴（当前 ${Math.round(zoom * 100)}%）`}
-          onClick={() => setZoom((value) => Math.min(8, Math.round((value + 0.1) * 10) / 10))}
+          onClick={() => {
+            setZoom((value) => Math.min(8, Math.round((value + 0.1) * 10) / 10))
+            setIsFit(false)
+          }}
         >
           <ZoomIn size={13} />
         </button>

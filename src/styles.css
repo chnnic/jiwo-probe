@@ -1261,6 +1261,11 @@ footer a:hover {
   border-color: color-mix(in srgb, var(--primary) 60%, transparent);
   color: var(--primary);
 }
+.ranges .zoom-btn.active {
+  color: #fff;
+  border-color: var(--primary);
+  background: var(--primary);
+}
 .ranges-sep {
   width: 1px;
   align-self: stretch;
