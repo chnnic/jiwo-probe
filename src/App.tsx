@@ -686,7 +686,7 @@ function TrendDialog({ serverIndex, initial, targetKey, title, mode, close }: { 
   const [series, setSeries] = useState<ProbePingSeries[]>(initial)
   const [loading, setLoading] = useState(false)
   const [zoom, setZoom] = useState(1)
-  const [isFit, setIsFit] = useState(false)
+  const [isFit, setIsFit] = useState(true)
   const chartRef = useRef<HTMLDivElement>(null)
   const [timeMeta, setTimeMeta] = useState({
     generatedAt: Math.floor(Date.now() / 1000),
@@ -773,6 +773,15 @@ function TrendDialog({ serverIndex, initial, targetKey, title, mode, close }: { 
     setZoom(Math.max(0.05, Math.min(8, target)))
     setIsFit(true)
   }
+  // 每个时间范围默认适应屏幕宽度；用户手动 +/- 后不再自动覆盖（与详情页 PingTrendChart 一致）
+  useEffect(() => {
+    if (!loading && displaySeries.length) {
+      const raf = requestAnimationFrame(fitZoom)
+      return () => cancelAnimationFrame(raf)
+    }
+    return undefined
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [range, loading])
 
   return createPortal(
     <div className="modal-backdrop" role="presentation" onMouseDown={close}>
