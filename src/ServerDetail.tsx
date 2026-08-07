@@ -285,27 +285,99 @@ function DetailMetric({ icon, label, value, percent }: { icon: React.ReactNode; 
 
 function DetailTrafficChart({ daily }: { daily: ProbeServer['daily_traffic'] }) {
   const rows = daily || []
+  const chartRef = useRef<HTMLDivElement>(null)
+  const [trafficRange, setTrafficRange] = useState<'all' | '7d' | '30d'>('7d')
+  const [zoom, setZoom] = useState(1)
+  const [isFit, setIsFit] = useState(true)
+  const shown = useMemo(() => {
+    if (!rows.length) return []
+    if (trafficRange === 'all') return rows
+    const days = trafficRange === '7d' ? 7 : 30
+    return rows.slice(-days)
+  }, [rows, trafficRange])
+  const fitZoom = () => {
+    const el = chartRef.current
+    if (!el || !shown.length) return
+    const target = el.clientWidth / (shown.length * 82)
+    setZoom(Math.max(0.05, Math.min(8, target)))
+    setIsFit(true)
+  }
+  useEffect(() => {
+    if (shown.length) {
+      const raf = requestAnimationFrame(fitZoom)
+      return () => cancelAnimationFrame(raf)
+    }
+    return undefined
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [trafficRange, shown.length])
   if (!rows.length) {
     return <div className="chart-empty">暂无日流量数据</div>
   }
   return (
-    <div className="detail-chart">
-      <HorizontalChart width={Math.max(120, rows.length * 82)}>
-        <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={rows} margin={{ top: 8, right: 12, bottom: 0, left: 0 }}>
-            <XAxis dataKey="date" tick={{ fontSize: 10 }} axisLine={false} tickLine={false} interval="preserveStartEnd" minTickGap={28} />
-            <YAxis width={52} tick={{ fontSize: 10 }} axisLine={false} tickLine={false} tickFormatter={(value) => bytes(Number(value), false)} />
-            <Tooltip
-              contentStyle={{ fontSize: 11, borderRadius: 8 }}
-              labelFormatter={(value) => String(value)}
-              formatter={(value, name) => [bytes(Number(value)), name === 'uplink' ? '上行' : '下行']}
-            />
-            <Line type="monotone" dataKey="uplink" name="上行" stroke="#f97316" strokeWidth={2} dot={false} isAnimationActive={false} />
-            <Line type="monotone" dataKey="downlink" name="下行" stroke="#22c55e" strokeWidth={2} dot={false} isAnimationActive={false} />
-          </LineChart>
-        </ResponsiveContainer>
-      </HorizontalChart>
-    </div>
+    <>
+      <div className="ranges">
+        <button type="button" className={trafficRange === 'all' ? 'active' : ''} onClick={() => setTrafficRange('all')}>
+          全部
+        </button>
+        <button type="button" className={trafficRange === '7d' ? 'active' : ''} onClick={() => setTrafficRange('7d')}>
+          7日
+        </button>
+        <button type="button" className={trafficRange === '30d' ? 'active' : ''} onClick={() => setTrafficRange('30d')}>
+          30日
+        </button>
+        <span className="ranges-sep" />
+        <button
+          type="button"
+          className="zoom-btn"
+          aria-label="缩小横轴"
+          title={`缩小横轴（当前 ${Math.round(zoom * 100)}%）`}
+          onClick={() => {
+            setZoom((value) => Math.max(0.05, Math.round((value - 0.1) * 10) / 10))
+            setIsFit(false)
+          }}
+        >
+          <ZoomOut size={13} />
+        </button>
+        <button
+          type="button"
+          className={`zoom-btn${isFit ? ' active' : ''}`}
+          aria-label="适应屏幕宽度"
+          title="适应屏幕宽度"
+          onClick={fitZoom}
+        >
+          <MoveHorizontal size={13} />
+        </button>
+        <button
+          type="button"
+          className="zoom-btn"
+          aria-label="放大横轴"
+          title={`放大横轴（当前 ${Math.round(zoom * 100)}%）`}
+          onClick={() => {
+            setZoom((value) => Math.min(8, Math.round((value + 0.1) * 10) / 10))
+            setIsFit(false)
+          }}
+        >
+          <ZoomIn size={13} />
+        </button>
+      </div>
+      <div className="detail-chart" ref={chartRef}>
+        <HorizontalChart width={Math.max(120, shown.length * 82 * zoom)}>
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={shown} margin={{ top: 8, right: 12, bottom: 0, left: 0 }}>
+              <XAxis dataKey="date" tick={{ fontSize: 10 }} axisLine={false} tickLine={false} interval="preserveStartEnd" minTickGap={28} />
+              <YAxis width={52} tick={{ fontSize: 10 }} axisLine={false} tickLine={false} tickFormatter={(value) => bytes(Number(value), false)} />
+              <Tooltip
+                contentStyle={{ fontSize: 11, borderRadius: 8 }}
+                labelFormatter={(value) => String(value)}
+                formatter={(value, name) => [bytes(Number(value)), name === 'uplink' ? '上行' : '下行']}
+              />
+              <Line type="monotone" dataKey="uplink" name="上行" stroke="#f97316" strokeWidth={2} dot={false} isAnimationActive={false} />
+              <Line type="monotone" dataKey="downlink" name="下行" stroke="#22c55e" strokeWidth={2} dot={false} isAnimationActive={false} />
+            </LineChart>
+          </ResponsiveContainer>
+        </HorizontalChart>
+      </div>
+    </>
   )
 }
 
