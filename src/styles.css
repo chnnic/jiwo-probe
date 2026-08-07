@@ -3292,7 +3292,7 @@ footer a:hover {
 .lumina-traffic-pulse {
   display: flex;
   gap: 3px;
-  height: 22px;
+  height: 34px;
   align-items: flex-end;
 }
 .lumina-traffic-pulse > span {
@@ -3306,6 +3306,7 @@ footer a:hover {
   display: flex;
   flex-direction: column;
   gap: 6px;
+  margin-top: 6px;
 }
 .lumina-quota-head {
   display: flex;
