@@ -1141,12 +1141,12 @@ function LuminaMetricBar({
 }
 
 function luminaPulseColor(level: number): string {
-  // 相对峰值分档: 无流量灰 → 低绿 → 中蓝 → 高琥珀 → 极高红
+  // 相对峰值分档: 无流量灰 → 低绿 → 中蓝 → 高琥珀 → 极高暖橙(琥珀+30%红, 避免刺眼红)
   if (level <= 0.01) return 'var(--progress-bg)'
   if (level < 0.3) return 'var(--status-success)'
   if (level < 0.6) return 'var(--traffic-up)'
   if (level < 0.85) return 'var(--status-warning)'
-  return 'var(--status-error)'
+  return 'color-mix(in srgb, var(--status-warning) 70%, var(--status-error) 30%)'
 }
 
 function LuminaTrafficPulse({ samples }: { samples: ProbeServer['daily_traffic'] }) {
