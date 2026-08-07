@@ -1,7 +1,7 @@
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import Lottie from 'lottie-react'
-import { Activity, ArrowDown, ArrowDownUp, ArrowUp, BadgeDollarSign, CalendarClock, CheckCircle2, ChevronDown, ChevronUp, Clock, Cpu, Gauge, Globe2, HardDrive, LayoutGrid, List, MapPin, MemoryStick, Monitor, Moon, MoveHorizontal, Palette, PieChart, Rows3, Rows4, Search, Server, Sun, Trophy, Wallet, Wifi, XCircle, ZoomIn, ZoomOut } from 'lucide-react'
+import { Activity, ArrowDown, ArrowDownUp, ArrowUp, BadgeDollarSign, CalendarClock, CheckCircle2, ChevronDown, ChevronUp, Clock, Cpu, Gauge, Globe2, HardDrive, Hourglass, LayoutGrid, List, MapPin, MemoryStick, Monitor, Moon, MoveHorizontal, Palette, PieChart, Rows3, Rows4, Search, Server, Sun, Trophy, Wallet, Wifi, XCircle, ZoomIn, ZoomOut } from 'lucide-react'
 import { siAlmalinux, siAlpinelinux, siApple, siArchlinux, siCentos, siDebian, siFedora, siFreebsd, siGentoo, siKalilinux, siLinux, siLinuxmint, siNixos, siOpensuse, siProxmox, siRedhat, siRockylinux, siUbuntu } from 'simple-icons'
 import { Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import type { ProbeBucket, ProbePingSeries, ProbeReturnRoute, ProbeServer, ThemeName } from './types'
@@ -363,7 +363,7 @@ export function averagePing(series: ProbePingSeries[]): ProbePingSeries {
   }
 }
 
-type LeaderboardKey = 'cpu' | 'mem' | 'traffic' | 'speed' | 'ping-cn' | 'ping-idc'
+type LeaderboardKey = 'cpu' | 'mem' | 'traffic' | 'speed' | 'uptime' | 'today' | 'forecast' | 'loss' | 'cost' | 'value' | 'ping-cn' | 'ping-idc'
 
 const isCnLabel = (label: string) => /电信|联通|移动/.test(label)
 
@@ -373,11 +373,65 @@ function groupedPingAvg(ping: ProbePingSeries[], cn: boolean): number {
   return current.length ? current.reduce((a, b) => a + b, 0) / current.length : -1
 }
 
+const CYCLE_MONTHS: Record<string, number> = { month: 1, quarter: 3, half_year: 6, year: 12 }
+
+function formatUptime(seconds: number): string {
+  const d = Math.floor(seconds / 86400)
+  const h = Math.floor((seconds % 86400) / 3600)
+  const m = Math.floor((seconds % 3600) / 60)
+  if (d > 0) return h > 0 ? `${d}天${h}小时` : `${d}天`
+  if (h > 0) return m > 0 ? `${h}小时${m}分` : `${h}小时`
+  return `${Math.max(1, m)}分`
+}
+
+function monthlyCost(server: ProbeServer): number {
+  const price = server.renewal_price_cny ?? server.renewal_price
+  if (price === undefined || price === null) return -1
+  const months = CYCLE_MONTHS[server.renewal_cycle || 'month'] || 1
+  return price / months
+}
+
+function todayTraffic(server: ProbeServer): number {
+  const daily = server.daily_traffic
+  return daily?.length ? daily[daily.length - 1].total ?? -1 : -1
+}
+
+function forecastDays(server: ProbeServer): number {
+  const daily = server.daily_traffic
+  if (!daily?.length || server.traffic_limit === undefined || server.traffic_used === undefined) return -1
+  const recent = daily.slice(-7)
+  const avg = recent.reduce((sum, item) => sum + (item.total || 0), 0) / recent.length
+  if (avg <= 0) return -1
+  const remaining = Math.max(0, server.traffic_limit - server.traffic_used)
+  return remaining / avg
+}
+
+function avgLossPct(server: ProbeServer): number {
+  const losses = (server.ping || []).map((item) => item.loss_pct).filter((value) => value >= 0)
+  return losses.length ? losses.reduce((a, b) => a + b, 0) / losses.length : -1
+}
+
+function valueScore(server: ProbeServer): number {
+  const cost = monthlyCost(server)
+  if (cost <= 0) return -1
+  const memGb = server.mem_total ? server.mem_total / 1e9 : 0
+  const diskGb = server.disk_total ? server.disk_total / 1e9 : 0
+  const cores = server.cpu_cores ?? 0
+  const resources = cores * 5 + memGb + diskGb / 50
+  return resources > 0 ? resources / cost : -1
+}
+
 const LEADERBOARD_TABS: { key: LeaderboardKey; label: string; icon: React.ReactNode }[] = [
   { key: 'cpu', label: 'CPU', icon: <Cpu size={13} /> },
   { key: 'mem', label: '内存', icon: <MemoryStick size={13} /> },
   { key: 'traffic', label: '流量', icon: <PieChart size={13} /> },
   { key: 'speed', label: '实时速度', icon: <ArrowDownUp size={13} /> },
+  { key: 'uptime', label: '在线时长', icon: <Clock size={13} /> },
+  { key: 'today', label: '今日流量', icon: <CalendarClock size={13} /> },
+  { key: 'forecast', label: '流量耗尽', icon: <Hourglass size={13} /> },
+  { key: 'loss', label: '丢包率', icon: <Activity size={13} /> },
+  { key: 'cost', label: '月成本', icon: <Wallet size={13} /> },
+  { key: 'value', label: '性价比', icon: <BadgeDollarSign size={13} /> },
   { key: 'ping-cn', label: '内地延迟', icon: <Gauge size={13} /> },
   { key: 'ping-idc', label: '海外延迟', icon: <Globe2 size={13} /> },
 ]
@@ -392,7 +446,7 @@ function Leaderboard({ servers }: { servers: ProbeServer[] }) {
       setDesc((value) => !value)
     } else {
       setTab(key)
-      setDesc(true)
+      setDesc(key !== 'forecast')
     }
     setExpanded(null)
   }
@@ -405,6 +459,12 @@ function Leaderboard({ servers }: { servers: ProbeServer[] }) {
         : tab === 'mem' ? pct(server.mem_used, server.mem_total)
         : tab === 'traffic' ? server.traffic_used ?? -1
         : tab === 'speed' ? (server.download_speed ?? 0) + (server.upload_speed ?? 0)
+        : tab === 'uptime' ? server.uptime ?? -1
+        : tab === 'today' ? todayTraffic(server)
+        : tab === 'forecast' ? forecastDays(server)
+        : tab === 'loss' ? avgLossPct(server)
+        : tab === 'cost' ? monthlyCost(server)
+        : tab === 'value' ? valueScore(server)
         : tab === 'ping-cn' ? groupedPingAvg(server.ping || [], true)
         : tab === 'ping-idc' ? groupedPingAvg(server.ping || [], false)
         : avg.current_ms
@@ -424,6 +484,12 @@ function Leaderboard({ servers }: { servers: ProbeServer[] }) {
     tab === 'cpu' || tab === 'mem' ? `${value.toFixed(1)}%`
     : tab === 'traffic' ? bytes(value, false)
     : tab === 'speed' ? `↓${speed(server.download_speed ?? 0)} ↑${speed(server.upload_speed ?? 0)}`
+    : tab === 'uptime' ? formatUptime(value)
+    : tab === 'today' ? bytes(value, false)
+    : tab === 'forecast' ? (value >= 100 ? `${value.toFixed(0)} 天` : `${value.toFixed(1)} 天`)
+    : tab === 'loss' ? `${value.toFixed(2)}%`
+    : tab === 'cost' ? `¥${value.toFixed(0)}/月`
+    : tab === 'value' ? `${value.toFixed(1)} 分/元`
     : `${value.toFixed(0)} ms`
   return (
     <section className={`leaderboard-card ${open ? 'open' : ''}`}>
@@ -487,7 +553,11 @@ function Leaderboard({ servers }: { servers: ProbeServer[] }) {
                 )}
               </li>
             ))}
-            {!rows.length && <li className="lb-empty">暂无数据</li>}
+            {!rows.length && (
+              <li className="lb-empty">
+                {tab === 'uptime' || tab === 'today' || tab === 'forecast' ? '等待探针数据上报' : '暂无数据'}
+              </li>
+            )}
           </ol>
         </div>
       )}
