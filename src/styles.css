@@ -1583,7 +1583,7 @@ footer a:hover {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 16px;
-  align-items: start;
+  align-items: stretch;
 }
 @media (max-width: 960px) {
   .globe-row {
@@ -1821,6 +1821,7 @@ footer a:hover {
   z-index: 1;
   display: grid;
   justify-items: center;
+  align-content: center;
   padding: 0 18px 16px;
 }
 .region-globe {
