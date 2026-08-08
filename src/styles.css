@@ -2656,6 +2656,10 @@ footer a:hover {
 .detail-chart.detail-chart-traffic {
   height: 335px;
 }
+/* 负载 tab: 无线路 picker(26px) + legend 单行矮 24px, 补 58px 与延迟/丢包面板等高(实测 461 vs 453 后再 +8) */
+.detail-chart.detail-chart-load {
+  height: 338px;
+}
 .server-detail .legend {
   display: flex;
   flex-wrap: wrap;
@@ -2690,6 +2694,9 @@ footer a:hover {
   }
   .detail-chart {
     height: 220px;
+  }
+  .detail-chart.detail-chart-load {
+    height: 278px;
   }
 }
 
