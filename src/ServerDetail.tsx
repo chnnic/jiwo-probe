@@ -276,6 +276,169 @@ function PingTrendChart({ serverIndex, initial, targetKey, mode }: { serverIndex
   )
 }
 
+const LOAD_LINES = [
+  { key: 'l1', label: '1 分钟', color: 'var(--primary, #8b5cf6)' },
+  { key: 'l5', label: '5 分钟', color: '#f59e0b' },
+  { key: 'l15', label: '15 分钟', color: '#22c55e' },
+] as const
+
+function LoadTrendChart({ serverIndex }: { serverIndex: number }) {
+  const [range, setRange] = useState<RangeKey>('1h')
+  const [hidden, setHidden] = useState<Set<string>>(new Set())
+  const [rows, setRows] = useState<{ ts: number; time: string; l1: number | null; l5: number | null; l15: number | null }[]>([])
+  const [loading, setLoading] = useState(true)
+  const [zoom, setZoom] = useState(1)
+  const [isFit, setIsFit] = useState(true)
+  const chartRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const controller = new AbortController()
+    setLoading(true)
+    void fetch(`/api/load?server=${serverIndex}&range=${range}`, {
+      cache: 'no-store',
+      signal: controller.signal,
+    })
+      .then((response) => {
+        if (!response.ok) throw new Error(`HTTP ${response.status}`)
+        return response.json() as Promise<{
+          success: boolean
+          points?: { ts: number; l1: number; l5: number; l15: number }[]
+        }>
+      })
+      .then((payload) => {
+        if (payload.success && payload.points) {
+          setRows(
+            payload.points.map((p) => ({
+              ts: p.ts,
+              time: formatAxisDateTime(p.ts, range === '1h'),
+              l1: p.l1 ?? null,
+              l5: p.l5 ?? null,
+              l15: p.l15 ?? null,
+            })),
+          )
+        } else {
+          setRows([])
+        }
+      })
+      .catch(() => setRows([]))
+      .finally(() => {
+        if (!controller.signal.aborted) setLoading(false)
+      })
+    return () => controller.abort()
+  }, [range, serverIndex])
+
+  const fitZoom = () => {
+    const el = chartRef.current
+    if (!el || !rows.length) return
+    const target = el.clientWidth / (rows.length * 82)
+    setZoom(Math.max(0.05, Math.min(8, target)))
+    setIsFit(true)
+  }
+  useEffect(() => {
+    if (!loading && rows.length) {
+      const raf = requestAnimationFrame(fitZoom)
+      return () => cancelAnimationFrame(raf)
+    }
+    return undefined
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [range, loading])
+
+  const toggleHidden = (key: string) => {
+    setHidden((prev) => {
+      const next = new Set(prev)
+      if (next.has(key)) next.delete(key)
+      else next.add(key)
+      return next
+    })
+  }
+
+  return (
+    <>
+      <div className="ranges">
+        {RANGES.map((item) => (
+          <button type="button" className={range === item.key ? 'active' : ''} onClick={() => setRange(item.key)} key={item.key}>
+            {item.label}
+          </button>
+        ))}
+        <span className="ranges-sep" />
+        <button
+          type="button"
+          className="zoom-btn"
+          aria-label="缩小横轴"
+          title={`缩小横轴（当前 ${Math.round(zoom * 100)}%）`}
+          onClick={() => {
+            setZoom((value) => Math.max(0.05, Math.round((value - 0.1) * 10) / 10))
+            setIsFit(false)
+          }}
+        >
+          <ZoomOut size={13} />
+        </button>
+        <button type="button" className={`zoom-btn${isFit ? ' active' : ''}`} aria-label="适应屏幕宽度" title="适应屏幕宽度" onClick={fitZoom}>
+          <MoveHorizontal size={13} />
+        </button>
+        <button
+          type="button"
+          className="zoom-btn"
+          aria-label="放大横轴"
+          title={`放大横轴（当前 ${Math.round(zoom * 100)}%）`}
+          onClick={() => {
+            setZoom((value) => Math.min(8, Math.round((value + 0.1) * 10) / 10))
+            setIsFit(false)
+          }}
+        >
+          <ZoomIn size={13} />
+        </button>
+      </div>
+      <div className="detail-chart" ref={chartRef}>
+        {loading && <div className="loading-overlay">加载中…</div>}
+        {!loading && !rows.length && <div className="chart-empty">暂无负载历史（采集约 5 分钟后出数据）</div>}
+        <HorizontalChart width={Math.max(120, rows.length * 82 * zoom)}>
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={rows} margin={{ top: 8, right: 12, bottom: 0, left: 0 }}>
+              <XAxis dataKey="time" tick={{ fontSize: 10 }} axisLine={false} tickLine={false} interval="preserveStartEnd" minTickGap={28} />
+              <YAxis width={40} tick={{ fontSize: 10 }} axisLine={false} tickLine={false} domain={[0, 'auto']} />
+              <Tooltip
+                contentStyle={{ fontSize: 11, borderRadius: 8 }}
+                formatter={(value, _name, item) => [
+                  Number(value).toFixed(2),
+                  LOAD_LINES.find((l) => l.key === item.dataKey)?.label || String(item.dataKey),
+                ]}
+                labelFormatter={(_value, payload) => formatAxisDateTime(Number((payload?.[0]?.payload as { ts?: number } | undefined)?.ts ?? 0), true)}
+              />
+              {LOAD_LINES.map((line) =>
+                hidden.has(line.key) ? null : (
+                  <Line
+                    key={line.key}
+                    type="monotone"
+                    dataKey={line.key}
+                    name={line.label}
+                    stroke={line.color}
+                    strokeWidth={line.key === 'l1' ? 2.5 : 1.5}
+                    dot={false}
+                    connectNulls={false}
+                    isAnimationActive={false}
+                  />
+                ),
+              )}
+            </LineChart>
+          </ResponsiveContainer>
+        </HorizontalChart>
+      </div>
+      <div className="legend">
+        {LOAD_LINES.map((line) => {
+          const off = hidden.has(line.key)
+          return (
+            <button type="button" className={off ? 'off' : ''} key={line.key} onClick={() => toggleHidden(line.key)} title={off ? '点击显示' : '点击隐藏'}>
+              <i style={{ background: line.color }} />
+              {line.label}
+            </button>
+          )
+        })}
+      </div>
+    </>
+  )
+}
+
 function DetailMetric({ icon, label, value, percent }: { icon: React.ReactNode; label: string; value: string; percent: number }) {
   return (
     <div className="detail-metric">
@@ -295,7 +458,7 @@ function DetailMetric({ icon, label, value, percent }: { icon: React.ReactNode; 
 
 export function ServerDetail({ server, index, onClose }: { server: ProbeServer; index: number; onClose: () => void }) {
   const [selected, setSelected] = useState('__avg__')
-  const [trendMode, setTrendMode] = useState<'latency' | 'loss' | 'traffic'>('latency')
+  const [trendMode, setTrendMode] = useState<'latency' | 'loss' | 'traffic' | 'load'>('latency')
   const name = server.name || `服务器 ${index + 1}`
   const flag = regionFlag(server.region)
   const ping = server.ping || []
@@ -465,7 +628,7 @@ export function ServerDetail({ server, index, onClose }: { server: ProbeServer; 
           {!!ping.length && (
             <section className="detail-panel">
               <div className="detail-panel-head">
-                <h3>{trendMode === 'latency' ? '延迟趋势' : trendMode === 'loss' ? '丢包趋势' : '日流量趋势'}</h3>
+                <h3>{trendMode === 'latency' ? '延迟趋势' : trendMode === 'loss' ? '丢包趋势' : trendMode === 'traffic' ? '日流量趋势' : '负载趋势'}</h3>
                 <div className="trend-mode-switch" role="tablist" aria-label="趋势类型">
                   <button type="button" role="tab" aria-selected={trendMode === 'latency'} className={trendMode === 'latency' ? 'active' : ''} onClick={() => setTrendMode('latency')}>
                     延迟
@@ -476,10 +639,15 @@ export function ServerDetail({ server, index, onClose }: { server: ProbeServer; 
                   <button type="button" role="tab" aria-selected={trendMode === 'traffic'} className={trendMode === 'traffic' ? 'active' : ''} onClick={() => setTrendMode('traffic')}>
                     流量
                   </button>
+                  <button type="button" role="tab" aria-selected={trendMode === 'load'} className={trendMode === 'load' ? 'active' : ''} onClick={() => setTrendMode('load')}>
+                    负载
+                  </button>
                 </div>
               </div>
               {trendMode === 'traffic' ? (
                 <TrafficChart daily={server.daily_traffic || []} containerClass="detail-chart detail-chart-traffic" />
+              ) : trendMode === 'load' ? (
+                <LoadTrendChart serverIndex={index} />
               ) : (
                 <>
                   <div className="detail-ping-picker">

@@ -9,5 +9,11 @@
     "binding": "ASSETS",
     "not_found_handling": "single-page-application",
     "run_worker_first": ["/api/*"]
+  },
+  "kv_namespaces": [
+    { "binding": "LOAD_KV", "id": "9605fadfd0a04d2fae60f3f4c9b16e2f" }
+  ],
+  "triggers": {
+    "crons": ["*/5 * * * *"]
   }
 }

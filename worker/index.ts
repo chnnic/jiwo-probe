@@ -2,6 +2,7 @@ interface Env {
   ASSETS: Fetcher
   MMWX_ORIGIN: string
   PROBE_TOKEN: string
+  LOAD_KV: KVNamespace
 }
 
 const routes: Record<string, string> = {
@@ -24,8 +25,110 @@ function upstreamURL(request: Request, env: Env): URL | null {
   return origin
 }
 
+// KV key: load:{YYYYMMDDHH}（UTC 小时桶），值: { "0": [[ts,l1,l5,l15], ...], "1": [...] }（按 server 数组下标）
+const hourKey = (d: Date): string => {
+  const p = (n: number) => String(n).padStart(2, '0')
+  return `${d.getUTCFullYear()}${p(d.getUTCMonth() + 1)}${p(d.getUTCDate())}${p(d.getUTCHours())}`
+}
+
+type LoadPoint = [number, number, number, number] // ts(秒), load1, load5, load15
+
+const avg = (arr: number[]) => arr.reduce((a, b) => a + b, 0) / (arr.length || 1)
+
+// 读负载历史并按 range 聚合（与延迟图同粒度: 1h=12×5m, 6h=36×10m, 24h=48×30m）
+async function loadHistory(env: Env, serverIdx: number, range: string): Promise<Response> {
+  const bucketSec = range === '6h' ? 600 : range === '24h' ? 1800 : 300
+  const count = range === '6h' ? 36 : range === '24h' ? 48 : 12
+  const hours = Math.ceil((count * bucketSec) / 3600) + 1
+  const now = Date.now()
+
+  const keys: string[] = []
+  for (let h = 0; h <= hours; h++) {
+    keys.push(`load:${hourKey(new Date(now - h * 3600 * 1000))}`)
+  }
+  const raw = (await Promise.all(keys.map((k) => env.LOAD_KV.get(k, 'json')))) as (Record<string, LoadPoint[]> | null)[]
+  const points: LoadPoint[] = []
+  for (const data of raw) {
+    const arr = data?.[String(serverIdx)]
+    if (arr?.length) points.push(...arr)
+  }
+
+  // 按 bucket 对齐取均值
+  const buckets = new Map<number, number[][]>()
+  for (const [ts, l1, l5, l15] of points) {
+    const b = ts - (ts % bucketSec)
+    const list = buckets.get(b) ?? []
+    list.push([l1, l5, l15])
+    buckets.set(b, list)
+  }
+  const rows = [...buckets.entries()].sort((a, b) => a[0] - b[0]).slice(-count)
+  const out = rows.map(([ts, list]) => ({
+    ts,
+    l1: Number(avg(list.map((x) => x[0])).toFixed(3)),
+    l5: Number(avg(list.map((x) => x[1])).toFixed(3)),
+    l15: Number(avg(list.map((x) => x[2])).toFixed(3)),
+  }))
+
+  return new Response(JSON.stringify({ success: true, points: out, bucket_sec: bucketSec, generated_at: Math.floor(now / 1000) }), {
+    headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' },
+  })
+}
+
+// 采集: 拉主控 probe-servers，把每台 loadavg 写入 KV（按小时分桶），并清理 7 天前的 key
+async function collectLoad(env: Env): Promise<void> {
+  const origin = new URL(env.MMWX_ORIGIN)
+  origin.pathname = '/api/public/probe-servers'
+  const resp = await fetch(origin.toString(), { headers: { 'X-MMwx-Probe-Token': env.PROBE_TOKEN } })
+  if (!resp.ok) return
+  const payload = (await resp.json()) as { servers?: { loadavg?: string }[] }
+  const servers = payload.servers ?? []
+  if (!servers.length) return
+
+  const now = new Date()
+  const key = `load:${hourKey(now)}`
+  const ts = Math.floor(now.getTime() / 1000)
+  const data = ((await env.LOAD_KV.get(key, 'json')) as Record<string, LoadPoint[]> | null) ?? {}
+
+  servers.forEach((s, i) => {
+    const parts = (s.loadavg ?? '').trim().split(/\s+/).map(Number)
+    if (parts.length < 3 || isNaN(parts[0])) return
+    const idx = String(i)
+    const arr = data[idx] ?? []
+    const last = arr[arr.length - 1]
+    // 同桶内 4 分钟内重复采样 → 覆盖最后一点（防 cron 重试/抖动产生重复点）
+    if (last && ts - last[0] < 240) arr[arr.length - 1] = [ts, parts[0], parts[1], parts[2]]
+    else arr.push([ts, parts[0], parts[1], parts[2]])
+    if (arr.length > 14) arr.splice(0, arr.length - 14) // 每 key 每台最多 14 点（70 分钟）
+    data[idx] = arr
+  })
+
+  await env.LOAD_KV.put(key, JSON.stringify(data))
+
+  // 清理 7 天前的 key
+  const cutoff = Date.now() - 7 * 86400 * 1000
+  let cursor: string | undefined
+  do {
+    const list = await env.LOAD_KV.list({ prefix: 'load:', cursor })
+    for (const item of list.keys) {
+      const k = item.name.slice('load:'.length)
+      if (!/^\d{10}$/.test(k)) continue
+      const t = Date.UTC(Number(k.slice(0, 4)), Number(k.slice(4, 6)) - 1, Number(k.slice(6, 8)), Number(k.slice(8, 10)))
+      if (t < cutoff) await env.LOAD_KV.delete(item.name)
+    }
+    cursor = list.list_complete ? undefined : list.cursor
+  } while (cursor)
+}
+
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
+    const incoming = new URL(request.url)
+    if (incoming.pathname === '/api/load') {
+      if (request.method !== 'GET') return new Response('Method not allowed', { status: 405 })
+      const serverIdx = Number(incoming.searchParams.get('server') ?? '0')
+      const range = incoming.searchParams.get('range') ?? '1h'
+      return loadHistory(env, Number.isFinite(serverIdx) ? serverIdx : 0, range)
+    }
+
     const target = upstreamURL(request, env)
     if (!target) return env.ASSETS.fetch(request)
     if (request.method !== 'GET') return new Response('Method not allowed', { status: 405 })
@@ -52,5 +155,13 @@ export default {
       statusText: upstream.statusText,
       headers: responseHeaders,
     })
+  },
+  async scheduled(_event: ScheduledController, env: Env): Promise<void> {
+    if (!env.PROBE_TOKEN) return
+    try {
+      await collectLoad(env)
+    } catch (error) {
+      console.error('collectLoad failed:', error)
+    }
   },
 } satisfies ExportedHandler<Env>
