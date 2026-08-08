@@ -3240,6 +3240,26 @@ footer a:hover {
   gap: 5px;
   min-width: 0;
 }
+.lumina-metric-btn {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  border-radius: var(--radius);
+  transition: background 0.15s ease;
+}
+.lumina-metric-btn:hover {
+  background: color-mix(in srgb, var(--muted, #9ca3af) 8%, transparent);
+}
+.lumina-metric-btn:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 1px;
+}
 .lumina-metric-head {
   display: flex;
   align-items: baseline;
