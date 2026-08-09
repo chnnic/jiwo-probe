@@ -75,15 +75,17 @@ async function loadHistory(env: Env, serverIdx: number, range: string): Promise<
 }
 
 // 采集: 拉主控 probe-servers，把每台 loadavg 写入 KV（按小时分桶），并清理 7 天前的 key
+// 同时把每台 daily_traffic 按日期合并进 daily-history（跨周期历史缓存，保留 90 天，单 key）
 async function collectLoad(env: Env): Promise<void> {
   const origin = new URL(env.MMWX_ORIGIN)
   origin.pathname = '/api/public/probe-servers'
   const resp = await fetch(origin.toString(), { headers: { 'X-MMwx-Probe-Token': env.PROBE_TOKEN } })
   if (!resp.ok) return
-  const payload = (await resp.json()) as { servers?: { loadavg?: string }[] }
+  const payload = (await resp.json()) as { servers?: { loadavg?: string; name?: string; daily_traffic?: { date?: string; uplink?: number; downlink?: number; total?: number }[] }[] }
   const servers = payload.servers ?? []
   if (!servers.length) return
 
+  // --- loadavg 采集（原逻辑）---
   const now = new Date()
   const key = `load:${hourKey(now)}`
   const ts = Math.floor(now.getTime() / 1000)
@@ -104,7 +106,7 @@ async function collectLoad(env: Env): Promise<void> {
 
   await env.LOAD_KV.put(key, JSON.stringify(data))
 
-  // 清理 7 天前的 key
+  // 清理 7 天前的 load key
   const cutoff = Date.now() - 7 * 86400 * 1000
   let cursor: string | undefined
   do {
@@ -117,6 +119,29 @@ async function collectLoad(env: Env): Promise<void> {
     }
     cursor = list.list_complete ? undefined : list.cursor
   } while (cursor)
+
+  // --- daily_traffic 跨周期历史采集 ---
+  // KV key: daily-history, 值: { "YYYY-MM-DD": { "<serverName>": [uplink, downlink, total] } }（紧凑数组省体积）
+  // 上游 daily_traffic = 当前重置周期内，周期重置会清零 → 这里按天合并，跨周期保留 90 天
+  const HIST_KEY = 'daily-history'
+  const history = ((await env.LOAD_KV.get(HIST_KEY, 'json')) as Record<string, Record<string, [number, number, number]>>) ?? {}
+  for (const s of servers) {
+    const name = s.name?.trim()
+    if (!name || !Array.isArray(s.daily_traffic)) continue
+    for (const row of s.daily_traffic) {
+      if (!row?.date) continue
+      const up = row.uplink ?? 0
+      const down = row.downlink ?? 0
+      const rec: [number, number, number] = [up, down, row.total ?? up + down]
+      history[row.date] = history[row.date] ?? {}
+      history[row.date][name] = rec
+    }
+  }
+  const cutoffDate = new Date(now.getTime() - 90 * 86400 * 1000).toISOString().slice(0, 10)
+  for (const date of Object.keys(history)) {
+    if (date < cutoffDate) delete history[date]
+  }
+  await env.LOAD_KV.put(HIST_KEY, JSON.stringify(history))
 }
 
 export default {
@@ -127,6 +152,15 @@ export default {
       const serverIdx = Number(incoming.searchParams.get('server') ?? '0')
       const range = incoming.searchParams.get('range') ?? '1h'
       return loadHistory(env, Number.isFinite(serverIdx) ? serverIdx : 0, range)
+    }
+
+    // daily_traffic 跨周期历史（Worker cron 采集，按天合并，保留 90 天）——前端用它补全脉冲图/日流量趋势
+    if (incoming.pathname === '/api/daily-history') {
+      if (request.method !== 'GET') return new Response('Method not allowed', { status: 405 })
+      const history = (await env.LOAD_KV.get('daily-history', 'json')) ?? {}
+      return new Response(JSON.stringify({ success: true, history }), {
+        headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' },
+      })
     }
 
     const target = upstreamURL(request, env)
