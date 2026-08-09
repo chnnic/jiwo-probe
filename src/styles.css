@@ -3536,11 +3536,12 @@ footer a:hover {
 }
 .lumina-route-chip {
   min-width: 0;
+  min-height: 24px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 4px;
-  padding: 2px 6px;
+  padding: 2px 8px;
   border: 1px solid var(--border);
   border-radius: var(--radius);
   background: color-mix(in srgb, var(--foreground) 3%, transparent);
