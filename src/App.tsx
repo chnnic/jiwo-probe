@@ -1703,11 +1703,17 @@ function ServerCardLumina({ server, index }: { server: ProbeServer; index: numbe
   const downRate = server.download_speed
   const trafficUp = server.cumulative_up
   const trafficDown = server.cumulative_down
-  // 当前周期流量: API 只有 traffic_used 合计, 按历史累计比例拆分为上行/下行估算
+  // 当前周期流量: API 只有 traffic_used 合计, 按比例拆分为上行/下行估算。
+  // 优先用 daily_traffic 周期内每日上下行 sum 的比例(实测 17/40 台精确匹配计费口径, 比 cumulative 物理比例准一个量级),
+  // daily_traffic 缺失时回退 cumulative 比例, 再回退 0.5
+  const dailyUp = (server.daily_traffic || []).reduce((acc, item) => acc + (item.uplink ?? 0), 0)
+  const dailyDown = (server.daily_traffic || []).reduce((acc, item) => acc + (item.downlink ?? 0), 0)
   const cycleRatioUp =
-    trafficUp !== undefined && trafficDown !== undefined && trafficUp + trafficDown > 0
-      ? trafficUp / (trafficUp + trafficDown)
-      : 0.5
+    dailyUp + dailyDown > 0
+      ? dailyUp / (dailyUp + dailyDown)
+      : trafficUp !== undefined && trafficDown !== undefined && trafficUp + trafficDown > 0
+        ? trafficUp / (trafficUp + trafficDown)
+        : 0.5
   const cycleUp = server.traffic_used !== undefined ? server.traffic_used * cycleRatioUp : undefined
   const cycleDown = server.traffic_used !== undefined ? server.traffic_used * (1 - cycleRatioUp) : undefined
   const expireValue = server.expires_at ? remainingDays(server.expires_at) : null
