@@ -2660,6 +2660,10 @@ footer a:hover {
 .detail-chart.detail-chart-load {
   height: 338px;
 }
+/* CPU/内存 tab: 结构与负载相同(ranges+chart+单线legend), 同 338px 对齐 461 */
+.detail-chart.detail-chart-system {
+  height: 338px;
+}
 .server-detail .legend {
   display: flex;
   flex-wrap: wrap;
@@ -2696,6 +2700,9 @@ footer a:hover {
     height: 220px;
   }
   .detail-chart.detail-chart-load {
+    height: 278px;
+  }
+  .detail-chart.detail-chart-system {
     height: 278px;
   }
 }
@@ -3619,5 +3626,24 @@ footer a:hover {
   :root.theme-lumina .lumina-card {
     padding: 13px 13px 11px;
     gap: 12px;
+  }
+}
+
+/* 详情页趋势 tab 扩到 6 个(延迟/丢包/流量/负载/CPU/内存): 手机端放不下时横滑而非换行破坏布局 */
+@media (max-width: 640px) {
+  .detail-panel-head {
+    gap: 6px;
+  }
+  .trend-mode-switch {
+    max-width: 100%;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  .trend-mode-switch::-webkit-scrollbar {
+    display: none;
+  }
+  .trend-mode-switch button {
+    padding: 1px 6px;
   }
 }
