@@ -1703,20 +1703,27 @@ function ServerCardLumina({ server, index }: { server: EnrichedServer; index: nu
   const downRate = server.download_speed
   const trafficUp = server.cumulative_up
   const trafficDown = server.cumulative_down
-  // 当前周期流量: API 只有 traffic_used 合计, 按比例拆分为上行/下行估算。
-  // 优先用 cycle_daily_traffic(payload 原始周期内数据) 的每日上下行 sum 的比例
-  // (实测 17/40 台精确匹配计费口径, 比 cumulative 物理比例准一个量级), 缺失时回退 daily_traffic, 再回退 cumulative, 再回退 0.5
-  const cycleDaily = server.cycle_daily_traffic ?? server.daily_traffic ?? []
-  const dailyUp = cycleDaily.reduce((acc, item) => acc + (item.uplink ?? 0), 0)
-  const dailyDown = cycleDaily.reduce((acc, item) => acc + (item.downlink ?? 0), 0)
-  const cycleRatioUp =
-    dailyUp + dailyDown > 0
-      ? dailyUp / (dailyUp + dailyDown)
-      : trafficUp !== undefined && trafficDown !== undefined && trafficUp + trafficDown > 0
-        ? trafficUp / (trafficUp + trafficDown)
-        : 0.5
-  const cycleUp = server.traffic_used !== undefined ? server.traffic_used * cycleRatioUp : undefined
-  const cycleDown = server.traffic_used !== undefined ? server.traffic_used * (1 - cycleRatioUp) : undefined
+  // 当前周期流量(物理口径): 主控 2026-08-10 新增 traffic_used_up/down(40/40 有值, 与Σdaily_traffic 精确一致)，
+  // 优先直读字段; 缺失回退 cycle_daily_traffic 每日上下行 sum 比例估算(物理口径), 再回退 cumulative, 再回退 0.5
+  // 注意: traffic_used(计费口径, oneway 只算单向) ≠ traffic_used_up+down(物理口径), 上下行展示用物理值
+  let cycleUp = server.traffic_used_up
+  let cycleDown = server.traffic_used_down
+  if (cycleUp === undefined || cycleDown === undefined) {
+    const cycleDaily = server.cycle_daily_traffic ?? server.daily_traffic ?? []
+    const dailyUp = cycleDaily.reduce((acc, item) => acc + (item.uplink ?? 0), 0)
+    const dailyDown = cycleDaily.reduce((acc, item) => acc + (item.downlink ?? 0), 0)
+    const cycleRatioUp =
+      dailyUp + dailyDown > 0
+        ? dailyUp / (dailyUp + dailyDown)
+        : trafficUp !== undefined && trafficDown !== undefined && trafficUp + trafficDown > 0
+          ? trafficUp / (trafficUp + trafficDown)
+          : 0.5
+    const base = server.traffic_used !== undefined ? server.traffic_used : server.traffic_used_total
+    if (base !== undefined) {
+      cycleUp = base * cycleRatioUp
+      cycleDown = base * (1 - cycleRatioUp)
+    }
+  }
   const expireValue = server.expires_at ? remainingDays(server.expires_at) : null
   const renewText =
     server.renewal_price !== undefined

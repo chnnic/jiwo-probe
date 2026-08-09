@@ -31,6 +31,11 @@ export interface ProbeServer {
   download_speed?: number
   traffic_used?: number
   traffic_limit?: number
+  traffic_used_up?: number
+  traffic_used_down?: number
+  traffic_used_total?: number
+  period_start?: string
+  period_end?: string
   cumulative_up?: number
   cumulative_down?: number
   daily_traffic?: Array<{
