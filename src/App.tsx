@@ -1364,25 +1364,38 @@ function ReturnRouteIcon({ premium }: { premium: boolean }) {
   return <Lottie animationData={premium ? premiumRouteAnimation : commonRouteAnimation} aria-hidden="true" className="route-badge-icon" loop />
 }
 
-export function ReturnRouteBadges({ routes, telecomPaidPeer }: { routes: ProbeReturnRoute[]; telecomPaidPeer?: boolean }) {
+export function ReturnRouteBadges({ routes, telecomPaidPeer, variant }: { routes: ProbeReturnRoute[]; telecomPaidPeer?: boolean; variant?: 'lumina' }) {
   const byCarrier = new Map(routes.map((route) => [route.carrier, route]))
+  const items = (['telecom', 'unicom', 'mobile'] as const).map((carrier) => {
+    const route = byCarrier.get(carrier)
+    const detectedRouteType = displayReturnRoute(route?.route_type || 'Unknown')
+    const routeType = carrier === 'telecom' && telecomPaidPeer && detectedRouteType === '163' ? '163 PP' : detectedRouteType
+    return { carrier, route, routeType, premium: goldRoutes.has(routeType.toUpperCase().replace(/[^A-Z0-9]/g, '')) }
+  })
+  if (variant === 'lumina') {
+    // Lumina 扁平版勋章：无 Lottie 动画、无渐变、无阴影，细边框 + 低饱和色块（匹配 lumina tokens）
+    return (
+      <div className="lumina-route-badges">
+        {items.map(({ carrier, route, routeType, premium }) => (
+          <span className={`lumina-route-chip${premium ? ' gold' : ''}`} key={carrier} title={route?.region ? `${route.region} · ${routeType}` : routeType}>
+            <small>{routeCarrierLabels[carrier]}</small>
+            <strong>{routeType}</strong>
+          </span>
+        ))}
+      </div>
+    )
+  }
   return (
     <div className="return-route-badges">
-      {(['telecom', 'unicom', 'mobile'] as const).map((carrier) => {
-        const route = byCarrier.get(carrier)
-        const detectedRouteType = displayReturnRoute(route?.route_type || 'Unknown')
-        const routeType = carrier === 'telecom' && telecomPaidPeer && detectedRouteType === '163' ? '163 PP' : detectedRouteType
-        const premium = goldRoutes.has(routeType.toUpperCase().replace(/[^A-Z0-9]/g, ''))
-        return (
-          <div className="route-badge" key={carrier} title={route?.region ? `${route.region} · ${routeType}` : routeType}>
-            <div className={premium ? 'route-badge-animation gold' : 'route-badge-animation silver'}><ReturnRouteIcon premium={premium} /></div>
-            <div className={premium ? 'route-badge-text gold' : 'route-badge-text silver'}>
-              <small>{routeCarrierLabels[carrier]}</small>
-              <strong>{routeType}</strong>
-            </div>
+      {items.map(({ carrier, route, routeType, premium }) => (
+        <div className="route-badge" key={carrier} title={route?.region ? `${route.region} · ${routeType}` : routeType}>
+          <div className={premium ? 'route-badge-animation gold' : 'route-badge-animation silver'}><ReturnRouteIcon premium={premium} /></div>
+          <div className={premium ? 'route-badge-text gold' : 'route-badge-text silver'}>
+            <small>{routeCarrierLabels[carrier]}</small>
+            <strong>{routeType}</strong>
           </div>
-        )
-      })}
+        </div>
+      ))}
     </div>
   )
 }
@@ -1753,7 +1766,7 @@ function ServerCardLumina({ server, index }: { server: ProbeServer; index: numbe
         </div>
 
         {!!server.return_routes?.length && (
-          <ReturnRouteBadges routes={server.return_routes} telecomPaidPeer={server.telecom_paid_peer} />
+          <ReturnRouteBadges routes={server.return_routes} telecomPaidPeer={server.telecom_paid_peer} variant="lumina" />
         )}
 
         <footer className="lumina-card-footer">

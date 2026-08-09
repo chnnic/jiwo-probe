@@ -3526,6 +3526,56 @@ footer a:hover {
   border-top: 0;
   gap: 6px;
 }
+/* Lumina 扁平回程勋章：替代系统金/银 Lottie 拟物勋章（无动画/无渐变/无阴影，细边框+低饱和色块） */
+.lumina-route-badges {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+  margin: 4px 0 0;
+  padding: 0;
+}
+.lumina-route-chip {
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 2px 6px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--foreground) 3%, transparent);
+  white-space: nowrap;
+  overflow: hidden;
+}
+.lumina-route-chip small {
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+.lumina-route-chip strong {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--foreground);
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+.lumina-route-chip.gold {
+  background: color-mix(in srgb, #d6a514 7%, transparent);
+  border-color: color-mix(in srgb, #d6a514 30%, var(--border));
+}
+.lumina-route-chip.gold strong {
+  color: #b45309;
+}
+:root.theme-lumina.dark .lumina-route-chip.gold {
+  background: color-mix(in srgb, #f5c542 7%, transparent);
+  border-color: color-mix(in srgb, #f5c542 30%, var(--border));
+}
+:root.theme-lumina.dark .lumina-route-chip.gold strong {
+  color: #f5c542;
+}
 .lumina-footer-stat {
   display: inline-flex;
   align-items: center;
