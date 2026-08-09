@@ -1512,7 +1512,7 @@ function ReturnRouteIcon({ premium }: { premium: boolean }) {
   return <Lottie animationData={premium ? premiumRouteAnimation : commonRouteAnimation} aria-hidden="true" className="route-badge-icon" loop />
 }
 
-export function ReturnRouteBadges({ routes, telecomPaidPeer, variant }: { routes: ProbeReturnRoute[]; telecomPaidPeer?: boolean; variant?: 'lumina' }) {
+export function ReturnRouteBadges({ routes, telecomPaidPeer, variant }: { routes: ProbeReturnRoute[]; telecomPaidPeer?: boolean; variant?: 'lumina' | 'anime' }) {
   const byCarrier = new Map(routes.map((route) => [route.carrier, route]))
   const items = (['telecom', 'unicom', 'mobile'] as const).map((carrier) => {
     const route = byCarrier.get(carrier)
@@ -1520,12 +1520,13 @@ export function ReturnRouteBadges({ routes, telecomPaidPeer, variant }: { routes
     const routeType = carrier === 'telecom' && telecomPaidPeer && detectedRouteType === '163' ? '163 PP' : detectedRouteType
     return { carrier, route, routeType, premium: goldRoutes.has(routeType.toUpperCase().replace(/[^A-Z0-9]/g, '')) }
   })
-  if (variant === 'lumina') {
-    // Lumina 扁平版勋章：无 Lottie 动画、无渐变、无阴影，细边框 + 低饱和色块（匹配 lumina tokens）
+  if (variant === 'lumina' || variant === 'anime') {
+    // 扁平版勋章：无 Lottie 动画、无渐变、无阴影。lumina=细边框低饱和 chip；anime=直角+紫色调 chip
+    const flat = variant === 'lumina' ? 'lumina-route' : 'anime-route'
     return (
-      <div className="lumina-route-badges">
+      <div className={`${flat}-badges`}>
         {items.map(({ carrier, route, routeType, premium }) => (
-          <span className={`lumina-route-chip${premium ? ' gold' : ''}`} key={carrier} title={route?.region ? `${route.region} · ${routeType}` : routeType}>
+          <span className={`${flat}-chip${premium ? ' gold' : ''}`} key={carrier} title={route?.region ? `${route.region} · ${routeType}` : routeType}>
             <small>{routeCarrierLabels[carrier]}</small>
             <strong>{routeType}</strong>
           </span>
@@ -2040,7 +2041,7 @@ function ServerCard({ server, index }: { server: ProbeServer; index: number }) {
         </div>
       )}
       {!!server.ping?.length && <PingPanel ping={server.ping} serverIndex={index} />}
-      {!!server.return_routes?.length && <ReturnRouteBadges routes={server.return_routes} telecomPaidPeer={server.telecom_paid_peer} />}
+      {!!server.return_routes?.length && <ReturnRouteBadges routes={server.return_routes} telecomPaidPeer={server.telecom_paid_peer} variant={document.documentElement.classList.contains('theme-anime') ? 'anime' : undefined} />}
       {(server.expires_at || server.renewal_price !== undefined) && (
         <div className="server-meta" onClick={(event) => event.stopPropagation()}>
           {server.expires_at &&

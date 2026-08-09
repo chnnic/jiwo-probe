@@ -3590,6 +3590,51 @@ footer a:hover {
 :root.theme-lumina.dark .lumina-route-chip.gold strong {
   color: #f5c542;
 }
+/* Anime 扁平回程勋章：直角 + 紫色调（替代系统金/银 Lottie 拟物勋章，与 anime 直角/紫白棋盘/蕾丝风格一致） */
+.anime-route-badges {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+  margin: 0;
+  padding: 10px 0 12px;
+  border-top: 1px solid #eadffc;
+}
+.anime-route-chip {
+  min-width: 0;
+  min-height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border: 1px solid var(--border, #d8c9fa);
+  border-radius: 0;
+  background: color-mix(in srgb, var(--primary) 6%, var(--surface));
+  white-space: nowrap;
+  overflow: hidden;
+}
+.anime-route-chip small {
+  color: color-mix(in srgb, var(--primary) 85%, #000);
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+.anime-route-chip strong {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--foreground);
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+.anime-route-chip.gold {
+  border-color: color-mix(in srgb, #d6a514 45%, var(--border));
+  background: color-mix(in srgb, #d6a514 8%, var(--surface));
+}
+.anime-route-chip.gold strong {
+  color: #a16207;
+}
 .lumina-footer-stat {
   display: inline-flex;
   align-items: center;
