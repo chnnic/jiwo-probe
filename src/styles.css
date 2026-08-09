@@ -3353,6 +3353,12 @@ footer a:hover {
   border-radius: 2px;
   background: var(--pulse-color, var(--progress-bg));
 }
+/* 历史不足16天的空白格: 不占高度不画色, 仅占宽度保持16格布局 */
+.lumina-traffic-pulse > span.lumina-pulse-empty {
+  height: 0;
+  min-height: 0;
+  background: transparent;
+}
 .lumina-quota {
   display: flex;
   flex-direction: column;

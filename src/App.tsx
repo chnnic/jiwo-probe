@@ -1464,17 +1464,15 @@ function LuminaTrafficPulse({ samples }: { samples: ProbeServer['daily_traffic']
     <span className="lumina-traffic-pulse" aria-hidden>
       {Array.from({ length: dots }, (_, index) => {
         const sample = list[index - Math.max(0, dots - list.length)]
-        const value = sample?.total ?? 0
+        // 无数据的天(历史不足16天): 渲染空白格, 不画灰条(避免"没流量"假象)
+        if (!sample) return <span key={index} className="lumina-pulse-empty" />
+        const value = sample.total ?? 0
         const level = value / max
         return (
           <span
             key={index}
             data-active={value > 0 ? 'true' : 'false'}
-            title={
-              sample
-                ? `${sample.date}\n上行 ${bytes(sample.uplink)}\n下行 ${bytes(sample.downlink)}`
-                : '无数据'
-            }
+            title={`${sample.date}\n上行 ${bytes(sample.uplink)}\n下行 ${bytes(sample.downlink)}`}
             style={
               {
                 '--pulse-h': `${Math.max(4, Math.round((0.45 + level * 0.95) * 20))}px`,
