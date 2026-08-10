@@ -61,8 +61,15 @@ if (
   )
 }
 
-export default function App() {
-  const [theme, setTheme] = useState<Theme>(loadTheme)
+export default function App({ initialTheme }: { initialTheme?: string }) {
+  // 主题优先级: 用户手动选过(ran.theme.user) > 主控下发变体(initialTheme) > 本地缓存 > ran-night
+  const [theme, setTheme] = useState<Theme>(() => {
+    let userSet = false
+    try { userSet = !!localStorage.getItem(THEME_USER_SET_KEY) } catch { /* ignore */ }
+    if (userSet) return loadTheme()
+    if (isValidTheme(initialTheme)) return initialTheme
+    return loadTheme()
+  })
   const handleThemeChange = (t: Theme) => {
     try { localStorage.setItem(THEME_USER_SET_KEY, '1') } catch { /* ignore */ }
     setTheme(t)
