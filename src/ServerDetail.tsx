@@ -276,7 +276,7 @@ function PingTrendChart({ serverIndex, initial, targetKey, mode }: { serverIndex
   )
 }
 
-function DetailMetric({ icon, label, value, percent }: { icon: React.ReactNode; label: string; value: string; percent: number }) {
+function DetailMetric({ icon, label, value, percent, sub }: { icon: React.ReactNode; label: string; value: string; percent: number; sub?: string }) {
   return (
     <div className="detail-metric">
       <div className="detail-metric-head">
@@ -289,6 +289,7 @@ function DetailMetric({ icon, label, value, percent }: { icon: React.ReactNode; 
       <div className="meter">
         <i style={{ width: `${Math.max(0, Math.min(100, percent))}%` }} />
       </div>
+      {sub && <div className="detail-metric-sub">{sub}</div>}
     </div>
   )
 }
@@ -344,6 +345,12 @@ export function ServerDetail({ server, index, onClose }: { server: ProbeServer; 
                     label="流量"
                     value={server.traffic_limit ? `${bytes(server.traffic_used, false)} / ${bytes(server.traffic_limit, false)}` : bytes(server.traffic_used, false)}
                     percent={pct(server.traffic_used, server.traffic_limit)}
+                    sub={[
+                      (server.traffic_used_up !== undefined || server.traffic_used_down !== undefined)
+                        ? `↑ ${bytes(server.traffic_used_up, false)} · ↓ ${bytes(server.traffic_used_down, false)}`
+                        : null,
+                      server.period_start && server.period_end ? `${server.period_start.slice(5)} — ${server.period_end.slice(5)}` : null,
+                    ].filter(Boolean).join(' · ')}
                   />
                 )}
                 {server.loadavg && (

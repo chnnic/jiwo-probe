@@ -2563,6 +2563,14 @@ footer a:hover {
   font-size: 12px;
   white-space: nowrap;
 }
+.detail-metric-sub {
+  margin-top: 3px;
+  color: var(--muted);
+  font-size: 10px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 .detail-loadavg {
   display: flex;
   align-items: center;
