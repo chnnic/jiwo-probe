@@ -78,6 +78,10 @@ interface Props {
   /** Site-wide ping history (used for ping-to-targets summary). */
   ping?: PingHistory
   hubTargetUuid?: string
+  /** Local avg-latency history (derived from probe snapshots). */
+  pingByNode?: Record<string, number[]>
+  /** Local avg packet-loss history. */
+  pingLossByNode?: Record<string, number[]>
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
@@ -842,6 +846,8 @@ export function HubPage({
   lastUpdate,
   config,
   hubTargetUuid,
+  pingByNode,
+  pingLossByNode,
 }: Props) {
   const drawer = useMobileDrawer()
   // Live UTC clock for the command bar.
@@ -1482,24 +1488,38 @@ export function HubPage({
                   }
                 >
                   <div style={{ padding: '8px 12px 12px' }}>
-                    {pingSeries.length > 0 ? (
-                      <PingChart series={pingSeries} height={120} times={bucketTimes} />
-                    ) : (
-                      <div
-                        style={{
-                          height: 120,
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          color: 'var(--fg-3)',
-                          fontFamily: 'var(--font-mono)',
-                          fontSize: contentFs(10),
-                          letterSpacing: '0.16em',
-                        }}
-                      >
-                        NO PING DATA
-                      </div>
-                    )}
+                    {(() => {
+                      // Prefer real locally-accumulated avg latency — MMWX series
+                      // buckets are all current-value (flat pseudo-line).
+                      const local = pingByNode?.[uuid]
+                      if (local && local.length >= 2) {
+                        return (
+                          <PingChart
+                            series={[{ data: local, label: 'AVG' }]}
+                            height={120}
+                            times={undefined}
+                          />
+                        )
+                      }
+                      return pingSeries.length > 0 ? (
+                        <PingChart series={pingSeries} height={120} times={bucketTimes} />
+                      ) : (
+                        <div
+                          style={{
+                            height: 120,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            color: 'var(--fg-3)',
+                            fontFamily: 'var(--font-mono)',
+                            fontSize: contentFs(10),
+                            letterSpacing: '0.16em',
+                          }}
+                        >
+                          NO PING DATA
+                        </div>
+                      )
+                    })()}
                   </div>
                 </CardFrame>
               </div>

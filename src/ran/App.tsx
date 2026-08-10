@@ -204,6 +204,8 @@ export default function App({ initialTheme }: { initialTheme?: string }) {
             config={config}
             ping={ping}
             hubTargetUuid={hubTargetUuid}
+            pingByNode={pingByNode}
+            pingLossByNode={pingLossByNode}
           />
         </ErrorBoundary>
       )
@@ -223,6 +225,8 @@ export default function App({ initialTheme }: { initialTheme?: string }) {
             conn={conn}
             config={config}
             hubTargetUuid={hubTargetUuid}
+            pingByNode={pingByNode}
+            pingLossByNode={pingLossByNode}
           />
         )
       }

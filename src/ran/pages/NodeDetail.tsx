@@ -91,6 +91,10 @@ interface Props {
   siteName?: string
   config?: KomariPublicConfig
   hubTargetUuid?: string
+  /** Local avg-latency history (derived from probe snapshots). */
+  pingByNode?: Record<string, number[]>
+  /** Local avg packet-loss history. */
+  pingLossByNode?: Record<string, number[]>
 }
 
 export function NodeDetailPage({
@@ -104,6 +108,8 @@ export function NodeDetailPage({
   siteName = '岚 · Komari',
   config,
   hubTargetUuid,
+  pingByNode,
+  pingLossByNode,
 }: Props) {
   const drawer = useMobileDrawer()
   const isMobile = useIsMobile()
@@ -1040,6 +1046,8 @@ export function NodeDetailPage({
                       target={t}
                       index={i}
                       times={bucketTimes}
+                      localHistory={pingByNode?.[uuid]}
+                      localLoss={pingLossByNode?.[uuid]}
                     />
                   ))}
                 </div>
@@ -1176,18 +1184,28 @@ function PingTargetCard({
   target,
   index,
   times,
+  localHistory,
+  localLoss,
 }: {
   target: { task: { id: number; name: string; loss: number; interval: number }; data: number[]; latest?: number }
   index: number
   times?: number[]
+  /** Local avg-latency history — replaces the flat pseudo-series from MMWX series API. */
+  localHistory?: number[]
+  localLoss?: number[]
 }) {
   const colors = ['var(--accent)', 'var(--signal-info)', 'var(--signal-good)', 'var(--accent-bright)']
   const color = colors[index % colors.length]
   const latest = target.latest
   const loss = target.task.loss ?? 0
 
+  // Prefer real locally-accumulated history over the flat pseudo-buckets the
+  // MMWX series API returns (all buckets = current value → a flat line).
+  const seriesData = localHistory && localHistory.length >= 2 ? localHistory : target.data
+  const seriesLoss = localLoss && localLoss.length >= 2 ? localLoss : undefined
+
   // Auto y-scale based on this target's actual values
-  const peak = Math.max(...target.data, 1)
+  const peak = Math.max(...seriesData, 1)
   const yMax = Math.ceil((peak * 1.3) / 10) * 10 || 50
 
   // Status from loss + latency
@@ -1277,7 +1295,7 @@ function PingTargetCard({
         </div>
 
         <AreaChart
-          data={target.data}
+          data={seriesData}
           times={times}
           formatValue={(v) => `${Math.round(v)} ms`}
           width={260}
