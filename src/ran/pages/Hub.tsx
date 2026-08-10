@@ -43,7 +43,6 @@ import { filterWindowsByRetention, getRecordRetentionHours } from '@/utils/reten
 import { useNodeHistory } from '@/hooks/useNodeHistory'
 import { useNodeTelemetry } from '@/hooks/useNodeTelemetry'
 import { NetworkQualityPanel } from '@/components/v2/NetworkQualityPanel'
-import { ConnectionsPanel } from '@/components/v2/ConnectionsPanel'
 import { useElementWidth } from '@/hooks/useElementWidth'
 import { hashFor } from '@/router/route'
 import { useMobileDrawer } from '@/hooks/useMediaQuery'
@@ -1671,20 +1670,6 @@ export function HubPage({
                 <NetworkQualityPanel
                   stats={telemetry.quality}
                   code="NET · 12"
-                  windowLabel={windowSpec.label}
-                />
-              )}
-
-              {telemetry.supported && telemetry.tcp.length > 0 && (
-                <ConnectionsPanel
-                  tcp={telemetry.tcp}
-                  udp={telemetry.udp}
-                  proc={telemetry.proc}
-                  tcpNow={telemetry.tcpNow}
-                  udpNow={telemetry.udpNow}
-                  procNow={telemetry.procNow}
-                  tcpMean={telemetry.tcpMean}
-                  code="CON · 13"
                   windowLabel={windowSpec.label}
                 />
               )}

@@ -142,7 +142,6 @@ export function NodeDetailPage({
   // be padded with synthetic zeroes before collection actually started.
   const cpuHistory = useMemo(() => timedLoadMetric(history.load, 'cpu'), [history.load])
   const memoryHistory = useMemo(() => timedLoadMetric(history.load, 'ram'), [history.load])
-  const diskHistory = useMemo(() => timedLoadMetric(history.load, 'disk'), [history.load])
   const networkHistory = useMemo(() => timedNetwork(history.load), [history.load])
   const historyDomain = useMemo<readonly [number, number]>(() => {
     const end = Date.now()
@@ -282,9 +281,7 @@ export function NodeDetailPage({
 
   const haveCpuHistory = cpuHistory.data.length > 0
   const haveMemoryHistory = memoryHistory.data.length > 0
-  const haveDiskHistory = diskHistory.data.length > 0
   const haveNetworkHistory = networkHistory.hasIn || networkHistory.hasOut
-  const hasConnectionData = record?.tcp != null || record?.udp != null || record?.process != null
 
   // Specs strip
   // Try to extract kernel from os string (e.g. "Debian GNU/Linux 13 · 6.1.0-26 · amd64").
@@ -733,27 +730,6 @@ export function NodeDetailPage({
                   </ChartOrEmpty>
                 </CardFrame>
                 <CardFrame
-                  title={`Disk · ${windowSpec.titleSuffix}`}
-                  code="C · 03"
-                  action={<Etch>{haveDiskHistory ? `${diskHistory.data.length} SAMPLES` : 'CURRENT ONLY'}</Etch>}
-                >
-                  <ChartOrEmpty empty={!haveDiskHistory} label="CURRENT VALUE ONLY · NO HISTORY API">
-                    <AreaChart
-                      data={diskHistory.data}
-                      times={diskHistory.times}
-                      xDomain={historyDomain}
-                      formatValue={(v) => `${v.toFixed(1)}%`}
-                      width={400}
-                      height={150}
-                      color="var(--signal-good)"
-                      yMin={0}
-                      yMax={100}
-                      threshold={85}
-                      gradientId="ndt-disk"
-                    />
-                  </ChartOrEmpty>
-                </CardFrame>
-                <CardFrame
                   title={`Network · ${windowSpec.titleSuffix}`}
                   code="C · 04"
                   action={<Etch>{haveNetworkHistory ? `${networkHistory.times.length} SAMPLES` : 'NO DATA'}</Etch>}
@@ -779,69 +755,6 @@ export function NodeDetailPage({
                   gap: 16,
                 }}
               >
-                <CardFrame
-                  title="Connections"
-                  code="P · 11"
-                  action={<Etch>{hasConnectionData ? 'BY KIND' : 'NOT EXPOSED'}</Etch>}
-                >
-                  {hasConnectionData ? (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                    {[
-                      {
-                        l: 'TCP',
-                        v: record?.tcp != null ? record.tcp.toLocaleString() : '—',
-                        s: 'good',
-                      },
-                      {
-                        l: 'UDP',
-                        v: record?.udp != null ? record.udp.toLocaleString() : '—',
-                        s: 'info',
-                      },
-                      {
-                        l: 'PROCESSES',
-                        v: record?.process != null ? record.process.toLocaleString() : '—',
-                        s: (record?.process ?? 0) > 500 ? 'warn' : 'good',
-                      },
-                    ].map((x, i) => (
-                      <div
-                        key={x.l}
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'space-between',
-                          padding: '6px 0',
-                          borderBottom: i < 2 ? '1px solid var(--edge-engrave)' : 'none',
-                        }}
-                      >
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                          <StatusDot status={x.s as 'good' | 'warn' | 'info'} size={5} />
-                          <span style={{ fontSize: contentFs(11), color: 'var(--fg-1)' }}>{x.l}</span>
-                        </div>
-                        <Numeric value={x.v} size={14} />
-                      </div>
-                    ))}
-                    <div className="seam" style={{ margin: '6px 0' }} />
-                    <div
-                      style={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'baseline',
-                      }}
-                    >
-                      <Etch>TOTAL</Etch>
-                      <Numeric
-                        value={record?.tcp == null && record?.udp == null
-                          ? '—'
-                          : ((record?.tcp ?? 0) + (record?.udp ?? 0)).toLocaleString()}
-                        size={20}
-                      />
-                    </div>
-                  </div>
-                  ) : (
-                    <FeatureUnavailable text="CURRENT PROBE API DOES NOT EXPOSE CONNECTION OR PROCESS COUNTS" />
-                  )}
-                </CardFrame>
-
                 <CardFrame title="Traffic" code="T · 11" action={<Etch>REPORTED PERIOD</Etch>}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                     <ConnRow
@@ -1310,31 +1223,6 @@ function PingTargetCard({
           smooth
         />
       </div>
-    </div>
-  )
-}
-
-function FeatureUnavailable({ text }: { text: string }) {
-  return (
-    <div
-      style={{
-        minHeight: 118,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '14px 18px',
-        textAlign: 'center',
-        color: 'var(--fg-3)',
-        background: 'var(--bg-inset)',
-        border: '1px solid var(--edge-engrave)',
-        borderRadius: 2,
-        fontFamily: 'var(--font-mono)',
-        fontSize: contentFs(9),
-        letterSpacing: '0.12em',
-        lineHeight: 1.7,
-      }}
-    >
-      {text}
     </div>
   )
 }
