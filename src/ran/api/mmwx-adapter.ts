@@ -95,6 +95,8 @@ export function toMmwxRecord(server: ProbeServer, index: number): KomariRecord {
     network_rx: server.download_speed,
     network_total_up: server.cumulative_up,
     network_total_down: server.cumulative_down,
+    traffic_period_up: server.traffic_used_up,
+    traffic_period_down: server.traffic_used_down,
     load1: load[0],
     load5: load[1],
     load15: load[2],

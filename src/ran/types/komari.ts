@@ -122,6 +122,9 @@ export interface KomariRecord {
   /** Cumulative bytes since boot — resets on reboot */
   network_total_up?: number
   network_total_down?: number
+  /** Current billing-period traffic used (up/down), bytes */
+  traffic_period_up?: number
+  traffic_period_down?: number
   tcp?: number
   udp?: number
   load1?: number

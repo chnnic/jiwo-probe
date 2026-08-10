@@ -278,15 +278,15 @@ function NodeCardCompact_({ node, record, netSpark = [], pingSpark = [], pingLos
         </div>
       </div>
 
-      {/* total traffic */}
+      {/* period traffic (current billing cycle up/down) */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, fontSize: contentFs(11) }}>
         <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-          <span style={{ color: 'var(--fg-2)', fontFamily: 'var(--font-mono)' }}>出站</span>
-          <span className="mono tnum" style={{ color: 'var(--fg-0)' }}>{formatBytes(record?.network_total_up)}</span>
+          <span style={{ color: 'var(--fg-2)', fontFamily: 'var(--font-mono)' }}>周期上行</span>
+          <span className="mono tnum" style={{ color: 'var(--fg-0)' }}>{formatBytes(record?.traffic_period_up)}</span>
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-          <span style={{ color: 'var(--fg-2)', fontFamily: 'var(--font-mono)' }}>入站</span>
-          <span className="mono tnum" style={{ color: 'var(--fg-0)' }}>{formatBytes(record?.network_total_down)}</span>
+          <span style={{ color: 'var(--fg-2)', fontFamily: 'var(--font-mono)' }}>周期下行</span>
+          <span className="mono tnum" style={{ color: 'var(--fg-0)' }}>{formatBytes(record?.traffic_period_down)}</span>
         </div>
       </div>
 
