@@ -26,8 +26,12 @@ export function applyAppearance(input?: ProbeAppearance) {
   })()
   const appearance = input || cached || { theme: 'pixel', color_mode: 'light' }
   const themeOverride = localStorage.getItem(THEME_OVERRIDE) as ThemeName | null
-  // 用户手动选择的内置主题优先；否则用主控下发的主题名（含自定义名，原样保留）
-  const theme = themeOverride || appearance.theme || 'pixel'
+  // 用户手动选择的内置主题优先；否则用主控下发的主题名。
+  // 内置主题名大小写不敏感归一化（主控可能下发 Lumina/LUMINA → lumina）；
+  // 自定义主题名原样保留挂 theme-{name}（站长 CSS 怎么写就怎么匹配）。
+  const raw = themeOverride || appearance.theme || 'pixel'
+  const lower = raw.toLowerCase()
+  const theme = isBuiltinTheme(lower) ? lower : raw
   const root = document.documentElement
   // 清理所有 theme-* 类（含可能的自定义主题类），再挂当前主题
   for (const cls of [...root.classList]) {
