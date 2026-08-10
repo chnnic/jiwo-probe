@@ -5,7 +5,7 @@ import { Activity, ArrowDown, ArrowDownUp, ArrowUp, BadgeDollarSign, Calendar, C
 import { siAlmalinux, siAlpinelinux, siApple, siArchlinux, siCentos, siDebian, siFedora, siFreebsd, siGentoo, siKalilinux, siLinux, siLinuxmint, siNixos, siOpensuse, siProxmox, siRedhat, siRockylinux, siUbuntu } from 'simple-icons'
 import { Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import type { ProbeBucket, ProbePingSeries, ProbeReturnRoute, ProbeServer, ThemeName } from './types'
-import { getDarkOverride, getThemeOverride, setDarkOverride, setTheme, useProbe } from './use-probe'
+import { getActiveTheme, getDarkOverride, getThemeOverride, setDarkOverride, setTheme, useProbe } from './use-probe'
 import { Twemoji } from './Twemoji'
 import { ServerDetail } from './ServerDetail'
 import { computeRemainingValue, formatMoney } from './value'
@@ -2628,6 +2628,13 @@ export function App() {
     })
   }
   const [theme, setThemeState] = useState<ThemeName | null>(() => getThemeOverride())
+  const [activeTheme, setActiveTheme] = useState<string>(() => getActiveTheme())
+  // 主控下发主题变化（如自定义主题名）→ 同步 activeTheme（用户手动 override 时不覆盖）
+  useEffect(() => {
+    if (data?.appearance?.theme && !getThemeOverride()) {
+      setActiveTheme(getActiveTheme())
+    }
+  }, [data?.appearance?.theme])
   const [darkMode, setDarkMode] = useState<string | null>(() => getDarkOverride())
   const [detailIndex, setDetailIndex] = useState<number | null>(() => {
     const match = /^#\/server\/(\d+)$/.exec(window.location.hash)
@@ -2729,7 +2736,7 @@ export function App() {
           <button aria-label="切换暗色模式" title={isDark ? '切换浅色模式' : '切换暗色模式'} onClick={toggleDark}>
             {isDark ? <Sun size={18} /> : <Moon size={18} />}
           </button>
-          <ThemeSelect value={theme} onChange={(name) => { setTheme(name); setThemeState(name) }} />
+          <ThemeSelect value={theme} onChange={(name) => { setTheme(name); setThemeState(name); setActiveTheme(name ?? getActiveTheme()) }} />
         </nav>
       </header>
       <section className="dashboard-summary">
@@ -2886,7 +2893,7 @@ export function App() {
           </label>
         </div>
       </section>
-      <main className={`servers ${view}`}>{visible.length ? view === 'card' ? visible.map((server) => theme === 'lumina' ? <ServerCardLumina key={server.name} server={server} index={servers.indexOf(server)} /> : <ServerCard key={server.name} server={server} index={servers.indexOf(server)} />) : view === 'mini' ? visible.map((server) => <ServerMiniCard key={server.name} server={server} index={servers.indexOf(server)} expanded={miniExpanded} />) : <ServerTable servers={visible} /> : <div className="empty">暂无符合条件的服务器</div>}</main>
+      <main className={`servers ${view}`}>{visible.length ? view === 'card' ? visible.map((server) => activeTheme === 'lumina' ? <ServerCardLumina key={server.name} server={server} index={servers.indexOf(server)} /> : <ServerCard key={server.name} server={server} index={servers.indexOf(server)} />) : view === 'mini' ? visible.map((server) => <ServerMiniCard key={server.name} server={server} index={servers.indexOf(server)} expanded={miniExpanded} />) : <ServerTable servers={visible} /> : <div className="empty">暂无符合条件的服务器</div>}</main>
       <footer>
         Powered by{' '}
         <a href="https://github.com/mmwx-group" target="_blank" rel="noreferrer">

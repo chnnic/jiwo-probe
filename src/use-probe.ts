@@ -73,6 +73,21 @@ export function getThemeOverride(): ThemeName | null {
   return localStorage.getItem(THEME_OVERRIDE) as ThemeName | null
 }
 
+// 当前生效主题: 用户手动 override 优先，否则主控下发的 theme（内置名归一化小写，自定义名原样）。
+// 视图分支（如 theme==='lumina' 渲染 ServerCardLumina）应读这个，而不是只看 override。
+export function getActiveTheme(): string {
+  const override = getThemeOverride()
+  if (override) return override
+  try {
+    const cached = JSON.parse(localStorage.getItem(APPEARANCE_CACHE) || 'null') as ProbeAppearance | null
+    const raw = cached?.theme || 'pixel'
+    const lower = raw.toLowerCase()
+    return isBuiltinTheme(lower) ? lower : raw
+  } catch {
+    return 'pixel'
+  }
+}
+
 export function cycleTheme(): ThemeName | null {
   const current = getThemeOverride()
   if (!current) {
