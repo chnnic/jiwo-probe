@@ -2497,7 +2497,6 @@ footer a:hover {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 10px;
-  align-items: start;
 }
 .detail-cols > div {
   border-radius: var(--radius);
@@ -2507,6 +2506,7 @@ footer a:hover {
   flex-direction: column;
   gap: 10px;
   min-width: 0;
+  height: 100%;
 }
 .detail-panel-head {
   display: flex;
