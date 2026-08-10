@@ -1289,6 +1289,7 @@ function PingTargetCard({
           gridX={3}
           gradientId={`pt-${target.task.id}`}
           formatY={(v) => `${Math.round(v)}`}
+          smooth
         />
       </div>
     </div>

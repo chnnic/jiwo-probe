@@ -280,13 +280,13 @@ function NodeCardCompact_({ node, record, netSpark = [], pingSpark = [], pingLos
 
       {/* period traffic (current billing cycle up/down) */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, fontSize: contentFs(11) }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-          <span style={{ color: 'var(--fg-2)', fontFamily: 'var(--font-mono)' }}>周期上行</span>
-          <span className="mono tnum" style={{ color: 'var(--fg-0)' }}>{formatBytes(record?.traffic_period_up)}</span>
+        <div style={{ display: 'flex', justifyContent: 'space-between', minWidth: 0, gap: 6 }}>
+          <span style={{ color: 'var(--fg-2)', fontFamily: 'var(--font-mono)', whiteSpace: 'nowrap' }}>周期上行</span>
+          <span className="mono tnum" style={{ color: 'var(--fg-0)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{formatBytes(record?.traffic_period_up)}</span>
         </div>
-        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-          <span style={{ color: 'var(--fg-2)', fontFamily: 'var(--font-mono)' }}>周期下行</span>
-          <span className="mono tnum" style={{ color: 'var(--fg-0)' }}>{formatBytes(record?.traffic_period_down)}</span>
+        <div style={{ display: 'flex', justifyContent: 'space-between', minWidth: 0, gap: 6 }}>
+          <span style={{ color: 'var(--fg-2)', fontFamily: 'var(--font-mono)', whiteSpace: 'nowrap' }}>周期下行</span>
+          <span className="mono tnum" style={{ color: 'var(--fg-0)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{formatBytes(record?.traffic_period_down)}</span>
         </div>
       </div>
 

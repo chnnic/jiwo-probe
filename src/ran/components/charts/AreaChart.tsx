@@ -30,6 +30,8 @@ interface Props {
   xDomain?: readonly [number, number]
   /** Optional formatter for the tooltip value (gets units etc). Defaults to v.toFixed(1). */
   formatValue?: (v: number) => string
+  /** Smooth the line with Catmull-Rom → bezier interpolation (default false). */
+  smooth?: boolean
 }
 
 /**
@@ -52,6 +54,7 @@ function AreaChart_({
   times,
   xDomain,
   formatValue,
+  smooth = false,
 }: Props) {
   const [wrapRef, w] = useElementWidth<HTMLDivElement>(initialWidth)
 
@@ -135,9 +138,24 @@ function AreaChart_({
         pad.top + innerH - ((Math.max(yMin, Math.min(yMax, d)) - yMin) / range) * innerH,
       ] as [number, number],
   )
-  const path = pts
-    .map((p, i) => (i === 0 ? `M${p[0]},${p[1]}` : `L${p[0]},${p[1]}`))
-    .join(' ')
+  // Catmull-Rom → cubic bezier smoothing (only when smooth=true; otherwise straight segments)
+  const smoothPath = (p: [number, number][]) => {
+    if (p.length < 3) return p.map((q, i) => (i === 0 ? `M${q[0]},${q[1]}` : `L${q[0]},${q[1]}`)).join(' ')
+    let d = `M${p[0][0]},${p[0][1]}`
+    for (let i = 0; i < p.length - 1; i++) {
+      const p0 = p[Math.max(0, i - 1)]
+      const p1 = p[i]
+      const p2 = p[i + 1]
+      const p3 = p[Math.min(p.length - 1, i + 2)]
+      const c1x = p1[0] + (p2[0] - p0[0]) / 6
+      const c1y = p1[1] + (p2[1] - p0[1]) / 6
+      const c2x = p2[0] - (p3[0] - p1[0]) / 6
+      const c2y = p2[1] - (p3[1] - p1[1]) / 6
+      d += ` C${c1x.toFixed(2)},${c1y.toFixed(2)} ${c2x.toFixed(2)},${c2y.toFixed(2)} ${p2[0].toFixed(2)},${p2[1].toFixed(2)}`
+    }
+    return d
+  }
+  const path = smooth ? smoothPath(pts) : pts.map((p, i) => (i === 0 ? `M${p[0]},${p[1]}` : `L${p[0]},${p[1]}`)).join(' ')
   const fillPath = `${path} L${pts[pts.length - 1][0]},${pad.top + innerH} L${pts[0][0]},${pad.top + innerH} Z`
 
   const formatLabel = formatY ?? ((v: number) => v.toFixed(0))

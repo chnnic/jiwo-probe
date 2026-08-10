@@ -1,5 +1,6 @@
 import { memo } from 'react'
 import { formatBytes } from '@/utils/format'
+import { daysUntil } from '@/utils/format'
 import { formatTrafficPercent, trafficColor, type TrafficQuota } from '@/utils/traffic'
 
 /**
@@ -46,6 +47,15 @@ function TrafficBar_({ quota, variant = 'grid' }: { quota: TrafficQuota; variant
           >
             {quota.mode === 'reported' ? '主控口径' : quota.mode === 'sum' ? '求和' : '取最大'}
           </span>
+          {quota.periodEnd && (() => {
+            const days = daysUntil(quota.periodEnd)
+            if (days === undefined) return null
+            return (
+              <span style={{ fontSize: 8, color: 'var(--fg-3)', marginLeft: 4 }}>
+                ({days}天后重置)
+              </span>
+            )
+          })()}
           <span style={{ marginLeft: 'auto', fontSize: 10, color: 'var(--fg-2)' }}>
             {usedText}
             <span style={{ color: 'var(--fg-3)' }}> / </span>

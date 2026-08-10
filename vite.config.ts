@@ -4,6 +4,14 @@ import { fileURLToPath } from 'node:url'
 
 export default defineConfig({
   plugins: [react()],
+  build: {
+    rollupOptions: {
+      input: {
+        main: 'index.html',
+        map: 'map.html',
+      },
+    },
+  },
   resolve: {
     alias: {
       // Ran 主题组件用 @/ 引用自身目录（原版 Komari 路径约定）

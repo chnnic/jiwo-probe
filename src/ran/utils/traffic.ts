@@ -29,6 +29,8 @@ export interface TrafficQuota {
   down?: number
   /** Severity band, drives bar color. */
   level: 'ok' | 'warn' | 'crit'
+  /** Billing period end (ISO), for showing days-until-reset. */
+  periodEnd?: string
 }
 
 /**
@@ -75,7 +77,7 @@ export function computeTrafficQuota(
   const ratio = Math.min(1, Math.max(0, used / limit))
   const level: TrafficQuota['level'] = percent >= 85 ? 'crit' : percent >= 60 ? 'warn' : 'ok'
 
-  return { used, limit, ratio, percent, mode, up, down, level }
+  return { used, limit, ratio, percent, mode, up, down, level, periodEnd: node.period_end }
 }
 
 /** Bar fill color for a severity band. */
