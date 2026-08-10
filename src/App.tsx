@@ -1856,6 +1856,13 @@ function ServerCardLumina({ server, index }: { server: EnrichedServer; index: nu
                 <Database size={13} />
                 <span>剩余流量</span>
                 <strong>{server.traffic_limit ? bytes(Math.max(0, server.traffic_limit - server.traffic_used)) : bytes(server.traffic_used)}</strong>
+                {(() => {
+                  // 周期重置倒计时 + 重置日 (主控 period_end, 如 2026-08-31)
+                  if (!server.period_end) return null
+                  const days = Math.ceil((new Date(`${server.period_end}T23:59:59`).getTime() - Date.now()) / 86400000)
+                  if (days < 0) return null
+                  return <span className="lumina-quota-reset" title={`流量周期 ${server.period_start ?? ''} ~ ${server.period_end}`}>{`重置 ${server.period_end.slice(5)} · 剩 ${days} 天`}</span>
+                })()}
               </span>
               <span className="lumina-quota-usage tabular">{server.traffic_limit ? `${bytes(server.traffic_used)} / ${bytes(server.traffic_limit)}` : ''}</span>
             </div>

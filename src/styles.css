@@ -3377,6 +3377,7 @@ footer a:hover {
   align-items: baseline;
   justify-content: space-between;
   gap: 8px;
+  flex-wrap: wrap;
 }
 .lumina-quota-label {
   display: inline-flex;
@@ -3385,6 +3386,16 @@ footer a:hover {
   min-width: 0;
   color: var(--muted);
   font-size: 11px;
+}
+.lumina-quota-reset {
+  color: var(--muted);
+  font-size: 10px;
+  opacity: 0.85;
+  white-space: nowrap;
+  padding: 0 6px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--foreground) 4%, transparent);
 }
 .lumina-quota-label strong {
   color: var(--foreground);
