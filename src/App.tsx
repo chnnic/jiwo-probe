@@ -93,7 +93,8 @@ export function bytes(value = 0, decimal = true): string {
   if (i === 4) {
     return `${Math.abs(n - Math.round(n)) < 1e-9 ? n.toFixed(0) : n.toFixed(2)} ${units[i]}`
   }
-  return `${n.toFixed(decimal && i >= 2 ? 1 : 0)} ${units[i]}`
+  // 整数不标 .0 (如 1000 GB 而非 1000.0 GB)
+  return `${Number.isInteger(n) ? n.toFixed(0) : n.toFixed(decimal && i >= 2 ? 1 : 0)} ${units[i]}`
 }
 
 export function speed(value = 0): string {
