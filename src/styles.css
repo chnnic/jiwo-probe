@@ -3204,6 +3204,8 @@ footer a:hover {
 }
 .lumina-title {
   margin: 0;
+  min-width: 0;
+  flex: 1 1 auto;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -3212,7 +3214,8 @@ footer a:hover {
   letter-spacing: -0.02em;
 }
 .lumina-subtitle {
-  flex-shrink: 0;
+  flex: 0 1 auto;
+  min-width: 0;
   overflow: hidden;
   max-width: 42%;
   text-overflow: ellipsis;
