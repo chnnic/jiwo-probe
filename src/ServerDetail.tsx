@@ -406,12 +406,18 @@ export function ServerDetail({ server, index, onClose }: { server: ProbeServer; 
                       </span>
                     )
                   })()}
-                  {server.cumulative_up !== undefined && server.cumulative_down !== undefined && (
-                    <span title="累计总流量（上行 + 下行）">
-                      <Database size={13} />
-                      累计 {bytes(server.cumulative_up + server.cumulative_down)}
-                    </span>
-                  )}
+                  {(() => {
+                    // 累计总流量: 优先主控周期统计 traffic_used_total(物理口径, 重启不清零),
+                    // 回退 cumulative_up+down(agent 网卡计数, 重启清零)
+                    const total = server.traffic_used_total ?? (server.cumulative_up !== undefined && server.cumulative_down !== undefined ? server.cumulative_up + server.cumulative_down : undefined)
+                    if (total === undefined) return null
+                    return (
+                      <span title="累计总流量（上行 + 下行）">
+                        <Database size={13} />
+                        累计 {bytes(total)}
+                      </span>
+                    )
+                  })()}
                 </div>
               )}
             </section>
