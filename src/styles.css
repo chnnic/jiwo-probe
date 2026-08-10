@@ -3374,7 +3374,7 @@ footer a:hover {
 }
 .lumina-quota-head {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
   gap: 8px;
   flex-wrap: wrap;
@@ -3407,7 +3407,7 @@ footer a:hover {
 }
 .lumina-quota-usage {
   color: var(--muted);
-  font-size: 10.5px;
+  font-size: 12px;
   white-space: nowrap;
 }
 .lumina-quota-track {
