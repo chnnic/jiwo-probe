@@ -252,19 +252,39 @@ function NodeCardCompact_({ node, record, netSpark = [], pingSpark = [], pingLos
 
       {/* up/down */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-            <span style={{ fontSize: contentFs(11), color: 'var(--accent-bright)', fontFamily: 'var(--font-mono)' }}>↑ 上行</span>
-            <span className="mono tnum" style={{ fontSize: contentFs(11), color: 'var(--fg-0)' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', minWidth: 0, gap: 6 }}>
+            <span style={{ fontSize: contentFs(11), color: 'var(--accent-bright)', fontFamily: 'var(--font-mono)', whiteSpace: 'nowrap' }}>↑ 上行</span>
+            <span
+              className="mono tnum"
+              style={{
+                fontSize: contentFs(11),
+                color: 'var(--fg-0)',
+                marginLeft: 'auto',
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+              }}
+            >
               {formatBps(record?.network_tx)}
             </span>
           </div>
           <Sparkline data={netSpark} width={150} height={14} color="var(--accent)" thickness={1} />
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-            <span style={{ fontSize: contentFs(11), color: 'var(--signal-good)', fontFamily: 'var(--font-mono)' }}>↓ 下行</span>
-            <span className="mono tnum" style={{ fontSize: contentFs(11), color: 'var(--fg-0)' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', minWidth: 0, gap: 6 }}>
+            <span style={{ fontSize: contentFs(11), color: 'var(--signal-good)', fontFamily: 'var(--font-mono)', whiteSpace: 'nowrap' }}>↓ 下行</span>
+            <span
+              className="mono tnum"
+              style={{
+                fontSize: contentFs(11),
+                color: 'var(--fg-0)',
+                marginLeft: 'auto',
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+              }}
+            >
               {formatBps(record?.network_rx)}
             </span>
           </div>
