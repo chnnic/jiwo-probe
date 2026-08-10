@@ -25,7 +25,7 @@ function upstreamURL(request: Request, env: Env): URL | null {
   return origin
 }
 
-// KV key: load:{YYYYMMDDHH}（UTC 小时桶），值: { "0": [[ts,l1,l5,l15], ...], "1": [...] }（按 server 数组下标）
+// KV key: load:{YYYYMMDDHH}（UTC 小时桶），值: { "<serverName>": [[ts,l1,l5,l15], ...] }（按服务器 name 关联，改名才断，换 IP/增删顺序不影响）
 const hourKey = (d: Date): string => {
   const p = (n: number) => String(n).padStart(2, '0')
   return `${d.getUTCFullYear()}${p(d.getUTCMonth() + 1)}${p(d.getUTCDate())}${p(d.getUTCHours())}`
@@ -36,7 +36,7 @@ type LoadPoint = [number, number, number, number] // ts(秒), load1, load5, load
 const avg = (arr: number[]) => arr.reduce((a, b) => a + b, 0) / (arr.length || 1)
 
 // 读负载历史并按 range 聚合（与延迟图同粒度: 1h=12×5m, 6h=36×10m, 24h=48×30m）
-async function loadHistory(env: Env, serverIdx: number, range: string): Promise<Response> {
+async function loadHistory(env: Env, serverName: string, range: string): Promise<Response> {
   const bucketSec = range === '6h' ? 600 : range === '24h' ? 1800 : 300
   const count = range === '6h' ? 36 : range === '24h' ? 48 : 12
   const hours = Math.ceil((count * bucketSec) / 3600) + 1
@@ -49,7 +49,7 @@ async function loadHistory(env: Env, serverIdx: number, range: string): Promise<
   const raw = (await Promise.all(keys.map((k) => env.LOAD_KV.get(k, 'json')))) as (Record<string, LoadPoint[]> | null)[]
   const points: LoadPoint[] = []
   for (const data of raw) {
-    const arr = data?.[String(serverIdx)]
+    const arr = data?.[serverName]
     if (arr?.length) points.push(...arr)
   }
 
@@ -91,17 +91,18 @@ async function collectLoad(env: Env): Promise<void> {
   const ts = Math.floor(now.getTime() / 1000)
   const data = ((await env.LOAD_KV.get(key, 'json')) as Record<string, LoadPoint[]> | null) ?? {}
 
-  servers.forEach((s, i) => {
+  servers.forEach((s) => {
+    const name = s.name?.trim()
+    if (!name) return
     const parts = (s.loadavg ?? '').trim().split(/\s+/).map(Number)
     if (parts.length < 3 || isNaN(parts[0])) return
-    const idx = String(i)
-    const arr = data[idx] ?? []
+    const arr = data[name] ?? []
     const last = arr[arr.length - 1]
     // 同桶内 4 分钟内重复采样 → 覆盖最后一点（防 cron 重试/抖动产生重复点）
     if (last && ts - last[0] < 240) arr[arr.length - 1] = [ts, parts[0], parts[1], parts[2]]
     else arr.push([ts, parts[0], parts[1], parts[2]])
     if (arr.length > 14) arr.splice(0, arr.length - 14) // 每 key 每台最多 14 点（70 分钟）
-    data[idx] = arr
+    data[name] = arr
   })
 
   await env.LOAD_KV.put(key, JSON.stringify(data))
@@ -149,9 +150,9 @@ export default {
     const incoming = new URL(request.url)
     if (incoming.pathname === '/api/load') {
       if (request.method !== 'GET') return new Response('Method not allowed', { status: 405 })
-      const serverIdx = Number(incoming.searchParams.get('server') ?? '0')
+      const serverName = incoming.searchParams.get('server') ?? ''
       const range = incoming.searchParams.get('range') ?? '1h'
-      return loadHistory(env, Number.isFinite(serverIdx) ? serverIdx : 0, range)
+      return loadHistory(env, serverName, range)
     }
 
     // daily_traffic 跨周期历史（Worker cron 采集，按天合并，保留 90 天）——前端用它补全脉冲图/日流量趋势

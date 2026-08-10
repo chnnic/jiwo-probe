@@ -496,7 +496,7 @@ export function ServerDetail({ server, index, onClose }: { server: ProbeServer; 
               {trendMode === 'traffic' ? (
                 <TrafficChart daily={server.daily_traffic || []} containerClass="detail-chart detail-chart-traffic" />
               ) : trendMode === 'load' ? (
-                <LoadTrendChart serverIndex={index} containerClass="detail-chart detail-chart-load" />
+                <LoadTrendChart serverName={server.name || `服务器 ${index + 1}`} containerClass="detail-chart detail-chart-load" />
               ) : trendMode === 'cpu' ? (
                 <SystemTrendChart serverIndex={index} metric="cpu" containerClass="detail-chart detail-chart-system" />
               ) : trendMode === 'mem' ? (

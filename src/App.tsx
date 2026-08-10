@@ -1131,7 +1131,7 @@ const LOAD_LINES = [
 ] as const
 
 // 负载历史曲线（数据来自 /api/load，Worker cron 自建采集）。详情页与 Lumina 弹窗共用，containerClass 控制容器（详情页 detail-chart / 弹窗 chart）
-export function LoadTrendChart({ serverIndex, containerClass = 'detail-chart' }: { serverIndex: number; containerClass?: string }) {
+export function LoadTrendChart({ serverName, containerClass = 'detail-chart' }: { serverName: string; containerClass?: string }) {
   const [range, setRange] = useState<RangeKey>('1h')
   const [hidden, setHidden] = useState<Set<string>>(new Set())
   const [rows, setRows] = useState<{ ts: number; time: string; l1: number | null; l5: number | null; l15: number | null }[]>([])
@@ -1143,7 +1143,7 @@ export function LoadTrendChart({ serverIndex, containerClass = 'detail-chart' }:
   useEffect(() => {
     const controller = new AbortController()
     setLoading(true)
-    void fetch(`/api/load?server=${serverIndex}&range=${range}`, {
+    void fetch(`/api/load?server=${encodeURIComponent(serverName)}&range=${range}`, {
       cache: 'no-store',
       signal: controller.signal,
     })
@@ -1174,7 +1174,7 @@ export function LoadTrendChart({ serverIndex, containerClass = 'detail-chart' }:
         if (!controller.signal.aborted) setLoading(false)
       })
     return () => controller.abort()
-  }, [range, serverIndex])
+  }, [range, serverName])
 
   const fitZoom = () => {
     const el = chartRef.current
@@ -1419,7 +1419,7 @@ export function SystemTrendChart({ serverIndex, metric, containerClass = 'detail
   )
 }
 
-function LoadTrendDialog({ serverIndex, title, close }: { serverIndex: number; title: string; close: () => void }) {
+function LoadTrendDialog({ serverName, title, close }: { serverName: string; title: string; close: () => void }) {
   return createPortal(
     <div className="modal-backdrop" role="presentation" onMouseDown={close}>
       <section className="modal" onMouseDown={(event) => event.stopPropagation()}>
@@ -1429,7 +1429,7 @@ function LoadTrendDialog({ serverIndex, title, close }: { serverIndex: number; t
             ×
           </button>
         </header>
-        <LoadTrendChart serverIndex={serverIndex} containerClass="chart" />
+        <LoadTrendChart serverName={serverName} containerClass="chart" />
       </section>
     </div>,
     document.body,
@@ -1996,7 +1996,7 @@ function ServerCardLumina({ server, index }: { server: EnrichedServer; index: nu
         />
       )}
       {trafficOpen && <TrafficDialog server={server} close={() => setTrafficOpen(false)} />}
-      {loadOpen && <LoadTrendDialog serverIndex={index} title={name} close={() => setLoadOpen(false)} />}
+      {loadOpen && <LoadTrendDialog serverName={name} title={name} close={() => setLoadOpen(false)} />}
       {cpuOpen && <SystemTrendDialog serverIndex={index} title={name} metric="cpu" close={() => setCpuOpen(false)} />}
       {memOpen && <SystemTrendDialog serverIndex={index} title={name} metric="mem" close={() => setMemOpen(false)} />}
     </>
