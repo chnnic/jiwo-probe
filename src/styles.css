@@ -1020,6 +1020,26 @@ button {
 .table-traffic {
   width: 145px;
 }
+.table-traffic-button {
+  padding: 0;
+  border: 0;
+  color: inherit;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+}
+.table-traffic-main {
+  display: block;
+  white-space: nowrap;
+}
+.table-traffic small {
+  display: block;
+  margin: 3px 0;
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 400;
+  white-space: nowrap;
+}
 .table-ping {
   width: 165px;
   padding: 0;

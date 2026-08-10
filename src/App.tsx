@@ -2259,6 +2259,41 @@ function TableMetric({ percent }: { percent?: number }) {
   )
 }
 
+// 表格流量列: 计费口径总量 + 周期上下行小字(物理口径) + 周期区间 + 点击弹日流量趋势
+function TrafficCell({ server }: { server: ProbeServer }) {
+  const [open, setOpen] = useState(false)
+  if (server.traffic_used === undefined) return <span className="dash">—</span>
+  const showDetail = server.traffic_used_up !== undefined || server.traffic_used_down !== undefined
+  return (
+    <>
+      <button
+        type="button"
+        className={`table-traffic${server.daily_traffic?.length ? ' table-traffic-button' : ''}`}
+        onClick={() => server.daily_traffic?.length && setOpen(true)}
+        title={server.daily_traffic?.length ? '查看日流量趋势' : undefined}
+      >
+        <span className="table-traffic-main">
+          {server.traffic_limit ? `${bytes(server.traffic_used, false)} / ${bytes(server.traffic_limit, false)}` : bytes(server.traffic_used, false)}
+        </span>
+        {showDetail && (
+          <small className="table-traffic-ud">
+            ↑ {bytes(server.traffic_used_up, false)} · ↓ {bytes(server.traffic_used_down, false)}
+          </small>
+        )}
+        {server.period_start && server.period_end && (
+          <small className="table-traffic-period">{server.period_start.slice(5)} — {server.period_end.slice(5)}</small>
+        )}
+        {!!server.traffic_limit && (
+          <div className="meter">
+            <i style={{ width: `${pct(server.traffic_used, server.traffic_limit)}%` }} />
+          </div>
+        )}
+      </button>
+      {open && <TrafficDialog server={server} close={() => setOpen(false)} />}
+    </>
+  )
+}
+
 function TablePing({ ping, serverIndex }: { ping?: ProbePingSeries[]; serverIndex: number }) {
   const [open, setOpen] = useState(false)
   if (!ping?.length) return <span className="dash">—</span>
@@ -2404,18 +2439,7 @@ function ServerTable({ servers }: { servers: ProbeServer[] }) {
                     </span>
                   </td>
                   <td>
-                    <div className="table-traffic">
-                      <span>{server.traffic_limit ? `${bytes(server.traffic_used, false)} / ${bytes(server.traffic_limit, false)}` : bytes(server.traffic_used, false)}</span>
-                      {!!server.traffic_limit && (
-                        <div className="meter">
-                          <i
-                            style={{
-                              width: `${pct(server.traffic_used, server.traffic_limit)}%`,
-                            }}
-                          />
-                        </div>
-                      )}
-                    </div>
+                    <TrafficCell server={server} />
                   </td>
                   <td>
                     <TablePing ping={server.ping} serverIndex={index} />
