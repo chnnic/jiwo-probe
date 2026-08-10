@@ -26,7 +26,7 @@ const COLOR_BY_STATUS: Record<NodeStatus, string> = {
 
 function deriveStatus(r?: KomariRecord): NodeStatus {
   if (!r || r.online === false) return 'bad'
-  if ((r.cpu ?? 0) > 80 || (r.loss ?? 0) > 5) return 'warn'
+  if ((r.cpu ?? 0) > 80 || (r.loss ?? 0) * 100 > 5) return 'warn'
   return 'good'
 }
 
@@ -336,7 +336,7 @@ function NodeCardCompact_({ node, record, netSpark = [], pingSpark = [], pingLos
               className="mono tnum"
               style={{
                 fontSize: contentFs(12),
-                color: ((record?.loss ?? pingStats?.loss) ?? 0) > 1 ? 'var(--signal-warn)' : 'var(--signal-good)',
+                color: ((record?.loss ?? pingStats?.loss) ?? 0) * 100 > 1 ? 'var(--signal-warn)' : 'var(--signal-good)',
               }}
             >
               {formatPercent(record?.loss ?? pingStats?.loss, 1)}
@@ -385,7 +385,8 @@ function PingBar({ data, loss = [] }: { data: number[]; loss?: number[] }) {
     )
   }
   const lossColor = (l: number): string =>
-    l > 10 ? 'var(--signal-bad)' : l > 2 ? '#d68a3c' : l > 0 ? 'var(--signal-warn)' : 'var(--signal-good)'
+    // MMWX loss_pct is a 0–1 fraction (0.17 = 0.17%); thresholds are in percent.
+    l * 100 > 10 ? 'var(--signal-bad)' : l * 100 > 2 ? '#d68a3c' : l * 100 > 0 ? 'var(--signal-warn)' : 'var(--signal-good)'
   return (
     <div style={{ display: 'flex', gap: 1, alignItems: 'flex-end', height: 14 }}>
       {data.map((v, i) => {
@@ -407,7 +408,7 @@ function PingBar({ data, loss = [] }: { data: number[]; loss?: number[] }) {
         }
         const l = Number.isFinite(rawLoss) ? rawLoss : v <= 0 ? 100 : 0
         // Full loss (≥95%) — full-height hatched fault bar.
-        if (l >= 95) {
+        if (l * 100 >= 95) {
           return (
             <div
               key={i}

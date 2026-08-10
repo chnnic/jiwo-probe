@@ -55,18 +55,21 @@ interface Bubble {
 
 function colorForLoss(loss: number, online: boolean): string {
   if (!online) return 'var(--signal-bad)'
-  if (loss > 2) return 'var(--signal-bad)'
-  if (loss > 1) return '#d97a3a'
-  if (loss > 0.5) return 'var(--signal-warn)'
-  if (loss > 0.1) return '#a0b03a'
+  // MMWX loss is a 0–1 fraction (0.17 = 0.17%); thresholds are in percent.
+  const pct = loss * 100
+  if (pct > 2) return 'var(--signal-bad)'
+  if (pct > 1) return '#d97a3a'
+  if (pct > 0.5) return 'var(--signal-warn)'
+  if (pct > 0.1) return '#a0b03a'
   return 'var(--signal-good)'
 }
 
 function sizeForLoss(loss: number, online: boolean): number {
   if (!online) return 7
-  if (loss > 2) return 9
-  if (loss > 1) return 7.5
-  if (loss > 0.5) return 6.5
+  const pct = loss * 100
+  if (pct > 2) return 9
+  if (pct > 1) return 7.5
+  if (pct > 0.5) return 6.5
   return 5.5
 }
 

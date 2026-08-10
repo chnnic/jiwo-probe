@@ -206,7 +206,8 @@ function PingMiniBar({ data, loss = [] }: { data: number[]; loss?: number[] }) {
   // Bar HEIGHT encodes latency; bar COLOR encodes packet-loss %.
   // Loss tiers: 0%=good, ≤2%=warn, ≤10%=mid, >10%=bad, full-loss=hatched bad.
   const lossColor = (l: number): string =>
-    l > 10 ? 'var(--signal-bad)' : l > 2 ? '#d68a3c' : l > 0 ? 'var(--signal-warn)' : 'var(--signal-good)'
+    // MMWX loss_pct is a 0–1 fraction (0.17 = 0.17%); thresholds are in percent.
+    l * 100 > 10 ? 'var(--signal-bad)' : l * 100 > 2 ? '#d68a3c' : l * 100 > 0 ? 'var(--signal-warn)' : 'var(--signal-good)'
   return (
     <div style={{ display: 'flex', gap: 1, alignItems: 'flex-end', height: 12 }}>
       {data.map((v, i) => {
@@ -229,7 +230,7 @@ function PingMiniBar({ data, loss = [] }: { data: number[]; loss?: number[] }) {
         }
         const l = Number.isFinite(rawLoss) ? rawLoss : v <= 0 ? 100 : 0
         // Full loss (≥95%) — render a full-height hatched fault bar.
-        if (l >= 95) {
+        if (l * 100 >= 95) {
           return (
             <div
               key={i}

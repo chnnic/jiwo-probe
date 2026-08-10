@@ -1143,7 +1143,7 @@ function PingTargetCard({
   const yMax = Math.ceil((peak * 1.3) / 10) * 10 || 50
 
   // Status from loss + latency
-  const lossStatus: 'good' | 'warn' | 'bad' = loss > 10 ? 'bad' : loss > 2 ? 'warn' : 'good'
+  const lossStatus: 'good' | 'warn' | 'bad' = loss * 100 > 10 ? 'bad' : loss * 100 > 2 ? 'warn' : 'good'
 
   return (
     <div
