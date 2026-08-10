@@ -70,6 +70,10 @@ interface Props {
   lastUpdate?: number | null
   ping?: PingHistory
   config?: KomariPublicConfig
+  /** Local avg-latency history (derived from probe snapshots) — feeds card pulse bars. */
+  pingByNode?: Record<string, number[]>
+  /** Local avg packet-loss history. */
+  pingLossByNode?: Record<string, number[]>
   hubTargetUuid?: string
   viewVersion?: 'v1' | 'v2'
   onViewVersionChange?: (v: 'v1' | 'v2') => void
@@ -89,6 +93,8 @@ export function NodesV2Page({
   hubTargetUuid,
   viewVersion,
   onViewVersionChange,
+  pingByNode,
+  pingLossByNode,
 }: Props) {
   const stats = useAggregateStats(nodes, records, { expiringWithinDays: 30 })
   const drawer = useMobileDrawer()
@@ -530,8 +536,8 @@ export function NodesV2Page({
                         node={n}
                         record={records[n.uuid]}
                         netSpark={netSpark}
-                        pingSpark={history1h.pingByNode[n.uuid]}
-                        pingLoss={history1h.pingLossByNode[n.uuid]}
+                        pingSpark={pingByNode?.[n.uuid] ?? history1h.pingByNode[n.uuid]}
+                        pingLoss={pingLossByNode?.[n.uuid] ?? history1h.pingLossByNode[n.uuid]}
                         pingStats={history1h.pingStatsByNode[n.uuid]}
                         onClick={handleNodeClick}
                         selected={effectiveSelectedUuid === n.uuid}
