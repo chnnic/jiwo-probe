@@ -9,7 +9,7 @@ import './styles.css'
 // 其余（pixel/flat/anime/glass/lumina/自定义）渲染经典界面。
 const RanApp = lazy(() => import('./ran/RanApp').then((module) => ({ default: module.RanApp })))
 
-const RAN_PREFIX = /^ran(-|$)/
+const RAN_PREFIX = /^ran(-|$)/i
 
 function isRanTheme(theme: string): boolean {
   return RAN_PREFIX.test(theme)
@@ -31,7 +31,7 @@ function Root() {
   const ran = isRanTheme(theme)
   return (
     <Suspense fallback={<main className="center">{ran ? 'Loading Ran…' : 'Loading…'}</main>}>
-      {ran ? <RanApp initialTheme={theme} /> : <App />}
+      {ran ? <RanApp initialTheme={theme.toLowerCase()} /> : <App />}
     </Suspense>
   )
 }

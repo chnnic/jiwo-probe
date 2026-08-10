@@ -62,12 +62,14 @@ if (
 }
 
 export default function App({ initialTheme }: { initialTheme?: string }) {
-  // 主题优先级: 用户手动选过(ran.theme.user) > 主控下发变体(initialTheme) > 本地缓存 > ran-night
+  // 主题优先级: 主控明确下发变体(ran-night/ran-mist) > 用户手动选过(ran.theme.user) > 本地缓存 > ran-night
+  // 主控只下发 'ran'(无变体) → 用 Ran 默认主题(ran-mist), 忽略用户缓存
   const [theme, setTheme] = useState<Theme>(() => {
+    if (initialTheme === 'ran') return 'ran-mist'
+    if (isValidTheme(initialTheme)) return initialTheme
     let userSet = false
     try { userSet = !!localStorage.getItem(THEME_USER_SET_KEY) } catch { /* ignore */ }
     if (userSet) return loadTheme()
-    if (isValidTheme(initialTheme)) return initialTheme
     return loadTheme()
   })
   const handleThemeChange = (t: Theme) => {
@@ -94,14 +96,15 @@ export default function App({ initialTheme }: { initialTheme?: string }) {
     }
   }, [theme])
 
-  // 后台 default_theme — 仅在用户从未手动选过主题时生效。
+  // 后台 default_theme — 仅在用户从未手动选过、且主控未明确下发变体时生效。
   useEffect(() => {
     try {
       if (localStorage.getItem(THEME_USER_SET_KEY)) return
     } catch { /* ignore */ }
+    if (isValidTheme(initialTheme)) return
     const raw = config?.theme_settings?.default_theme
     if (isValidTheme(raw)) setTheme(raw)
-  }, [config?.theme_settings?.default_theme])
+  }, [config?.theme_settings?.default_theme, initialTheme])
 
   // 字号档位 — 跟随 Komari 后台 theme_settings.font_scale 实时变化。
   // 写到 <html> 上的 CSS 变量,各组件通过 contentFs() 读取。
