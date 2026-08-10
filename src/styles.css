@@ -3377,7 +3377,6 @@ footer a:hover {
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  flex-wrap: wrap;
 }
 .lumina-quota-label {
   display: inline-flex;
