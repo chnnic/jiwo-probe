@@ -1,0 +1,1082 @@
+/* ============================================================
+   岚 / Ran — Komari Probe Theme
+   Design tokens. Inspired by precision-machined hi-fi gear:
+   stepped chamfered edges, etched serial plates, sunken displays,
+   true 1px hairlines. No glow, no scanlines, no spectacle.
+   Themes: ran-night (graphite), ran-mist (porcelain), ran-ember (jujube),
+           ran-sakura (cherry blossom), ran-lavender (pale lilac).
+   ============================================================ */
+
+:root {
+  /* Type stacks */
+  --font-mono: 'JetBrains Mono', 'IBM Plex Mono', ui-monospace, 'SFMono-Regular', monospace;
+  --font-sans: 'Inter Tight', 'Inter', -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  --font-display: 'Inter Tight', 'Inter', sans-serif;
+
+  /* Type scale (px) */
+  --t-micro: 9px;
+  --t-mini: 10px;
+  --t-small: 11px;
+  --t-body: 13px;
+  --t-h4: 15px;
+  --t-h3: 18px;
+  --t-h2: 24px;
+  --t-h1: 32px;
+  --t-display: 56px;
+
+  --tracking-wide: 0.14em;
+  --tracking-mid: 0.06em;
+  --tracking-tight: -0.02em;
+
+  /* Breakpoints — design contract. The matching JS hook lives in
+     src/hooks/useMediaQuery.ts; keep these two sources aligned.
+     - sm: phone portrait edge case (single-column collapse)
+     - md: phone / phablet (sidebar becomes drawer, hide subtitle)
+     - lg: tablet / small laptop (Hub 3→2 col) */
+  --bp-sm: 480px;
+  --bp-md: 768px;
+  --bp-lg: 1024px;
+
+  /* Geometry */
+  --radius-xs: 2px;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 10px;
+  --radius-xl: 14px;
+
+  /* Spacing scale (4px base) */
+  --s-1: 4px;
+  --s-2: 8px;
+  --s-3: 12px;
+  --s-4: 16px;
+  --s-5: 20px;
+  --s-6: 24px;
+  --s-7: 32px;
+  --s-8: 40px;
+
+  --hairline: 1px;
+}
+
+/* ── ran-night (deep) ─────────────────────────────────────── */
+[data-theme='ran-night'] {
+  --bg-0: #0c0d0f;
+  --bg-1: #14161a;
+  --bg-2: #1a1d22;
+  --bg-3: #21252b;
+  --bg-4: #2a2f36;
+  --bg-inset: #0a0b0d;
+
+  /* v2 (per design spec): lift fg-1/2/3 toward white for AA contrast.
+     Was: #b8b3a8 / #7a7468 / #4a463e
+     Now: #d4cfc2 / #9a9384 / #6e695c — fg-3 ~5.2:1 on bg-2 (hits AA). */
+  --fg-0: #f2efe8;
+  --fg-1: #d4cfc2;
+  --fg-2: #9a9384;
+  --fg-3: #6e695c;
+  --fg-mark: #ffffff;
+
+  /* Engraved-letter shadow — applied via .etch / .engrave / Etch / SerialPlate.
+     SOFT recipe: single-direction 1px blur, ~35% alpha. Avoids the double-image
+     ghosting that hard opposing shadows produce on small mono type. */
+  --txt-engrave: 0 1px 1px rgba(0, 0, 0, 0.35);
+
+  /* Edges — outer bright (top light) + inner deep (recessed) = chamfer */
+  --edge-bright: rgba(255, 248, 230, 0.09);
+  --edge-mid: rgba(255, 248, 230, 0.05);
+  --edge-deep: rgba(0, 0, 0, 0.55);
+  --edge-engrave: rgba(0, 0, 0, 0.40);
+
+  /* Accent — restrained warm copper-gold */
+  --accent: #c28840;
+  --accent-dim: #8a5f2c;
+  --accent-bright: #e0a55a;
+
+  --signal-good: #6db485;
+  --signal-warn: #d9a154;
+  --signal-bad: #c85a4f;
+  --signal-info: #6b8db5;
+
+  --shadow-card:
+    0 1px 0 var(--edge-bright) inset,
+    0 -1px 0 var(--edge-deep) inset,
+    0 2px 8px rgba(0, 0, 0, 0.35);
+  --shadow-inset:
+    inset 0 1px 0 var(--edge-deep),
+    inset 0 -1px 0 var(--edge-bright),
+    inset 0 2px 6px rgba(0, 0, 0, 0.45);
+  --shadow-button:
+    0 1px 0 var(--edge-bright) inset,
+    0 -1px 0 var(--edge-deep) inset,
+    0 1px 2px rgba(0, 0, 0, 0.4);
+
+  --grid-line: rgba(255, 248, 230, 0.025);
+  --grid-line-strong: rgba(255, 248, 230, 0.05);
+
+  /* Map-specific — calibrated so land/borders read clearly in both themes.
+     Don't reuse --edge-engrave (way too dark in night, too light in mist). */
+  --map-land: #1c2026;
+  --map-land-hover: #262b33;
+  --map-border: rgba(255, 248, 230, 0.22);
+  --map-graticule: rgba(255, 248, 230, 0.07);
+}
+
+/* ── ran-mist (porcelain) ─────────────────────────────────── */
+[data-theme='ran-mist'] {
+  --bg-0: #f0e9dc;
+  --bg-1: #f6efe2;
+  --bg-2: #fbf5e9;
+  --bg-3: #fffaf0;
+  --bg-4: #fffdf6;
+  --bg-inset: #e2d9c5;
+
+  /* v2 (per design spec): pull fg toward black for AA contrast.
+     Was: #4a463d / #76705f / #a8a190
+     Now: #2e2a22 / #5a5546 / #807866 — fg-3 ~4.7:1 on bg-2 (hits AA). */
+  --fg-0: #14110b;
+  --fg-1: #2e2a22;
+  --fg-2: #5a5546;
+  --fg-3: #807866;
+  --fg-mark: #000000;
+
+  --txt-engrave: 0 1px 1px rgba(255, 255, 255, 0.7);
+
+  --edge-bright: rgba(255, 255, 255, 0.9);
+  --edge-mid: rgba(255, 255, 255, 0.5);
+  --edge-deep: rgba(50, 40, 25, 0.18);
+  --edge-engrave: rgba(50, 40, 25, 0.12);
+
+  --accent: #a06820;
+  --accent-dim: #7a4f18;
+  --accent-bright: #c28840;
+
+  --signal-good: #4a8a64;
+  --signal-warn: #b07820;
+  --signal-bad: #a83a30;
+  --signal-info: #4a6b90;
+
+  --shadow-card:
+    0 1px 0 var(--edge-bright) inset,
+    0 -1px 0 var(--edge-deep) inset,
+    0 1px 3px rgba(50, 40, 25, 0.08);
+  --shadow-inset:
+    inset 0 1px 0 var(--edge-deep),
+    inset 0 -1px 0 var(--edge-bright),
+    inset 0 1px 3px rgba(50, 40, 25, 0.12);
+  --shadow-button:
+    0 1px 0 var(--edge-bright) inset,
+    0 -1px 0 var(--edge-deep) inset,
+    0 1px 2px rgba(50, 40, 25, 0.1);
+
+  --grid-line: rgba(50, 40, 25, 0.04);
+  --grid-line-strong: rgba(50, 40, 25, 0.08);
+
+  /* Map-specific — calibrated for the mist (light) palette.
+     Land slightly cooler/grayer than bg-2 so it doesn't blend into the
+     ocean rect; borders dark enough to read at small zoom levels. */
+  --map-land: #ece2cc;
+  --map-land-hover: #e1d4b8;
+  --map-border: rgba(50, 40, 25, 0.32);
+  --map-graticule: rgba(50, 40, 25, 0.10);
+}
+
+/* ── ran-ember (jujube — warm dark red) ───────────────────── */
+[data-theme='ran-ember'] {
+  /* Almost black with a hint of red — Chinese jujube wood, not blood.
+     Same darkness as ran-night (#0c0d0f), only the hue shifts warm.
+     Sits in the same restraint family as night/mist, not a candy red. */
+  --bg-0: #1c0c0a;
+  --bg-1: #221412;
+  --bg-2: #2a1815;
+  --bg-3: #321e1a;
+  --bg-4: #3c2620;
+  --bg-inset: #150705;
+
+  /* fg: warm white → warm gray → red-tinted gray → deep red-gray.
+     fg-3 ~5:1 on bg-2 (hits AA). Same lightness curve as ran-night,
+     just shifted toward warm. */
+  --fg-0: #f5ebe5;
+  --fg-1: #d8c4bd;
+  --fg-2: #a0857d;
+  --fg-3: #74564f;
+  --fg-mark: #ffffff;
+
+  --txt-engrave: 0 1px 1px rgba(0, 0, 0, 0.4);
+
+  /* Edges — warm-tinted hairlines so the bevels don't look cool/blue. */
+  --edge-bright: rgba(255, 220, 200, 0.10);
+  --edge-mid: rgba(255, 220, 200, 0.06);
+  --edge-deep: rgba(0, 0, 0, 0.6);
+  --edge-engrave: rgba(0, 0, 0, 0.45);
+
+  /* Accent — slightly hotter copper than night (#c28840 → #c8853a) so it
+     reads cleanly against the warmer red ground without dimming. */
+  --accent: #c8853a;
+  --accent-dim: #8a5828;
+  --accent-bright: #e0a050;
+
+  /* Signal-bad lifted to bright orange-red so it cleanly separates from the
+     warm-red ground. signal-warn is fine (amber on warm red works).
+     signal-info gets a small lift toward cooler blue for max contrast. */
+  --signal-good: #6db485;
+  --signal-warn: #d9a154;
+  --signal-bad: #ff7058;
+  --signal-info: #6b8db5;
+
+  --shadow-card:
+    0 1px 0 var(--edge-bright) inset,
+    0 -1px 0 var(--edge-deep) inset,
+    0 2px 8px rgba(0, 0, 0, 0.4);
+  --shadow-inset:
+    inset 0 1px 0 var(--edge-deep),
+    inset 0 -1px 0 var(--edge-bright),
+    inset 0 2px 6px rgba(0, 0, 0, 0.5);
+  --shadow-button:
+    0 1px 0 var(--edge-bright) inset,
+    0 -1px 0 var(--edge-deep) inset,
+    0 1px 2px rgba(0, 0, 0, 0.45);
+
+  --grid-line: rgba(255, 220, 200, 0.03);
+  --grid-line-strong: rgba(255, 220, 200, 0.06);
+
+  /* Map — land slightly redder than bg-2 so continents read against ocean. */
+  --map-land: #2a1612;
+  --map-land-hover: #3a2018;
+  --map-border: rgba(255, 220, 200, 0.22);
+  --map-graticule: rgba(255, 220, 200, 0.08);
+}
+
+/* ── ran-sakura (cherry blossom — pale pink) ──────────────── */
+[data-theme='ran-sakura'] {
+  /* Pale Japanese cherry-blossom pink — washi paper with a sakura tag,
+     not candy. Same lightness as ran-mist, hue shifted toward pink. */
+  --bg-0: #fbe6ea;
+  --bg-1: #fceaee;
+  --bg-2: #fdeff2;
+  --bg-3: #fef4f6;
+  --bg-4: #fef9fa;
+  --bg-inset: #efd2d8;
+
+  /* fg: dark plum → deep mauve → mid mauve → pale mauve.
+     fg-3 ~4.7:1 on bg-2 (hits AA). */
+  --fg-0: #3a1820;
+  --fg-1: #5a2832;
+  --fg-2: #8a5660;
+  --fg-3: #b08490;
+  --fg-mark: #000000;
+
+  --txt-engrave: 0 1px 1px rgba(255, 255, 255, 0.7);
+
+  --edge-bright: rgba(255, 255, 255, 0.85);
+  --edge-mid: rgba(255, 255, 255, 0.45);
+  --edge-deep: rgba(120, 40, 60, 0.20);
+  --edge-engrave: rgba(120, 40, 60, 0.13);
+
+  /* Accent — deep pink, same family as the ground (per design spec:
+     "background a soft tone, accent the same hue one stop deeper"). */
+  --accent: #c4426a;
+  --accent-dim: #8a2e4a;
+  --accent-bright: #d85a82;
+
+  /* Signal-bad pulled deeper toward burgundy so offline reads clearly
+     against pale pink (a generic red would blend). signal-good lifted
+     a touch toward green to keep contrast with mauve fg. */
+  --signal-good: #5a9a78;
+  --signal-warn: #a06a18;
+  --signal-bad: #8a2828;
+  --signal-info: #4a6b90;
+
+  --shadow-card:
+    0 1px 0 var(--edge-bright) inset,
+    0 -1px 0 var(--edge-deep) inset,
+    0 1px 3px rgba(120, 40, 60, 0.08);
+  --shadow-inset:
+    inset 0 1px 0 var(--edge-deep),
+    inset 0 -1px 0 var(--edge-bright),
+    inset 0 1px 3px rgba(120, 40, 60, 0.12);
+  --shadow-button:
+    0 1px 0 var(--edge-bright) inset,
+    0 -1px 0 var(--edge-deep) inset,
+    0 1px 2px rgba(120, 40, 60, 0.1);
+
+  --grid-line: rgba(120, 40, 60, 0.04);
+  --grid-line-strong: rgba(120, 40, 60, 0.08);
+
+  /* Map — land slightly deeper pink than bg-2 so continents register. */
+  --map-land: #f0d4dc;
+  --map-land-hover: #e8c0cc;
+  --map-border: rgba(120, 40, 60, 0.30);
+  --map-graticule: rgba(120, 40, 60, 0.10);
+}
+
+/* ── ran-lavender (pale lilac) ────────────────────────────── */
+[data-theme='ran-lavender'] {
+  /* Pale Provençal lavender — pastoral lilac, not Barbie purple. Same
+     lightness as ran-mist, hue shifted cool toward violet. */
+  --bg-0: #e4dceb;
+  --bg-1: #e9e2ef;
+  --bg-2: #ede7f3;
+  --bg-3: #f1ecf6;
+  --bg-4: #f5f1f9;
+  --bg-inset: #d4c8df;
+
+  /* fg: dark violet-black → deep violet → mid violet → pale lavender.
+     fg-3 ~4.6:1 on bg-2 (hits AA). */
+  --fg-0: #241834;
+  --fg-1: #3e2e50;
+  --fg-2: #6c5e80;
+  --fg-3: #9a8eaa;
+  --fg-mark: #000000;
+
+  --txt-engrave: 0 1px 1px rgba(255, 255, 255, 0.65);
+
+  --edge-bright: rgba(255, 255, 255, 0.75);
+  --edge-mid: rgba(255, 255, 255, 0.4);
+  --edge-deep: rgba(60, 40, 90, 0.22);
+  --edge-engrave: rgba(60, 40, 90, 0.14);
+
+  /* Accent — deep violet, same family as the ground (per design spec:
+     "background a soft tone, accent the same hue one stop deeper"). */
+  --accent: #7048a4;
+  --accent-dim: #503078;
+  --accent-bright: #8a64bc;
+
+  /* Signal-info pulled deeper toward navy (#2a5a8a) so it doesn't blend
+     with the cool-violet ground. signal-good shifted slightly toward
+     teal-green to read clean on a cool base. */
+  --signal-good: #3a8a72;
+  --signal-warn: #a06a18;
+  --signal-bad: #a83a30;
+  --signal-info: #2a5a8a;
+
+  --shadow-card:
+    0 1px 0 var(--edge-bright) inset,
+    0 -1px 0 var(--edge-deep) inset,
+    0 1px 3px rgba(60, 40, 90, 0.08);
+  --shadow-inset:
+    inset 0 1px 0 var(--edge-deep),
+    inset 0 -1px 0 var(--edge-bright),
+    inset 0 1px 3px rgba(60, 40, 90, 0.12);
+  --shadow-button:
+    0 1px 0 var(--edge-bright) inset,
+    0 -1px 0 var(--edge-deep) inset,
+    0 1px 2px rgba(60, 40, 90, 0.1);
+
+  --grid-line: rgba(60, 40, 90, 0.04);
+  --grid-line-strong: rgba(60, 40, 90, 0.08);
+
+  /* Map — land slightly deeper lavender than bg-2 so continents read. */
+  --map-land: #ddd0eb;
+  --map-land-hover: #cdbcdf;
+  --map-border: rgba(60, 40, 90, 0.30);
+  --map-graticule: rgba(60, 40, 90, 0.10);
+}
+
+/* ─── Base ─── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/* Komari may embed our markup inside its own layout shell.
+   Don't force 100% height — let content flow naturally and avoid
+   creating an oversized scroll area when the host already has a header. */
+html,
+body {
+  margin: 0;
+}
+
+body {
+  font-family: var(--font-sans);
+  font-size: var(--t-body);
+  color: var(--fg-0);
+  /* Machined surface: a 34px scribed grid over an off-axis light source.
+     The gradient is built from the palette's own steps rather than fixed
+     colours, so every theme variant gets the same lighting for free.
+
+     Deliberately NOT background-attachment: fixed. Pinning the backdrop forces
+     the browser to repaint the entire viewport — radial gradient and all — on
+     every scroll frame, which is enough on its own to peg a CPU core. Scrolling
+     with the content costs nothing and looks the same. */
+  background-color: var(--bg-0);
+  background-image:
+    linear-gradient(var(--grid-line) var(--hairline), transparent var(--hairline)),
+    linear-gradient(90deg, var(--grid-line) var(--hairline), transparent var(--hairline)),
+    radial-gradient(120% 92% at 80% 4%, var(--bg-3) 0%, var(--bg-0) 55%, var(--bg-inset) 100%);
+  background-size:
+    34px 34px,
+    34px 34px,
+    100% 100%;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: 'ss01', 'cv11';
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Reusable atoms */
+.mono {
+  font-family: var(--font-mono);
+  font-feature-settings: 'tnum', 'zero';
+}
+
+.tnum {
+  font-variant-numeric: tabular-nums;
+}
+
+.uppercase-mid {
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-mid);
+}
+
+.uppercase-wide {
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wide);
+}
+
+/* Etched / engraved label — v2: AA-grade fg-2 color + weight 600 (per design
+   spec). Note: --txt-engrave shadow is defined per-theme above but NOT applied
+   here by default. At 9px the shadow blurs rather than engraves; the shadow
+   is reserved for the .engrave utility (large headings) and is opt-in. */
+.etch {
+  font-family: var(--font-mono);
+  font-size: var(--t-micro);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wide);
+  color: var(--fg-2);
+  font-weight: 600;
+}
+
+/* .engrave — utility class for "stamped/cut into surface" effect on large
+   text only. Apply to card titles, section headers, large status labels
+   (≥14px). NOT for small labels (≤11px) — shadow blurs at that size. */
+.engrave {
+  text-shadow: var(--txt-engrave);
+}
+
+/* Precision card — outer chamfer + inner stroke.
+   Raised: lit from above, so the face carries a top-down gradient, the top
+   edge takes a highlight and the bottom edge a shadow (see --shadow-card). */
+.precision-card {
+  background: linear-gradient(180deg, var(--bg-3), var(--bg-2));
+  border: var(--hairline) solid var(--edge-mid);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-card);
+  position: relative;
+  /* transform only. Animating box-shadow re-rasterises the blur on every frame
+     — across a grid of cards that is a repaint storm for no visible gain, so
+     the shadow swaps instantly while the lift itself is what the eye follows. */
+  transition: transform 0.16s ease;
+}
+
+/* Lift on hover — the plate rises off the sheet and its shadow lengthens,
+   which is what sells the depth. Opt in with .precision-card.liftable so
+   static panels don't wobble under the cursor. */
+.precision-card.liftable:hover {
+  transform: translateY(-1px);
+  box-shadow:
+    0 1px 0 var(--edge-bright) inset,
+    0 -1px 0 var(--edge-deep) inset,
+    0 10px 26px rgba(50, 40, 25, 0.16);
+  border-color: var(--edge-deep);
+}
+
+/* Status sweep — a hairline of the node's own status colour across the top
+   edge of a card, brightest at centre. Reads as light catching a machined
+   bevel, and encodes state without spending a single pixel on a badge. */
+.status-sweep {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+/* Text pressed into the metal: a single light line beneath each glyph. On the
+   dark variants --txt-engrave inverts to a shadow, so this reads correctly in
+   both. Defined per theme; it was never actually applied anywhere until now. */
+.engraved {
+  text-shadow: var(--txt-engrave);
+}
+
+/* Sunken display — for screens, charts, value readouts.
+   Recessed: the same light source, so the shading inverts — shadow along the
+   TOP inner edge, highlight along the bottom (see --shadow-inset). Getting
+   this backwards is what makes a slot look painted on rather than milled. */
+.precision-inset {
+  background: var(--bg-inset);
+  border: var(--hairline) solid var(--edge-engrave);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-inset);
+}
+
+/* Selected nav item: the plate is pressed IN (inverted shading) and a raised
+   tab juts from its left edge — the physical vocabulary of a latched switch,
+   rather than a coloured background. */
+.nav-selected {
+  position: relative;
+  background: var(--bg-inset);
+  box-shadow: var(--shadow-inset);
+}
+
+.nav-selected::before {
+  content: '';
+  position: absolute;
+  left: -12px;
+  top: 8px;
+  bottom: 8px;
+  width: 3px;
+  border-radius: 0 2px 2px 0;
+  background: var(--accent);
+}
+
+/* The double-stroke effect — outer bright, inner deep */
+.machined-edge {
+  position: relative;
+  border-radius: var(--radius-md);
+}
+
+.machined-edge::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  border: var(--hairline) solid var(--edge-bright);
+  pointer-events: none;
+}
+
+.machined-edge::after {
+  content: '';
+  position: absolute;
+  inset: 1px;
+  border-radius: calc(var(--radius-md) - 1px);
+  border: var(--hairline) solid var(--edge-deep);
+  pointer-events: none;
+}
+
+/* Tick scale — vertical or horizontal ruler */
+.tick-scale {
+  background-image: repeating-linear-gradient(
+    90deg,
+    var(--fg-3) 0,
+    var(--fg-3) 1px,
+    transparent 1px,
+    transparent 8px
+  );
+  height: 6px;
+  opacity: 0.5;
+}
+
+/* Hardware seam — subtle horizontal divider with center cap */
+.seam {
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 0,
+    var(--edge-deep) 8px,
+    var(--edge-deep) calc(100% - 8px),
+    transparent 100%
+  );
+  border-bottom: 1px solid var(--edge-bright);
+}
+
+/* Scrollbar — subtle */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-1);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--bg-3);
+  border: 2px solid var(--bg-1);
+  border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--bg-4);
+}
+
+/* Selection */
+::selection {
+  background: var(--accent-dim);
+  color: var(--fg-mark);
+}
+
+/* ─── Animations (GPU-composited, ~free) ───────────────────── */
+@keyframes ran-pulse {
+  0% {
+    transform: scale(0.6);
+    opacity: 0.7;
+  }
+  100% {
+    transform: scale(1.8);
+    opacity: 0;
+  }
+}
+
+@keyframes ran-sweep {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(200%);
+  }
+}
+
+@keyframes ran-blink {
+  0%,
+  50% {
+    opacity: 1;
+  }
+  50.01%,
+  100% {
+    opacity: 0.2;
+  }
+}
+
+/* ── ran-tomcat (steel blue-grey) ─────────────────────────── */
+[data-theme='ran-tomcat'] {
+  --bg-0: #2a3848;
+  --bg-1: #324252;
+  --bg-2: #3a4d5e;
+  --bg-3: #46596c;
+  --bg-4: #526677;
+  --bg-inset: #1e2e3c;
+
+  --fg-0: #e8eef4;
+  --fg-1: #bcc8d4;
+  --fg-2: #869aae;
+  --fg-3: #5e7286;
+  --fg-mark: #ffffff;
+
+  --txt-engrave: 0 1px 1px rgba(0, 0, 0, 0.5);
+
+  --edge-bright: rgba(210, 224, 238, 0.10);
+  --edge-mid: rgba(210, 224, 238, 0.05);
+  --edge-deep: rgba(0, 0, 0, 0.50);
+  --edge-engrave: rgba(0, 0, 0, 0.38);
+
+  --accent: #e8a458;
+  --accent-dim: #c4823a;
+  --accent-bright: #f0bc78;
+
+  --signal-good: #88b8a8;
+  --signal-warn: #d4a840;
+  --signal-bad: #d86050;
+  --signal-info: #6a9fd0;
+
+  --shadow-card:
+    0 1px 0 var(--edge-bright) inset,
+    0 -1px 0 var(--edge-deep) inset,
+    0 1px 3px rgba(0, 0, 0, 0.25);
+  --shadow-inset:
+    inset 0 1px 0 var(--edge-deep),
+    inset 0 -1px 0 var(--edge-bright),
+    inset 0 1px 3px rgba(0, 0, 0, 0.30);
+  --shadow-button:
+    0 1px 0 var(--edge-bright) inset,
+    0 -1px 0 var(--edge-deep) inset;
+
+  --grid-line: rgba(210, 224, 238, 0.06);
+  --grid-line-strong: rgba(210, 224, 238, 0.12);
+}
+
+/* ── ran-teal (deep teal) ─────────────────────────────────── */
+[data-theme='ran-teal'] {
+  --bg-0: #1f3537;
+  --bg-1: #243d3f;
+  --bg-2: #2a4548;
+  --bg-3: #324f53;
+  --bg-4: #3a5a5e;
+  --bg-inset: #162a2c;
+
+  --fg-0: #e8f0ee;
+  --fg-1: #bcc8c5;
+  --fg-2: #82938f;
+  --fg-3: #5a6b67;
+  --fg-mark: #ffffff;
+
+  --txt-engrave: 0 1px 1px rgba(0, 0, 0, 0.5);
+
+  --edge-bright: rgba(220, 240, 234, 0.10);
+  --edge-mid: rgba(220, 240, 234, 0.05);
+  --edge-deep: rgba(0, 0, 0, 0.52);
+  --edge-engrave: rgba(0, 0, 0, 0.42);
+
+  --accent: #e8a458;
+  --accent-dim: #c4823a;
+  --accent-bright: #f0bc78;
+
+  --signal-good: #7ec0a0;
+  --signal-warn: #d4a840;
+  --signal-bad: #d86050;
+  --signal-info: #5a9ec0;
+
+  --shadow-card:
+    0 1px 0 var(--edge-bright) inset,
+    0 -1px 0 var(--edge-deep) inset,
+    0 1px 3px rgba(0, 0, 0, 0.28);
+  --shadow-inset:
+    inset 0 1px 0 var(--edge-deep),
+    inset 0 -1px 0 var(--edge-bright),
+    inset 0 1px 3px rgba(0, 0, 0, 0.32);
+  --shadow-button:
+    0 1px 0 var(--edge-bright) inset,
+    0 -1px 0 var(--edge-deep) inset;
+
+  --grid-line: rgba(220, 240, 234, 0.06);
+  --grid-line-strong: rgba(220, 240, 234, 0.12);
+}
+
+/* ── ran-midnight (deep navy) ─────────────────────────────── */
+[data-theme='ran-midnight'] {
+  --bg-0: #0c1422;
+  --bg-1: #101a2c;
+  --bg-2: #162038;
+  --bg-3: #1c2844;
+  --bg-4: #243050;
+  --bg-inset: #080e18;
+
+  --fg-0: #e8eef8;
+  --fg-1: #bcc8dc;
+  --fg-2: #7a8aa8;
+  --fg-3: #4e5c78;
+  --fg-mark: #ffffff;
+
+  --txt-engrave: 0 1px 1px rgba(0, 0, 0, 0.6);
+
+  --edge-bright: rgba(200, 220, 255, 0.10);
+  --edge-mid: rgba(200, 220, 255, 0.05);
+  --edge-deep: rgba(0, 0, 0, 0.62);
+  --edge-engrave: rgba(0, 0, 0, 0.50);
+
+  --accent: #e0a55a;
+  --accent-dim: #bc8438;
+  --accent-bright: #f0be78;
+
+  --signal-good: #5ab088;
+  --signal-warn: #d4a840;
+  --signal-bad: #d86050;
+  --signal-info: #5a8ec8;
+
+  --shadow-card:
+    0 1px 0 var(--edge-bright) inset,
+    0 -1px 0 var(--edge-deep) inset,
+    0 1px 3px rgba(0, 0, 0, 0.35);
+  --shadow-inset:
+    inset 0 1px 0 var(--edge-deep),
+    inset 0 -1px 0 var(--edge-bright),
+    inset 0 1px 3px rgba(0, 0, 0, 0.40);
+  --shadow-button:
+    0 1px 0 var(--edge-bright) inset,
+    0 -1px 0 var(--edge-deep) inset;
+
+  --grid-line: rgba(200, 220, 255, 0.06);
+  --grid-line-strong: rgba(200, 220, 255, 0.12);
+}
+
+/* ── ran-mint (pale mint) ─────────────────────────────────── */
+[data-theme='ran-mint'] {
+  --bg-0: #dceee5;
+  --bg-1: #e2f1ea;
+  --bg-2: #e8f4ef;
+  --bg-3: #eef7f3;
+  --bg-4: #f4faf7;
+  --bg-inset: #cce6da;
+
+  --fg-0: #0e2a22;
+  --fg-1: #1c4438;
+  --fg-2: #4e766a;
+  --fg-3: #82a294;
+  --fg-mark: #000000;
+
+  --txt-engrave: 0 1px 1px rgba(255, 255, 255, 0.65);
+
+  --edge-bright: rgba(255, 255, 255, 0.75);
+  --edge-mid: rgba(255, 255, 255, 0.4);
+  --edge-deep: rgba(20, 70, 55, 0.22);
+  --edge-engrave: rgba(20, 70, 55, 0.14);
+
+  --accent: #2e8870;
+  --accent-dim: #1e6858;
+  --accent-bright: #3aa888;
+
+  --signal-good: #3a9060;
+  --signal-warn: #a07018;
+  --signal-bad: #c03828;
+  --signal-info: #2a6898;
+
+  --shadow-card:
+    0 1px 0 var(--edge-bright) inset,
+    0 -1px 0 var(--edge-deep) inset,
+    0 1px 3px rgba(20, 70, 55, 0.08);
+  --shadow-inset:
+    inset 0 1px 0 var(--edge-deep),
+    inset 0 -1px 0 var(--edge-bright),
+    inset 0 1px 3px rgba(20, 70, 55, 0.12);
+  --shadow-button:
+    0 1px 0 var(--edge-bright) inset,
+    0 -1px 0 var(--edge-deep) inset;
+
+  --grid-line: rgba(20, 70, 55, 0.07);
+  --grid-line-strong: rgba(20, 70, 55, 0.14);
+}
+
+/* ── ran-butter (warm cream) ──────────────────────────────── */
+[data-theme='ran-butter'] {
+  --bg-0: #f6ecc8;
+  --bg-1: #f8efd2;
+  --bg-2: #faf2dc;
+  --bg-3: #fcf6e6;
+  --bg-4: #fefaf2;
+  --bg-inset: #ede0b0;
+
+  --fg-0: #3a2c0c;
+  --fg-1: #5e4818;
+  --fg-2: #8e7438;
+  --fg-3: #b5a06c;
+  --fg-mark: #000000;
+
+  --txt-engrave: 0 1px 1px rgba(255, 255, 255, 0.65);
+
+  --edge-bright: rgba(255, 255, 255, 0.75);
+  --edge-mid: rgba(255, 255, 255, 0.4);
+  --edge-deep: rgba(80, 55, 10, 0.22);
+  --edge-engrave: rgba(80, 55, 10, 0.14);
+
+  --accent: #c4881c;
+  --accent-dim: #a06a10;
+  --accent-bright: #dea030;
+
+  --signal-good: #7a9c40;
+  --signal-warn: #c07818;
+  --signal-bad: #c03828;
+  --signal-info: #2a6898;
+
+  --shadow-card:
+    0 1px 0 var(--edge-bright) inset,
+    0 -1px 0 var(--edge-deep) inset,
+    0 1px 3px rgba(80, 55, 10, 0.08);
+  --shadow-inset:
+    inset 0 1px 0 var(--edge-deep),
+    inset 0 -1px 0 var(--edge-bright),
+    inset 0 1px 3px rgba(80, 55, 10, 0.12);
+  --shadow-button:
+    0 1px 0 var(--edge-bright) inset,
+    0 -1px 0 var(--edge-deep) inset;
+
+  --grid-line: rgba(80, 55, 10, 0.07);
+  --grid-line-strong: rgba(80, 55, 10, 0.14);
+}
+
+/* ── ran-ji (霁 — clear-sky white, blue accent) ───────────────
+   Pure cool white. Rain-cleared-sky palette: neutral white grounds,
+   blue accent. Cooler & whiter than ran-mist (which is warm porcelain).
+   fg pulled toward near-black for AA contrast on white. */
+[data-theme='ran-ji'] {
+  --bg-0: #f4f6f8;
+  --bg-1: #f9fafb;
+  --bg-2: #fcfdfe;
+  --bg-3: #ffffff;
+  --bg-4: #ffffff;
+  --bg-inset: #e8ebef;
+
+  --fg-0: #10151c;
+  --fg-1: #1f2530;
+  --fg-2: #4a5160;
+  --fg-3: #7a818e;
+  --fg-mark: #000000;
+
+  --txt-engrave: 0 1px 1px rgba(255, 255, 255, 0.8);
+
+  --edge-bright: rgba(255, 255, 255, 0.95);
+  --edge-mid: rgba(255, 255, 255, 0.6);
+  --edge-deep: rgba(30, 40, 55, 0.16);
+  --edge-engrave: rgba(30, 40, 55, 0.10);
+
+  --accent: #2f6fd6;
+  --accent-dim: #2358b0;
+  --accent-bright: #4a86e8;
+
+  --signal-good: #3f9c6a;
+  --signal-warn: #c08420;
+  --signal-bad: #cf4a3e;
+  --signal-info: #3f6fb0;
+
+  --shadow-card:
+    0 1px 0 var(--edge-bright) inset,
+    0 -1px 0 var(--edge-deep) inset,
+    0 1px 3px rgba(30, 40, 55, 0.07);
+  --shadow-inset:
+    inset 0 1px 0 var(--edge-deep),
+    inset 0 -1px 0 var(--edge-bright),
+    inset 0 1px 3px rgba(30, 40, 55, 0.10);
+  --shadow-button:
+    0 1px 0 var(--edge-bright) inset,
+    0 -1px 0 var(--edge-deep) inset,
+    0 1px 2px rgba(30, 40, 55, 0.08);
+
+  --grid-line: rgba(30, 40, 55, 0.05);
+  --grid-line-strong: rgba(30, 40, 55, 0.09);
+
+  /* Map-specific — cool white land, blue-gray borders. */
+  --map-land: #eef1f5;
+  --map-land-hover: #e2e7ee;
+  --map-border: rgba(30, 40, 55, 0.30);
+  --map-graticule: rgba(30, 40, 55, 0.09);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ============================================================
+   Responsive — runtime CSS only. JS-driven layout uses
+   useIsMobile/Tablet hooks; this section covers cases that are
+   easier expressed declaratively (CSS-var-driven grid columns,
+   borderRight cleanup at row edges, etc.).
+   ============================================================ */
+
+/* Hub TelemetryBar: 8-cell strip → 4 cols on mobile (4×2 grid).
+   The component sets --telemetry-cols inline-default 8; we override
+   below md. nth-child rules clean up the row-edge borders so the strip
+   looks like a coherent 4×2 grid rather than two stacked 4-pieces with
+   stray vertical lines on the wrong cells. */
+@media (max-width: 767px) {
+  .hub-telemetry-bar {
+    --telemetry-cols: 4;
+  }
+  /* Cell 4 (1-indexed) now sits at the right edge of row 1, so kill its
+     borderRight even though inline style had it set. */
+  .hub-telemetry-bar .hub-telemetry-cell:nth-child(4) {
+    border-right: none !important;
+  }
+  /* Cells 5..8 are the second row; give them a top border so the row
+     break reads visually. */
+  .hub-telemetry-bar .hub-telemetry-cell:nth-child(n + 5) {
+    border-top: 1px solid var(--edge-engrave);
+  }
+  /* Slightly tighter padding so 4 cells fit a 380px viewport. */
+  .hub-telemetry-bar .hub-telemetry-cell {
+    padding: 7px 10px;
+  }
+}
+
+/* NodeTable grid: 420px floor breaks on phones (forces horizontal overflow).
+   Drop the floor below md so a single card fills the viewport width. */
+@media (max-width: 767px) {
+  .nodetable-grid {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+}
+
+/* Traffic Top Talkers table: 6 fixed columns blow out on phones.
+   Mobile reflow:
+   - rank (#) and SHARE bar disappear (less critical, save horizontal space)
+   - NODE name takes the full first row
+   - REGION pill and TX/RX appear on the second row as a quick-glance strip
+   - The grid becomes a 2-row visual block per entry. */
+@media (max-width: 767px) {
+  .traffic-talkers-header {
+    /* Header: just two columns, "NODE" and "TX/RX" hint */
+    grid-template-columns: 1fr auto !important;
+    gap: 8px !important;
+  }
+  .traffic-talkers-header .traffic-col-rank,
+  .traffic-talkers-header .traffic-col-region,
+  .traffic-talkers-header .traffic-col-share {
+    display: none !important;
+  }
+  /* Header layout: header has 6 children. With grid-template-columns
+     1fr auto, the visible 3 (NODE, TX, RX) need explicit grid-column to
+     not auto-place into 4 cells. We put NODE in col 1 and merge TX+RX
+     into a single right-aligned hint via a trick: hide TX, keep RX
+     spanning the right slot. Simplest: just override via direct sibling
+     rules — children 4 (↑TX) and 5 (↓RX) keep auto-placement; children
+     1/3/6 hidden. Result: NODE + RX shown. */
+  .traffic-talkers-header > :nth-child(4) {
+    display: none !important;
+  }
+
+  /* Each row: 2-column grid where NODE spans the full width on the first
+     line and TX/RX sit on a second line. Use grid-template-areas for
+     clarity. */
+  .traffic-talkers-row {
+    grid-template-columns: 1fr auto auto !important;
+    grid-template-areas:
+      'node node node'
+      'tx tx rx' !important;
+    gap: 4px 12px !important;
+    padding: 10px 14px !important;
+  }
+  .traffic-talkers-row .traffic-col-rank,
+  .traffic-talkers-row .traffic-col-region,
+  .traffic-talkers-row .traffic-col-share {
+    display: none !important;
+  }
+  .traffic-talkers-row .traffic-col-node {
+    grid-area: node;
+  }
+  .traffic-talkers-row .traffic-col-tx {
+    grid-area: tx;
+    text-align: left !important;
+    font-size: 11px !important;
+  }
+  .traffic-talkers-row .traffic-col-rx {
+    grid-area: rx;
+    text-align: right !important;
+    font-size: 11px !important;
+  }
+  /* Add ↑/↓ glyphs to TX/RX on mobile to compensate for the missing header */
+  .traffic-talkers-row .traffic-col-tx::before {
+    content: '↑ ';
+    color: var(--fg-3);
+    font-weight: normal;
+  }
+  .traffic-talkers-row .traffic-col-rx::before {
+    content: '↓ ';
+    color: var(--fg-3);
+    font-weight: normal;
+  }
+}
+
+/* Billing: two 2-col blocks (Renewal Timeline / Critical-7 panel,
+   and CostTrend / continent spend) collapse to single column on mobile. */
+@media (max-width: 767px) {
+  .billing-2col-renewal,
+  .billing-2col-trend {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* Page main padding tightens on mobile. Inline style sets desktop padding
+   (typically 20 or 16); the !important override below kicks in below md.
+   We also honor iOS safe-area for landscape with a notch and the home-
+   indicator gesture bar at the bottom. */
+@media (max-width: 767px) {
+  .app-main {
+    padding: 12px 12px 16px !important;
+    padding-left: max(12px, env(safe-area-inset-left)) !important;
+    padding-right: max(12px, env(safe-area-inset-right)) !important;
+    padding-bottom: max(16px, env(safe-area-inset-bottom)) !important;
+  }
+}
+
+/* MapApp bottom grid (Fleet Stats + Nodes by Region) collapses to single
+   column on mobile. */
+@media (max-width: 767px) {
+  .map-bottom-grid {
+    grid-template-columns: 1fr !important;
+  }
+}

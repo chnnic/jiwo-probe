@@ -164,6 +164,38 @@ export default {
       })
     }
 
+    // 访客信息（Ran 主题访客浮卡用）——直接读 CF 请求头，不调用第三方
+    if (incoming.pathname === '/api/visitor') {
+      if (request.method !== 'GET') return new Response('Method not allowed', { status: 405 })
+      const cf = request.cf
+      const optionalNumber = (value: unknown): number | undefined => {
+        if (typeof value !== 'string' && typeof value !== 'number') return undefined
+        const parsed = Number(value)
+        return Number.isFinite(parsed) ? parsed : undefined
+      }
+      return Response.json(
+        {
+          ip: request.headers.get('CF-Connecting-IP') || 'UNKNOWN',
+          city: cf?.city,
+          region: cf?.region,
+          country: cf?.country,
+          isp: cf?.asOrganization,
+          lat: optionalNumber(cf?.latitude),
+          lon: optionalNumber(cf?.longitude),
+          risk: null,
+          proxy: 'unknown',
+          type: '',
+        },
+        {
+          headers: {
+            'Cache-Control': 'private, no-store',
+            'Content-Type': 'application/json; charset=utf-8',
+            'X-Content-Type-Options': 'nosniff',
+          },
+        },
+      )
+    }
+
     const target = upstreamURL(request, env)
     if (!target) return env.ASSETS.fetch(request)
     if (request.method !== 'GET') return new Response('Method not allowed', { status: 405 })
