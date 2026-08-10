@@ -836,16 +836,16 @@ export function NodeDetailPage({
                   )}
                 </CardFrame>
 
-                <CardFrame title="Traffic" code="T · 11" action={<Etch>REPORTED TOTAL</Etch>}>
+                <CardFrame title="Traffic" code="T · 11" action={<Etch>REPORTED PERIOD</Etch>}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                     <ConnRow
                       label="↑ TX"
-                      value={online ? formatBytes(record?.network_total_up) : '—'}
+                      value={online ? formatBytes(record?.traffic_period_up) : '—'}
                     />
                     <div style={{ borderTop: '1px solid var(--edge-engrave)' }} />
                     <ConnRow
                       label="↓ RX"
-                      value={online ? formatBytes(record?.network_total_down) : '—'}
+                      value={online ? formatBytes(record?.traffic_period_down) : '—'}
                     />
                     <div className="seam" style={{ margin: '6px 0' }} />
                     <div
@@ -858,8 +858,8 @@ export function NodeDetailPage({
                       <Etch>TOTAL</Etch>
                       <Numeric
                         value={formatBytes(
-                          record?.network_total_up !== undefined || record?.network_total_down !== undefined
-                            ? (record?.network_total_up ?? 0) + (record?.network_total_down ?? 0)
+                          record?.traffic_period_up !== undefined || record?.traffic_period_down !== undefined
+                            ? (record?.traffic_period_up ?? 0) + (record?.traffic_period_down ?? 0)
                             : node.traffic_used,
                         )}
                         size={16}

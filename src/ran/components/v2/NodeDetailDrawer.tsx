@@ -496,7 +496,7 @@ export function NodeDetailDrawer({ node, record, onClose }: Props) {
                   {record?.network_tx ? formatBps(record.network_tx) : '—'}
                 </div>
                 <div style={{ fontSize: contentFs(9), color: 'var(--fg-3)', marginTop: 2 }}>
-                  total {record?.network_total_up ? formatBytes(record.network_total_up) : '—'}
+                  周期 {record?.traffic_period_up ? formatBytes(record.traffic_period_up) : '—'}
                 </div>
               </div>
               <div
@@ -527,7 +527,7 @@ export function NodeDetailDrawer({ node, record, onClose }: Props) {
                   {record?.network_rx ? formatBps(record.network_rx) : '—'}
                 </div>
                 <div style={{ fontSize: contentFs(9), color: 'var(--fg-3)', marginTop: 2 }}>
-                  total {record?.network_total_down ? formatBytes(record.network_total_down) : '—'}
+                  周期 {record?.traffic_period_down ? formatBytes(record.traffic_period_down) : '—'}
                 </div>
               </div>
             </div>
