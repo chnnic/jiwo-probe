@@ -3205,7 +3205,7 @@ footer a:hover {
 .lumina-title {
   margin: 0;
   min-width: 0;
-  flex: 1 1 auto;
+  flex: 1 0 auto;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
