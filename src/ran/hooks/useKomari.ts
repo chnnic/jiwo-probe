@@ -21,7 +21,8 @@ interface KomariState {
   pingLossByNode: Record<string, number[]>
 }
 
-const MAX_PING_POINTS = 120 // ~10min at a 5s poll
+// 24h worth of 5s polls — window selector (1H/6H/1D) slices this per window.
+const MAX_PING_POINTS = 24 * 60 * 12 // 17280 @ 5s ≈ 24h
 
 export function useKomari(): KomariState {
   const probe = useProbe()

@@ -961,6 +961,8 @@ export function NodeDetailPage({
                       times={bucketTimes}
                       localHistory={pingByNode?.[uuid]}
                       localLoss={pingLossByNode?.[uuid]}
+                      windowBuckets={windowSpec.buckets}
+                      windowHours={windowSpec.hours}
                     />
                   ))}
                 </div>
@@ -1099,6 +1101,8 @@ function PingTargetCard({
   times,
   localHistory,
   localLoss,
+  windowBuckets,
+  windowHours,
 }: {
   target: { task: { id: number; name: string; loss: number; interval: number }; data: number[]; latest?: number }
   index: number
@@ -1106,6 +1110,9 @@ function PingTargetCard({
   /** Local avg-latency history — replaces the flat pseudo-series from MMWX series API. */
   localHistory?: number[]
   localLoss?: number[]
+  /** Window shape: slice local history to this window, downsampled to these buckets. */
+  windowBuckets?: number
+  windowHours?: number
 }) {
   const colors = ['var(--accent)', 'var(--signal-info)', 'var(--signal-good)', 'var(--accent-bright)']
   const color = colors[index % colors.length]
@@ -1114,7 +1121,21 @@ function PingTargetCard({
 
   // Prefer real locally-accumulated history over the flat pseudo-buckets the
   // MMWX series API returns (all buckets = current value → a flat line).
-  const seriesData = localHistory && localHistory.length >= 2 ? localHistory : target.data
+  // Slice the local buffer to the selected window (1H/6H/1D) and downsample
+  // to the window's bucket count so switching windows actually changes the span.
+  let seriesData = target.data
+  if (localHistory && localHistory.length >= 2) {
+    const hours = windowHours ?? 1
+    const want = Math.min(localHistory.length, hours * 60 * 12) // 5s poll
+    const slice = localHistory.slice(localHistory.length - want)
+    const buckets = windowBuckets ?? 60
+    if (slice.length > buckets) {
+      const step = slice.length / buckets
+      seriesData = Array.from({ length: buckets }, (_, b) => slice[Math.min(slice.length - 1, Math.floor(b * step))])
+    } else {
+      seriesData = slice
+    }
+  }
   const seriesLoss = localLoss && localLoss.length >= 2 ? localLoss : undefined
 
   // Auto y-scale based on this target's actual values

@@ -1490,11 +1490,19 @@ export function HubPage({
                     {(() => {
                       // Prefer real locally-accumulated avg latency — MMWX series
                       // buckets are all current-value (flat pseudo-line).
+                      // Slice to the selected window (1H/6H/1D) so window switching works.
                       const local = pingByNode?.[uuid]
                       if (local && local.length >= 2) {
+                        const want = Math.min(local.length, HOURS * 60 * 12) // 5s poll
+                        const slice = local.slice(local.length - want)
+                        let data = slice
+                        if (slice.length > BUCKETS) {
+                          const step = slice.length / BUCKETS
+                          data = Array.from({ length: BUCKETS }, (_, b) => slice[Math.min(slice.length - 1, Math.floor(b * step))])
+                        }
                         return (
                           <PingChart
-                            series={[{ data: local, label: 'AVG' }]}
+                            series={[{ data, label: 'AVG' }]}
                             height={120}
                             times={undefined}
                           />
