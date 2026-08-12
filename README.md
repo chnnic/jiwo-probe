@@ -102,12 +102,16 @@ Worker 仅代理三个固定路径，不接受访客指定上游地址，因此�
 
 整个过程由 Cloudflare 从 GitHub 拉取、编译和部署，不需要在本地 clone，也不需要安装 Node.js：
 
-1. 在 Cloudflare Dashboard 的 **Workers & Pages → Create application → Import a repository**，选择 `chnnic/jiwo-probe`。
-2. 保持以下构建设置：
+> **推荐先 fork 再导入**：先在 GitHub 上把 `chnnic/jiwo-probe` fork 到自己的账号，然后按下面的步骤导入**自己的 fork**。这样自带 `sync-upstream.yml` 自动同步工作流，上游更新无需手动合并（详见下文"自动同步上游更新"）。
+> ⚠️ **不要用页面上的 "Deploy with Workers" 一键部署按钮**（`deploy.workers.cloudflare.com`）：它会在你的 GitHub 生成一个**复制仓库**，且复制时跳过隐藏目录 `.github/`，导致自动同步工作流丢失，之后无法跟随上游更新。请使用 Dashboard 的 **Import a repository** 直接连接你的 fork。
+
+1. 在 GitHub 上 fork `chnnic/jiwo-probe`（页面右上角 **Fork** 按钮）。
+2. 在 Cloudflare Dashboard 的 **Workers & Pages → Create application → Import a repository**，选择**你 fork 出来的仓库**（而不是原仓库）。
+3. 保持以下构建设置：
    - Production branch：`main`
    - Build command：`npm run build`
    - Deploy command：`./scripts/deploy.sh`
-   - Root directory：独立仓库留空
+   - Root directory：留空
 4. 首次部署后，进入 Worker 的 **Settings → Variables and Secrets**，添加运行时变量：
 
    | 名称 | 类型 | 值 |
@@ -120,6 +124,17 @@ Worker 仅代理三个固定路径，不接受访客指定上游地址，因此�
 6. 最后回到主控，开启"仅允许独立探针访问"。此后直接访问主控的探针接口会返回 `404`。
 
 连接 GitHub 后，每次推送到 `main` 分支都会由 Workers Builds 自动构建和部署。
+
+### 自动同步上游更新
+
+fork 自带 `sync-upstream.yml` 工作流（纯 shell git 实现，零 action 依赖）：
+
+- **自动**：每天北京时间 11:23 自动合并 `chnnic/jiwo-probe` 的 `main` 到你的 fork 并推送，推送触发 CF 自动构建部署。
+- **手动**：fork 仓库 → **Actions → Sync upstream → Run workflow**（秒级同步）；或 GitHub 网页 **Sync fork → Update branch** 按钮。
+- **前提**（公共 fork 需检查一次）：
+  - **Actions 已启用**：fork 仓库 → Settings → Actions → General → 勾选 *Allow all actions and reusable workflows*（公共 fork 默认禁用定时任务）。
+  - **Workflow permissions = Read and write**：同上页面，*Workflow permissions* 选 *Read and write permissions*，否则工作流推送会被拒绝。
+  - 不要修改与上游冲突的文件；若有本地改动冲突，同步工作流会停止并列出冲突文件，需手动处理。
 
 ## Wrangler 命令行部署
 
