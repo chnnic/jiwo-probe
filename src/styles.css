@@ -3543,7 +3543,7 @@ footer a:hover {
   grid-column: 1 / -1;
   display: grid;
   grid-template-columns: minmax(105px, auto) 1fr;
-  align-items: center;
+  align-items: stretch;
   gap: 12px;
   min-width: 0;
   margin-top: 10px;
@@ -3592,11 +3592,13 @@ footer a:hover {
   justify-content: center;
   min-width: 0;
   width: 100%;
+  margin: 5px 0;
 }
 .lumina-traffic-pulse {
   display: flex;
   gap: 3px;
-  height: 34px;
+  height: 100%;
+  min-height: 34px;
   align-items: flex-end;
 }
 .lumina-traffic-pulse > span {

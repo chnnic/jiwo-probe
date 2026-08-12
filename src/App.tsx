@@ -1432,7 +1432,8 @@ function luminaPulseColor(level: number): string {
     if (level < 0.3) return '#a8843f'
     if (level < 0.6) return '#c9a255'
     if (level < 0.85) return '#d8b46a'
-    return '#f2d28b'
+    // 最高柱: 压至比次高档略暗, 不再抢眼(原 #f2d28b → #e3c176 → #d3ac63)
+    return '#d3ac63'
   }
   // 相对峰值分档: 无流量灰 → 低绿 → 中蓝 → 高琥珀 → 极高暖橙(琥珀+30%红, 避免刺眼红)
   if (level <= 0.01) return 'var(--progress-bg)'
@@ -1442,13 +1443,15 @@ function luminaPulseColor(level: number): string {
   return 'color-mix(in srgb, var(--status-warning) 70%, var(--status-error) 30%)'
 }
 
-function LuminaTrafficPulse({ samples, dots = 16 }: { samples: ProbeServer['daily_traffic']; dots?: number }) {
-  const list = (samples || []).slice(-dots)
+function LuminaTrafficPulse({ samples, dots }: { samples: ProbeServer['daily_traffic']; dots?: number }) {
+  // 自适应: 数据有几天显示几根, 上限14天; 传 dots 则固定根数
+  const list = (samples || []).slice(-(dots ?? 14))
+  const count = dots ?? list.length
   const max = Math.max(1, ...list.map((item) => item.total ?? 0))
   return (
     <span className="lumina-traffic-pulse" aria-hidden>
-      {Array.from({ length: dots }, (_, index) => {
-        const sample = list[index - Math.max(0, dots - list.length)]
+      {Array.from({ length: count }, (_, index) => {
+        const sample = list[index - Math.max(0, count - list.length)]
         // 无数据的天(历史不足16天): 渲染空白格, 不画灰条(避免"没流量"假象)
         if (!sample) return <span key={index} className="lumina-pulse-empty" />
         const value = sample.total ?? 0
@@ -1460,7 +1463,7 @@ function LuminaTrafficPulse({ samples, dots = 16 }: { samples: ProbeServer['dail
             title={`${sample.date}\n上行 ${bytes(sample.uplink)}\n下行 ${bytes(sample.downlink)}`}
             style={
               {
-                '--pulse-h': `${Math.max(4, Math.round((0.45 + level * 0.95) * 20))}px`,
+                '--pulse-h': `${Math.max(8, Math.round((value / max) * 100))}%`,
                 '--pulse-color': luminaPulseColor(level),
                 opacity: value > 0 ? 0.55 + level * 0.45 : 0.35,
               } as React.CSSProperties
@@ -1693,15 +1696,15 @@ function ServerCardLumina({ server, index }: { server: EnrichedServer; index: nu
               <button
                 type="button"
                 className="lumina-pulse-btn lumina-week-btn"
-                aria-label="查看近 7 日流量趋势"
-                title="近 7 日流量 · 点击查看完整趋势"
+                aria-label="查看流量趋势"
+                title="近 7-14 日流量 · 点击查看完整趋势"
                 onMouseDown={(event) => event.stopPropagation()}
                 onClick={(event) => {
                   event.stopPropagation()
                   setTrafficOpen(true)
                 }}
               >
-                <LuminaTrafficPulse samples={server.daily_traffic} dots={7} />
+                <LuminaTrafficPulse samples={server.daily_traffic} />
               </button>
             </div>
           </div>
