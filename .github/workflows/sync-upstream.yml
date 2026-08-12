@@ -15,29 +15,32 @@ concurrency:
 
 jobs:
   sync:
-    # 官方仓库自身不跑；fork 仓库跑。upstream 指向定制源(chnnic/jiwo-probe)。
+    # 官方仓库自身不跑；下游仓库跑。upstream 指向定制源(chnnic/jiwo-probe)。
+    # 纯 shell git 实现, 不依赖任何 action(避开 actions/checkout 在 Node24 runner 上的兼容问题)。
     if: github.repository != 'chnnic/jiwo-probe'
     runs-on: ubuntu-latest
     steps:
       - name: Check out user repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Merge upstream updates
-        env:
-          UPSTREAM_REPOSITORY: chnnic/jiwo-probe
-          UPSTREAM_BRANCH: main
         run: |
+          git clone --depth 50 "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" repo
+          cd repo
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git remote add upstream "https://github.com/${UPSTREAM_REPOSITORY}.git"
-          git fetch --no-tags upstream "${UPSTREAM_BRANCH}"
 
-          if git diff --quiet HEAD "upstream/${UPSTREAM_BRANCH}"; then
+      - name: Merge upstream updates
+        run: |
+          cd repo
+          git remote add upstream "https://github.com/chnnic/jiwo-probe.git"
+          git fetch --no-tags upstream main
+
+          if git diff --quiet HEAD "upstream/main"; then
             echo "Already up to date."
             exit 0
           fi
 
-          git merge --no-edit "upstream/${UPSTREAM_BRANCH}"
+          git merge --no-edit "upstream/main" || {
+            echo "::error::与本地改动冲突, 请手动处理以下文件:"
+            git diff --name-only --diff-filter=U
+            exit 1
+          }
           git push origin "HEAD:${GITHUB_REF_NAME}"
