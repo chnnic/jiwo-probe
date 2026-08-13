@@ -873,6 +873,10 @@ body.gm-body .detail-body {
   .gm-header { padding: 8px 12px; }
   .gm-general { gap: 6px; }
   .gm-general-cards { gap: 6px; }
+  /* 总览卡: 数字/单位纵向堆叠, 完整显示 "GB / 101.7 GB" */
+  .gm-general-card-value { flex-direction: column; align-items: flex-start; gap: 2px; }
+  .gm-general-card-number { font-size: 20px; }
+  .gm-general-card-unit { font-size: 11px; }
   .gm-search { order: 2; }
   .gm-search.has-text { flex: 1; }
   .gm-view-switch { margin-left: auto; order: 1; }
