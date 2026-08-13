@@ -356,14 +356,19 @@
   padding: 0 8px;
   border: none;
   background: none;
-  color: #f8fafc;
+  color: transparent;
+  caret-color: transparent;
   font-size: 13px;
   outline: none;
   min-width: 0;
+  cursor: pointer;
 }
 .gm-search:focus-within input,
 .gm-search.has-text input {
   padding: 0 30px 0 30px;
+  color: #f8fafc;
+  caret-color: #f8fafc;
+  cursor: text;
 }
 .gm-search input::placeholder { color: transparent; }
 .gm-search:focus-within input::placeholder,
@@ -494,23 +499,6 @@
   display: flex;
   align-items: center;
   gap: 6px;
-}
-.gm-node-fav {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 20px;
-  height: 20px;
-  border: none;
-  border-radius: 4px;
-  background: none;
-  color: #94a3b8;
-  cursor: pointer;
-  transition: color 0.15s ease, background 0.15s ease;
-}
-.gm-node-fav:hover {
-  background: rgba(148, 163, 184, 0.1);
-  color: #fbbf24;
 }
 .gm-node-os {
   display: inline-flex;
@@ -995,6 +983,13 @@ body.gm-body .detail-value-sub {
 body.gm-body .detail-value-main strong {
   color: var(--accent);
 }
+/* light 模式: 时间范围 active 按钮白字在浅色页面对比突兀 → 深翡翠字 + 浅底 */
+body.gm-body.gm-light-body .ranges button.active,
+body.gm-body.gm-light-body .filters button.active {
+  color: #0d946e;
+  background: rgba(13, 148, 110, 0.12);
+  border-color: #0d946e;
+}
 body.gm-body .detail-loadavg code {
   background: var(--border);
   color: var(--foreground);
@@ -1112,8 +1107,6 @@ body.gm-body .modal {
   box-shadow: rgba(15, 23, 42, 0.12) 0px 12px 32px 0px;
 }
 .gm-app.gm-light .gm-node-title { color: #10141f; }
-.gm-app.gm-light .gm-node-fav { color: #8b95ab; }
-.gm-app.gm-light .gm-node-fav:hover { background: rgba(15, 23, 42, 0.06); color: #d97706; }
 .gm-app.gm-light .gm-node-os { color: #8b95ab; }
 .gm-app.gm-light .gm-chip { background: rgba(15, 23, 42, 0.06); color: #3f4a63; }
 .gm-app.gm-light .gm-metric-label { color: #3f4a63; }

@@ -17,7 +17,6 @@ import {
   Palette,
   PieChart,
   Search,
-  Star,
   Sun,
   Table2,
   Wallet,
@@ -226,9 +225,6 @@ function GmNodeCard({ server, index }: { server: EnrichedServer; index: number }
             <h2 className="gm-node-title">{name}</h2>
           </div>
           <div className="gm-node-icons">
-            <button type="button" className="gm-node-fav" aria-label={`收藏 ${name}`} title="收藏节点" onClick={(event) => event.stopPropagation()}>
-              <Star size={14} />
-            </button>
             <span className="gm-node-os" title={systemTitle(server)} onClick={(event) => event.stopPropagation()}>
               <SystemIcon server={server} />
             </span>
