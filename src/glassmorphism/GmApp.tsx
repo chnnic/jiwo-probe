@@ -34,6 +34,7 @@ import {
   ReturnRouteBadges,
   SystemIcon,
   TrafficDialog,
+  TrendDialog,
   averagePing,
   bytes,
   expiring,
@@ -144,6 +145,7 @@ function buildRegions(servers: ProbeServer[]): GmRegion[] {
 /* ================= 节点卡（照搬 Komari NodeCard 结构） ================= */
 function GmNodeCard({ server, index }: { server: EnrichedServer; index: number }) {
   const [trafficOpen, setTrafficOpen] = useState(false)
+  const [trendMode, setTrendMode] = useState<'latency' | 'loss' | null>(null)
   const name = server.name || `服务器 ${index + 1}`
   const flag = regionFlag(server.region)
   const isOffline = !server.online
@@ -340,7 +342,7 @@ function GmNodeCard({ server, index }: { server: EnrichedServer; index: number }
           {(latencyBars.length > 0 || lossBars.length > 0) && (
             <div className="gm-ping-row">
               {latencyBars.length > 0 && (
-                <button type="button" className="gm-ping-cell" title={`平均延迟 ${avgMs >= 0 ? avgMs.toFixed(0) : '超时'} ms`} aria-label={`${name} 延迟监测`} onClick={(event) => event.stopPropagation()}>
+                <button type="button" className="gm-ping-cell" title={`平均延迟 ${avgMs >= 0 ? avgMs.toFixed(0) : '超时'} ms · 点击看趋势`} aria-label={`${name} 延迟监测`} onClick={(event) => { event.stopPropagation(); setTrendMode('latency') }}>
                   <div className="gm-ping-head">
                     <span>延迟</span>
                     <span className="gm-ping-value">{avgMs < 0 ? '超时' : `${avgMs.toFixed(0)} ms`}</span>
@@ -353,7 +355,7 @@ function GmNodeCard({ server, index }: { server: EnrichedServer; index: number }
                 </button>
               )}
               {lossBars.length > 0 && (
-                <button type="button" className="gm-ping-cell" title={`平均丢包 ${avgLoss.toFixed(1)}%`} aria-label={`${name} 丢包监测`} onClick={(event) => event.stopPropagation()}>
+                <button type="button" className="gm-ping-cell" title={`平均丢包 ${avgLoss.toFixed(1)}% · 点击看趋势`} aria-label={`${name} 丢包监测`} onClick={(event) => { event.stopPropagation(); setTrendMode('loss') }}>
                   <div className="gm-ping-head">
                     <span>丢包</span>
                     <span className="gm-ping-value">{avgLoss.toFixed(1)}%</span>
@@ -368,6 +370,16 @@ function GmNodeCard({ server, index }: { server: EnrichedServer; index: number }
             </div>
           )}
           {/* 三网回程文字标签 */}
+          {trendMode && (
+            <TrendDialog
+              serverIndex={index}
+              initial={server.ping || []}
+              targetKey="__avg__"
+              title={name}
+              mode={trendMode}
+              close={() => setTrendMode(null)}
+            />
+          )}
           {routeLines.length > 0 ? (
             <div className="gm-tags">
               {routeLines.map((line) => (

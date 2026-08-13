@@ -900,7 +900,7 @@ export function SystemIcon({ server }: { server: ProbeServer }) {
   )
 }
 
-function TrendDialog({ serverIndex, initial, targetKey, title, mode, close }: { serverIndex: number; initial: ProbePingSeries[]; targetKey: string; title: string; mode: 'latency' | 'loss'; close: () => void }) {
+export function TrendDialog({ serverIndex, initial, targetKey, title, mode, close }: { serverIndex: number; initial: ProbePingSeries[]; targetKey: string; title: string; mode: 'latency' | 'loss'; close: () => void }) {
   const [range, setRange] = useState<RangeKey>('1h')
   const [group, setGroup] = useState<'all' | 'cn' | 'idc'>('all')
   const [hidden, setHidden] = useState<Set<string>>(new Set())
