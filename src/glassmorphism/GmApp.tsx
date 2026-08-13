@@ -62,7 +62,7 @@ function formatUptimeDays(seconds: number): string {
   return `${Math.floor(seconds / 86400)} 天`
 }
 
-const CYCLE_LABELS: Record<string, string> = { hour: '时', day: '天', week: '周', month: '月', quarterly: '季', halfyear: '半年', year: '年', twoyear: '两年', threeyear: '三年', onetime: '一次性' }
+const CYCLE_LABELS: Record<string, string> = { month: '月', quarter: '季', half_year: '半年', year: '年' }
 
 function systemTitle(server: ProbeServer): string {
   const parts = [server.os, server.cpu_model, server.arch].filter(Boolean)
