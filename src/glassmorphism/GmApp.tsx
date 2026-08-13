@@ -514,8 +514,9 @@ function GmGeneralCards({ servers }: { servers: ProbeServer[] }) {
 
 /* ================= 访客条（照搬 Komari VisitorInfo 底部浮条） ================= */
 function GmVisitorBar() {
+  const [closed, setClosed] = useState(false)
   const { data } = useVisitorInfo(true)
-  if (!data) return null
+  if (closed || !data) return null
   const country = data.country || '未知地区'
   return (
     <div className="gm-visitor">
@@ -530,6 +531,9 @@ function GmVisitorBar() {
           <span className="gm-visitor-isp">{data.isp}</span>
         </>
       )}
+      <button type="button" className="gm-visitor-close" aria-label="关闭" title="关闭" onClick={() => setClosed(true)}>
+        <X size={12} />
+      </button>
     </div>
   )
 }

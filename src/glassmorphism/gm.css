@@ -797,7 +797,7 @@
   max-width: 1280px;
   width: calc(100% - 32px);
   margin: 0 auto;
-  padding: 0 0 48px;
+  padding: 0 0 16px;
   font-size: 12px;
   color: #94a3b8;
   flex-wrap: wrap;
@@ -806,25 +806,47 @@
 .gm-footer a { color: inherit; text-decoration: none; }
 .gm-footer a:hover { opacity: 0.85; }
 
-/* ===== 访客条(贴视口最底部整条固定横幅, 不随页面滚动) ===== */
+/* ===== 访客条（照搬实测: 黑 50% + blur 12px + pill, 右侧可关闭） ===== */
 .gm-visitor {
   position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
   z-index: 50;
   display: flex;
   align-items: center;
-  justify-content: center;
   gap: 6px;
-  padding: 8px 16px;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(0, 0, 0, 0.55);
+  max-width: calc(100vw - 24px);
+  padding: 7px 8px 7px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.5);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
   font-size: 12px;
   color: #94a3b8;
   white-space: nowrap;
+}
+.gm-visitor-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  margin-left: 2px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  color: #cbd5e1;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.gm-visitor-close:hover {
+  background: rgba(255, 255, 255, 0.22);
+  color: #fff;
 }
 .gm-visitor > svg { color: #38bdf8; flex-shrink: 0; }
 .gm-visitor-ip-label { display: none; }
@@ -1171,9 +1193,18 @@ body.gm-body .modal {
 .gm-app.gm-light .gm-footer strong { color: #10141f; }
 /* 访客条 */
 .gm-app.gm-light .gm-visitor {
-  background: rgba(250, 251, 253, 0.8);
-  border-top-color: rgba(15, 23, 42, 0.12);
+  background: rgba(250, 251, 253, 0.75);
+  border-color: rgba(15, 23, 42, 0.12);
   color: #3f4a63;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.1);
+}
+.gm-app.gm-light .gm-visitor-close {
+  background: rgba(15, 23, 42, 0.08);
+  color: #3f4a63;
+}
+.gm-app.gm-light .gm-visitor-close:hover {
+  background: rgba(15, 23, 42, 0.16);
+  color: #10141f;
 }
 .gm-app.gm-light .gm-visitor-ip { color: #10141f; }
 .gm-app.gm-light .gm-visitor-sep { color: rgba(63, 74, 99, 0.4); }
