@@ -87,9 +87,12 @@ function normalizeTheme(value?: string): ThemeName {
 }
 
 // 主控下发组合名 "Lumina-Gold" / "Lumina Gold" / "LUMINAGOLD" → lumina 主题 + 黑金配色
-export function parseThemeName(raw: string): { theme: string; gold: boolean } {
+// "Glassmorphism Light/Dark" → glassmorphism 主题 + 白天/夜间模式
+export function parseThemeName(raw: string): { theme: string; gold: boolean; light?: boolean } {
   const lower = raw.toLowerCase().replace(/[\s_-]/g, '')
   if (lower === 'luminagold') return { theme: 'lumina', gold: true }
+  if (lower === 'glassmorphismlight') return { theme: 'glassmorphism', gold: false, light: true }
+  if (lower === 'glassmorphismdark') return { theme: 'glassmorphism', gold: false, light: false }
   return { theme: isBuiltinTheme(raw.toLowerCase()) ? raw.toLowerCase() : raw, gold: false }
 }
 
@@ -142,6 +145,10 @@ export function applyAppearance(input?: ProbeAppearance) {
       (appearance.color_mode === 'system' && matchMedia('(prefers-color-scheme: dark)').matches)
   }
   if (dark) root.classList.add('dark')
+  // Glassmorphism 明暗下发: 写 master 缓存, GmApp 初始化时读取(用户手动切换优先)
+  if (parsed.light !== undefined) {
+    localStorage.setItem('gm-color-mode-master', parsed.light ? 'light' : 'dark')
+  }
   root.dataset.themeReady = 'true'
   if (input) localStorage.setItem(APPEARANCE_CACHE, JSON.stringify(input))
 }

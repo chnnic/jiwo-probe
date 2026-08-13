@@ -559,7 +559,12 @@ export default function GmApp({
   const [search, setSearch] = useState('')
   const [view, setView] = useState<'card' | 'list'>(() => (localStorage.getItem('probe-view') === 'list' ? 'list' : 'card'))
   const [detailIndex, setDetailIndex] = useState<number | null>(null)
-  const [colorMode, setColorMode] = useState<'light' | 'dark'>(() => (localStorage.getItem('gm-color-mode') === 'light' ? 'light' : 'dark'))
+  const [colorMode, setColorMode] = useState<'light' | 'dark'>(() => {
+    // 优先级: 用户手动切过 > 主控下发(glassmorphism light/dark) > 默认夜间
+    const user = localStorage.getItem('gm-color-mode')
+    const master = localStorage.getItem('gm-color-mode-master')
+    return (user ?? master) === 'light' ? 'light' : 'dark'
+  })
   const [themeOverride, setThemeOverride] = useState<ThemeName | null>(() => {
     const v = localStorage.getItem('mmwx-probe-theme-override')
     return THEME_OPTIONS.some((opt) => opt.value === v) ? (v as ThemeName) : null
