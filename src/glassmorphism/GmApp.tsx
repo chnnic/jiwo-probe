@@ -76,8 +76,20 @@ function splitBytesText(value: number): { value: string; unit: string } {
   return { value: match[1], unit: match[2] || '' }
 }
 
+function bitSpeed(bytesPerSecond = 0): string {
+  let value = Math.max(0, bytesPerSecond) * 8
+  const units = ['bps', 'Kbps', 'Mbps', 'Gbps', 'Tbps']
+  let unit = 0
+  while (value >= 1000 && unit < units.length - 1) {
+    value /= 1000
+    unit++
+  }
+  const digits = value >= 100 ? 0 : value >= 10 ? 1 : 2
+  return `${value.toFixed(digits)} ${units[unit]}`
+}
+
 function splitSpeedText(value: number): { value: string; unit: string } {
-  const v = speed(value)
+  const v = bitSpeed(value)
   const match = /^([\d.]+)\s*([\w/]+)?$/.exec(v)
   if (!match) return { value: v, unit: '' }
   return { value: match[1], unit: match[2] || '' }
@@ -296,11 +308,11 @@ function GmNodeCard({ server, index }: { server: EnrichedServer; index: number }
             <div className="gm-quick-cell">
               <div className="gm-quick-line gm-q-up">
                 <ArrowUp size={11} />
-                <span>{speed(server.upload_speed)}</span>
+                <span>{bitSpeed(server.upload_speed)}</span>
               </div>
               <div className="gm-quick-line gm-q-down">
                 <ArrowDown size={11} />
-                <span>{speed(server.download_speed)}</span>
+                <span>{bitSpeed(server.download_speed)}</span>
               </div>
             </div>
             <div className="gm-quick-cell">
@@ -449,7 +461,7 @@ function GmGeneralCards({ servers }: { servers: ProbeServer[] }) {
         icon: <ArrowUp size={20} />,
         value: upSpeed.value,
         unit: upSpeed.unit,
-        tooltip: `所有在线节点实时上行合计 ${speed(up)}`,
+        tooltip: `所有在线节点实时上行合计 ${bitSpeed(up)}`,
       },
       {
         key: 'downloadSpeed',
@@ -457,7 +469,7 @@ function GmGeneralCards({ servers }: { servers: ProbeServer[] }) {
         icon: <ArrowDown size={20} />,
         value: downSpeed.value,
         unit: downSpeed.unit,
-        tooltip: `所有在线节点实时下行合计 ${speed(down)}`,
+        tooltip: `所有在线节点实时下行合计 ${bitSpeed(down)}`,
       },
     ]
     return result
@@ -715,9 +727,9 @@ export default function GmApp({
                         <td className="tabular">{server.disk_total ? `${pct(server.disk_used, server.disk_total).toFixed(1)}%` : '—'}</td>
                         <td className="tabular">{server.traffic_used !== undefined ? bytes(server.traffic_used, false) : '—'}</td>
                         <td className="tabular">
-                          <span className="gm-table-speed-down">{speed(server.download_speed)}</span>
+                          <span className="gm-table-speed-down">{bitSpeed(server.download_speed)}</span>
                           {' / '}
-                          <span className="gm-table-speed-up">{speed(server.upload_speed)}</span>
+                          <span className="gm-table-speed-up">{bitSpeed(server.upload_speed)}</span>
                         </td>
                       </tr>
                     )

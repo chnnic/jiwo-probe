@@ -174,7 +174,7 @@ export function regionCountryLabel(server: ProbeServer): string {
 
 function RegionSelect({ regions, value, onChange }: { regions: string[]; value: string; onChange: (value: string) => void }) {
   const [open, setOpen] = useState(false)
-  const [pos, setPos] = useState({ top: 0, left: 0, width: 0 })
+  const [pos, setPos] = useState({ top: 0, right: 0 })
   const wrapRef = useRef<HTMLDivElement>(null)
   const menuRef = useRef<HTMLDivElement>(null)
 
@@ -187,14 +187,8 @@ function RegionSelect({ regions, value, onChange }: { regions: string[]; value: 
       if (top + estHeight > window.innerHeight - 8 && rect.top - estHeight - 5 > 0) {
         top = rect.top - estHeight - 5
       }
-      // 水平夹取: 手机窄屏下菜单向右展开会超出屏幕 → 贴右缘对齐
-      const estWidth = 240
-      const vw = window.innerWidth
-      let left = rect.left
-      if (left + estWidth > vw - 8) {
-        left = Math.max(8, vw - estWidth - 8)
-      }
-      setPos({ top, left, width: rect.width })
+      // 右缘与按钮右缘对齐(fixed right 定位), 不再按估算宽度左夹取
+      setPos({ top, right: window.innerWidth - rect.right })
     }
     setOpen((v) => !v)
   }, [open, regions.length])
@@ -229,7 +223,7 @@ function RegionSelect({ regions, value, onChange }: { regions: string[]; value: 
       </button>
       {open &&
         createPortal(
-          <div className="region-menu" ref={menuRef} style={{ top: pos.top, left: pos.left, minWidth: pos.width }} role="listbox">
+          <div className="region-menu" ref={menuRef} style={{ top: pos.top, right: pos.right }} role="listbox">
             <button type="button" role="option" aria-selected={value === 'all'} onClick={() => { onChange('all'); setOpen(false) }}>
               <Twemoji>🌍</Twemoji>
               <span>全部地区</span>
@@ -260,7 +254,7 @@ const THEME_OPTIONS: { value: ThemeName; label: string }[] = [
 
 function ThemeSelect({ value, onChange }: { value: ThemeName | null; onChange: (name: ThemeName | null) => void }) {
   const [open, setOpen] = useState(false)
-  const [pos, setPos] = useState({ top: 0, left: 0, width: 0 })
+  const [pos, setPos] = useState({ top: 0, right: 0 })
   const wrapRef = useRef<HTMLDivElement>(null)
   const menuRef = useRef<HTMLDivElement>(null)
 
@@ -273,14 +267,8 @@ function ThemeSelect({ value, onChange }: { value: ThemeName | null; onChange: (
       if (top + estHeight > window.innerHeight - 8 && rect.top - estHeight - 5 > 0) {
         top = rect.top - estHeight - 5
       }
-      // 水平夹取: 手机窄屏下按钮靠右, 菜单向右展开会超出屏幕 → 贴右缘对齐
-      const estWidth = 200
-      const vw = window.innerWidth
-      let left = rect.left
-      if (left + estWidth > vw - 8) {
-        left = Math.max(8, vw - estWidth - 8)
-      }
-      setPos({ top, left, width: rect.width })
+      // 右缘与按钮右缘对齐(fixed right 定位), 精确不漂移
+      setPos({ top, right: window.innerWidth - rect.right })
     }
     setOpen((v) => !v)
   }, [open])
@@ -319,7 +307,7 @@ function ThemeSelect({ value, onChange }: { value: ThemeName | null; onChange: (
       </button>
       {open &&
         createPortal(
-          <div className="region-menu theme-menu" ref={menuRef} style={{ top: pos.top, left: pos.left }} role="listbox">
+          <div className="region-menu theme-menu" ref={menuRef} style={{ top: pos.top, right: pos.right }} role="listbox">
             <button type="button" role="option" aria-selected={value === null} onClick={() => { onChange(null); setOpen(false) }}>
               <span>跟随主控</span>
               {value === null && <Check size={14} className="theme-menu-check" />}
