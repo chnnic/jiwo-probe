@@ -187,7 +187,14 @@ function RegionSelect({ regions, value, onChange }: { regions: string[]; value: 
       if (top + estHeight > window.innerHeight - 8 && rect.top - estHeight - 5 > 0) {
         top = rect.top - estHeight - 5
       }
-      setPos({ top, left: rect.left, width: rect.width })
+      // 水平夹取: 手机窄屏下菜单向右展开会超出屏幕 → 贴右缘对齐
+      const estWidth = 240
+      const vw = window.innerWidth
+      let left = rect.left
+      if (left + estWidth > vw - 8) {
+        left = Math.max(8, vw - estWidth - 8)
+      }
+      setPos({ top, left, width: rect.width })
     }
     setOpen((v) => !v)
   }, [open, regions.length])
@@ -266,7 +273,14 @@ function ThemeSelect({ value, onChange }: { value: ThemeName | null; onChange: (
       if (top + estHeight > window.innerHeight - 8 && rect.top - estHeight - 5 > 0) {
         top = rect.top - estHeight - 5
       }
-      setPos({ top, left: rect.left, width: rect.width })
+      // 水平夹取: 手机窄屏下按钮靠右, 菜单向右展开会超出屏幕 → 贴右缘对齐
+      const estWidth = 200
+      const vw = window.innerWidth
+      let left = rect.left
+      if (left + estWidth > vw - 8) {
+        left = Math.max(8, vw - estWidth - 8)
+      }
+      setPos({ top, left, width: rect.width })
     }
     setOpen((v) => !v)
   }, [open])
