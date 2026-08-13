@@ -15,6 +15,7 @@ import premiumRouteAnimation from './assets/return-route/premium.json'
 const colors = ['#8b5cf6', '#0ea5e9', '#22c55e', '#f59e0b', '#ef4444', '#ec4899']
 const RegionGlobe = lazy(() => import('./RegionGlobe').then((module) => ({ default: module.RegionGlobe })))
 const PremiumProbePage = lazy(() => import('./PremiumProbePage').then((module) => ({ default: module.PremiumProbePage })))
+const GmApp = lazy(() => import('./glassmorphism/GmApp').then((module) => ({ default: module.default })))
 const ranges = [
   {
     key: '1h',
@@ -836,7 +837,7 @@ export function TrafficChart({ daily, containerClass = 'detail-chart' }: { daily
   )
 }
 
-function TrafficDialog({ server, close }: { server: ProbeServer; close: () => void }) {
+export function TrafficDialog({ server, close }: { server: ProbeServer; close: () => void }) {
   return createPortal(
     <div className="modal-backdrop" role="presentation" onMouseDown={close}>
       <section className="modal" onMouseDown={(e) => e.stopPropagation()} onClick={(e) => e.stopPropagation()}>
@@ -1274,7 +1275,7 @@ function SystemTrendDialog({ serverIndex, title, metric, close }: { serverIndex:
   )
 }
 
-function PingPanel({ ping, serverIndex }: { ping: ProbePingSeries[]; serverIndex: number }) {
+export function PingPanel({ ping, serverIndex }: { ping: ProbePingSeries[]; serverIndex: number }) {
   const [mode, setMode] = useState<'latency' | 'loss' | null>(null)
   const [selected, setSelected] = useState('__avg__')
   const average = averagePing(ping)
@@ -1960,144 +1961,6 @@ function ServerCard({ server, index }: { server: ProbeServer; index: number }) {
   )
 }
 
-function ServerCardGlassmorphism({ server, index }: { server: EnrichedServer; index: number }) {
-  const [trafficOpen, setTrafficOpen] = useState(false)
-  const name = server.name || `服务器 ${index + 1}`
-  const flag = regionFlag(server.region)
-  const isOffline = !server.online
-  const cpuPct = server.cpu_pct
-  const memPct = server.mem_total ? pct(server.mem_used, server.mem_total) : undefined
-  const diskPct = server.disk_total ? pct(server.disk_used, server.disk_total) : undefined
-  const trafficPct = server.traffic_limit ? pct(server.traffic_used, server.traffic_limit) : undefined
-  const trafficLevel = trafficPct === undefined ? '' : trafficPct >= 95 ? ' danger' : trafficPct >= 70 ? ' warn' : ''
-  const uptimeText = server.uptime !== undefined ? formatUptime(server.uptime) : null
-  const daysText = server.expires_at ? remainingDays(server.expires_at) : null
-  const renewText =
-    server.renewal_price !== undefined
-      ? server.renewal_price_cny !== undefined
-        ? `¥${server.renewal_price_cny.toFixed(2)}`
-        : `${server.renewal_currency || 'CNY'} ${server.renewal_price}`
-      : null
-  const loadParts = (server.loadavg || '').split(/\s+/).map(Number).filter((v) => Number.isFinite(v))
-
-  return (
-    <>
-      <article
-        className={`server-card gm-card${isOffline ? ' is-offline' : ''}`}
-        onClick={() => { location.hash = `#/server/${index}` }}
-        role="button"
-        tabIndex={0}
-        onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); location.hash = `#/server/${index}` } }}
-        title="点击查看详情"
-      >
-        <header className="gm-header">
-          <div className="gm-title-wrap">
-            <span className={server.online ? 'status online' : 'status'} />
-            <h2 className="gm-title">
-              <Twemoji>{flag && !hasLeadingFlag(name) ? `${flag} ${name}` : name}</Twemoji>
-            </h2>
-            <span className="gm-system" title={systemTitle(server)} onClick={(event) => event.stopPropagation()}>
-              <SystemIcon server={server} />
-            </span>
-          </div>
-          {(uptimeText || daysText || renewText) && (
-            <div className="gm-chips" onClick={(event) => event.stopPropagation()}>
-              {uptimeText && (
-                <span className="gm-chip" title="在线时长">
-                  <Clock3 size={11} />
-                  {uptimeText}
-                </span>
-              )}
-              {daysText && (
-                <span className={`gm-chip${expiring(server) || expired(server) ? ' warn' : ''}`} title="到期时间">
-                  <CalendarClock size={11} />
-                  {daysText}
-                </span>
-              )}
-              {renewText && (
-                <span className="gm-chip" title="续费价格">
-                  <Wallet size={11} />
-                  {renewText}
-                </span>
-              )}
-            </div>
-          )}
-        </header>
-        <div className="gm-metrics">
-          {cpuPct !== undefined && (
-            <div className="gm-metric" title={loadParts.length ? `负载 ${loadParts.join(' / ')}` : 'CPU 使用率'}>
-              <div className="gm-metric-head">
-                <span className="gm-metric-label"><Cpu size={13} className="gm-ic-cpu" />CPU</span>
-                <span className="tabular gm-metric-value">{cpuPct.toFixed(1)}%</span>
-              </div>
-              <div className="gm-meter"><i className="gm-m-cpu" style={{ width: `${Math.min(100, cpuPct)}%` }} /></div>
-              <div className="gm-metric-sub">{loadParts.length ? `${loadParts[0] ?? 0} / ${loadParts[1] ?? 0} / ${loadParts[2] ?? 0}` : '负载暂无'}</div>
-            </div>
-          )}
-          {memPct !== undefined && (
-            <div className="gm-metric" title="内存使用率">
-              <div className="gm-metric-head">
-                <span className="gm-metric-label"><MemoryStick size={13} className="gm-ic-mem" />内存</span>
-                <span className="tabular gm-metric-value">{memPct.toFixed(1)}%</span>
-              </div>
-              <div className="gm-meter"><i className="gm-m-mem" style={{ width: `${Math.min(100, memPct)}%` }} /></div>
-              <div className="gm-metric-sub">{bytes(server.mem_used)} / {bytes(server.mem_total)}</div>
-            </div>
-          )}
-          {diskPct !== undefined && (
-            <div className="gm-metric" title="硬盘使用率">
-              <div className="gm-metric-head">
-                <span className="gm-metric-label"><HardDrive size={13} className="gm-ic-disk" />硬盘</span>
-                <span className="tabular gm-metric-value">{diskPct.toFixed(1)}%</span>
-              </div>
-              <div className="gm-meter"><i className="gm-m-disk" style={{ width: `${Math.min(100, diskPct)}%` }} /></div>
-              <div className="gm-metric-sub">{bytes(server.disk_used)} / {bytes(server.disk_total)}</div>
-            </div>
-          )}
-          {server.traffic_used !== undefined && (
-            <button
-              type="button"
-              className="gm-metric gm-metric-button"
-              title="查看日流量趋势"
-              onClick={(event) => {
-                event.stopPropagation()
-                setTrafficOpen(true)
-              }}
-            >
-              <div className="gm-metric-head">
-                <span className="gm-metric-label"><PieChart size={13} className="gm-ic-traffic" />流量</span>
-                <span className={`tabular gm-metric-value${trafficLevel}`}>
-                  {server.traffic_limit ? `${trafficPct!.toFixed(1)}%` : '∞'}
-                </span>
-              </div>
-              <div className="gm-meter"><i className={`gm-m-traffic${trafficLevel}`} style={{ width: `${Math.min(100, trafficPct ?? (server.traffic_limit ? 0 : 100))}%` }} /></div>
-              <div className={`gm-metric-sub${trafficLevel}`}>
-                {bytes(server.traffic_used, false)}
-                {server.traffic_limit ? ` / ${bytes(server.traffic_limit, false)}` : ' / ∞'}
-              </div>
-            </button>
-          )}
-        </div>
-        {(server.upload_speed !== undefined || server.download_speed !== undefined) && (
-          <div className="speed gm-speed">
-            <span className="download" title={`下行 ${speed(server.download_speed)}`}>
-              <ArrowDown size={15} />
-              <span className="tabular">{speed(server.download_speed)}</span>
-            </span>
-            <span className="upload" title={`上行 ${speed(server.upload_speed)}`}>
-              <ArrowUp size={15} />
-              <span className="tabular">{speed(server.upload_speed)}</span>
-            </span>
-          </div>
-        )}
-        {!!server.ping?.length && <PingPanel ping={server.ping} serverIndex={index} />}
-        {!!server.return_routes?.length && <ReturnRouteBadges routes={server.return_routes} telecomPaidPeer={server.telecom_paid_peer} />}
-      </article>
-      {trafficOpen && <TrafficDialog server={server} close={() => setTrafficOpen(false)} />}
-    </>
-  )
-}
-
 function MiniReturnRoutes({ server }: { server: ProbeServer }) {
   const byCarrier = new Map((server.return_routes || []).map((route) => [route.carrier, route]))
   const carriers = (['telecom', 'unicom', 'mobile'] as const).filter((carrier) => {
@@ -2664,6 +2527,14 @@ export function App() {
       </Suspense>
     )
   }
+  // glassmorphism 主题: 整页 Glassmorphism 界面（复刻 Komari Glassmorphism 主题）
+  if (activeTheme === 'glassmorphism') {
+    return (
+      <Suspense fallback={<main className="center">正在加载 Glassmorphism 主题…</main>}>
+        <GmApp data={data} onThemeChange={(name) => { setTheme(name); setThemeState(name); setActiveTheme(name ?? getActiveTheme()) }} />
+      </Suspense>
+    )
+  }
   const title = data.title?.trim() || '服务器状态'
   const onlineCount = servers.filter((server) => server.online).length
   const expiringCount = servers.filter(expiring).length
@@ -2862,7 +2733,7 @@ export function App() {
           </label>
         </div>
       </section>
-      <main className={`servers ${view}`}>{visible.length ? view === 'card' ? visible.map((server) => activeTheme === 'lumina' ? <ServerCardLumina key={server.name} server={server} index={servers.indexOf(server)} /> : activeTheme === 'glassmorphism' ? <ServerCardGlassmorphism key={server.name} server={server} index={servers.indexOf(server)} /> : <ServerCard key={server.name} server={server} index={servers.indexOf(server)} />) : view === 'mini' ? visible.map((server) => <ServerMiniCard key={server.name} server={server} index={servers.indexOf(server)} expanded={miniExpanded} />) : <ServerTable servers={visible} /> : <div className="empty">暂无符合条件的服务器</div>}</main>
+      <main className={`servers ${view}`}>{visible.length ? view === 'card' ? visible.map((server) => activeTheme === 'lumina' ? <ServerCardLumina key={server.name} server={server} index={servers.indexOf(server)} /> : <ServerCard key={server.name} server={server} index={servers.indexOf(server)} />) : view === 'mini' ? visible.map((server) => <ServerMiniCard key={server.name} server={server} index={servers.indexOf(server)} expanded={miniExpanded} />) : <ServerTable servers={visible} /> : <div className="empty">暂无符合条件的服务器</div>}</main>
       <footer>
         Powered by{' '}
         <a href="https://github.com/mmwx-group" target="_blank" rel="noreferrer">
