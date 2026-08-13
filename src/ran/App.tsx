@@ -94,6 +94,10 @@ export default function App({ initialTheme }: { initialTheme?: string }) {
     } catch {
       /* ignore */
     }
+    // 卸载(切到其他主题)时清理, 避免 tokens.css 全局 body{color:var(--fg-0)} 污染新主题
+    return () => {
+      document.body.removeAttribute('data-theme')
+    }
   }, [theme])
 
   // 后台 default_theme — 仅在用户从未手动选过、且主控未明确下发变体时生效。
