@@ -177,19 +177,20 @@ type PremiumProbePageProps = {
   isLoading: boolean
   isError: boolean
   // 主题切换回调（经典界面 ThemeSelect 同款语义: name=null 表示跟随主控）
-  onThemeChange?: (name: 'pixel' | 'flat' | 'anime' | 'glass' | 'lumina' | 'premium' | null) => void
+  onThemeChange?: (name: 'pixel' | 'flat' | 'anime' | 'glass' | 'lumina' | 'premium' | 'ran' | null) => void
 }
 
 type StatusFilter = 'all' | 'online' | 'offline'
 type PremiumProbeView = 'card' | 'network' | 'resource'
 
-const PREMIUM_THEME_OPTIONS: { value: 'pixel' | 'flat' | 'anime' | 'glass' | 'lumina' | 'premium'; label: string }[] = [
+const PREMIUM_THEME_OPTIONS: { value: 'pixel' | 'flat' | 'anime' | 'glass' | 'lumina' | 'premium' | 'ran'; label: string }[] = [
   { value: 'pixel', label: '像素' },
   { value: 'flat', label: '扁平' },
   { value: 'anime', label: '动漫' },
   { value: 'glass', label: '玻璃' },
   { value: 'lumina', label: 'Lumina' },
   { value: 'premium', label: 'Premium' },
+  { value: 'ran', label: '岚 · Ran' },
 ]
 
 // 主题切换下拉（黑金风）。当前必然是 premium（本页就是），选择其他主题或"跟随主控"时回调上层切换。
@@ -209,7 +210,7 @@ function PremiumThemeSelect({ onThemeChange }: { onThemeChange?: PremiumProbePag
     return () => document.removeEventListener('mousedown', handle)
   }, [open])
 
-  const pick = (name: 'pixel' | 'flat' | 'anime' | 'glass' | 'lumina' | 'premium' | null) => {
+  const pick = (name: 'pixel' | 'flat' | 'anime' | 'glass' | 'lumina' | 'premium' | 'ran' | null) => {
     setOpen(false)
     if (name === 'premium') return // 已在 Premium，无需切换
     onThemeChange?.(name)
