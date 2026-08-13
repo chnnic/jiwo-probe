@@ -3184,7 +3184,7 @@ footer a:hover {
   --status-error: #dc2626;
   --traffic-up: #3b82f6;
   --traffic-down: #2f9e65;
-  --lumina-heat: linear-gradient(to right in oklch, oklch(0.72 0.16 150) 0%, oklch(0.72 0.16 150) 10%, oklch(0.8 0.18 128) 28%, oklch(0.86 0.18 110) 44%, oklch(0.8 0.18 85) 58%, oklch(0.72 0.19 62) 72%, oklch(0.65 0.21 40) 86%, oklch(0.6 0.22 27) 100%);
+  --lumina-heat: linear-gradient(to right, #4ac06c 0%, #4ac06c 10%, #9cd242 28%, #d9da26 44%, #f2b200 58%, #f58200 72%, #f25100 86%, #e62c2c 100%);
   --lumina-top-glow: radial-gradient(1100px 560px at 50% -8%, color-mix(in srgb, #3b82f6 5%, transparent) 0%, transparent 60%);
 }
 :root.theme-lumina.dark {

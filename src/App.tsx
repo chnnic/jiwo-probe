@@ -1372,10 +1372,12 @@ export function ReturnRouteBadges({ routes, telecomPaidPeer, variant }: { routes
 }
 
 const LUMINA_QUOTA_SEGMENTS = 18
-// 每段取 OKLCH heat 渐变(绿→黄→橙→红)的 1/18 切片作为段色,与 LuminaPlus 的
+// 每段取 heat 渐变(绿→黄→橙→红)的 1/18 切片作为段色,与 LuminaPlus 的
 // trafficQuotaSegmentColor 语义一致:颜色只看段的位置,与主题无关。
+// 2026-08-13: 原 oklch 插值语法(linear-gradient to right in oklch) 在 Chrome<111 / Safari<16.2
+// 等浏览器整条失效导致进度条无渐变,改 hex 色标全兼容(色值经 oklch→sRGB 精确转换)。
 const LUMINA_HEAT_GRADIENT =
-  'linear-gradient(to right in oklch, oklch(0.72 0.16 150) 0%, oklch(0.72 0.16 150) 10%, oklch(0.8 0.18 128) 28%, oklch(0.86 0.18 110) 44%, oklch(0.8 0.18 85) 58%, oklch(0.72 0.19 62) 72%, oklch(0.65 0.21 40) 86%, oklch(0.6 0.22 27) 100%)'
+  'linear-gradient(to right, #4ac06c 0%, #4ac06c 10%, #9cd242 28%, #d9da26 44%, #f2b200 58%, #f58200 72%, #f25100 86%, #e62c2c 100%)'
 function luminaHeatGradient(): string {
   // 黑金配色: 金色渐变(与 --lumina-heat 覆盖一致)
   if (document.documentElement.classList.contains('gold')) {
@@ -1737,7 +1739,7 @@ function ServerCardLumina({ server, index }: { server: EnrichedServer; index: nu
                     style={
                       lit
                         ? {
-                            background: luminaHeatGradient(),
+                            backgroundImage: luminaHeatGradient(),
                             backgroundSize: `${LUMINA_QUOTA_SEGMENTS * 100}% 100%`,
                             backgroundPosition: `${(i / (LUMINA_QUOTA_SEGMENTS - 1)) * 100}% 0`,
                           }
