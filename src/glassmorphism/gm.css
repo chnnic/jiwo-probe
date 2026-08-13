@@ -730,6 +730,16 @@
   overflow: hidden;
   box-shadow: rgba(0, 0, 0, 0.42) 0px 8px 26px 0px;
 }
+/* 手机: 列表视图列多(7列), 允许横向滑动看全 */
+@media (max-width: 640px) {
+  .gm-table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .gm-table {
+    min-width: 720px;
+  }
+}
 .gm-table {
   width: 100%;
   min-width: 900px;
