@@ -65,8 +65,6 @@ function formatUptimeDays(seconds: number): string {
 
 const CYCLE_LABELS: Record<string, string> = { hour: '时', day: '天', week: '周', month: '月', quarterly: '季', halfyear: '半年', year: '年', twoyear: '两年', threeyear: '三年', onetime: '一次性' }
 
-const GOLD_ROUTES = new Set(['CN2GIA', 'CTGGIA', '9929', 'CMIN2', '163PP', 'CMIN2'])
-
 function systemTitle(server: ProbeServer): string {
   const parts = [server.os, server.cpu_model, server.arch].filter(Boolean)
   return parts.join(' · ') || '系统信息'
@@ -198,18 +196,16 @@ function GmNodeCard({ server, index }: { server: EnrichedServer; index: number }
       lossTitles.push(`${loss.toFixed(1)}%`)
     }
   }
-  // 规格标签
-  const tags: string[] = []
-  if (server.cpu_cores !== undefined) {
-    const memG = server.mem_total !== undefined ? Math.round(server.mem_total / 1073741824) : 0
-    const diskG = server.disk_total !== undefined ? Math.round(server.disk_total / 1073741824) : 0
-    tags.push(`${server.cpu_cores}C${memG}G${diskG}GB`)
+  // 三网回程文字标签
+  const carrierLabels: Record<string, string> = { telecom: '电信', unicom: '联通', mobile: '移动' }
+  const displayRoute = (route: string): string => {
+    const normalized = route.toUpperCase().replace(/[^A-Z0-9]/g, '')
+    return normalized === 'CMIN' ? 'CMI' : route.trim().toUpperCase()
   }
-  if (server.traffic_limit !== undefined) tags.push(bytes(server.traffic_limit, false))
-  const routeTags = [...new Set((server.return_routes || [])
-    .map((route) => (route.route_type || '').toUpperCase().replace(/[^A-Z0-9]/g, ''))
-    .filter((tag) => GOLD_ROUTES.has(tag)))]
-  if (routeTags.length) tags.push(...routeTags.slice(0, 2))
+  const routeLines = (server.return_routes || [])
+    .map((route) => ({ carrier: route.carrier, type: (route.route_type || '').trim() }))
+    .filter((route) => route.type && route.type.toLowerCase() !== 'unknown')
+    .map((route) => ({ carrier: carrierLabels[route.carrier] || route.carrier, type: displayRoute(route.type) }))
 
   return (
     <>
@@ -363,13 +359,21 @@ function GmNodeCard({ server, index }: { server: EnrichedServer; index: number }
               )}
             </div>
           )}
-          {/* 规格标签行 */}
-          {tags.length > 0 && (
+          {/* 三网回程文字标签 */}
+          {routeLines.length > 0 ? (
             <div className="gm-tags">
-              {tags.map((tag) => (
-                <span key={tag} className="gm-tag">{tag}</span>
+              {routeLines.map((line) => (
+                <span key={line.carrier} className="gm-tag" title={`${line.carrier}回程: ${line.type}`}>
+                  {line.carrier} {line.type}
+                </span>
               ))}
             </div>
+          ) : (
+            (server.return_routes?.length ?? 0) > 0 && (
+              <div className="gm-tags">
+                <span className="gm-tag">回程未知</span>
+              </div>
+            )
           )}
         </div>
       </article>
