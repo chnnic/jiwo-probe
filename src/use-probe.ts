@@ -125,9 +125,12 @@ export function applyAppearance(input?: ProbeAppearance) {
   for (const cls of [...root.classList]) {
     if (cls.startsWith('theme-')) root.classList.remove(cls)
   }
-  // Ran 主题把 data-theme 挂在 body 上且卸载时不清理,
-  // tokens.css 的全局 body{color:var(--fg-0)} 会污染切换后的主题文字色 → 这里兜底清掉
-  document.body.removeAttribute('data-theme')
+  // Ran 主题把 data-theme 挂在 body 上作为自身配色 tokens 的载体,
+  // 这里只在切到非 Ran 主题时才清(ran 组件卸载后残留会污染其他主题文字色);
+  // Ran 系主题必须保留, 否则轮询每帧清掉 data-theme 会导致 Ran 页面全白。
+  if (!/^ran(-|$)/i.test(theme)) {
+    document.body.removeAttribute('data-theme')
+  }
   root.classList.remove('dark')
   root.classList.remove('gold')
   root.classList.add(`theme-${theme}`)
