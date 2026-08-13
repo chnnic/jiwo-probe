@@ -247,7 +247,7 @@ const THEME_OPTIONS: { value: ThemeName; label: string }[] = [
   { value: 'lumina', label: 'Lumina' },
   { value: 'premium', label: 'Premium' },
   { value: 'ran', label: '岚 · Ran' },
-  { value: 'komari', label: '小羽 · Komari' },
+  { value: 'glassmorphism', label: 'Glassmorphism' },
 ]
 
 function ThemeSelect({ value, onChange }: { value: ThemeName | null; onChange: (name: ThemeName | null) => void }) {
@@ -1960,7 +1960,7 @@ function ServerCard({ server, index }: { server: ProbeServer; index: number }) {
   )
 }
 
-function ServerCardKomari({ server, index }: { server: EnrichedServer; index: number }) {
+function ServerCardGlassmorphism({ server, index }: { server: EnrichedServer; index: number }) {
   const [trafficOpen, setTrafficOpen] = useState(false)
   const name = server.name || `服务器 ${index + 1}`
   const flag = regionFlag(server.region)
@@ -1983,39 +1983,39 @@ function ServerCardKomari({ server, index }: { server: EnrichedServer; index: nu
   return (
     <>
       <article
-        className={`server-card komari-card${isOffline ? ' is-offline' : ''}`}
+        className={`server-card gm-card${isOffline ? ' is-offline' : ''}`}
         onClick={() => { location.hash = `#/server/${index}` }}
         role="button"
         tabIndex={0}
         onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); location.hash = `#/server/${index}` } }}
         title="点击查看详情"
       >
-        <header className="komari-header">
-          <div className="komari-title-wrap">
+        <header className="gm-header">
+          <div className="gm-title-wrap">
             <span className={server.online ? 'status online' : 'status'} />
-            <h2 className="komari-title">
+            <h2 className="gm-title">
               <Twemoji>{flag && !hasLeadingFlag(name) ? `${flag} ${name}` : name}</Twemoji>
             </h2>
-            <span className="komari-system" title={systemTitle(server)} onClick={(event) => event.stopPropagation()}>
+            <span className="gm-system" title={systemTitle(server)} onClick={(event) => event.stopPropagation()}>
               <SystemIcon server={server} />
             </span>
           </div>
           {(uptimeText || daysText || renewText) && (
-            <div className="komari-chips" onClick={(event) => event.stopPropagation()}>
+            <div className="gm-chips" onClick={(event) => event.stopPropagation()}>
               {uptimeText && (
-                <span className="komari-chip" title="在线时长">
+                <span className="gm-chip" title="在线时长">
                   <Clock3 size={11} />
                   {uptimeText}
                 </span>
               )}
               {daysText && (
-                <span className={`komari-chip${expiring(server) || expired(server) ? ' warn' : ''}`} title="到期时间">
+                <span className={`gm-chip${expiring(server) || expired(server) ? ' warn' : ''}`} title="到期时间">
                   <CalendarClock size={11} />
                   {daysText}
                 </span>
               )}
               {renewText && (
-                <span className="komari-chip" title="续费价格">
+                <span className="gm-chip" title="续费价格">
                   <Wallet size={11} />
                   {renewText}
                 </span>
@@ -2023,55 +2023,55 @@ function ServerCardKomari({ server, index }: { server: EnrichedServer; index: nu
             </div>
           )}
         </header>
-        <div className="komari-metrics">
+        <div className="gm-metrics">
           {cpuPct !== undefined && (
-            <div className="komari-metric" title={loadParts.length ? `负载 ${loadParts.join(' / ')}` : 'CPU 使用率'}>
-              <div className="komari-metric-head">
-                <span className="komari-metric-label"><Cpu size={13} className="komari-ic-cpu" />CPU</span>
-                <span className="tabular komari-metric-value">{cpuPct.toFixed(1)}%</span>
+            <div className="gm-metric" title={loadParts.length ? `负载 ${loadParts.join(' / ')}` : 'CPU 使用率'}>
+              <div className="gm-metric-head">
+                <span className="gm-metric-label"><Cpu size={13} className="gm-ic-cpu" />CPU</span>
+                <span className="tabular gm-metric-value">{cpuPct.toFixed(1)}%</span>
               </div>
-              <div className="komari-meter"><i className="komari-m-cpu" style={{ width: `${Math.min(100, cpuPct)}%` }} /></div>
-              <div className="komari-metric-sub">{loadParts.length ? `${loadParts[0] ?? 0} / ${loadParts[1] ?? 0} / ${loadParts[2] ?? 0}` : '负载暂无'}</div>
+              <div className="gm-meter"><i className="gm-m-cpu" style={{ width: `${Math.min(100, cpuPct)}%` }} /></div>
+              <div className="gm-metric-sub">{loadParts.length ? `${loadParts[0] ?? 0} / ${loadParts[1] ?? 0} / ${loadParts[2] ?? 0}` : '负载暂无'}</div>
             </div>
           )}
           {memPct !== undefined && (
-            <div className="komari-metric" title="内存使用率">
-              <div className="komari-metric-head">
-                <span className="komari-metric-label"><MemoryStick size={13} className="komari-ic-mem" />内存</span>
-                <span className="tabular komari-metric-value">{memPct.toFixed(1)}%</span>
+            <div className="gm-metric" title="内存使用率">
+              <div className="gm-metric-head">
+                <span className="gm-metric-label"><MemoryStick size={13} className="gm-ic-mem" />内存</span>
+                <span className="tabular gm-metric-value">{memPct.toFixed(1)}%</span>
               </div>
-              <div className="komari-meter"><i className="komari-m-mem" style={{ width: `${Math.min(100, memPct)}%` }} /></div>
-              <div className="komari-metric-sub">{bytes(server.mem_used)} / {bytes(server.mem_total)}</div>
+              <div className="gm-meter"><i className="gm-m-mem" style={{ width: `${Math.min(100, memPct)}%` }} /></div>
+              <div className="gm-metric-sub">{bytes(server.mem_used)} / {bytes(server.mem_total)}</div>
             </div>
           )}
           {diskPct !== undefined && (
-            <div className="komari-metric" title="硬盘使用率">
-              <div className="komari-metric-head">
-                <span className="komari-metric-label"><HardDrive size={13} className="komari-ic-disk" />硬盘</span>
-                <span className="tabular komari-metric-value">{diskPct.toFixed(1)}%</span>
+            <div className="gm-metric" title="硬盘使用率">
+              <div className="gm-metric-head">
+                <span className="gm-metric-label"><HardDrive size={13} className="gm-ic-disk" />硬盘</span>
+                <span className="tabular gm-metric-value">{diskPct.toFixed(1)}%</span>
               </div>
-              <div className="komari-meter"><i className="komari-m-disk" style={{ width: `${Math.min(100, diskPct)}%` }} /></div>
-              <div className="komari-metric-sub">{bytes(server.disk_used)} / {bytes(server.disk_total)}</div>
+              <div className="gm-meter"><i className="gm-m-disk" style={{ width: `${Math.min(100, diskPct)}%` }} /></div>
+              <div className="gm-metric-sub">{bytes(server.disk_used)} / {bytes(server.disk_total)}</div>
             </div>
           )}
           {server.traffic_used !== undefined && (
             <button
               type="button"
-              className="komari-metric komari-metric-button"
+              className="gm-metric gm-metric-button"
               title="查看日流量趋势"
               onClick={(event) => {
                 event.stopPropagation()
                 setTrafficOpen(true)
               }}
             >
-              <div className="komari-metric-head">
-                <span className="komari-metric-label"><PieChart size={13} className="komari-ic-traffic" />流量</span>
-                <span className={`tabular komari-metric-value${trafficLevel}`}>
+              <div className="gm-metric-head">
+                <span className="gm-metric-label"><PieChart size={13} className="gm-ic-traffic" />流量</span>
+                <span className={`tabular gm-metric-value${trafficLevel}`}>
                   {server.traffic_limit ? `${trafficPct!.toFixed(1)}%` : '∞'}
                 </span>
               </div>
-              <div className="komari-meter"><i className={`komari-m-traffic${trafficLevel}`} style={{ width: `${Math.min(100, trafficPct ?? (server.traffic_limit ? 0 : 100))}%` }} /></div>
-              <div className={`komari-metric-sub${trafficLevel}`}>
+              <div className="gm-meter"><i className={`gm-m-traffic${trafficLevel}`} style={{ width: `${Math.min(100, trafficPct ?? (server.traffic_limit ? 0 : 100))}%` }} /></div>
+              <div className={`gm-metric-sub${trafficLevel}`}>
                 {bytes(server.traffic_used, false)}
                 {server.traffic_limit ? ` / ${bytes(server.traffic_limit, false)}` : ' / ∞'}
               </div>
@@ -2079,7 +2079,7 @@ function ServerCardKomari({ server, index }: { server: EnrichedServer; index: nu
           )}
         </div>
         {(server.upload_speed !== undefined || server.download_speed !== undefined) && (
-          <div className="speed komari-speed">
+          <div className="speed gm-speed">
             <span className="download" title={`下行 ${speed(server.download_speed)}`}>
               <ArrowDown size={15} />
               <span className="tabular">{speed(server.download_speed)}</span>
@@ -2862,7 +2862,7 @@ export function App() {
           </label>
         </div>
       </section>
-      <main className={`servers ${view}`}>{visible.length ? view === 'card' ? visible.map((server) => activeTheme === 'lumina' ? <ServerCardLumina key={server.name} server={server} index={servers.indexOf(server)} /> : activeTheme === 'komari' ? <ServerCardKomari key={server.name} server={server} index={servers.indexOf(server)} /> : <ServerCard key={server.name} server={server} index={servers.indexOf(server)} />) : view === 'mini' ? visible.map((server) => <ServerMiniCard key={server.name} server={server} index={servers.indexOf(server)} expanded={miniExpanded} />) : <ServerTable servers={visible} /> : <div className="empty">暂无符合条件的服务器</div>}</main>
+      <main className={`servers ${view}`}>{visible.length ? view === 'card' ? visible.map((server) => activeTheme === 'lumina' ? <ServerCardLumina key={server.name} server={server} index={servers.indexOf(server)} /> : activeTheme === 'glassmorphism' ? <ServerCardGlassmorphism key={server.name} server={server} index={servers.indexOf(server)} /> : <ServerCard key={server.name} server={server} index={servers.indexOf(server)} />) : view === 'mini' ? visible.map((server) => <ServerMiniCard key={server.name} server={server} index={servers.indexOf(server)} expanded={miniExpanded} />) : <ServerTable servers={visible} /> : <div className="empty">暂无符合条件的服务器</div>}</main>
       <footer>
         Powered by{' '}
         <a href="https://github.com/mmwx-group" target="_blank" rel="noreferrer">
