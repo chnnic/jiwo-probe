@@ -1,4 +1,4 @@
-export type ThemeName = 'pixel' | 'flat' | 'anime' | 'glass' | 'lumina' | 'premium'
+export type ThemeName = 'pixel' | 'flat' | 'anime' | 'glass' | 'lumina' | 'premium' | 'ran'
 
 export interface ProbeAppearance {
   // theme 是主控下发名，可为任意自定义主题名（探针挂 theme-{name} 类，无对应 CSS 时回退默认）

@@ -246,6 +246,7 @@ const THEME_OPTIONS: { value: ThemeName; label: string }[] = [
   { value: 'glass', label: '玻璃' },
   { value: 'lumina', label: 'Lumina' },
   { value: 'premium', label: 'Premium' },
+  { value: 'ran', label: '岚 · Ran' },
 ]
 
 function ThemeSelect({ value, onChange }: { value: ThemeName | null; onChange: (name: ThemeName | null) => void }) {

@@ -3,6 +3,7 @@ import { Etch } from '@/components/atoms/Etch'
 import { SerialPlate } from '@/components/atoms/SerialPlate'
 import { StatusDot } from '@/components/atoms/StatusDot'
 import { ThemePicker } from '@/components/atoms/ThemePicker'
+import { GlobalThemeSwitch } from '@/components/atoms/GlobalThemeSwitch'
 import { ViewVersionSwitcher } from '@/components/atoms/ViewVersionSwitcher'
 import { Icon } from '@/components/atoms/icons'
 import { useIsMobile, useIsNarrow } from '@/hooks/useMediaQuery'
@@ -446,6 +447,7 @@ export function Topbar({
             onChange={onViewVersionChange}
           />
         )}
+        <GlobalThemeSwitch />
         <ThemePicker value={theme} onChange={(v) => onTheme(v)} />
       </div>
 

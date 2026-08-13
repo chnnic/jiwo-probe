@@ -97,7 +97,7 @@ export function parseThemeName(raw: string): { theme: string; gold: boolean } {
 // 未知主题名照常挂 theme-{name} 类——站长可在自己的 CSS 里写 .theme-{name} 覆盖，
 // 没写则回退到默认(pixel)样式。返回值 = 是否内置主题（供 UI 判断"跟随主控"时如何显示）。
 export function isBuiltinTheme(value?: string): boolean {
-  return value === 'pixel' || value === 'flat' || value === 'anime' || value === 'glass' || value === 'lumina' || value === 'premium' || value === 'luminagold'
+  return value === 'pixel' || value === 'flat' || value === 'anime' || value === 'glass' || value === 'lumina' || value === 'premium' || value === 'luminagold' || value === 'ran'
 }
 
 export function applyAppearance(input?: ProbeAppearance) {
