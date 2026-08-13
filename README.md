@@ -39,12 +39,26 @@
 
 | 主控输入 | 访客看到 |
 |---|---|
-| `Ran` / `RAN` / `ran` | Ran 金工界面 + 默认主题（ran-mist 雾色浅） |
-| `Ran-Night` / `Ran-Mist` / `Ran-Ember` 等 | Ran 界面 + 对应变体（墨石深 / 雾色浅 / 烬枣红 …） |
-| `Lumina-Gold` / `Lumina Gold` / `LUMINAGOLD` | Lumina 黑金配色（默认黑金，访客手动切换仍优先） |
-| `Lumina` / `Pixel` / `Flat` / `Anime` / `Glass` | 经典界面 + 对应主题 |
-| `Premium` | Premium 黑金 PRO 界面（整页独立界面，右上角主题下拉可双向切换） |
+| `pixel` / `flat` / `anime` / `glass` / `lumina` / `premium` | 经典界面 + 对应主题 |
+| `lumina-gold` | Lumina 黑金配色（默认黑金，访客手动切换仍优先） |
+| `ran` | Ran 金工界面 + 默认变体（ran-mist 雾色浅） |
+| `ran-night` | Ran · 夜（墨石深） |
+| `ran-mist` | Ran · 雾（雾色浅） |
+| `ran-ember` | Ran · 烬（烬枣红） |
+| `ran-sakura` | Ran · 樱（樱粉） |
+| `ran-lavender` | Ran · 薰（薰衣草紫） |
+| `ran-tomcat` | Ran · 凶鸟（橘猫橙） |
+| `ran-teal` | Ran · 松石（松石青） |
+| `ran-midnight` | Ran · 午夜（深蓝夜） |
+| `ran-mint` | Ran · 薄荷（薄荷绿） |
+| `ran-butter` | Ran · 奶油（奶油黄） |
+| `ran-ji` | Ran · 霁（雨后青） |
+| `glassmorphism` | Glassmorphism 玻璃拟态整页（默认夜间） |
+| `glassmorphism-light` | Glassmorphism · 白天模式（浅蓝白玻璃） |
+| `glassmorphism-dark` | Glassmorphism · 夜间模式（深蓝黑玻璃） |
 | 其他自定义名 | 经典界面 + `theme-{name}` 类（站长自写 CSS 接管） |
+
+> 主控主题名仅允许字母、数字、下划线、连字符（≤64 字符），上表均为合规写法；大小写不敏感。
 
 优先级：**主控明确下发变体 > 用户手动选过（浏览器记忆）> 本地缓存 > 默认**。探针实时监听主控下发（WS/轮询新帧），切换无需刷新页面。
 - 做过性能优化：backdrop-filter 合成层从 50+ 降到 2 层（仅顶部栏和遮罩），低 CPU / 低耗电，手机不发烫
