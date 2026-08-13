@@ -16,6 +16,7 @@ import {
   Palette,
   PieChart,
   Search,
+  Star,
   Table2,
   Wallet,
   X,
@@ -32,6 +33,7 @@ import {
   ReturnRouteBadges,
   SystemIcon,
   TrafficDialog,
+  averagePing,
   bytes,
   expiring,
   expired,
@@ -55,14 +57,13 @@ const THEME_OPTIONS: { value: ThemeName; label: string }[] = [
   { value: 'glassmorphism', label: 'Glassmorphism' },
 ]
 
-function formatUptime(seconds: number): string {
-  const d = Math.floor(seconds / 86400)
-  const h = Math.floor((seconds % 86400) / 3600)
-  const m = Math.floor((seconds % 3600) / 60)
-  if (d > 0) return h > 0 ? `${d}天${h}小时` : `${d}天`
-  if (h > 0) return m > 0 ? `${h}小时${m}分` : `${h}小时`
-  return `${Math.max(1, m)}分`
+function formatUptimeDays(seconds: number): string {
+  return `${Math.floor(seconds / 86400)} 天`
 }
+
+const CYCLE_LABELS: Record<string, string> = { hour: '时', day: '天', week: '周', month: '月', quarterly: '季', halfyear: '半年', year: '年', twoyear: '两年', threeyear: '三年', onetime: '一次性' }
+
+const GOLD_ROUTES = new Set(['CN2GIA', 'CTGGIA', '9929', 'CMIN2', '163PP', 'CMIN2'])
 
 function systemTitle(server: ProbeServer): string {
   const parts = [server.os, server.cpu_model, server.arch].filter(Boolean)
@@ -139,132 +140,236 @@ function GmNodeCard({ server, index }: { server: EnrichedServer; index: number }
   const memPct = server.mem_total ? pct(server.mem_used, server.mem_total) : undefined
   const diskPct = server.disk_total ? pct(server.disk_used, server.disk_total) : undefined
   const trafficPct = server.traffic_limit ? pct(server.traffic_used, server.traffic_limit) : undefined
-  const trafficLevel = trafficPct === undefined ? '' : trafficPct >= 95 ? ' danger' : trafficPct >= 70 ? ' warn' : ''
-  const uptimeText = server.uptime !== undefined ? formatUptime(server.uptime) : null
-  const daysText = server.expires_at ? remainingDays(server.expires_at) : null
-  const renewText =
+  const statusOf = (v: number) => (v >= 95 ? 'danger' : v >= 70 ? 'warn' : 'ok')
+  const uptimeText = server.uptime !== undefined ? formatUptimeDays(server.uptime) : null
+  const priceText =
     server.renewal_price !== undefined
       ? server.renewal_price_cny !== undefined
-        ? `¥${server.renewal_price_cny.toFixed(2)}`
-        : `${server.renewal_currency || 'CNY'} ${server.renewal_price}`
+        ? `¥${server.renewal_price_cny.toFixed(2)} / ${CYCLE_LABELS[server.renewal_cycle || 'month'] || '月'}`
+        : `${server.renewal_currency || 'CNY'} ${server.renewal_price} / ${CYCLE_LABELS[server.renewal_cycle || 'month'] || '月'}`
       : null
   const loadParts = (server.loadavg || '').split(/\s+/).map(Number).filter((v) => Number.isFinite(v))
+  // 周期流量(物理口径, 与 Lumina 卡同源逻辑)
+  let cycleUp = server.traffic_used_up
+  let cycleDown = server.traffic_used_down
+  if (cycleUp === undefined || cycleDown === undefined) {
+    const cycleDaily = server.cycle_daily_traffic ?? server.daily_traffic ?? []
+    const dailyUp = cycleDaily.reduce((acc, item) => acc + (item.uplink ?? 0), 0)
+    const dailyDown = cycleDaily.reduce((acc, item) => acc + (item.downlink ?? 0), 0)
+    const ratio = dailyUp + dailyDown > 0 ? dailyUp / (dailyUp + dailyDown) : 0.5
+    const base = server.traffic_used ?? server.traffic_used_total
+    if (base !== undefined) {
+      cycleUp = base * ratio
+      cycleDown = base * (1 - ratio)
+    }
+  }
+  const daysText = server.expires_at ? remainingDays(server.expires_at) : null
+  const remainValue = computeRemainingValue(server)
+  const remainValueText = remainValue ? formatMoney(remainValue.value, 'CNY', true) : null
+  // 延迟/丢包脉冲(平均线 buckets)
+  const pingAvg = server.ping?.length ? averagePing(server.ping) : undefined
+  const latencyBars: string[] = []
+  const lossBars: string[] = []
+  const latencyTitles: string[] = []
+  const lossTitles: string[] = []
+  let avgMs = -1
+  let avgLoss = 0
+  if (pingAvg) {
+    avgMs = pingAvg.current_ms
+    avgLoss = pingAvg.loss_pct ?? 0
+    for (const bucket of pingAvg.buckets) {
+      if (bucket.ms < 0) {
+        latencyBars.push('none')
+        latencyTitles.push('超时')
+      } else if (bucket.ms >= 200) {
+        latencyBars.push('bad')
+        latencyTitles.push(`${bucket.ms} ms`)
+      } else if (bucket.ms >= 100) {
+        latencyBars.push('warn')
+        latencyTitles.push(`${bucket.ms} ms`)
+      } else {
+        latencyBars.push('ok')
+        latencyTitles.push(`${bucket.ms} ms`)
+      }
+      const loss = bucket.loss ?? 0
+      lossBars.push(loss >= 20 ? 'bad' : loss > 0 ? 'warn' : 'ok')
+      lossTitles.push(`${loss.toFixed(1)}%`)
+    }
+  }
+  // 规格标签
+  const tags: string[] = []
+  if (server.cpu_cores !== undefined) {
+    const memG = server.mem_total !== undefined ? Math.round(server.mem_total / 1073741824) : 0
+    const diskG = server.disk_total !== undefined ? Math.round(server.disk_total / 1073741824) : 0
+    tags.push(`${server.cpu_cores}C${memG}G${diskG}GB`)
+  }
+  if (server.traffic_limit !== undefined) tags.push(bytes(server.traffic_limit, false))
+  const routeTags = [...new Set((server.return_routes || [])
+    .map((route) => (route.route_type || '').toUpperCase().replace(/[^A-Z0-9]/g, ''))
+    .filter((tag) => GOLD_ROUTES.has(tag)))]
+  if (routeTags.length) tags.push(...routeTags.slice(0, 2))
 
   return (
     <>
       <article
         className={`gm-node-card${isOffline ? ' is-offline' : ''}`}
-        onClick={() => { location.hash = `#/server/${index}` }}
         role="button"
         tabIndex={0}
+        aria-label={`查看节点 ${name} 详情`}
+        onClick={() => { location.hash = `#/server/${index}` }}
         onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); location.hash = `#/server/${index}` } }}
-        title="点击查看详情"
       >
-        <header className="gm-node-header">
+        <div className="gm-node-top">
           <div className="gm-node-title-wrap">
             <span className="gm-status-wrap">
-              <span className={server.online ? 'status online' : 'status'} />
+              <span className={`status${server.online ? ' online' : ''}`} />
               {server.online && <span className="gm-status-ping" />}
             </span>
-            <h2 className="gm-node-title">
-              <Twemoji>{flag && !hasLeadingFlag(name) ? `${flag} ${name}` : name}</Twemoji>
-            </h2>
-            <span className="gm-node-system" title={systemTitle(server)} onClick={(event) => event.stopPropagation()}>
+            <h2 className="gm-node-title">{name}</h2>
+          </div>
+          <div className="gm-node-icons">
+            <button type="button" className="gm-node-fav" aria-label={`收藏 ${name}`} title="收藏节点" onClick={(event) => event.stopPropagation()}>
+              <Star size={14} />
+            </button>
+            <span className="gm-node-os" title={systemTitle(server)} onClick={(event) => event.stopPropagation()}>
               <SystemIcon server={server} />
             </span>
+            {flag && <Twemoji className="gm-node-flag">{flag}</Twemoji>}
           </div>
-          {(uptimeText || daysText || renewText) && (
-            <div className="gm-node-chips" onClick={(event) => event.stopPropagation()}>
-              {uptimeText && (
-                <span className="gm-chip" title="在线时长">
-                  <Clock3 size={11} />
-                  {uptimeText}
-                </span>
+        </div>
+        <div className="gm-node-body">
+          <div className="gm-node-chips">
+            {uptimeText && <span className="gm-chip">在线 {uptimeText}</span>}
+            {priceText && <span className="gm-chip">{priceText}</span>}
+          </div>
+          <div className="gm-node-metrics">
+            {cpuPct !== undefined && (
+              <div className="gm-metric">
+                <div className="gm-metric-head">
+                  <span className="gm-metric-label"><Cpu size={13} className="gm-ic-cpu" />CPU</span>
+                  <span className="tabular gm-metric-value">{cpuPct.toFixed(1)}%</span>
+                </div>
+                <div className="gm-meter"><i className={`gm-fill-${statusOf(cpuPct)}`} style={{ width: `${Math.min(100, cpuPct)}%` }} /></div>
+                <div className="gm-metric-sub">{loadParts.length ? `${loadParts[0] ?? 0}, ${loadParts[1] ?? 0}, ${loadParts[2] ?? 0}` : '—'}</div>
+              </div>
+            )}
+            {memPct !== undefined && (
+              <div className="gm-metric" title="内存使用率">
+                <div className="gm-metric-head">
+                  <span className="gm-metric-label"><MemoryStick size={13} className="gm-ic-mem" />内存</span>
+                  <span className="tabular gm-metric-value">{memPct.toFixed(1)}%</span>
+                </div>
+                <div className="gm-meter"><i className={`gm-fill-${statusOf(memPct)}`} style={{ width: `${Math.min(100, memPct)}%` }} /></div>
+                <div className="gm-metric-sub">{bytes(server.mem_used)} / {bytes(server.mem_total)}</div>
+              </div>
+            )}
+            {diskPct !== undefined && (
+              <div className="gm-metric">
+                <div className="gm-metric-head">
+                  <span className="gm-metric-label"><HardDrive size={13} className="gm-ic-disk" />硬盘</span>
+                  <span className="tabular gm-metric-value">{diskPct.toFixed(1)}%</span>
+                </div>
+                <div className="gm-meter"><i className={`gm-fill-${statusOf(diskPct)}`} style={{ width: `${Math.min(100, diskPct)}%` }} /></div>
+                <div className="gm-metric-sub">{bytes(server.disk_used)} / {bytes(server.disk_total)}</div>
+              </div>
+            )}
+            {server.traffic_used !== undefined && (
+              <button
+                type="button"
+                className="gm-metric gm-metric-button"
+                title="查看日流量趋势"
+                onClick={(event) => {
+                  event.stopPropagation()
+                  setTrafficOpen(true)
+                }}
+              >
+                <div className="gm-metric-head">
+                  <span className="gm-metric-label"><PieChart size={13} className="gm-ic-traffic" />流量</span>
+                  <span className={`tabular gm-metric-value${trafficPct !== undefined && trafficPct >= 70 ? ` gm-text-${statusOf(trafficPct)}` : ''}`}>
+                    {server.traffic_limit ? `${trafficPct!.toFixed(1)}%` : '∞'}
+                  </span>
+                </div>
+                <div className="gm-meter"><i className={`gm-fill-${trafficPct !== undefined ? statusOf(trafficPct) : 'ok'}`} style={{ width: `${Math.min(100, trafficPct ?? (server.traffic_limit ? 0 : 100))}%` }} /></div>
+                <div className="gm-metric-sub">
+                  {bytes(server.traffic_used, false)}
+                  {server.traffic_limit ? ` / ${bytes(server.traffic_limit, false)}` : ' / ∞'}
+                </div>
+              </button>
+            )}
+          </div>
+          {/* 速率/周期流量/到期 3 列块 */}
+          <div className="gm-quick-row">
+            <div className="gm-quick-cell">
+              <div className="gm-quick-line gm-q-up">
+                <ArrowUp size={11} />
+                <span>{speed(server.upload_speed)}</span>
+              </div>
+              <div className="gm-quick-line gm-q-down">
+                <ArrowDown size={11} />
+                <span>{speed(server.download_speed)}</span>
+              </div>
+            </div>
+            <div className="gm-quick-cell">
+              <div className="gm-quick-line gm-q-cycle-up">
+                <ArrowUp size={11} />
+                <span>{cycleUp !== undefined ? bytes(cycleUp) : '—'}</span>
+              </div>
+              <div className="gm-quick-line gm-q-cycle-down">
+                <ArrowDown size={11} />
+                <span>{cycleDown !== undefined ? bytes(cycleDown) : '—'}</span>
+              </div>
+            </div>
+            <div className="gm-quick-cell">
+              <div className="gm-quick-line gm-q-days">
+                <CalendarClock size={11} />
+                <span>{daysText ?? '—'}</span>
+              </div>
+              <div className="gm-quick-line gm-q-value">
+                <Wallet size={11} />
+                <span>{remainValueText ?? '—'}</span>
+              </div>
+            </div>
+          </div>
+          {/* 延迟/丢包脉冲块 */}
+          {(latencyBars.length > 0 || lossBars.length > 0) && (
+            <div className="gm-ping-row">
+              {latencyBars.length > 0 && (
+                <button type="button" className="gm-ping-cell" title={`平均延迟 ${avgMs >= 0 ? avgMs.toFixed(0) : '超时'} ms`} aria-label={`${name} 延迟监测`} onClick={(event) => event.stopPropagation()}>
+                  <div className="gm-ping-head">
+                    <span>延迟</span>
+                    <span className="gm-ping-value">{avgMs < 0 ? '超时' : `${avgMs.toFixed(0)} ms`}</span>
+                  </div>
+                  <div className="gm-ping-bars">
+                    {latencyBars.map((level, i) => (
+                      <span key={i} className={`gm-ping-bar gm-sig-${level}`} title={latencyTitles[i]} />
+                    ))}
+                  </div>
+                </button>
               )}
-              {daysText && (
-                <span className={`gm-chip${expiring(server) || expired(server) ? ' warn' : ''}`} title="到期时间">
-                  <CalendarClock size={11} />
-                  {daysText}
-                </span>
+              {lossBars.length > 0 && (
+                <button type="button" className="gm-ping-cell" title={`平均丢包 ${avgLoss.toFixed(1)}%`} aria-label={`${name} 丢包监测`} onClick={(event) => event.stopPropagation()}>
+                  <div className="gm-ping-head">
+                    <span>丢包</span>
+                    <span className="gm-ping-value">{avgLoss.toFixed(1)}%</span>
+                  </div>
+                  <div className="gm-ping-bars">
+                    {lossBars.map((level, i) => (
+                      <span key={i} className={`gm-ping-bar gm-sig-${level}`} title={lossTitles[i]} />
+                    ))}
+                  </div>
+                </button>
               )}
-              {renewText && (
-                <span className="gm-chip" title="续费价格">
-                  <Wallet size={11} />
-                  {renewText}
-                </span>
-              )}
             </div>
           )}
-        </header>
-        <div className="gm-node-metrics">
-          {cpuPct !== undefined && (
-            <div className="gm-metric" title={loadParts.length ? `负载 ${loadParts.join(' / ')}` : 'CPU 使用率'}>
-              <div className="gm-metric-head">
-                <span className="gm-metric-label"><Cpu size={13} className="gm-ic-cpu" />CPU</span>
-                <span className="tabular gm-metric-value">{cpuPct.toFixed(1)}%</span>
-              </div>
-              <div className="gm-meter"><i className="gm-m-cpu" style={{ width: `${Math.min(100, cpuPct)}%` }} /></div>
-              <div className="gm-metric-sub">{loadParts.length ? `${loadParts[0] ?? 0} / ${loadParts[1] ?? 0} / ${loadParts[2] ?? 0}` : '负载暂无'}</div>
+          {/* 规格标签行 */}
+          {tags.length > 0 && (
+            <div className="gm-tags">
+              {tags.map((tag) => (
+                <span key={tag} className="gm-tag">{tag}</span>
+              ))}
             </div>
-          )}
-          {memPct !== undefined && (
-            <div className="gm-metric" title="内存使用率">
-              <div className="gm-metric-head">
-                <span className="gm-metric-label"><MemoryStick size={13} className="gm-ic-mem" />内存</span>
-                <span className="tabular gm-metric-value">{memPct.toFixed(1)}%</span>
-              </div>
-              <div className="gm-meter"><i className="gm-m-mem" style={{ width: `${Math.min(100, memPct)}%` }} /></div>
-              <div className="gm-metric-sub">{bytes(server.mem_used)} / {bytes(server.mem_total)}</div>
-            </div>
-          )}
-          {diskPct !== undefined && (
-            <div className="gm-metric" title="硬盘使用率">
-              <div className="gm-metric-head">
-                <span className="gm-metric-label"><HardDrive size={13} className="gm-ic-disk" />硬盘</span>
-                <span className="tabular gm-metric-value">{diskPct.toFixed(1)}%</span>
-              </div>
-              <div className="gm-meter"><i className="gm-m-disk" style={{ width: `${Math.min(100, diskPct)}%` }} /></div>
-              <div className="gm-metric-sub">{bytes(server.disk_used)} / {bytes(server.disk_total)}</div>
-            </div>
-          )}
-          {server.traffic_used !== undefined && (
-            <button
-              type="button"
-              className="gm-metric gm-metric-button"
-              title="查看日流量趋势"
-              onClick={(event) => {
-                event.stopPropagation()
-                setTrafficOpen(true)
-              }}
-            >
-              <div className="gm-metric-head">
-                <span className="gm-metric-label"><PieChart size={13} className="gm-ic-traffic" />流量</span>
-                <span className={`tabular gm-metric-value${trafficLevel}`}>
-                  {server.traffic_limit ? `${trafficPct!.toFixed(1)}%` : '∞'}
-                </span>
-              </div>
-              <div className="gm-meter"><i className={`gm-m-traffic${trafficLevel}`} style={{ width: `${Math.min(100, trafficPct ?? (server.traffic_limit ? 0 : 100))}%` }} /></div>
-              <div className={`gm-metric-sub${trafficLevel}`}>
-                {bytes(server.traffic_used, false)}
-                {server.traffic_limit ? ` / ${bytes(server.traffic_limit, false)}` : ' / ∞'}
-              </div>
-            </button>
           )}
         </div>
-        {(server.upload_speed !== undefined || server.download_speed !== undefined) && (
-          <div className="gm-node-speed">
-            <span title={`下行 ${speed(server.download_speed)}`}>
-              <ArrowDown size={15} />
-              <span className="tabular">{speed(server.download_speed)}</span>
-            </span>
-            <span title={`上行 ${speed(server.upload_speed)}`}>
-              <ArrowUp size={15} />
-              <span className="tabular">{speed(server.upload_speed)}</span>
-            </span>
-          </div>
-        )}
-        {!!server.ping?.length && <PingPanel ping={server.ping} serverIndex={index} />}
-        {!!server.return_routes?.length && <ReturnRouteBadges routes={server.return_routes} telecomPaidPeer={server.telecom_paid_peer} />}
       </article>
       {trafficOpen && <TrafficDialog server={server} close={() => setTrafficOpen(false)} />}
     </>
@@ -291,39 +396,42 @@ function GmGeneralCards({ servers }: { servers: ProbeServer[] }) {
     const up = servers.reduce((acc, s) => acc + (s.upload_speed || 0), 0)
     const down = servers.reduce((acc, s) => acc + (s.download_speed || 0), 0)
     let totalValue = 0
+    let totalPrice = 0
     for (const server of servers) {
       const rv = computeRemainingValue(server)
       if (rv) totalValue += rv.value
+      if (server.renewal_price !== undefined) totalPrice += server.renewal_price_cny ?? server.renewal_price
     }
     const mem = splitBytesText(memUsed)
     const disk = splitBytesText(diskUsed)
     const traffic = splitBytesText(trafficUsed)
     const upSpeed = splitSpeedText(up)
     const downSpeed = splitSpeedText(down)
+    const valueText = totalValue > 0 ? formatMoney(totalValue, 'CNY', true).replace(/¥/, '') : '—'
     const result: GmGeneralCard[] = [
       {
         key: 'memory',
-        label: '内存',
+        label: '内存用量',
         icon: <MemoryStick size={20} />,
         value: mem.value,
-        unit: mem.unit,
-        tooltip: `总内存 ${bytes(memTotal)}\n已用 ${bytes(memUsed)}`,
+        unit: `${mem.unit} / ${bytes(memTotal)}`,
+        tooltip: `已用 ${bytes(memUsed)}\n总量 ${bytes(memTotal)}`,
       },
       {
         key: 'disk',
-        label: '硬盘',
+        label: '硬盘用量',
         icon: <HardDrive size={20} />,
         value: disk.value,
-        unit: disk.unit,
-        tooltip: `总硬盘 ${bytes(diskTotal)}\n已用 ${bytes(diskUsed)}`,
+        unit: `${disk.unit} / ${bytes(diskTotal)}`,
+        tooltip: `已用 ${bytes(diskUsed)}\n总量 ${bytes(diskTotal)}`,
       },
       {
         key: 'remainingValue',
         label: '剩余价值',
         icon: <Wallet size={20} />,
-        value: totalValue > 0 ? formatMoney(totalValue, 'CNY', true).replace(/¥/, '') : '—',
+        value: valueText,
         unit: totalValue > 0 ? 'CNY' : undefined,
-        tooltip: totalValue > 0 ? `剩余价值合计 ${formatMoney(totalValue, 'CNY', true)}` : '暂无价格数据',
+        tooltip: totalValue > 0 ? `总价值 ${formatMoney(totalPrice, 'CNY', true)}` : '暂无价格数据',
       },
       {
         key: 'totalTraffic',
@@ -331,7 +439,7 @@ function GmGeneralCards({ servers }: { servers: ProbeServer[] }) {
         icon: <Database size={20} />,
         value: traffic.value,
         unit: traffic.unit,
-        tooltip: `所有节点累计已用流量 ${bytes(trafficUsed)}`,
+        tooltip: `↑ ${bytes(servers.reduce((acc, s) => acc + (s.cumulative_up || 0), 0))}\n↓ ${bytes(servers.reduce((acc, s) => acc + (s.cumulative_down || 0), 0))}`,
       },
       {
         key: 'uploadSpeed',
