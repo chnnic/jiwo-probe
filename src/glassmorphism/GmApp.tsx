@@ -587,6 +587,15 @@ export default function GmApp({
     return () => window.removeEventListener('hashchange', applyHash)
   }, [])
 
+  // 详情页/弹窗是 portal 到 body 下, 需要在 body 上挂主题类供 CSS 变量覆盖
+  useEffect(() => {
+    document.body.classList.add('gm-body')
+    document.body.classList.toggle('gm-light-body', colorMode === 'light')
+    return () => {
+      document.body.classList.remove('gm-body', 'gm-light-body')
+    }
+  }, [colorMode])
+
   const query = search.trim().toLowerCase()
   const visible = servers.filter((server) => {
     if (!query) return true

@@ -848,24 +848,25 @@
   .gm-visitor-isp { display: inline; }
 }
 
-/* ===== 详情页玻璃化 ===== */
-.gm-app .modal {
-  background: rgba(17, 24, 39, 0.96);
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  color: #e2e8f0;
+body.gm-body .modal-backdrop {
+  background: rgba(6, 10, 18, 0.66);
+  backdrop-filter: blur(4px);
 }
-.gm-app .detail-cols > div,
-.gm-app .detail-panel,
-.gm-app .detail-card,
-.gm-app .metric {
-  background: rgba(17, 24, 39, 0.9);
-  border-color: rgba(255, 255, 255, 0.12);
+body.gm-body.gm-light-body .modal-backdrop {
+  background: rgba(15, 23, 42, 0.3);
 }
-.gm-app .detail-page,
-.gm-app .detail-header,
-.gm-app .detail-body {
-  background: rgba(11, 16, 25, 0.94);
-  color: #e2e8f0;
+/* 详情页玻璃化(配色统一走上面注入的 CSS 变量) */
+body.gm-body .detail-cols > div,
+body.gm-body .detail-card,
+body.gm-body .metric {
+  background: var(--surface-elevated);
+  border-color: var(--border);
+}
+body.gm-body .detail-page,
+body.gm-body .detail-header,
+body.gm-body .detail-body {
+  background: var(--surface);
+  color: var(--foreground);
 }
 
 /* ===== 移动端 ===== */
@@ -878,6 +879,158 @@
   .gm-search.has-text { flex: 1; }
   .gm-view-switch { margin-left: auto; order: 1; }
   .gm-controls { flex-wrap: wrap; }
+}
+
+/* ============================================================
+   CSS 变量注入: 挂在 body 级(ServerDetail/弹窗 portal 到 body
+   下, .gm-app 祖先选择器罩不住), gm 主题下自动获得玻璃配色
+   ============================================================ */
+.gm-app,
+body.gm-body {
+  --page-bg: #0b0f19;
+  --surface: rgba(17, 24, 39, 0.94);
+  --surface-elevated: rgba(30, 41, 59, 0.88);
+  --border: rgba(148, 163, 184, 0.16);
+  --muted: #94a3b8;
+  --foreground: #f8fafc;
+  --accent: #2fd4a1;
+  --primary: #2fd4a1;
+  --radius: 12px;
+  --green: #2fd4a1;
+  --blue: #38bdf8;
+  --orange: #fb923c;
+  --red: #f87171;
+  --amber: #fbbf24;
+}
+.gm-app.gm-light,
+body.gm-body.gm-light-body {
+  --page-bg: #eef1f7;
+  --surface: rgba(250, 251, 253, 0.96);
+  --surface-elevated: rgba(255, 255, 255, 0.92);
+  --border: rgba(15, 23, 42, 0.12);
+  --muted: #3f4a63;
+  --foreground: #10141f;
+  --accent: #0d946e;
+  --primary: #0d946e;
+}
+/* 详情页容器细节 */
+body.gm-body .server-detail {
+  background: var(--surface);
+  border-color: var(--border);
+}
+body.gm-body .server-detail-header {
+  background: var(--surface);
+  border-bottom-color: var(--border);
+}
+body.gm-body .detail-panel {
+  background: var(--surface-elevated);
+  border-color: var(--border);
+}
+body.gm-body .detail-panel h3 {
+  color: var(--muted);
+}
+body.gm-body .server-detail-title h2,
+body.gm-body .detail-metric-sub,
+body.gm-body .detail-metric-head strong,
+body.gm-body .detail-hw > span,
+body.gm-body .detail-meta > span {
+  color: var(--foreground);
+}
+body.gm-body .detail-region,
+body.gm-body .detail-metric-head span,
+body.gm-body .detail-loadavg,
+body.gm-body .detail-hw small,
+body.gm-body .detail-meta small,
+body.gm-body .detail-meta > a {
+  color: var(--muted);
+}
+/* 图表(recharts)配色适配 */
+body.gm-body .recharts-cartesian-axis-tick text,
+body.gm-body .recharts-cartesian-axis-tick-value,
+body.gm-body .recharts-text {
+  fill: var(--muted);
+}
+body.gm-body .recharts-cartesian-grid line,
+body.gm-body .recharts-cartesian-grid-horizontal line,
+body.gm-body .recharts-cartesian-grid-vertical line {
+  stroke: var(--border);
+}
+body.gm-body .recharts-tooltip-cursor {
+  stroke: var(--border);
+}
+/* ping 等级块改用 gm 状态色 */
+body.gm-body .ping-blocks i.good { background: var(--green); }
+body.gm-body .ping-blocks i.warn { background: var(--amber); }
+body.gm-body .ping-blocks i.bad { background: var(--red); }
+body.gm-body .ping-head {
+  background: var(--surface-elevated);
+  border-color: var(--border);
+}
+body.gm-body .ping-grid {
+  border-color: var(--border);
+  background: var(--surface);
+}
+body.gm-body .ping-blocks {
+  background: var(--surface-elevated);
+}
+body.gm-body .ping-head strong { color: var(--foreground); }
+body.gm-body .ping-head > span { color: var(--muted); }
+body.gm-body .ping-head select {
+  background: var(--surface-elevated);
+  color: var(--foreground);
+  border-color: var(--border);
+}
+body.gm-body .ping-head select option { background: #0b0f19; }
+body.gm-body.gm-light-body .ping-head select option { background: #fafbfd; }
+/* 详情页小面板玻璃化 */
+body.gm-body .detail-value {
+  background: var(--surface-elevated);
+  border-color: var(--border);
+}
+body.gm-body .detail-value-main > span,
+body.gm-body .detail-value-main small,
+body.gm-body .detail-value-sub {
+  color: var(--muted);
+}
+body.gm-body .detail-value-main strong {
+  color: var(--accent);
+}
+body.gm-body .detail-loadavg code {
+  background: var(--border);
+  color: var(--foreground);
+}
+body.gm-body .trend-mode-switch button {
+  border-color: var(--border);
+  color: var(--muted);
+}
+body.gm-body .trend-mode-switch button.active {
+  border-color: var(--primary);
+  color: var(--primary);
+  background: rgba(47, 212, 161, 0.12);
+}
+body.gm-body.gm-light-body .trend-mode-switch button.active {
+  background: rgba(13, 148, 110, 0.1);
+}
+body.gm-body .detail-speed .download {
+  color: var(--blue);
+  background: rgba(56, 189, 248, 0.12);
+}
+body.gm-body .detail-speed .upload {
+  color: #a78bfa;
+  background: rgba(139, 92, 246, 0.12);
+}
+/* 模态 backdrop */
+body.gm-body .server-detail-backdrop {
+  background: rgba(6, 10, 18, 0.66);
+  backdrop-filter: blur(4px);
+}
+body.gm-body.gm-light-body .server-detail-backdrop {
+  background: rgba(15, 23, 42, 0.28);
+}
+body.gm-body .modal {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--foreground);
 }
 
 /* ============================================================
@@ -1002,15 +1155,19 @@
 }
 .gm-app.gm-light .gm-visitor-ip { color: #10141f; }
 .gm-app.gm-light .gm-visitor-sep { color: rgba(63, 74, 99, 0.4); }
-/* 详情页 */
-.gm-app.gm-light .modal {
+/* 详情页(portal 到 body, 用 body 级选择器; 配色已由 body.gm-body 变量接管, 此处保留兜底) */
+.gm-app.gm-light .modal,
+body.gm-body.gm-light-body .modal {
   background: rgba(250, 251, 253, 0.97);
   border-color: rgba(15, 23, 42, 0.12);
   color: #10141f;
 }
 .gm-app.gm-light .detail-page,
 .gm-app.gm-light .detail-header,
-.gm-app.gm-light .detail-body {
+.gm-app.gm-light .detail-body,
+body.gm-body.gm-light-body .detail-page,
+body.gm-body.gm-light-body .detail-header,
+body.gm-body.gm-light-body .detail-body {
   background: rgba(238, 241, 247, 0.96);
   color: #10141f;
 }
