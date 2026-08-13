@@ -924,6 +924,24 @@ body.gm-body .detail-panel {
   background: var(--surface-elevated);
   border-color: var(--border);
 }
+/* dark 模式: 详情页文字提亮 + 面板更不透明(背景图干扰小) */
+body.gm-body:not(.gm-light-body) .server-detail {
+  background: rgba(17, 24, 39, 0.97);
+}
+body.gm-body:not(.gm-light-body) .detail-panel,
+body.gm-body:not(.gm-light-body) .detail-value,
+body.gm-body:not(.gm-light-body) .detail-cols > div {
+  background: rgba(30, 41, 59, 0.94);
+}
+body.gm-body:not(.gm-light-body) .detail-panel h3,
+body.gm-body:not(.gm-light-body) .detail-region,
+body.gm-body:not(.gm-light-body) .detail-metric-head span,
+body.gm-body:not(.gm-light-body) .detail-loadavg,
+body.gm-body:not(.gm-light-body) .detail-hw small,
+body.gm-body:not(.gm-light-body) .detail-meta small,
+body.gm-body:not(.gm-light-body) .legend span {
+  color: #a9b7cb;
+}
 body.gm-body .detail-panel h3 {
   color: var(--muted);
 }
