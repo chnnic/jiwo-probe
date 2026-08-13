@@ -200,7 +200,7 @@ function GmNodeCard({ server, index }: { server: EnrichedServer; index: number }
   const carrierLabels: Record<string, string> = { telecom: '电信', unicom: '联通', mobile: '移动' }
   const displayRoute = (route: string): string => {
     const normalized = route.toUpperCase().replace(/[^A-Z0-9]/g, '')
-    return normalized === 'CMIN' ? 'CMI' : route.trim().toUpperCase()
+    return normalized === 'CMIN' ? 'CMI' : normalized
   }
   const routeLines = (server.return_routes || [])
     .map((route) => ({ carrier: route.carrier, type: (route.route_type || '').trim() }))
