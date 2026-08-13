@@ -13,10 +13,12 @@ import {
   HardDrive,
   LayoutGrid,
   MemoryStick,
+  Moon,
   Palette,
   PieChart,
   Search,
   Star,
+  Sun,
   Table2,
   Wallet,
   X,
@@ -557,10 +559,19 @@ export default function GmApp({
   const [search, setSearch] = useState('')
   const [view, setView] = useState<'card' | 'list'>(() => (localStorage.getItem('probe-view') === 'list' ? 'list' : 'card'))
   const [detailIndex, setDetailIndex] = useState<number | null>(null)
+  const [colorMode, setColorMode] = useState<'light' | 'dark'>(() => (localStorage.getItem('gm-color-mode') === 'light' ? 'light' : 'dark'))
   const [themeOverride, setThemeOverride] = useState<ThemeName | null>(() => {
     const v = localStorage.getItem('mmwx-probe-theme-override')
     return THEME_OPTIONS.some((opt) => opt.value === v) ? (v as ThemeName) : null
   })
+
+  const toggleColorMode = () => {
+    setColorMode((mode) => {
+      const next = mode === 'dark' ? 'light' : 'dark'
+      localStorage.setItem('gm-color-mode', next)
+      return next
+    })
+  }
 
   useEffect(() => {
     const applyHash = () => {
@@ -590,7 +601,7 @@ export default function GmApp({
   }
 
   return (
-    <div className="gm-app">
+    <div className={`gm-app gm-${colorMode}`}>
       <div className="gm-bg" aria-hidden="true" />
       <header className="gm-header">
         <a className="gm-brand" href="#/" onClick={() => setDetailIndex(null)}>
@@ -598,6 +609,15 @@ export default function GmApp({
           <span>{title}</span>
         </a>
         <div className="gm-header-actions">
+          <button
+            type="button"
+            className="gm-header-btn"
+            title={colorMode === 'dark' ? '切换到白天模式' : '切换到夜间模式'}
+            aria-label={colorMode === 'dark' ? '切换到白天模式' : '切换到夜间模式'}
+            onClick={toggleColorMode}
+          >
+            {colorMode === 'dark' ? <Sun size={15} /> : <Moon size={15} />}
+          </button>
           <GmThemeMenu current={themeOverride} onChange={handleThemeChange} />
           <a className="gm-header-btn" href="/login" title="后台管理" rel="noreferrer">
             <Table2 size={15} />

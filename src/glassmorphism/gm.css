@@ -876,3 +876,138 @@
   .gm-view-switch { margin-left: auto; order: 1; }
   .gm-controls { flex-wrap: wrap; }
 }
+
+/* ============================================================
+   白天模式（照搬 Komari light 变量: 浅蓝白底 + 白玻璃卡）
+   ============================================================ */
+.gm-app.gm-light {
+  color: oklch(0.11 0.01 285.823);
+  background: oklch(0.935 0.015 252);
+}
+.gm-app.gm-light .gm-bg::after {
+  background: linear-gradient(180deg, rgba(238, 241, 247, 0.55) 0%, rgba(238, 241, 247, 0.8) 100%);
+}
+/* header */
+.gm-app.gm-light .gm-header {
+  background: rgba(238, 241, 247, 0.6);
+  border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+}
+.gm-app.gm-light .gm-brand { color: #10141f; }
+.gm-app.gm-light .gm-brand-icon { color: #0d946e; }
+.gm-app.gm-light .gm-header-btn {
+  background: rgba(255, 255, 255, 0.6);
+  border-color: rgba(15, 23, 42, 0.1);
+  color: #3f4a63;
+}
+.gm-app.gm-light .gm-header-btn:hover { background: rgba(255, 255, 255, 0.9); color: #10141f; }
+/* 主题下拉 */
+.gm-app.gm-light .gm-theme-dropdown {
+  background: rgba(250, 251, 253, 0.98);
+  border-color: rgba(15, 23, 42, 0.12);
+}
+.gm-app.gm-light .gm-theme-dropdown button { color: #3f4a63; }
+.gm-app.gm-light .gm-theme-dropdown button:hover { background: rgba(16, 185, 129, 0.1); color: #10141f; }
+/* 总览卡 */
+.gm-app.gm-light .gm-general-card {
+  background: rgba(250, 251, 253, 0.5);
+  border-color: transparent;
+}
+.gm-app.gm-light .gm-general-card:hover {
+  background: rgba(250, 251, 253, 0.92);
+  border-color: rgba(15, 23, 42, 0.12);
+}
+.gm-app.gm-light .gm-general-card-label { color: #3f4a63; }
+.gm-app.gm-light .gm-general-card-icon { color: rgba(63, 74, 99, 0.3); }
+.gm-app.gm-light .gm-general-card:hover .gm-general-card-icon { color: rgba(63, 74, 99, 0.75); }
+.gm-app.gm-light .gm-general-card-number { color: #10141f; }
+.gm-app.gm-light .gm-general-card-unit { color: #3f4a63; }
+/* 地球 */
+.gm-app.gm-light [data-gm-country] { fill: #c3cddd; stroke: rgba(63, 74, 99, 0.35); }
+.gm-app.gm-light [data-gm-country].is-active { fill: #0d946e; stroke: #10b981; }
+.gm-app.gm-light .gm-graticule { stroke: rgba(63, 74, 99, 0.15); }
+.gm-app.gm-light .gm-globe-outline { stroke: rgba(13, 148, 110, 0.4); }
+.gm-app.gm-light .gm-orbit-labels rect { fill: rgba(250, 251, 253, 0.92); stroke: rgba(13, 148, 110, 0.35); }
+.gm-app.gm-light .gm-orbit-label-content { color: #3f4a63; }
+/* 控件 */
+.gm-app.gm-light .gm-search {
+  background: rgba(255, 255, 255, 0.6);
+  border-color: rgba(15, 23, 42, 0.1);
+}
+.gm-app.gm-light .gm-search:hover { background: rgba(255, 255, 255, 0.9); }
+.gm-app.gm-light .gm-search-icon { color: #3f4a63; }
+.gm-app.gm-light .gm-search input { color: #10141f; }
+.gm-app.gm-light .gm-search input::placeholder { color: #8b95ab; }
+.gm-app.gm-light .gm-search-clear { color: #3f4a63; }
+.gm-app.gm-light .gm-view-switch {
+  background: rgba(250, 251, 253, 0.6);
+  border-color: rgba(15, 23, 42, 0.1);
+}
+.gm-app.gm-light .gm-view-switch button { color: #3f4a63; }
+.gm-app.gm-light .gm-view-switch button:hover { color: #10141f; }
+.gm-app.gm-light .gm-view-switch button.active { background: rgba(15, 23, 42, 0.06); color: #0d946e; }
+/* 节点卡 */
+.gm-app.gm-light .gm-node-card {
+  background: rgba(250, 251, 253, 0.9);
+  border-color: rgba(15, 23, 42, 0.12);
+  box-shadow: rgba(15, 23, 42, 0.08) 0px 8px 26px 0px;
+}
+.gm-app.gm-light .gm-node-card:hover {
+  border-color: rgba(15, 23, 42, 0.25);
+  box-shadow: rgba(15, 23, 42, 0.12) 0px 12px 32px 0px;
+}
+.gm-app.gm-light .gm-node-title { color: #10141f; }
+.gm-app.gm-light .gm-node-fav { color: #8b95ab; }
+.gm-app.gm-light .gm-node-fav:hover { background: rgba(15, 23, 42, 0.06); color: #d97706; }
+.gm-app.gm-light .gm-node-os { color: #8b95ab; }
+.gm-app.gm-light .gm-chip { background: rgba(15, 23, 42, 0.06); color: #3f4a63; }
+.gm-app.gm-light .gm-metric-label { color: #3f4a63; }
+.gm-app.gm-light .gm-metric-value { color: #10141f; }
+.gm-app.gm-light .gm-meter { background: rgba(15, 23, 42, 0.1); }
+.gm-app.gm-light .gm-metric-sub { color: #3f4a63; }
+.gm-app.gm-light .gm-quick-cell,
+.gm-app.gm-light .gm-ping-cell { background: rgba(15, 23, 42, 0.045); }
+.gm-app.gm-light .gm-quick-line { color: #3f4a63; }
+.gm-app.gm-light .gm-ping-head > span:first-child { color: #3f4a63; }
+.gm-app.gm-light .gm-ping-value { color: #10141f; }
+.gm-app.gm-light .gm-sig-none { background: rgba(15, 23, 42, 0.1); }
+.gm-app.gm-light .gm-tag { border-color: rgba(15, 23, 42, 0.12); color: #3f4a63; }
+.gm-app.gm-light .gm-node-card.is-offline .gm-node-title,
+.gm-app.gm-light .gm-node-card.is-offline .gm-metric-value { color: #8b95ab; }
+/* 列表视图 */
+.gm-app.gm-light .gm-table-wrap {
+  background: rgba(250, 251, 253, 0.9);
+  border-color: rgba(15, 23, 42, 0.12);
+  box-shadow: rgba(15, 23, 42, 0.08) 0px 8px 26px 0px;
+}
+.gm-app.gm-light .gm-table th {
+  color: #3f4a63;
+  border-bottom-color: rgba(15, 23, 42, 0.08);
+  background: rgba(15, 23, 42, 0.03);
+}
+.gm-app.gm-light .gm-table td { color: #10141f; border-bottom-color: rgba(15, 23, 42, 0.05); }
+.gm-app.gm-light .gm-table tbody tr:hover { background: rgba(16, 185, 129, 0.06); }
+.gm-app.gm-light .gm-empty { color: #3f4a63; }
+/* footer */
+.gm-app.gm-light .gm-footer { color: #8b95ab; }
+.gm-app.gm-light .gm-footer strong { color: #10141f; }
+/* 访客条 */
+.gm-app.gm-light .gm-visitor {
+  background: rgba(250, 251, 253, 0.75);
+  border-color: rgba(15, 23, 42, 0.12);
+  color: #3f4a63;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.1);
+}
+.gm-app.gm-light .gm-visitor-ip { color: #10141f; }
+.gm-app.gm-light .gm-visitor-sep { color: rgba(63, 74, 99, 0.4); }
+/* 详情页 */
+.gm-app.gm-light .modal {
+  background: rgba(250, 251, 253, 0.97);
+  border-color: rgba(15, 23, 42, 0.12);
+  color: #10141f;
+}
+.gm-app.gm-light .detail-page,
+.gm-app.gm-light .detail-header,
+.gm-app.gm-light .detail-body {
+  background: rgba(238, 241, 247, 0.96);
+  color: #10141f;
+}
