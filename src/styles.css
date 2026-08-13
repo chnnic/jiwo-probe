@@ -3162,6 +3162,284 @@ footer a:hover {
   }
 }
 
+/* ================= Komari 主题（复刻 komari-theme-Glassmorphism） ================= */
+:root.theme-komari {
+  --primary: #10b981;
+  --radius: 16px;
+  --page-bg: #0b1220;
+  --surface: rgba(15, 23, 42, 0.52);
+  --border: rgba(148, 197, 255, 0.16);
+  --muted: #94a3b8;
+  --foreground: #f8fafc;
+  --accent: #34d399;
+  --shadow: 0 8px 30px rgba(0, 0, 0, 0.45);
+  color-scheme: dark;
+}
+/* 动态翡翠光晕背景：多层径向渐变 + 缓慢漂移（Komari 动态背景） */
+:root.theme-komari .app-shell {
+  background:
+    radial-gradient(1100px 640px at 12% -8%, rgba(16, 185, 129, 0.14), transparent 58%),
+    radial-gradient(900px 560px at 92% 6%, rgba(14, 165, 233, 0.1), transparent 56%),
+    radial-gradient(760px 520px at 60% 38%, rgba(139, 92, 246, 0.07), transparent 60%),
+    radial-gradient(1000px 680px at 20% 108%, rgba(16, 185, 129, 0.12), transparent 62%),
+    linear-gradient(160deg, #0b1220 0%, #0a1422 48%, #0c1120 100%);
+}
+:root.theme-komari .app-shell::before {
+  content: '';
+  position: fixed;
+  inset: -30% -20%;
+  pointer-events: none;
+  z-index: 0;
+  background:
+    radial-gradient(640px 420px at 22% 30%, rgba(16, 185, 129, 0.09), transparent 62%),
+    radial-gradient(560px 400px at 78% 64%, rgba(14, 165, 233, 0.07), transparent 60%);
+  animation: komari-drift 46s ease-in-out infinite alternate;
+}
+@keyframes komari-drift {
+  0% { transform: translate3d(-1.5%, -1%, 0) scale(1); }
+  100% { transform: translate3d(2.5%, 2%, 0) scale(1.06); }
+}
+:root.theme-komari .topbar {
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.66), rgba(15, 23, 42, 0.34));
+  backdrop-filter: blur(9px) saturate(150%);
+  -webkit-backdrop-filter: blur(9px) saturate(150%);
+  border-bottom: 1px solid rgba(148, 197, 255, 0.14);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+/* 玻璃面：液态玻璃（透明通透 + 斜向镜面高光，低 blur 高 saturate） */
+:root.theme-komari .summary-card,
+:root.theme-komari .probe-toolbar,
+:root.theme-komari .server-card,
+:root.theme-komari .server-mini-card,
+:root.theme-komari .globe-card,
+:root.theme-komari .leaderboard-card,
+:root.theme-komari .modal,
+:root.theme-komari .detail-cols > div,
+:root.theme-komari .detail-panel {
+  position: relative;
+  background: linear-gradient(155deg, rgba(30, 41, 66, 0.5) 0%, rgba(15, 23, 42, 0.28) 55%, rgba(24, 36, 62, 0.44) 100%);
+  border: 1px solid rgba(148, 197, 255, 0.18);
+  backdrop-filter: blur(7px) saturate(150%);
+  -webkit-backdrop-filter: blur(7px) saturate(150%);
+  box-shadow:
+    0 8px 30px rgba(0, 0, 0, 0.45),
+    0 3px 10px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.05);
+}
+:root.theme-komari .summary-card::before,
+:root.theme-komari .probe-toolbar::before,
+:root.theme-komari .server-card::before,
+:root.theme-komari .server-mini-card::before,
+:root.theme-komari .globe-card::before,
+:root.theme-komari .leaderboard-card::before,
+:root.theme-komari .modal::before,
+:root.theme-komari .detail-cols > div::before,
+:root.theme-komari .detail-panel::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  background: linear-gradient(115deg, transparent 26%, rgba(255, 255, 255, 0.1) 46%, rgba(255, 255, 255, 0.03) 58%, transparent 78%);
+}
+:root.theme-komari .server-card:hover,
+:root.theme-komari .server-mini-card:hover {
+  border-color: rgba(16, 185, 129, 0.42);
+  box-shadow:
+    0 14px 40px rgba(0, 0, 0, 0.52),
+    0 4px 14px rgba(0, 0, 0, 0.24),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.07);
+}
+:root.theme-komari .region-menu {
+  background: linear-gradient(155deg, rgba(30, 41, 66, 0.92) 0%, rgba(15, 23, 42, 0.82) 55%, rgba(24, 36, 62, 0.9) 100%);
+  border: 1px solid rgba(148, 197, 255, 0.2);
+  backdrop-filter: blur(8px) saturate(150%);
+  -webkit-backdrop-filter: blur(8px) saturate(150%);
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+:root.theme-komari .node-stats button,
+:root.theme-komari .filters button,
+:root.theme-komari .region-trigger,
+:root.theme-komari .server-search,
+:root.theme-komari .leaderboard-tabs button,
+:root.theme-komari .ranges button {
+  background: linear-gradient(180deg, rgba(51, 65, 94, 0.4), rgba(30, 41, 66, 0.24));
+  border-color: rgba(148, 197, 255, 0.16);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  color: var(--foreground);
+}
+:root.theme-komari .filters button.active {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--primary) 68%, #000) 0%, var(--primary) 100%);
+  color: #04170e;
+  border-color: transparent;
+  box-shadow: 0 6px 18px rgba(16, 185, 129, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+/* ===== Komari 卡片 ===== */
+.komari-card {
+  padding: 12px 14px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.komari-header {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.komari-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+}
+.komari-title {
+  flex: 1 0 auto;
+  min-width: 0;
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--foreground);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.komari-system {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+}
+.komari-system svg {
+  width: 15px;
+  height: 15px;
+}
+.komari-chips {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+.komari-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  line-height: 1;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.12);
+  color: var(--muted);
+  white-space: nowrap;
+}
+.komari-chip.warn {
+  color: #fbbf24;
+  background: rgba(251, 191, 36, 0.1);
+}
+/* 2×2 指标网格（Komari NodeCard 布局） */
+.komari-metrics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px 14px;
+}
+.komari-metric {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  padding: 0;
+  background: none;
+  border: none;
+  text-align: left;
+}
+.komari-metric-button {
+  cursor: pointer;
+}
+.komari-metric-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  min-width: 0;
+}
+.komari-metric-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  color: var(--muted);
+  white-space: nowrap;
+  min-width: 0;
+  overflow: hidden;
+}
+.komari-metric-value {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--foreground);
+  margin-left: auto;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+.komari-metric-value.warn { color: #fbbf24; }
+.komari-metric-value.danger { color: #f87171; }
+.komari-ic-cpu { color: #38bdf8; }
+.komari-ic-mem { color: #34d399; }
+.komari-ic-disk { color: #fb923c; }
+.komari-ic-traffic { color: #a78bfa; }
+/* 细进度条（4px，Komari ProgressThin；轨道暗、峰值压暗） */
+.komari-meter {
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.16);
+  overflow: hidden;
+}
+.komari-meter i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  transition: width 0.4s ease;
+}
+.komari-m-cpu { background: #0ea5e9; }
+.komari-m-mem { background: #0d946e; }
+.komari-m-disk { background: #c25e1f; }
+.komari-m-traffic { background: #7c67b8; }
+.komari-m-traffic.warn { background: #b47a1d; }
+.komari-m-traffic.danger { background: #b63c3c; }
+.komari-metric-sub {
+  font-size: 11px;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.komari-metric-sub.warn { color: #fbbf24; }
+.komari-metric-sub.danger { color: #f87171; }
+.komari-card.is-offline .komari-title { color: var(--muted); }
+.komari-card.is-offline .komari-metric-value { color: var(--muted); }
+.komari-card.is-offline .komari-m-cpu,
+.komari-card.is-offline .komari-m-mem,
+.komari-card.is-offline .komari-m-disk,
+.komari-card.is-offline .komari-m-traffic { background: rgba(148, 163, 184, 0.35); }
+.komari-card .speed {
+  border-top: 1px solid rgba(148, 197, 255, 0.12);
+  padding-top: 7px;
+  margin: 0;
+}
+/* 主题切换下拉 & 其余主题细节 */
+:root.theme-komari .theme-select-menu,
+:root.theme-komari .region-trigger {
+  color: var(--foreground);
+}
+:root.theme-komari input,
+:root.theme-komari select {
+  color: var(--foreground);
+}
+:root.theme-komari .server-search::placeholder { color: var(--muted); }
+:root.theme-komari .empty { color: var(--muted); }
+
 /* ================= Lumina 主题（复刻 Komari-Theme-LuminaPlus） ================= */
 :root.theme-lumina {
   --primary: #3b82f6;
