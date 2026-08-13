@@ -529,8 +529,8 @@ function GmThemeMenu({ current, onChange }: { current: ThemeName | null; onChang
   return (
     <div className="gm-theme-menu">
       <button type="button" className="gm-header-btn" title={`主题: ${label}`} onClick={() => setOpen((v) => !v)}>
-        <Palette size={15} />
-        <ChevronDown size={12} className={open ? 'rotated' : ''} />
+        <Palette size={18} />
+        <ChevronDown size={14} className={open ? 'rotated' : ''} />
       </button>
       {open && (
         <div className="gm-theme-dropdown">
@@ -620,7 +620,7 @@ export default function GmApp({
             aria-label={colorMode === 'dark' ? '切换到白天模式' : '切换到夜间模式'}
             onClick={toggleColorMode}
           >
-            {colorMode === 'dark' ? <Sun size={15} /> : <Moon size={15} />}
+            {colorMode === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
           </button>
           <GmThemeMenu current={themeOverride} onChange={handleThemeChange} />
         </div>

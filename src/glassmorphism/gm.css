@@ -69,9 +69,9 @@
   align-items: center;
   justify-content: center;
   gap: 4px;
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
+  width: 36px;
+  height: 36px;
+  border-radius: 9px;
   border: 1px solid rgba(255, 255, 255, 0.1);
   background: rgba(255, 255, 255, 0.045);
   backdrop-filter: blur(4px);
