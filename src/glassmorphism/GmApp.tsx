@@ -619,9 +619,6 @@ export default function GmApp({
             {colorMode === 'dark' ? <Sun size={15} /> : <Moon size={15} />}
           </button>
           <GmThemeMenu current={themeOverride} onChange={handleThemeChange} />
-          <a className="gm-header-btn" href="/login" title="后台管理" rel="noreferrer">
-            <Table2 size={15} />
-          </a>
         </div>
       </header>
 
