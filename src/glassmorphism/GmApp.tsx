@@ -158,7 +158,11 @@ function GmNodeCard({ server, index }: { server: EnrichedServer; index: number }
   const priceText =
     server.renewal_price !== undefined
       ? server.renewal_price_cny !== undefined
-        ? `¥${server.renewal_price_cny.toFixed(2)} / ${CYCLE_LABELS[server.renewal_cycle || 'month'] || '月'}`
+        ? `¥${server.renewal_price_cny.toFixed(2)} / ${CYCLE_LABELS[server.renewal_cycle || 'month'] || '月'}${
+            server.renewal_currency && server.renewal_currency !== 'CNY'
+              ? `（${server.renewal_currency} ${server.renewal_price}）`
+              : ''
+          }`
         : `${server.renewal_currency || 'CNY'} ${server.renewal_price} / ${CYCLE_LABELS[server.renewal_cycle || 'month'] || '月'}`
       : null
   const loadParts = (server.loadavg || '').split(/\s+/).map(Number).filter((v) => Number.isFinite(v))

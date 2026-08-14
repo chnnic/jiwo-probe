@@ -909,6 +909,7 @@ body.gm-body .detail-body {
    ============================================================ */
 .gm-app,
 body.gm-body {
+  color: var(--foreground);
   --page-bg: #0b0f19;
   --surface: rgba(17, 24, 39, 0.94);
   --surface-elevated: rgba(30, 41, 59, 0.88);
@@ -1077,6 +1078,12 @@ body.gm-body.gm-light-body .server-detail-backdrop {
 body.gm-body .modal {
   background: var(--surface);
   border: 1px solid var(--border);
+  color: var(--foreground);
+}
+body.gm-body .modal header button {
+  color: var(--muted);
+}
+body.gm-body .modal header button:hover {
   color: var(--foreground);
 }
 
