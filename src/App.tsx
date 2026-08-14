@@ -1135,6 +1135,14 @@ const SYSTEM_LINES = {
   cpu: { label: 'CPU 使用率', color: 'var(--progress-cpu, #3b82f6)' },
   mem: { label: '内存使用率', color: 'var(--progress-memory, #8b5cf6)' },
 } as const
+// 趋势图曲线色: 黑金/白金下 --progress-* 已是渐变字符串(SVG stroke 不接受渐变, 曲线会失效),
+// 必须渲染时用纯色: 白金=主题金(CPU 中金/内存深金), 黑金=亮金
+function systemLineColor(metric: 'cpu' | 'mem'): string {
+  const root = document.documentElement
+  if (root.classList.contains('platinum')) return metric === 'cpu' ? '#c9962b' : '#a87c22'
+  if (root.classList.contains('gold')) return '#d8b46a'
+  return metric === 'cpu' ? 'var(--progress-cpu, #3b82f6)' : 'var(--progress-memory, #8b5cf6)'
+}
 export function SystemTrendChart({ serverIndex, metric, containerClass = 'detail-chart' }: { serverIndex: number; metric: 'cpu' | 'mem'; containerClass?: string }) {
   const [range, setRange] = useState<RangeKey>('1h')
   const [hidden, setHidden] = useState(false)
@@ -1193,7 +1201,7 @@ export function SystemTrendChart({ serverIndex, metric, containerClass = 'detail
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [range, loading])
 
-  const line = SYSTEM_LINES[metric]
+  const line = { ...SYSTEM_LINES[metric], color: systemLineColor(metric) }
   return (
     <>
       <div className="ranges">
