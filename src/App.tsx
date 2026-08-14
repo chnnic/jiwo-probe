@@ -613,11 +613,32 @@ function Leaderboard({ servers }: { servers: ProbeServer[] }) {
               </button>
             ))}
           </div>
-          <ol className="leaderboard-list">
+          <ol
+            className="leaderboard-list"
+            onClick={(event) => {
+              // 事件委托: 轮询刷新等 DOM 时序下子按钮可能被替换, 直接绑定会丢事件(#175)
+              // 在稳定父级 ol 上统一处理, 通过 data-idx 定位
+              const target = event.target as HTMLElement
+              const main = target.closest('.lb-main')
+              if (main) {
+                const idx = main.getAttribute('data-idx')
+                if (idx !== null && idx !== '') location.hash = `#/server/${idx}`
+                return
+              }
+              const expand = target.closest('.lb-expand')
+              if (expand) {
+                const idx = expand.getAttribute('data-idx')
+                if (idx !== null && idx !== '') {
+                  const n = Number(idx)
+                  setExpanded((prev) => (prev === n ? null : n))
+                }
+              }
+            }}
+          >
             {rows.map(({ server, index, value, lines }, rank) => (
               <li key={`${server.name}-${index}`}>
                 <div className="lb-row">
-                  <button type="button" className="lb-main" onClick={() => (location.hash = `#/server/${index}`)}>
+                  <button type="button" className="lb-main" data-idx={index}>
                     <span className="rank">{rank + 1}</span>
                     <span className="lb-name">
                       <Twemoji>
@@ -634,7 +655,7 @@ function Leaderboard({ servers }: { servers: ProbeServer[] }) {
                       type="button"
                       className={`lb-expand${expanded === index ? ' open' : ''}`}
                       aria-label={expanded === index ? '收起线路明细' : '展开线路明细'}
-                      onClick={() => setExpanded((prev) => (prev === index ? null : index))}
+                      data-idx={index}
                     >
                       <ChevronDown size={13} />
                     </button>
@@ -2504,8 +2525,9 @@ export function App() {
       const match = /^#\/server\/(\d+)$/.exec(window.location.hash)
       const next = match ? Number(match[1]) : null
       if (next !== null) {
-        // 打开详情页：记录主页面滚动位置，供关闭时恢复
+        // 打开详情页：记录主页面滚动位置，供关闭时恢复；详情页从顶部展示(#175 点击榜单项后停留榜单位置看不到详情)
         detailScrollRef.current = window.scrollY
+        window.scrollTo(0, 0)
       } else {
         // 关闭详情页：恢复到最后浏览的位置
         window.scrollTo(0, detailScrollRef.current)
