@@ -3352,8 +3352,9 @@ footer a:hover {
   --status-success: #2f7d3c;
   --status-warning: #a87c22;
   --status-error: #c0342c;
-  --traffic-up: #f2d28b;
-  --traffic-down: #d8b46a;
+  /* 今日流量/速率数值: 白金下加深(亮金 #f2d28b/#d8b46a 浅底太淡, 2026-08-15) */
+  --traffic-up: #c9962b;
+  --traffic-down: #a87c22;
   --lumina-heat: linear-gradient(
     to right,
     /* 白金: 直接用黑金同款 4 色渐变 */
