@@ -87,20 +87,24 @@ function normalizeTheme(value?: string): ThemeName {
 }
 
 // 主控下发组合名 "Lumina-Gold" / "Lumina Gold" / "LUMINAGOLD" → lumina 主题 + 黑金配色
+// "Lumina-Platinum" → lumina + 白金配色(浅底暗金, license.miaomiaowu.net premium light 移植)
+// "Premium-Platinum"/"Premium Light" → premium 整页主题 + 白金配色
 // "Glassmorphism Light/Dark" → glassmorphism 主题 + 白天/夜间模式
-export function parseThemeName(raw: string): { theme: string; gold: boolean; light?: boolean } {
+export function parseThemeName(raw: string): { theme: string; gold: boolean; platinum: boolean; light?: boolean } {
   const lower = raw.toLowerCase().replace(/[\s_-]/g, '')
-  if (lower === 'luminagold') return { theme: 'lumina', gold: true }
-  if (lower === 'glassmorphismlight') return { theme: 'glassmorphism', gold: false, light: true }
-  if (lower === 'glassmorphismdark') return { theme: 'glassmorphism', gold: false, light: false }
-  return { theme: isBuiltinTheme(raw.toLowerCase()) ? raw.toLowerCase() : raw, gold: false }
+  if (lower === 'luminagold') return { theme: 'lumina', gold: true, platinum: false }
+  if (lower === 'luminaplatinum') return { theme: 'lumina', gold: false, platinum: true }
+  if (lower === 'premiumplatinum' || lower === 'premiumlight') return { theme: 'premium', gold: false, platinum: true }
+  if (lower === 'glassmorphismlight') return { theme: 'glassmorphism', gold: false, platinum: false, light: true }
+  if (lower === 'glassmorphismdark') return { theme: 'glassmorphism', gold: false, platinum: false, light: false }
+  return { theme: isBuiltinTheme(raw.toLowerCase()) ? raw.toLowerCase() : raw, gold: false, platinum: false }
 }
 
 // 主控可能下发自定义主题名（theme-{name} 类）。内置 6 主题走主题系统（含 premium 整页主题）；
 // 未知主题名照常挂 theme-{name} 类——站长可在自己的 CSS 里写 .theme-{name} 覆盖，
 // 没写则回退到默认(pixel)样式。返回值 = 是否内置主题（供 UI 判断"跟随主控"时如何显示）。
 export function isBuiltinTheme(value?: string): boolean {
-  return value === 'pixel' || value === 'flat' || value === 'anime' || value === 'glass' || value === 'lumina' || value === 'premium' || value === 'luminagold' || value === 'ran' || value === 'glassmorphism'
+  return value === 'pixel' || value === 'flat' || value === 'anime' || value === 'glass' || value === 'lumina' || value === 'premium' || value === 'luminagold' || value === 'luminaplatinum' || value === 'premiumplatinum' || value === 'premiumlight' || value === 'ran' || value === 'glassmorphism'
 }
 
 export function applyAppearance(input?: ProbeAppearance) {
@@ -133,6 +137,7 @@ export function applyAppearance(input?: ProbeAppearance) {
   }
   root.classList.remove('dark')
   root.classList.remove('gold')
+  root.classList.remove('platinum')
   root.classList.add(`theme-${theme}`)
   const darkOverride = localStorage.getItem(DARK_OVERRIDE)
   let dark: boolean
@@ -141,6 +146,11 @@ export function applyAppearance(input?: ProbeAppearance) {
     // 手动 override 为 gold，或主控下发组合名且用户从未手动干预（主题/配色都没选过）才进入。
     // 用户一旦手动切过配色（darkOverride 任意值），主控的 gold 不再强制，尊重用户选择。
     root.classList.add('gold')
+    dark = false
+  } else if (darkOverride === 'platinum' || (parsed.platinum && !themeOverride && !darkOverride)) {
+    // 白金配色（lumina 第四配色 / premium 第二配色, license.miaomiaowu.net premium light 移植）:
+    // 浅底暗金。机制与 gold 一致。
+    root.classList.add('platinum')
     dark = false
   } else if (darkOverride === 'dark') {
     dark = true
@@ -163,7 +173,7 @@ export function getDarkOverride(): string | null {
   return localStorage.getItem(DARK_OVERRIDE)
 }
 
-export function setDarkOverride(mode: 'dark' | 'light' | 'gold' | null) {
+export function setDarkOverride(mode: 'dark' | 'light' | 'gold' | 'platinum' | null) {
   if (mode) {
     localStorage.setItem(DARK_OVERRIDE, mode)
   } else {

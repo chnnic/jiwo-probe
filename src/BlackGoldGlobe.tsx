@@ -21,6 +21,8 @@ const GLOBE_LABEL_MARGIN = 8
 const INITIAL_ROTATION: [number, number] = [-108, -16]
 
 export function BlackGoldGlobe({ regions }: { regions: PremiumProbeRegion[] }) {
+  // 白金配色(浅底): 地球仪换浅金海洋/金褐大陆, 由 CSS 覆盖大陆与轨道色
+  const platinum = typeof document !== 'undefined' && document.documentElement.classList.contains('platinum')
   const rotation = useRef<[number, number]>(INITIAL_ROTATION)
   const pendingRotation = useRef<[number, number] | undefined>(undefined)
   const animationFrame = useRef<number | undefined>(undefined)
@@ -176,9 +178,19 @@ export function BlackGoldGlobe({ regions }: { regions: PremiumProbeRegion[] }) {
       >
         <defs>
           <radialGradient id={oceanID} cx='34%' cy='26%'>
-            <stop offset='0' stopColor='#2b2922' />
-            <stop offset='0.55' stopColor='#12130f' />
-            <stop offset='1' stopColor='#040505' />
+            {/* 白金配色: 浅金海洋(米白页面上的浅色地球); 黑金保持深褐海洋 */}
+            <stop
+              offset='0'
+              stopColor={platinum ? '#f1ead9' : '#2b2922'}
+            />
+            <stop
+              offset='0.55'
+              stopColor={platinum ? '#e3d9bd' : '#12130f'}
+            />
+            <stop
+              offset='1'
+              stopColor={platinum ? '#d5c8a4' : '#040505'}
+            />
           </radialGradient>
           <filter id={glowID} x='-40%' y='-40%' width='180%' height='180%'>
             <feGaussianBlur stdDeviation='7' />

@@ -369,6 +369,22 @@
   color: var(--pp-gold-bright);
   border-color: rgba(242, 210, 139, 0.62);
 }
+.premium-probe-page .premium-probe-platinum-toggle {
+  cursor: pointer;
+  color: #ffffff;
+}
+.premium-probe-page .premium-probe-platinum-toggle.is-on {
+  color: var(--pp-gold-bright);
+  border-color: rgba(242, 210, 139, 0.62);
+}
+/* 白金模式下按钮反色(浅底深金) */
+:root.theme-premium.platinum .premium-probe-platinum-toggle {
+  color: #a87c22;
+}
+:root.theme-premium.platinum .premium-probe-platinum-toggle.is-on {
+  color: #6f4e0c;
+  border-color: rgba(168, 124, 34, 0.62);
+}
 .premium-probe-page .premium-probe-license-anim-toggle {
   align-self: center;
   cursor: pointer;
@@ -1142,6 +1158,12 @@
   stroke: #f2d28b;
   stroke-width: 1.1;
   filter: drop-shadow(0 0 4px rgba(216, 180, 106, 0.72));
+}
+/* 白金: active 国家浅底金褐(深棕填色 + 亮金描边在白底上保留强调) */
+:root.theme-premium.platinum [data-premium-probe-country].is-active {
+  fill: #8a6210;
+  stroke: #d7a63d;
+  filter: drop-shadow(0 0 4px rgba(168, 124, 34, 0.5));
 }
 
 .premium-probe-globe-stage
@@ -3247,4 +3269,655 @@
   .premium-probe-node-connections path {
     animation: none;
   }
+}
+
+/* =====================================================================
+ * 白金模式 (license.miaomiaowu.net premium light 移植, 2026-08-14)
+ * 触发: <html class="theme-premium platinum">
+ *   - 页首配色按钮手动切换 (localStorage mmwx-probe-dark-override=platinum)
+ *   - 主控下发 "Premium Light" / "Premium Platinum" / "PREMIUMPLATINUM"
+ * ===================================================================== */
+:root.theme-premium.platinum,
+:root.theme-premium.platinum body {
+  color-scheme: light;
+  color: #241e14;
+  background-color: #f7f4ec;
+  background-image:
+    radial-gradient(circle at 18% 8%, rgba(168, 124, 34, 0.09), transparent 24rem),
+    radial-gradient(circle at 82% 72%, rgba(168, 124, 34, 0.05), transparent 28rem);
+  background-attachment: fixed;
+}
+:root.theme-premium.platinum #root {
+  color: #241e14;
+  background: transparent;
+}
+/* 白金变量 + 页面底色(照 license 页: 米白暖纸 + 顶部光晕) */
+:root.theme-premium.platinum .premium-probe-page {
+  --pp-gold: #a87c22;
+  --pp-gold-bright: #c9962b;
+  --pp-border: rgba(168, 124, 34, 0.28);
+  --pp-panel: #fffdf8;
+  color: #241e14;
+  background: radial-gradient(
+    circle at 70% 12%,
+    rgba(168, 124, 34, 0.05),
+    transparent 26rem
+  );
+}
+/* 浅金细网格底纹(照 license 页 body:before, 低透明铺满视口) */
+:root.theme-premium.platinum .premium-probe-page::before {
+  position: fixed;
+  z-index: 0;
+  inset: 0;
+  content: '';
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(70, 48, 10, 0.024) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(70, 48, 10, 0.024) 1px, transparent 1px);
+  background-size: 48px 48px;
+}
+/* 水印层白金下压淡(暗色水印在浅底上过重) */
+:root.theme-premium.platinum .premium-probe-watermarks {
+  opacity: 0.3;
+}
+/* ---- 表面色 ---- */
+:root.theme-premium.platinum .premium-probe-topbar {
+  border-bottom-color: rgba(168, 124, 34, 0.26);
+  background: rgba(255, 253, 248, 0.9);
+  box-shadow: 0 12px 36px -30px rgba(120, 86, 20, 0.55);
+}
+:root.theme-premium.platinum .premium-probe-theme-menu {
+  border-color: rgba(168, 124, 34, 0.32);
+  background: rgba(255, 253, 248, 0.97);
+  box-shadow: 0 10px 32px rgba(70, 48, 10, 0.18), 0 0 0 1px rgba(70, 48, 10, 0.08);
+}
+:root.theme-premium.platinum .premium-probe-theme-menu button {
+  color: #4f3a11;
+}
+:root.theme-premium.platinum .premium-probe-view-toggle button {
+  color: #5f5244;
+  background: rgba(168, 124, 34, 0.07);
+}
+:root.theme-premium.platinum .premium-probe-view-toggle button.is-active {
+  color: #6f4e0c;
+  background: rgba(168, 124, 34, 0.14);
+}
+:root.theme-premium.platinum .premium-probe-chart-tooltip {
+  border-color: rgba(168, 124, 34, 0.52);
+  background: rgba(255, 253, 248, 0.97);
+  box-shadow: 0 7px 18px rgba(70, 48, 10, 0.2);
+}
+:root.theme-premium.platinum .premium-probe-map aside {
+  border-left-color: rgba(168, 124, 34, 0.2);
+  background: rgba(168, 124, 34, 0.05);
+}
+:root.theme-premium.platinum .premium-probe-network-kpis article {
+  background:
+    linear-gradient(135deg, rgba(168, 124, 34, 0.05), transparent 55%),
+    #fffdf8;
+  box-shadow: 0 18px 38px -34px rgba(120, 86, 20, 0.5);
+}
+:root.theme-premium.platinum .premium-probe-network-view-heading {
+  background: rgba(255, 253, 248, 0.97);
+  box-shadow: 0 18px 40px -34px rgba(120, 86, 20, 0.5);
+}
+:root.theme-premium.platinum .premium-probe-resource-empty {
+  color: #5f5244;
+  background: rgba(255, 253, 248, 0.78);
+}
+:root.theme-premium.platinum .premium-probe-filters label {
+  color: #5f5244;
+  background: rgba(168, 124, 34, 0.06);
+}
+:root.theme-premium.platinum .premium-probe-filters button {
+  color: #5f5244;
+  background: rgba(168, 124, 34, 0.06);
+}
+:root.theme-premium.platinum .premium-probe-login {
+  color: #4f3a11;
+  background: rgba(168, 124, 34, 0.08);
+}
+:root.theme-premium.platinum .premium-probe-multi-tooltip {
+  color: #241e14;
+  border-color: rgba(168, 124, 34, 0.4);
+  background: rgba(255, 253, 248, 0.97);
+  box-shadow: 0 8px 26px rgba(70, 48, 10, 0.22);
+}
+:root.theme-premium.platinum .premium-probe-drawer-layer {
+  background: rgba(70, 48, 10, 0.35);
+}
+:root.theme-premium.platinum .premium-probe-drawer {
+  color: #241e14;
+  border-left-color: rgba(168, 124, 34, 0.42);
+  background:
+    linear-gradient(145deg, rgba(168, 124, 34, 0.07), transparent 28%), #fffdf8;
+  box-shadow: -24px 0 80px rgba(70, 48, 10, 0.35);
+}
+/* ---- 文字色收敛(米白/浅灰 → 深棕/灰棕) ---- */
+:root.theme-premium.platinum .premium-probe-loading,
+:root.theme-premium.platinum .premium-probe-kpis span,
+:root.theme-premium.platinum .premium-probe-kpis button,
+:root.theme-premium.platinum .premium-probe-overview-chart-heading span,
+:root.theme-premium.platinum .premium-probe-overview-chart-heading strong,
+:root.theme-premium.platinum .premium-probe-speed-meta small,
+:root.theme-premium.platinum .premium-probe-network-history span,
+:root.theme-premium.platinum .premium-probe-network-history > p,
+:root.theme-premium.platinum .premium-probe-target-toolbar button,
+:root.theme-premium.platinum .premium-probe-network-legend,
+:root.theme-premium.platinum .premium-probe-network-table-head,
+:root.theme-premium.platinum .premium-probe-network-empty,
+:root.theme-premium.platinum .premium-probe-network-server small,
+:root.theme-premium.platinum .premium-probe-command-nodes span,
+:root.theme-premium.platinum .premium-probe-billing-rank small,
+:root.theme-premium.platinum .premium-probe-heatmap .is-head span,
+:root.theme-premium.platinum .premium-probe-filters label,
+:root.theme-premium.platinum .premium-probe-server-footer span,
+:root.theme-premium.platinum .premium-probe-server-footer small,
+:root.theme-premium.platinum .premium-probe-empty {
+  color: #5f5244;
+}
+:root.theme-premium.platinum .premium-probe-kpis button {
+  color: #241e14;
+  background: rgba(168, 124, 34, 0.05);
+}
+:root.theme-premium.platinum .premium-probe-hotspot-list strong,
+:root.theme-premium.platinum .premium-probe-network-row > strong[data-level='medium'],
+:root.theme-premium.platinum .license-nameplate.is-static .np-text {
+  color: #6f4e0c;
+}
+/* 表格头/网络图例底纹改浅金 */
+:root.theme-premium.platinum .premium-probe-network-table-head {
+  border-bottom-color: rgba(168, 124, 34, 0.12);
+  background: rgba(168, 124, 34, 0.03);
+}
+/* ---- 白金补漏: 速度卡/账单卡 label 与数值(淡字加深, 亮金数值转深金) ---- */
+:root.theme-premium.platinum .premium-probe-speed-heading span,
+:root.theme-premium.platinum .premium-probe-billing-kpis span {
+  color: #5f5244;
+}
+:root.theme-premium.platinum .premium-probe-speed-heading strong,
+:root.theme-premium.platinum .premium-probe-overview-chart-heading strong,
+:root.theme-premium.platinum .premium-probe-billing-kpis strong {
+  color: #8a6210;
+}
+/* ---- 白金补漏: 网络状况选择框(原米白字+dark scheme, 浅底不可见) ---- */
+:root.theme-premium.platinum .premium-probe-network-view-heading select {
+  color: #4f3a11;
+  color-scheme: light;
+}
+/* ---- 白金补漏: 延迟矩阵卡(原深色底) + 时间范围按钮(原深色底) ---- */
+:root.theme-premium.platinum .premium-probe-network-matrix {
+  background: rgba(255, 253, 248, 0.97);
+  box-shadow: 0 24px 48px -40px rgba(120, 86, 20, 0.5);
+}
+:root.theme-premium.platinum .premium-probe-target-toolbar button {
+  background: rgba(168, 124, 34, 0.08);
+}
+/* ---- 白金补漏: 地球仪浅色化(浅金海洋 + 金褐大陆, 照 license 页浅色地图观感) ---- */
+:root.theme-premium.platinum .premium-probe-graticule {
+  stroke: rgba(168, 124, 34, 0.3);
+}
+:root.theme-premium.platinum .premium-probe-orbits ellipse {
+  stroke: rgba(168, 124, 34, 0.65);
+}
+:root.theme-premium.platinum [data-premium-probe-country] {
+  fill: #cfc29c;
+  stroke: rgba(168, 124, 34, 0.55);
+}
+:root.theme-premium.platinum .premium-probe-globe-glow {
+  fill: rgba(168, 124, 34, 0.4);
+}
+:root.theme-premium.platinum .premium-probe-ocean {
+  filter: drop-shadow(0 16px 16px rgba(70, 48, 10, 0.3));
+}
+/* ---- 语义色保留(绿在线/红离线/黄临近到期), 白金下不变 ---- */
+/* ---- 选中文本/滚动条(照 license 页) ---- */
+:root.theme-premium.platinum .premium-probe-page ::selection {
+  background: #a87c22;
+  color: #fffdf8;
+}
+:root.theme-premium.platinum .premium-probe-page *::-webkit-scrollbar-thumb {
+  background: #c7b78f;
+}
+:root.theme-premium.platinum .premium-probe-page *::-webkit-scrollbar-thumb:hover {
+  background: #a87c22;
+}
+/* 资源条轨道: 白 8% → 暗金 10%(浅底可见) */
+:root.theme-premium.platinum .premium-probe-resource i {
+  background: rgba(70, 48, 10, 0.1);
+}
+/* 许可证铭牌白金化(动画版: 浅金底深棕字; 静态版: 浅金边) */
+:root.theme-premium.platinum .license-nameplate {
+  border-color: #a87c22;
+  background: linear-gradient(100deg, #fffdf8, #d7c59a 48%, #f1e8d5);
+  box-shadow: 0 0 16px -7px #a87c22;
+}
+:root.theme-premium.platinum .license-nameplate .np-text {
+  color: #6f4e0c;
+  text-shadow: none;
+}
+:root.theme-premium.platinum .license-nameplate.is-static {
+  border-color: rgba(168, 124, 34, 0.32);
+}
+:root.theme-premium.platinum .premium-probe-billing-kpis span,
+
+/* ===== 白金自动生成覆盖(亮度驱动, 2026-08-14 v3) ===== */
+:root.theme-premium.platinum .premium-probe-billing-rank > div:not(.is-head) > span,
+:root.theme-premium.platinum .premium-probe-billing-rank small,
+:root.theme-premium.platinum .premium-probe-command-nodes span,
+:root.theme-premium.platinum .premium-probe-daily-list > div,
+:root.theme-premium.platinum .premium-probe-drawer-health > strong,
+:root.theme-premium.platinum .premium-probe-drawer-info strong,
+:root.theme-premium.platinum .premium-probe-drawer-pings span,
+:root.theme-premium.platinum .premium-probe-empty,
+:root.theme-premium.platinum .premium-probe-health-score,
+:root.theme-premium.platinum .premium-probe-heatmap .is-head b,
+:root.theme-premium.platinum .premium-probe-heatmap .is-head span,
+:root.theme-premium.platinum .premium-probe-heatmap span,
+:root.theme-premium.platinum .premium-probe-insight > div:first-child span,
+:root.theme-premium.platinum .premium-probe-kpis span,
+:root.theme-premium.platinum .premium-probe-live,
+:root.theme-premium.platinum .premium-probe-network-empty,
+:root.theme-premium.platinum .premium-probe-network-history > p,
+:root.theme-premium.platinum .premium-probe-network-history span,
+:root.theme-premium.platinum .premium-probe-network-history time,
+:root.theme-premium.platinum .premium-probe-network-legend,
+:root.theme-premium.platinum .premium-probe-network-selectors > label,
+:root.theme-premium.platinum .premium-probe-network-server small,
+:root.theme-premium.platinum .premium-probe-network-table-head,
+:root.theme-premium.platinum .premium-probe-overview-chart-heading span,
+:root.theme-premium.platinum .premium-probe-quota-rank span,
+:root.theme-premium.platinum .premium-probe-renewal-track span,
+:root.theme-premium.platinum .premium-probe-renewals span,
+:root.theme-premium.platinum .premium-probe-resource span,
+:root.theme-premium.platinum .premium-probe-server-footer small,
+:root.theme-premium.platinum .premium-probe-server-footer span,
+:root.theme-premium.platinum .premium-probe-server-status,
+:root.theme-premium.platinum .premium-probe-smart-summary strong,
+:root.theme-premium.platinum .premium-probe-speed-meta small,
+:root.theme-premium.platinum .premium-probe-target-toolbar button {
+  color: #5f5244;
+}
+:root.theme-premium.platinum .premium-probe-billing-rank strong,
+:root.theme-premium.platinum .premium-probe-chart-tooltip strong,
+:root.theme-premium.platinum .premium-probe-command-heading button,
+:root.theme-premium.platinum .premium-probe-command-heading h2,
+:root.theme-premium.platinum .premium-probe-command-kpis strong,
+:root.theme-premium.platinum .premium-probe-command-nodes b,
+:root.theme-premium.platinum .premium-probe-daily-list small:first-of-type,
+:root.theme-premium.platinum .premium-probe-drawer > header h2,
+:root.theme-premium.platinum .premium-probe-drawer-health span,
+:root.theme-premium.platinum .premium-probe-drawer-metrics strong,
+:root.theme-premium.platinum .premium-probe-drawer-pings strong,
+:root.theme-premium.platinum .premium-probe-drawer-routes b,
+:root.theme-premium.platinum .premium-probe-drawer-section h3,
+:root.theme-premium.platinum .premium-probe-drawer-traffic strong,
+:root.theme-premium.platinum .premium-probe-insight-card > header h3,
+:root.theme-premium.platinum .premium-probe-multi-tooltip strong,
+:root.theme-premium.platinum .premium-probe-network-history strong,
+:root.theme-premium.platinum .premium-probe-network-row > strong[data-level='medium'],
+:root.theme-premium.platinum .premium-probe-overview-chart-heading strong,
+:root.theme-premium.platinum .premium-probe-quota-rank strong,
+:root.theme-premium.platinum .premium-probe-renewal-totals strong,
+:root.theme-premium.platinum .premium-probe-renewal-track small,
+:root.theme-premium.platinum .premium-probe-renewal-track strong,
+:root.theme-premium.platinum .premium-probe-resource-heading > div > span,
+:root.theme-premium.platinum .premium-probe-resource-heading > strong,
+:root.theme-premium.platinum .premium-probe-route-badges b,
+:root.theme-premium.platinum .premium-probe-smart-summary > svg,
+:root.theme-premium.platinum .premium-probe-target-toolbar button.is-active,
+:root.theme-premium.platinum .premium-probe-target-toolbar button:hover {
+  color: #8a6210;
+}
+:root.theme-premium.platinum .premium-probe-command-nodes strong,
+:root.theme-premium.platinum .premium-probe-daily-list span,
+:root.theme-premium.platinum .premium-probe-heatmap b,
+:root.theme-premium.platinum .premium-probe-map aside button,
+:root.theme-premium.platinum .premium-probe-multi-tooltip b,
+:root.theme-premium.platinum .premium-probe-network-server strong,
+:root.theme-premium.platinum .premium-probe-orbit-label-content,
+:root.theme-premium.platinum .premium-probe-resource strong,
+:root.theme-premium.platinum .premium-probe-resource-heading h2,
+:root.theme-premium.platinum .premium-probe-server-footer strong {
+  color: #241e14;
+}
+:root.theme-premium.platinum .premium-probe-loading,
+:root.theme-premium.platinum .premium-probe-network-history > div,
+:root.theme-premium.platinum .premium-probe-network-history > p,
+:root.theme-premium.platinum .premium-probe-network-selectors > label,
+:root.theme-premium.platinum .premium-probe-network-selectors > label:focus-within,
+:root.theme-premium.platinum .premium-probe-network-selectors > label:hover,
+:root.theme-premium.platinum .premium-probe-network-view-heading select option {
+  background: rgba(255, 253, 248, 1.00);
+}
+:root.theme-premium.platinum .premium-probe-command-heading button,
+:root.theme-premium.platinum .premium-probe-license-name,
+:root.theme-premium.platinum .premium-probe-login,
+:root.theme-premium.platinum .premium-probe-network-selectors > label,
+:root.theme-premium.platinum .premium-probe-theme-menu {
+  border: 1px solid rgba(168, 124, 34, 0.32);
+}
+:root.theme-premium.platinum .premium-probe-globe-outline,
+:root.theme-premium.platinum .premium-probe-node-connections circle,
+:root.theme-premium.platinum .premium-probe-node-connections path,
+:root.theme-premium.platinum .premium-probe-orbit-labels circle,
+:root.theme-premium.platinum .premium-probe-speed-chart .is-line {
+  stroke: #8a6210;
+}
+:root.theme-premium.platinum .premium-probe-login:hover,
+:root.theme-premium.platinum .premium-probe-page .premium-probe-license-anim-toggle.is-on,
+:root.theme-premium.platinum .premium-probe-page .premium-probe-platinum-toggle.is-on,
+:root.theme-premium.platinum .premium-probe-page .premium-probe-watermark-toggle.is-on {
+  border-color: rgba(168, 124, 34, 0.62);
+}
+:root.theme-premium.platinum .premium-probe-hotspot-list i,
+:root.theme-premium.platinum .premium-probe-quota-rank i,
+:root.theme-premium.platinum .premium-probe-theme-menu button:hover,
+:root.theme-premium.platinum .premium-probe-theme-menu button[aria-selected='true'] {
+  background: rgba(168, 124, 34, 0.1);
+}
+:root.theme-premium.platinum .premium-probe-drawer-traffic i,
+:root.theme-premium.platinum .premium-probe-kpis button:hover,
+:root.theme-premium.platinum .premium-probe-network-history,
+:root.theme-premium.platinum .premium-probe-resource-heading > div > span {
+  background: rgba(168, 124, 34, 0.08);
+}
+:root.theme-premium.platinum .premium-probe-filters button.is-active,
+:root.theme-premium.platinum .premium-probe-filters button:hover,
+:root.theme-premium.platinum .premium-probe-network-ranges button.is-active,
+:root.theme-premium.platinum .premium-probe-network-view-heading select option:checked {
+  color: rgba(255, 253, 248, 1.00);
+}
+:root.theme-premium.platinum .premium-probe-insight-card > header > span i,
+:root.theme-premium.platinum .premium-probe-network-ranges button.is-active,
+:root.theme-premium.platinum .premium-probe-network-view-heading select option:checked,
+:root.theme-premium.platinum .premium-probe-renewal-track > div > i {
+  background: #a87c22;
+}
+:root.theme-premium.platinum 文字静止,
+:root.theme-premium.platinum 无星尘/扫光 */
+.license-nameplate.is-static,
+:root.theme-premium.platinum 透明底 {
+  border-color: rgba(168, 124, 34, 0.32);
+}
+:root.theme-premium.platinum .premium-probe-filters,
+:root.theme-premium.platinum .premium-probe-panel,
+:root.theme-premium.platinum .premium-probe-server-card {
+  box-shadow: inset 0 1px rgba(255, 241, 185, 0.025),
+    0 20px 44px -36px rgba(168, 124, 34, 0.95);
+}
+:root.theme-premium.platinum .premium-probe-network-ranges button,
+:root.theme-premium.platinum .premium-probe-resource-heading > strong,
+:root.theme-premium.platinum .premium-probe-server-card::before {
+  border: 1px solid rgba(168, 124, 34, 0.2);
+}
+:root.theme-premium.platinum .premium-probe-billing-kpis > div,
+:root.theme-premium.platinum .premium-probe-drawer-health,
+:root.theme-premium.platinum .premium-probe-network-row:hover {
+  background: rgba(168, 124, 34, 0.035);
+}
+:root.theme-premium.platinum .premium-probe-command-nodes button,
+:root.theme-premium.platinum .premium-probe-license-name {
+  background: rgba(255, 253, 248, 0.72);
+}
+:root.theme-premium.platinum .premium-probe-smart-summary,
+:root.theme-premium.platinum .premium-probe-view-toggle {
+  border: 1px solid rgba(168, 124, 34, 0.3);
+}
+:root.theme-premium.platinum .premium-probe-drawer-health,
+:root.theme-premium.platinum .premium-probe-kpis button {
+  border: 1px solid rgba(168, 124, 34, 0.18);
+}
+:root.theme-premium.platinum .premium-probe-multi-target-chart line.is-baseline,
+:root.theme-premium.platinum .premium-probe-speed-chart line {
+  stroke: rgba(168, 124, 34, 0.13);
+}
+:root.theme-premium.platinum .premium-probe-multi-target-chart line.is-cursor,
+:root.theme-premium.platinum .premium-probe-speed-chart line.is-cursor {
+  stroke: rgba(168, 124, 34, 0.5);
+}
+:root.theme-premium.platinum .premium-probe-drawer-routes small,
+:root.theme-premium.platinum .premium-probe-route-badges small {
+  background: rgba(168, 124, 34, 0.07);
+}
+:root.theme-premium.platinum .premium-probe-network-selectors > label:focus-within,
+:root.theme-premium.platinum .premium-probe-network-selectors > label:hover {
+  border-color: rgba(168, 124, 34, 0.68);
+}
+:root.theme-premium.platinum .premium-probe-network-selectors > label:focus-within,
+:root.theme-premium.platinum .premium-probe-network-selectors > label:hover {
+  box-shadow: inset 0 0 0 1px rgba(168, 124, 34, 0.08),
+    0 0 14px rgba(168, 124, 34, 0.08);
+}
+/* 白金: 网络选择器(服务器/探测目标)字体加深 + hover 深底改浅金(原 #0d0e0c 漏覆盖) */
+:root.theme-premium.platinum .premium-probe-network-selectors > label {
+  color: #4f3a11;
+  background: rgba(255, 253, 248, 0.97);
+}
+:root.theme-premium.platinum .premium-probe-network-selectors > label:hover,
+:root.theme-premium.platinum .premium-probe-network-selectors > label:focus-within {
+  color: #4f3a11;
+  background: #fffdf8;
+}
+:root.theme-premium.platinum .premium-probe-network-selectors > label::after {
+  border-color: #a87c22;
+}
+:root.theme-premium.platinum .premium-probe-command-nodes button,
+:root.theme-premium.platinum .premium-probe-target-toolbar button {
+  border: 1px solid rgba(168, 124, 34, 0.16);
+}
+:root.theme-premium.platinum .premium-probe-target-toolbar button.is-active,
+:root.theme-premium.platinum .premium-probe-target-toolbar button:hover {
+  border-color: rgba(168, 124, 34, 0.48);
+}
+:root.theme-premium.platinum .premium-probe-target-toolbar button.is-active,
+:root.theme-premium.platinum .premium-probe-target-toolbar button:hover {
+  background: rgba(168, 124, 34, 0.075);
+}
+:root.theme-premium.platinum .premium-probe-network-legend span[data-level='medium']::before,
+:root.theme-premium.platinum .premium-probe-network-server > i[data-level='medium'] {
+  background: #8a6210;
+}
+:root.theme-premium.platinum .premium-probe-panel::after,
+:root.theme-premium.platinum .premium-probe-smart-summary::after {
+  background: linear-gradient(90deg, transparent, #a87c22, transparent);
+}
+:root.theme-premium.platinum .premium-probe-billing-kpis > div,
+:root.theme-premium.platinum .premium-probe-drawer-metrics > div {
+  border: 1px solid rgba(168, 124, 34, 0.14);
+}
+:root.theme-premium.platinum .premium-probe-filters button,
+:root.theme-premium.platinum .premium-probe-filters label {
+  border: 1px solid rgba(168, 124, 34, 0.28);
+}
+:root.theme-premium.platinum .premium-probe-pro {
+  border: 1px solid rgba(168, 124, 34, 0.68);
+}
+:root.theme-premium.platinum .premium-probe-pro {
+  background: linear-gradient(
+    110deg,
+    rgba(140, 93, 23, 0.3),
+    rgba(168, 124, 34, 0.08)
+  );
+}
+:root.theme-premium.platinum .premium-probe-license-name {
+  color: #4f3a11;
+}
+:root.theme-premium.platinum .premium-probe-kpis button:hover {
+  border-color: rgba(168, 124, 34, 0.58);
+}
+:root.theme-premium.platinum .premium-probe-speed-chart .is-area {
+  fill: rgba(168, 124, 34, 0.1);
+}
+:root.theme-premium.platinum .premium-probe-chart-tooltip {
+  border: 1px solid rgba(168, 124, 34, 0.52);
+}
+:root.theme-premium.platinum .premium-probe-hotspot-list i b {
+  background: linear-gradient(90deg, #8c641c, #e3bd63);
+}
+:root.theme-premium.platinum .premium-probe-hotspot-list i b {
+  box-shadow: 0 0 5px rgba(168, 124, 34, 0.38);
+}
+:root.theme-premium.platinum .premium-probe-route-badges > span {
+  border: 1px solid rgba(168, 124, 34, 0.4);
+}
+:root.theme-premium.platinum .premium-probe-route-badges > span {
+  background: linear-gradient(
+    135deg,
+    rgba(156, 105, 27, 0.2),
+    rgba(168, 124, 34, 0.045)
+  );
+}
+:root.theme-premium.platinum .premium-probe-route-badges > span {
+  box-shadow: inset 0 0 10px rgba(168, 124, 34, 0.035);
+}
+:root.theme-premium.platinum .premium-probe-resource i b {
+  background: linear-gradient(90deg, #a66f19, #e7c266);
+}
+:root.theme-premium.platinum .premium-probe-node-connections circle {
+  fill: #8a6210;
+}
+:root.theme-premium.platinum .premium-probe-orbit-labels line {
+  stroke: rgba(168, 124, 34, 0.78);
+}
+:root.theme-premium.platinum .premium-probe-orbit-labels rect {
+  fill: rgba(255, 253, 248, 0.94);
+}
+:root.theme-premium.platinum .premium-probe-orbit-labels rect {
+  stroke: rgba(168, 124, 34, 0.48);
+}
+:root.theme-premium.platinum .premium-probe-orbit-label-count {
+  border: 1px solid rgba(168, 124, 34, 0.62);
+}
+:root.theme-premium.platinum .premium-probe-orbit-label-count {
+  background: rgba(168, 124, 34, 0.16);
+}
+:root.theme-premium.platinum .premium-probe-target-toolbar {
+  background: rgba(168, 124, 34, 0.018);
+}
+:root.theme-premium.platinum .premium-probe-network-server > i[data-level='medium'] {
+  box-shadow: 0 0 7px #8a6210;
+}
+:root.theme-premium.platinum .premium-probe-multi-tooltip {
+  border: 1px solid rgba(168, 124, 34, 0.48);
+}
+:root.theme-premium.platinum .premium-probe-smart-summary {
+  background: linear-gradient(
+    90deg,
+    rgba(151, 103, 28, 0.13),
+    rgba(255, 253, 248, 0.88) 42%
+  );
+}
+:root.theme-premium.platinum .premium-probe-command-heading button {
+  background: rgba(168, 124, 34, 0.045);
+}
+:root.theme-premium.platinum .premium-probe-command-kpis article {
+  border: 1px solid rgba(168, 124, 34, 0.24);
+}
+:root.theme-premium.platinum .premium-probe-command-kpis article {
+  background: linear-gradient(
+    150deg,
+    rgba(168, 124, 34, 0.075),
+    rgba(255, 253, 248, 0.88) 60%
+  );
+}
+:root.theme-premium.platinum .premium-probe-command-nodes button > i {
+  background: #5f5244;
+}
+:root.theme-premium.platinum .premium-probe-command-nodes button > i {
+  box-shadow: 0 0 8px #5f5244;
+}
+:root.theme-premium.platinum .premium-probe-resource-heading {
+  background: linear-gradient(110deg, rgba(168, 124, 34, 0.09), transparent 36%),
+    var(--pp-panel);
+}
+:root.theme-premium.platinum .premium-probe-resource-heading {
+  box-shadow: 0 18px 42px -36px rgba(168, 124, 34, 0.9);
+}
+:root.theme-premium.platinum .premium-probe-resource-heading > div > span {
+  border: 1px solid rgba(168, 124, 34, 0.38);
+}
+:root.theme-premium.platinum .premium-probe-resource-empty {
+  border: 1px dashed rgba(168, 124, 34, 0.28);
+}
+:root.theme-premium.platinum .premium-probe-billing-rank i {
+  background: rgba(168, 124, 34, 0.09);
+}
+:root.theme-premium.platinum .premium-probe-billing-rank i b {
+  background: linear-gradient(90deg, #7d5819, #e4be61);
+}
+:root.theme-premium.platinum .premium-probe-billing-rank i b {
+  box-shadow: 0 0 5px rgba(168, 124, 34, 0.35);
+}
+:root.theme-premium.platinum .premium-probe-insight-card {
+  background: linear-gradient(140deg, rgba(168, 124, 34, 0.055), transparent 48%),
+    var(--pp-panel);
+}
+:root.theme-premium.platinum .premium-probe-insight-card {
+  box-shadow: 0 18px 38px -34px rgba(168, 124, 34, 0.92);
+}
+:root.theme-premium.platinum .premium-probe-seven-days > div > div {
+  border: 1px solid rgba(168, 124, 34, 0.1);
+}
+:root.theme-premium.platinum .premium-probe-seven-days i:not(.is-up) {
+  /* 白金: 下行柱恢复黑金原版亮金渐变(上行 is-up 保持深棕, 上下行一眼可分)
+     注意 :root.theme-premium.platinum 前缀特异性(0,4,1)会盖过 i.is-up(0,2,1), 必须 :not(.is-up) 排除 */
+  background: linear-gradient(180deg, #f2d584, #c89232);
+}
+/* 白金: 上行提亮(原深棕 #9e752d→#563d15 在浅底上过暗, 用户反馈"比原版暗很多") */
+:root.theme-premium.platinum .premium-probe-seven-days i.is-up {
+  background: linear-gradient(180deg, #c9a255, #8f651d);
+}
+:root.theme-premium.platinum .premium-probe-insight-card > header > span i.is-up {
+  background: #a87c22;
+}
+:root.theme-premium.platinum .premium-probe-drawer-traffic i b:first-child {
+  /* 白金: 抽屉下行流量条改黑金原版渐变(原纯色 #d8b46a) */
+  background: linear-gradient(90deg, #8f651d, #e5c367);
+}
+:root.theme-premium.platinum .premium-probe-drawer-traffic i b:last-child {
+  /* 白金: 抽屉上行条提亮(原 #75541d 浅底过暗) */
+  background: #a87c22;
+}
+:root.theme-premium.platinum .premium-probe-heatmap b {
+  border: 1px solid rgba(168, 124, 34, 0.08);
+}
+:root.theme-premium.platinum .premium-probe-quota-rank i b {
+  /* 白金: 进度条统一用黑金原版金渐变(深金→亮金) */
+  background: linear-gradient(90deg, #8f651d, #e5c367);
+}
+:root.theme-premium.platinum .premium-probe-renewal-track::before {
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(168, 124, 34, 0.5),
+    transparent
+  );
+}
+:root.theme-premium.platinum .premium-probe-renewal-track > div > i {
+  border: 2px solid rgba(255, 253, 248, 1.00);
+}
+:root.theme-premium.platinum .premium-probe-renewal-track > div > i {
+  box-shadow: 0 0 0 1px rgba(168, 124, 34, 0.55);
+}
+:root.theme-premium.platinum .premium-probe-filters button:hover {
+  background: linear-gradient(90deg, #a87c22, #c9962b);
+}
+:root.theme-premium.platinum .premium-probe-server-card:hover {
+  border-color: rgba(168, 124, 34, 0.65);
+}
+:root.theme-premium.platinum .premium-probe-server-card:hover {
+  box-shadow: 0 20px 44px -28px rgba(168, 124, 34, 0.68);
+}
+:root.theme-premium.platinum .premium-probe-card-traffic > i b {
+  background: linear-gradient(#e6bc58, #765016);
+}
+:root.theme-premium.platinum .premium-probe-card-traffic > i b {
+  box-shadow: 0 0 6px rgba(168, 124, 34, 0.28);
+}
+:root.theme-premium.platinum .premium-probe-drawer > header button {
+  border: 1px solid rgba(168, 124, 34, 0.22);
+}
+:root.theme-premium.platinum .premium-probe-drawer-routes > span {
+  border: 1px solid rgba(168, 124, 34, 0.34);
 }

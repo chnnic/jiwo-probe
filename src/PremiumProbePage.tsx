@@ -6,6 +6,7 @@ import {
   ChevronDown,
   ChevronRight,
   CreditCard,
+  Crown,
   Globe2,
   Gauge,
   Layers,
@@ -24,6 +25,7 @@ import type {
   ProbePayload,
 } from './types'
 import { Twemoji } from './Twemoji'
+import { setDarkOverride } from './use-probe'
 import { EXTRA_LICENSE_BADGES, HEADER_LICENSE_BADGES } from './license-badges'
 import { FLAG_OPTIONS } from './country-flag'
 import { displayServerName } from './server-name'
@@ -791,10 +793,12 @@ function DataInsightPanels({
     Number(showTraffic7D) +
     Number(showResourceHeatmap) +
     Number(showTrafficQuota)
+  const isPlatinum = document.documentElement.classList.contains('platinum')
   const heatColor = (value?: number) => {
-    if (value === undefined) return 'rgba(255,255,255,.035)'
+    if (value === undefined) return isPlatinum ? 'rgba(168,124,34,.08)' : 'rgba(255,255,255,.035)'
     if (value >= 85) return 'rgba(239,91,100,.72)'
     if (value >= 60) return 'rgba(224,156,58,.62)'
+    if (isPlatinum) return `rgba(168,124,34,${0.12 + value / 220})`
     return `rgba(216,180,106,${0.16 + value / 180})`
   }
   const empty = <p className='premium-probe-insights-empty'>暂无可用数据</p>
@@ -2232,6 +2236,15 @@ export function PremiumProbePage({
     if (typeof window === 'undefined') return true
     return localStorage.getItem('premium-probe-watermark') !== '0'
   })
+  // 白金配色开关（黑金 ⇄ 白金，复用全局 darkOverride=platinum）
+  const [platinum, setPlatinum] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return false
+    return document.documentElement.classList.contains('platinum')
+  })
+  const togglePlatinum = () => {
+    setDarkOverride(platinum ? null : 'platinum')
+    setPlatinum(!platinum)
+  }
   // 底部许可证动画开关（默认开，localStorage 记忆）
   const [licenseAnim, setLicenseAnim] = useState<boolean>(() => {
     if (typeof window === 'undefined') return true
@@ -2412,6 +2425,16 @@ export function PremiumProbePage({
             onClick={toggleWatermark}
           >
             <Layers />
+          </button>
+          <button
+            type='button'
+            className={`premium-probe-login premium-probe-platinum-toggle${platinum ? ' is-on' : ''}`}
+            aria-label={platinum ? '切换黑金配色' : '切换白金配色'}
+            aria-pressed={platinum}
+            title={platinum ? '切换到黑金配色' : '切换到白金配色（浅色版）'}
+            onClick={togglePlatinum}
+          >
+            <Crown />
           </button>
           <PremiumThemeSelect onThemeChange={onThemeChange} />
         </nav>

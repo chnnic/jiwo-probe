@@ -3221,25 +3221,23 @@ footer a:hover {
   --shadow: 0 0 0 rgba(0, 0, 0, 0);
   --hover-bg: #1e2018;
   --accent: #d8b46a;
-  --progress-cpu: #d8b46a;
-  --progress-memory: #d8b46a;
-  --progress-swap: #d8b46a;
-  --progress-disk: #d8b46a;
-  --progress-network: #d8b46a;
-  --progress-load: #d8b46a;
+  --progress-cpu: linear-gradient(90deg, #8f651d, #e5c367);
+  --progress-memory: linear-gradient(90deg, #8f651d, #e5c367);
+  --progress-swap: linear-gradient(90deg, #8f651d, #e5c367);
+  --progress-disk: linear-gradient(90deg, #8f651d, #e5c367);
+  --progress-network: linear-gradient(90deg, #8f651d, #e5c367);
+  --progress-load: linear-gradient(90deg, #8f651d, #e5c367);
   --progress-bg: rgba(243, 236, 220, 0.14);
   --status-success: #57ab5a;
   --status-warning: #daaa3f;
   --status-error: #ef5b64;
   --traffic-up: #f2d28b;
   --traffic-down: #d8b46a;
-  /* 黑金: 剩余流量分段条金色渐变(替代绿→黄→红热力) */
+  /* 黑金: 剩余流量分段条统一 premium 黑金原版渐变(2026-08-15 与白金一致) */
   --lumina-heat: linear-gradient(
     to right,
-    #a8843f 0%,
-    #c9a255 30%,
-    #d8b46a 60%,
-    #f2d28b 100%
+    #8f651d 0%,
+    #e5c367 100%
   );
   --lumina-top-glow: radial-gradient(
     1100px 560px at 50% -8%,
@@ -3328,6 +3326,116 @@ footer a:hover {
     linear-gradient(140deg, rgba(216, 180, 106, 0.075), transparent 48%),
     color-mix(in srgb, var(--hover-bg) 38%, var(--surface));
   box-shadow: 0 20px 44px -28px rgba(216, 180, 106, 0.68);
+}
+/* ===== 白金配色(lumina 第四配色, license.miaomiaowu.net premium light 移植, 2026-08-14) ===== */
+:root.theme-lumina.platinum {
+  color-scheme: light;
+  color: #241e14;
+  --primary: #a87c22;
+  --page-bg: #f7f4ec;
+  --surface: #fffdf8;
+  --border: rgba(168, 124, 34, 0.28);
+  --muted: #746b5c;
+  --foreground: #241e14;
+  --shadow: 0 0 0 rgba(0, 0, 0, 0);
+  --hover-bg: #f1e8d5;
+  --accent: #a87c22;
+  --progress-cpu: linear-gradient(90deg, #8f651d, #e5c367);
+  --progress-memory: linear-gradient(90deg, #8f651d, #e5c367);
+  --progress-swap: linear-gradient(90deg, #8f651d, #e5c367);
+  --progress-disk: linear-gradient(90deg, #8f651d, #e5c367);
+  --progress-network: linear-gradient(90deg, #8f651d, #e5c367);
+  --progress-load: linear-gradient(90deg, #8f651d, #e5c367);
+  --progress-bg: rgba(168, 124, 34, 0.14);
+  --status-success: #2f7d3c;
+  --status-warning: #a87c22;
+  --status-error: #c0342c;
+  --traffic-up: #a87c22;
+  --traffic-down: #8a6210;
+  --lumina-heat: linear-gradient(
+    to right,
+    /* 白金: premium 黑金原版进度条渐变(深金→亮金) */
+    #8f651d 0%,
+    #e5c367 100%
+  );
+  --lumina-top-glow: radial-gradient(
+    1100px 560px at 50% -8%,
+    rgba(168, 124, 34, 0.08) 0%,
+    transparent 60%
+  );
+}
+/* 白金/黑金: 二级详情页进度条 .meter i(原 var(--primary) 纯色)统一黑金渐变 */
+:root.theme-lumina.platinum .meter i,
+:root.theme-premium.platinum .meter i,
+:root.theme-lumina.gold .meter i {
+  background: linear-gradient(90deg, #8f651d, #e5c367);
+}
+/* 白金: 许可证徽章浅色化(替代默认砖橙/棕) */
+:root.theme-lumina.platinum .probe-license-nameplate {
+  border-color: rgba(168, 124, 34, 0.45);
+  background: linear-gradient(135deg, #fffdf8 0%, #f7f4ec 48%, #eee9de 100%);
+  box-shadow: 2px 2px 0 rgba(70, 48, 10, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.85);
+  color: #6f4e0c;
+}
+/* 白金: 页面角落金色光斑(浅底版) */
+:root.theme-lumina.platinum .app-shell {
+  background-image:
+    var(--lumina-top-glow),
+    radial-gradient(circle at 18% 8%, rgba(168, 124, 34, 0.09), transparent 24rem),
+    radial-gradient(circle at 82% 72%, rgba(168, 124, 34, 0.05), transparent 28rem);
+  background-size: 100% 100vh, auto, auto;
+  background-repeat: no-repeat, no-repeat, no-repeat;
+  background-attachment: scroll, fixed, fixed;
+}
+/* 白金: 卡片顶部金色扫光(暗金线) */
+:root.theme-lumina.platinum .lumina-card,
+:root.theme-lumina.platinum .summary-card,
+:root.theme-lumina.platinum .globe-card,
+:root.theme-lumina.platinum .leaderboard-card {
+  position: relative;
+}
+:root.theme-lumina.platinum .lumina-card::after,
+:root.theme-lumina.platinum .summary-card::after,
+:root.theme-lumina.platinum .globe-card::after,
+:root.theme-lumina.platinum .leaderboard-card::after {
+  position: absolute;
+  z-index: 5;
+  top: 0;
+  left: -22%;
+  width: 20%;
+  height: 1px;
+  content: '';
+  pointer-events: none;
+  background: linear-gradient(90deg, transparent, #a87c22, transparent);
+  will-change: transform, opacity;
+  animation: lumina-border-shine 10s linear infinite;
+}
+/* 白金: 卡片背景金色光晕 + 底部外发光(浅金弱化, 照 license 页 .pixel-card) */
+:root.theme-lumina.platinum .lumina-card,
+:root.theme-lumina.platinum .summary-card,
+:root.theme-lumina.platinum .probe-toolbar,
+:root.theme-lumina.platinum .globe-card,
+:root.theme-lumina.platinum .leaderboard-card {
+  background:
+    linear-gradient(140deg, rgba(168, 124, 34, 0.06), transparent 48%),
+    var(--surface);
+  box-shadow: 0 18px 38px -34px rgba(120, 86, 20, 0.55);
+}
+/* 离线卡保留红色语义底(光晕压暗不吞红色) */
+:root.theme-lumina.platinum .lumina-card.is-offline {
+  background:
+    linear-gradient(140deg, rgba(168, 124, 34, 0.05), transparent 48%),
+    color-mix(in srgb, var(--status-error) 5%, var(--surface));
+}
+:root.theme-lumina.platinum .lumina-card:hover,
+:root.theme-lumina.platinum .summary-card:hover,
+:root.theme-lumina.platinum .probe-toolbar:hover,
+:root.theme-lumina.platinum .globe-card:hover,
+:root.theme-lumina.platinum .leaderboard-card:hover {
+  background:
+    linear-gradient(140deg, rgba(168, 124, 34, 0.085), transparent 48%),
+    color-mix(in srgb, var(--hover-bg) 38%, var(--surface));
+  box-shadow: 0 20px 44px -28px rgba(120, 86, 20, 0.42);
 }
 :root.theme-lumina .app-shell {
   background: var(--page-bg);
