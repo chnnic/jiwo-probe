@@ -1448,13 +1448,13 @@ function luminaPulseColor(level: number): string {
     // 最高柱: 压至比次高档略暗, 不再抢眼(原 #f2d28b → #e3c176 → #d3ac63)
     return '#d3ac63'
   }
-  // 白金配色: 暗金分档(浅底对比)
+  // 白金配色: 直接用黑金延迟色(2026-08-15 用户要求, 主基调提亮)
   if (document.documentElement.classList.contains('platinum')) {
     if (level <= 0.01) return 'var(--progress-bg)'
-    if (level < 0.3) return '#8a6210'
-    if (level < 0.6) return '#a87c22'
-    if (level < 0.85) return '#c9962b'
-    return '#d7a63d'
+    if (level < 0.3) return '#a8843f'
+    if (level < 0.6) return '#c9a255'
+    if (level < 0.85) return '#d8b46a'
+    return '#d3ac63'
   }
   // 相对峰值分档: 无流量灰 → 低绿 → 中蓝 → 高琥珀 → 极高暖橙(琥珀+30%红, 避免刺眼红)
   if (level <= 0.01) return 'var(--progress-bg)'
@@ -1509,17 +1509,17 @@ function luminaHeatColor(kind: 'latency' | 'loss', value: number): string {
     if (value < 5) return '#d8b46a'
     return '#f2d28b'
   }
-  // 白金配色: 暗金分档(浅底对比, 阈值语义与黑金一致)
+  // 白金配色: 直接用黑金延迟柱色(2026-08-15 用户要求, 主基调提亮)
   if (document.documentElement.classList.contains('platinum')) {
     if (value < 0) return 'var(--progress-bg)'
     if (kind === 'latency') {
-      if (value < 100) return '#a87c22'
-      if (value < 200) return '#8a6210'
-      return '#6f4e0c'
+      if (value < 100) return '#c9a255'
+      if (value < 200) return '#d8b46a'
+      return '#f2d28b'
     }
-    if (value < 1) return '#a87c22'
-    if (value < 5) return '#8a6210'
-    return '#6f4e0c'
+    if (value < 1) return '#c9a255'
+    if (value < 5) return '#d8b46a'
+    return '#f2d28b'
   }
   // 与延迟/丢包数值同色系(status tokens, 阈值仿原版 latency/loss bounds)
   if (kind === 'latency') {
@@ -1808,7 +1808,7 @@ function ServerCardLumina({ server, index }: { server: EnrichedServer; index: nu
                 </select>
                 <ChevronDown size={10} className="lumina-health-select-arrow" aria-hidden />
               </span>
-              <strong className="tabular" style={{ color: currentMs === null ? 'var(--text-tertiary)' : isGold ? '#f2d28b' : isPlatinum ? '#8a6210' : currentMs < 60 ? 'var(--status-success)' : currentMs < 120 ? 'var(--status-warning)' : 'var(--status-error)' }}>
+              <strong className="tabular" style={{ color: currentMs === null ? 'var(--text-tertiary)' : isGold ? '#f2d28b' : isPlatinum ? '#f2d28b' : currentMs < 60 ? 'var(--status-success)' : currentMs < 120 ? 'var(--status-warning)' : 'var(--status-error)' }}>
                 {currentMs === null ? '—' : `${Math.round(currentMs)}`}
                 <small>ms</small>
               </strong>
@@ -1833,7 +1833,7 @@ function ServerCardLumina({ server, index }: { server: EnrichedServer; index: nu
                 <Unplug size={13} />
                 丢包率
               </span>
-              <strong className="tabular" style={{ color: lossAvg < 0 ? 'var(--text-tertiary)' : isGold ? '#f2d28b' : isPlatinum ? '#8a6210' : lossAvg < 1 ? 'var(--status-success)' : lossAvg < 5 ? 'var(--status-warning)' : 'var(--status-error)' }}>
+              <strong className="tabular" style={{ color: lossAvg < 0 ? 'var(--text-tertiary)' : isGold ? '#f2d28b' : isPlatinum ? '#f2d28b' : lossAvg < 1 ? 'var(--status-success)' : lossAvg < 5 ? 'var(--status-warning)' : 'var(--status-error)' }}>
                 {lossAvg < 0 ? '—' : lossAvg.toFixed(1)}
                 <small>%</small>
               </strong>

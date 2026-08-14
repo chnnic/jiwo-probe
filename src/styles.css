@@ -3339,7 +3339,7 @@ footer a:hover {
   --foreground: #241e14;
   --shadow: 0 0 0 rgba(0, 0, 0, 0);
   --hover-bg: #f1e8d5;
-  --accent: #a87c22;
+  --accent: #d8b46a;
   --progress-cpu: linear-gradient(90deg, #8f651d, #e5c367);
   --progress-memory: linear-gradient(90deg, #8f651d, #e5c367);
   --progress-swap: linear-gradient(90deg, #8f651d, #e5c367);
@@ -3350,8 +3350,8 @@ footer a:hover {
   --status-success: #2f7d3c;
   --status-warning: #a87c22;
   --status-error: #c0342c;
-  --traffic-up: #a87c22;
-  --traffic-down: #8a6210;
+  --traffic-up: #f2d28b;
+  --traffic-down: #d8b46a;
   --lumina-heat: linear-gradient(
     to right,
     /* 白金: premium 黑金原版进度条渐变(深金→亮金) */
