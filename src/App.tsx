@@ -1385,14 +1385,12 @@ const LUMINA_HEAT_GRADIENT =
   'linear-gradient(to right, #4ac06c 0%, #4ac06c 10%, #9cd242 28%, #d9da26 44%, #f2b200 58%, #f58200 72%, #f25100 86%, #e62c2c 100%)'
 function luminaHeatGradient(): string {
   // 黑金配色: 金色渐变(与 --lumina-heat 覆盖一致)
-  // 2026-08-15: 统一 premium 黑金原版渐变(深金→亮金), 与白金一致
   if (document.documentElement.classList.contains('gold')) {
-    return 'linear-gradient(to right, #8f651d 0%, #e5c367 100%)'
+    return 'linear-gradient(to right, #a8843f 0%, #c9a255 30%, #d8b46a 60%, #f2d28b 100%)'
   }
-  // 白金配色: 暗金渐变(浅底上亮金对比不足, 用暗金系)
-  // 2026-08-15: 进度条统一用 premium 黑金原版渐变(深金→亮金), 与白金进度条一致
+  // 白金配色: 直接用黑金同款 4 色渐变(2026-08-15 用户要求 "直接用黑金那个")
   if (document.documentElement.classList.contains('platinum')) {
-    return 'linear-gradient(to right, #8f651d 0%, #e5c367 100%)'
+    return 'linear-gradient(to right, #a8843f 0%, #c9a255 30%, #d8b46a 60%, #f2d28b 100%)'
   }
   return LUMINA_HEAT_GRADIENT
 }

@@ -3233,11 +3233,13 @@ footer a:hover {
   --status-error: #ef5b64;
   --traffic-up: #f2d28b;
   --traffic-down: #d8b46a;
-  /* 黑金: 剩余流量分段条统一 premium 黑金原版渐变(2026-08-15 与白金一致) */
+  /* 黑金: 剩余流量分段条金色渐变(替代绿→黄→红热力) */
   --lumina-heat: linear-gradient(
     to right,
-    #8f651d 0%,
-    #e5c367 100%
+    #a8843f 0%,
+    #c9a255 30%,
+    #d8b46a 60%,
+    #f2d28b 100%
   );
   --lumina-top-glow: radial-gradient(
     1100px 560px at 50% -8%,
@@ -3354,9 +3356,11 @@ footer a:hover {
   --traffic-down: #d8b46a;
   --lumina-heat: linear-gradient(
     to right,
-    /* 白金: premium 黑金原版进度条渐变(深金→亮金) */
-    #8f651d 0%,
-    #e5c367 100%
+    /* 白金: 直接用黑金同款 4 色渐变 */
+    #a8843f 0%,
+    #c9a255 30%,
+    #d8b46a 60%,
+    #f2d28b 100%
   );
   --lumina-top-glow: radial-gradient(
     1100px 560px at 50% -8%,
@@ -3364,11 +3368,28 @@ footer a:hover {
     transparent 60%
   );
 }
-/* 白金/黑金: 二级详情页进度条 .meter i(原 var(--primary) 纯色)统一黑金渐变 */
+/* 白金: 二级详情页进度条 .meter i(原 var(--primary) 纯色)统一黑金渐变 */
 :root.theme-lumina.platinum .meter i,
 :root.theme-premium.platinum .meter i,
 :root.theme-lumina.gold .meter i {
   background: linear-gradient(90deg, #8f651d, #e5c367);
+}
+/* 白金: 全部按钮金色系(用户要求, 参照黑金金调 — 浅金底+深棕字, active 金渐变白字) */
+:root.theme-lumina.platinum .filters button,
+:root.theme-lumina.platinum .region-trigger {
+  color: #4f3a11;
+  background: rgba(168, 124, 34, 0.12);
+  border-color: rgba(168, 124, 34, 0.4);
+}
+:root.theme-lumina.platinum .filters button:hover,
+:root.theme-lumina.platinum .region-trigger:hover {
+  border-color: #a87c22;
+  background: rgba(168, 124, 34, 0.18);
+}
+:root.theme-lumina.platinum .filters button.active {
+  color: #fffdf8;
+  background: linear-gradient(90deg, #8f651d, #e5c367);
+  border-color: #a87c22;
 }
 /* 白金: 许可证徽章浅色化(替代默认砖橙/棕) */
 :root.theme-lumina.platinum .probe-license-nameplate {
