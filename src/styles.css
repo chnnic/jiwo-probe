@@ -3380,6 +3380,11 @@ footer a:hover {
 :root.theme-lumina.gold .meter i {
   background: linear-gradient(90deg, #8f651d, #e5c367);
 }
+/* 白金: 顶部网络状况 总下行/总上行 实时进度条 统一黑金渐变(替代默认绿/橙, 2026-08-15) */
+:root.theme-lumina.platinum .speed-summary .speed-progress i,
+:root.theme-lumina.platinum .speed-summary.up .speed-progress i {
+  background: linear-gradient(90deg, #8f651d, #e5c367);
+}
 /* 白金: 全部按钮金色系(用户要求, 参照黑金金调 — 浅金底+深棕字, active 金渐变白字) */
 :root.theme-lumina.platinum .filters button,
 :root.theme-lumina.platinum .region-trigger {
