@@ -3277,32 +3277,26 @@
  *   - 页首配色按钮手动切换 (localStorage mmwx-probe-dark-override=platinum)
  *   - 主控下发 "Premium Light" / "Premium Platinum" / "PREMIUMPLATINUM"
  * ===================================================================== */
+/* 白金: body 光斑移交水印层(按钮可关), 底色保持米白暖纸 */
 :root.theme-premium.platinum,
 :root.theme-premium.platinum body {
   color-scheme: light;
   color: #241e14;
   background-color: #f7f4ec;
-  background-image:
-    radial-gradient(circle at 18% 8%, rgba(168, 124, 34, 0.09), transparent 24rem),
-    radial-gradient(circle at 82% 72%, rgba(168, 124, 34, 0.05), transparent 28rem);
-  background-attachment: fixed;
 }
 :root.theme-premium.platinum #root {
   color: #241e14;
   background: transparent;
 }
 /* 白金变量 + 页面底色(照 license 页: 米白暖纸 + 顶部光晕) */
+/* 白金: 页面底色调纯色, 光斑并入水印层(照主控 light 实测: 3 处金色光斑) */
 :root.theme-premium.platinum .premium-probe-page {
   --pp-gold: #a87c22;
   --pp-gold-bright: #c9962b;
   --pp-border: rgba(168, 124, 34, 0.28);
   --pp-panel: #fffdf8;
   color: #241e14;
-  background: radial-gradient(
-    circle at 70% 12%,
-    rgba(168, 124, 34, 0.05),
-    transparent 26rem
-  );
+  background: transparent;
 }
 /* 浅金细网格底纹(照 license 页 body:before, 低透明铺满视口) */
 :root.theme-premium.platinum .premium-probe-page::before {
@@ -3316,9 +3310,17 @@
     linear-gradient(90deg, rgba(70, 48, 10, 0.024) 1px, transparent 1px);
   background-size: 48px 48px;
 }
-/* 水印层白金下压淡(暗色水印在浅底上过重) */
+/* 白金: 水印层 = 主控背景金色光斑(照 mmwx.289599.top theme-premium light 实测 3 处;
+   由 premium-probe-watermark-toggle 按钮开关, localStorage premium-probe-watermark) */
 :root.theme-premium.platinum .premium-probe-watermarks {
-  opacity: 0.3;
+  opacity: 1;
+  background-image:
+    radial-gradient(circle at 18% 8%, rgba(168, 124, 34, 0.09), transparent 384px),
+    radial-gradient(circle at 82% 72%, rgba(168, 124, 34, 0.05), transparent 448px),
+    radial-gradient(circle at 70% 12%, rgba(168, 124, 34, 0.09), transparent 416px);
+  background-repeat: no-repeat, no-repeat, no-repeat;
+  background-size: auto, auto, auto;
+  background-position: 0 0, 0 0, 0 0;
 }
 /* ---- 表面色 ---- */
 :root.theme-premium.platinum .premium-probe-topbar {
@@ -3369,9 +3371,27 @@
   color: #5f5244;
   background: rgba(168, 124, 34, 0.06);
 }
+/* 白金: 服务器摘要筛选按钮(全部/在线/离线)照主控统计卡 — 淡金底+浅金边 78px 卡,
+   选中深棕金渐变+浅金字(2026-08-17) */
 :root.theme-premium.platinum .premium-probe-filters button {
-  color: #5f5244;
-  background: rgba(168, 124, 34, 0.06);
+  min-height: 78px;
+  padding: 0 1.1rem;
+  color: #2c251a;
+  font-size: 1rem;
+  font-weight: 500;
+  border: 1px solid rgba(168, 124, 34, 0.2);
+  border-radius: 2px;
+  background: rgba(168, 124, 34, 0.043);
+}
+:root.theme-premium.platinum .premium-probe-filters button:hover {
+  border-color: rgba(168, 124, 34, 0.38);
+  background: rgba(168, 124, 34, 0.09);
+}
+:root.theme-premium.platinum .premium-probe-filters button.is-active {
+  color: #fff4cb;
+  border-color: #b47a1c;
+  background: linear-gradient(100deg, #4a300d, #d7a63d 48%, #6b4712);
+  box-shadow: 0 0 16px -7px #d7a63d;
 }
 :root.theme-premium.platinum .premium-probe-login {
   color: #4f3a11;
@@ -3719,7 +3739,7 @@
 }
 :root.theme-premium.platinum .premium-probe-filters button,
 :root.theme-premium.platinum .premium-probe-filters label {
-  border: 1px solid rgba(168, 124, 34, 0.28);
+  border: 1px solid rgba(168, 124, 34, 0.2);
 }
 :root.theme-premium.platinum .premium-probe-pro {
   border: 1px solid rgba(168, 124, 34, 0.68);
@@ -3896,9 +3916,6 @@
 }
 :root.theme-premium.platinum .premium-probe-renewal-track > div > i {
   box-shadow: 0 0 0 1px rgba(168, 124, 34, 0.55);
-}
-:root.theme-premium.platinum .premium-probe-filters button:hover {
-  background: linear-gradient(90deg, #a87c22, #c9962b);
 }
 :root.theme-premium.platinum .premium-probe-server-card:hover {
   border-color: rgba(168, 124, 34, 0.65);

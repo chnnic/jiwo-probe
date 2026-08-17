@@ -3491,14 +3491,15 @@ footer a:hover {
     linear-gradient(140deg, rgba(168, 124, 34, 0.05), transparent 48%),
     color-mix(in srgb, var(--status-error) 5%, var(--surface));
 }
+/* 白金: 卡片 hover 背景不变(用户要求取消变暗 — 保持默认卡背景, 仅阴影增强, 2026-08-17) */
 :root.theme-lumina.platinum .lumina-card:hover,
 :root.theme-lumina.platinum .summary-card:hover,
 :root.theme-lumina.platinum .probe-toolbar:hover,
 :root.theme-lumina.platinum .globe-card:hover,
 :root.theme-lumina.platinum .leaderboard-card:hover {
   background:
-    linear-gradient(140deg, rgba(168, 124, 34, 0.085), transparent 48%),
-    color-mix(in srgb, var(--hover-bg) 38%, var(--surface));
+    linear-gradient(140deg, rgba(168, 124, 34, 0.06), transparent 48%),
+    var(--surface);
   box-shadow: 0 20px 44px -28px rgba(120, 86, 20, 0.42);
 }
 :root.theme-lumina .app-shell {
