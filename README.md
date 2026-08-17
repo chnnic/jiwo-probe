@@ -1,6 +1,6 @@
 # Jiwo Probe（鸡窝状态站）
 
-妙妙屋 X（MiaoMiaoWuX）独立服务器探针的**非官方魔改 fork**，基于 [mmwx-probe](https://github.com/mmwx-group/mmwx-probe)（基线 `2dc05b3`，2026-08-10 已吸收上游探针表格优化 `5ce90c0`）。
+妙妙屋 X（MiaoMiaoWuX）独立服务器探针的**非官方魔改 fork**，基于 [mmwx-probe](https://github.com/mmwx-group/mmwx-probe)（基线 `6221dd1`，2026-08-17 已吸收上游 `bug fix`：计费口径工具 traffic-display / 趋势弹窗重做 / 卡片计费值修正，跳过大面积冲突的 App/Premium UI 重构）。
 
 [![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/chnnic/jiwo-probe)
 
@@ -79,6 +79,9 @@
 - **三许可证铭牌底栏**——手机端单行横滚，不占空间
 - **主控周期字段全面接线**——`traffic_used_up/down`（周期上下行，物理口径，up+down=total 与 daily_traffic 逐日求和精确一致）、`traffic_used_total`（周期总流量，重启不清零）、`period_start/end`（计费周期边界）：卡片/Lumina 卡周期上下行直读物理口径、详情页累计流量改周期统计、Lumina 卡剩余流量后显示重置倒计时 + 重置日
 - **表格流量列增强**——列表视图流量格显示 `↑ 上行 · ↓ 下行`（周期物理口径）+ 周期区间（MM-DD — MM-DD），点击弹出日流量趋势图
+- **原始上下行日流量趋势弹窗**（照上游 `6221dd1` 重做）——标题/合计/计费说明齐全：**当前周期 / 最近 7 日** 范围切换 + 周期原始合计 + 计费口径说明（"卡片按 XX 计费（公式）"）；图表内**总流量 / 上行流量 / 下行流量**三线独立切换（与二级详情页一致），缩放/适应宽度按钮；手机端弹窗撑满屏幕（`max-height: 100dvh`）+ 图表弹性高度（`min(42vh, 300px)`），三线按钮与缩放按钮免滚动直接可见、缩放按钮 34px 加大便于点击
+- **流量计费口径面板**（premium drawer 照主控实测）——本周期计费用量（`traffic_used` 计费口径）/ 计费口径（系统网卡·Xray 节点 × 上行+下行/仅上行/仅下行/取较大值）/ 原始周期 上下行 / 对账调整 / 对账公式（总量 − 调整 = 计费用量）/ 计费周期 / 本次开机网卡，黑金白金双适配
+- **单向计费修正**——premium 卡片/计费面板统一优先 `traffic_used`（计费口径）而非 `traffic_used_total`（双向物理值）：`traffic_stats_mode = upload/download/max` 的单向计费机器（如 GoMami 仅上行）不再显示翻倍流量；计费口径 mode 取值统一为上游 `upload / download / max`（`traffic-display.ts` 工具）
 - **bytes 格式化去冗余 .0**——`1000.0 GB` → `1000 GB`（含四舍五入后恰为 X.0 的值），非整数精度不变
 
 ### 手机端适配
@@ -86,6 +89,7 @@
 - 宽度断点全局对齐（760px / 640px / 960px），容器宽度一致无偏差
 - 紧凑速度徽章、负载区图标化、许可证底栏单行横滚
 - 极简卡片手机端专门压缩规则，375px 下无横向溢出
+- 趋势弹窗（日流量趋势）手机端撑满屏幕（`100dvh`）、图表高度弹性收缩，三线/缩放按钮免滚动直接可见
 
 ## 许可证
 
@@ -234,7 +238,7 @@ npm run deploy     # 构建并部署到 Cloudflare Workers
 
 ## 上游同步
 
-本 fork 基于上游 `2dc05b3`，已吸收 `5ce90c0`（探针表格优化：表格流量列增强）；`be3d03c`（表格网速列改纵向 + ping-pair 单列）经评估与 fork 三视图布局不兼容，已跳过；2026-08-11 吸收 `3ed41ca`（**Premium 黑金 PRO 主题**：PremiumProbePage / premium-probe.css / BlackGoldGlobe 球体 / country-flag + server-name 工具 + OPlusSans3 字体 + `/login` 重定向），并接入主题下拉体系（右上角主题下拉 + 经典界面下拉均可双向切换）、右上角登录按钮改为主题/水印切换、底部本地勋章（git filter 剥离，公开版零私人数据）；上游同 commit 的表格"上传/下载"文字标签与 metric-hover-detail 与本地定制冲突，跳过。后续迭代：网络状况页行高 280px/曲线加高、多目标 tooltip 上限 32rem（27 行全显 + 矮视口滚动）、内网/海外目标划分；Lumina 三态配色（黑金）+ 黑金金色体系（进度/脉冲/剩余流量/延迟/丢包/资产金额/许可证徽章全金色，语义状态色保留）；趋势图 tooltip 主题化深色；健康分徽章（详情页头部评分·等级，悬停显示扣分原因）；2026-08-12 吸收 `ce624cf`（**twemoji 本地化**：public/twemoji/ ~3650 个本地 SVG，Twemoji 组件从 jsdelivr CDN 改 `/twemoji/` 加载，零外部依赖；PremiumNetworkView 默认显示全部目标；`show_health_score` 字段对接主控 v0.4.8-beta.1 探针开关）。2026-08-10 完整移植 Komari-Ran-Theme（`src/ran/` 原版 125 文件 + mmwx-adapter 数据适配层，参考 [eutopiazen/mmwx-probe](https://github.com/eutopiazen/mmwx-probe) 的集成方式）。若上游有更新，可手动合并（注意 `src/styles.css`、`src/types.ts`、`src/use-probe.ts` 有大量本地定制，合并可能冲突，需逐一确认）：
+本 fork 基于上游 `6221dd1`（2026-08-17 `bug fix`，已吸收）：上游同 commit 把趋势弹窗重做为「原始上下行日流量趋势」（当前周期/最近 7 日 + 原始合计 + 计费说明）并新增 `traffic-display.ts` 计费口径工具（`billableTraffic` / `trafficRuleLabel` / `trafficFormulaLabel` / `dailyTrafficRows` 等，本地计费面板/drawer 日流量已接入）、`traffic_stats_mode` 取值修正（`upload / download / max`，本地原误判 `oneway` 导致单向计费机器显示异常）、`server-name.ts` 旗标修正、`RegionGlobe` 动态刷新、`types.ts` 规范化（保留本地 ThemeName union 与 license_badge union）；同 commit 的 App.tsx / PremiumProbePage.tsx / styles.css 大改（TrafficDialog 重做等）曾与本地定制大面积冲突，经拆分后已按用户要求将 TrafficDialog 核心（范围切换/三线切换/面板撑满免滚动）整体移植，其余无关重构跳过。更早吸收：`8d82a8b` 移除登录；`ce624cf` twemoji 本地化（public/twemoji/ ~3650 个本地 SVG，零外部依赖）；`3ed41ca` Premium 黑金 PRO 主题；`be3d03c`（表格网速列纵向 + ping-pair 单列）经评估与 fork 三视图布局不兼容，跳过；`5ce90c0` 探针表格优化（表格流量列增强）；基线 `2dc05b3`（2026-08-10）。后续本地迭代：流量计费口径 draw 面板、趋势弹窗三线切换与手机端免滚动撑满、卡片单向计费修正、白金水印等。若上游有更新，可手动合并（注意 `src/styles.css`、`src/types.ts`、`src/use-probe.ts` 有大量本地定制，合并可能冲突，需逐一确认）：
 
 ```bash
 git fetch origin
