@@ -2072,6 +2072,18 @@ function ServerDetailDrawer({
   const [trafficRange, setTrafficRange] = useState<TrafficRange>(() =>
     hasDailyPeriod ? 'period' : 'recent7',
   )
+  // 总流量/上行/下行 行切换(照二级详情页 traffic-line-toggle)
+  const [trafficLines, setTrafficLines] = useState<Set<'total' | 'uplink' | 'downlink'>>(
+    () => new Set(['total', 'uplink', 'downlink']),
+  )
+  const toggleTrafficLine = (key: 'total' | 'uplink' | 'downlink') => {
+    setTrafficLines((prev) => {
+      const next = new Set(prev)
+      if (next.has(key)) next.delete(key)
+      else next.add(key)
+      return next
+    })
+  }
   const traffic = dailyTrafficRows(server, trafficRange).map((item) => ({
     ...item,
     total: item.total || item.uplink + item.downlink,
@@ -2214,6 +2226,26 @@ function ServerDetailDrawer({
           <p className='premium-probe-traffic-note'>
             以下为原始上、下行，不应用计费方向或对账调整。
           </p>
+          <div className='traffic-line-toggle'>
+            {(
+              [
+                { key: 'total', label: '总流量', stroke: '#3b82f6' },
+                { key: 'uplink', label: '上行流量', stroke: '#f97316' },
+                { key: 'downlink', label: '下行流量', stroke: '#22c55e' },
+              ] as const
+            ).map((line) => (
+              <button
+                type='button'
+                key={line.key}
+                className={trafficLines.has(line.key) ? 'active' : 'off'}
+                style={{ '--line-color': line.stroke } as React.CSSProperties}
+                onClick={() => toggleTrafficLine(line.key)}
+              >
+                <span className='dot' />
+                {line.label}
+              </button>
+            ))}
+          </div>
           <div className='premium-probe-drawer-traffic'>
             {traffic.length === 0 ? (
               <p>暂无每日流量数据</p>
@@ -2222,14 +2254,28 @@ function ServerDetailDrawer({
                 <div key={item.date}>
                   <span>{item.date.slice(5)}</span>
                   <i>
-                    <b
-                      style={{ width: `${(item.downlink / maxTraffic) * 100}%` }}
-                    />
-                    <b
-                      style={{ width: `${(item.uplink / maxTraffic) * 100}%` }}
-                    />
+                    {trafficLines.has('downlink') && (
+                      <b
+                        style={{
+                          width: `${(item.downlink / maxTraffic) * 100}%`,
+                        }}
+                      />
+                    )}
+                    {trafficLines.has('uplink') && (
+                      <b
+                        style={{ width: `${(item.uplink / maxTraffic) * 100}%` }}
+                      />
+                    )}
                   </i>
-                  <strong>{formatTrafficCompact(item.total)}</strong>
+                  <strong>
+                    {trafficLines.has('total')
+                      ? formatTrafficCompact(item.total)
+                      : item.uplink !== undefined && item.downlink !== undefined && trafficLines.size === 2
+                        ? `${formatTrafficCompact(trafficLines.has('uplink') ? item.uplink : item.downlink)}`
+                        : trafficLines.has('uplink') || trafficLines.has('downlink')
+                          ? `${formatTrafficCompact(trafficLines.has('uplink') ? item.uplink : item.downlink)}`
+                          : '—'}
+                  </strong>
                 </div>
               ))
             )}
