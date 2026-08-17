@@ -4063,25 +4063,6 @@
   }
 }
 
-/* 手机端: 卡片 footer 两列(流量/延迟)改单列堆叠 — 窄宽下流量数字不再被 ellipsis 截断 */
-@media (max-width: 760px) {
-  .premium-probe-server-footer {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 0;
-    padding-top: 0.85rem;
-  }
-  .premium-probe-server-footer > div {
-    padding: 0;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 0.6fr);
-  }
-  .premium-probe-server-footer > div + div {
-    border-left: 0;
-    border-top: 1px solid rgba(216, 180, 106, 0.16);
-    padding-top: 0.75rem;
-    margin-top: 0.75rem;
-  }
-}
-
 /* 白金: 流量计费口径面板(照主控 light 实测: 淡金底+浅金边, 说明文字 muted #746b5c) */
 :root.theme-premium.platinum .premium-probe-drawer-accounting {
   border-color: rgba(168, 124, 34, 0.2);
