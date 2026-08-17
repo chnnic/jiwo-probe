@@ -3935,3 +3935,11 @@
 :root.theme-premium.platinum .premium-probe-drawer-routes > span {
   border: 1px solid rgba(168, 124, 34, 0.34);
 }
+/* 手机端: 白金筛选统计卡缩小(78px 卡在窄屏过大, 2026-08-17) */
+@media (max-width: 760px) {
+  :root.theme-premium.platinum .premium-probe-filters button {
+    min-height: 44px;
+    padding: 0 0.8rem;
+    font-size: 0.85rem;
+  }
+}
