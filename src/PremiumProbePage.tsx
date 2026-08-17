@@ -1923,8 +1923,8 @@ function PremiumServerCard({
   const mem = resourcePercentage(server.mem_used, server.mem_total)
   const disk = resourcePercentage(server.disk_used, server.disk_total)
   const trafficUsed =
-    server.traffic_used_total ??
     server.traffic_used ??
+    server.traffic_used_total ??
     server.traffic_used_up ??
     0
   const trafficValue = server.traffic_limit
