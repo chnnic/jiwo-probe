@@ -106,13 +106,6 @@ button {
   padding: 6px 9px;
   cursor: pointer;
 }
-.topbar .topbar-color-auto {
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.03em;
-  white-space: nowrap;
-  color: var(--primary);
-}
 .topbar button.active,
 .ranges button.active {
   color: #fff;

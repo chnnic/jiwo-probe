@@ -1,7 +1,7 @@
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import Lottie from 'lottie-react'
-import { Activity, ArrowDown, ArrowDownUp, ArrowUp, BadgeDollarSign, Calendar, CalendarClock, Check, CheckCircle2, ChevronDown, ChevronUp, CircleDollarSign, Clock, Clock3, Cpu, Database, Gauge, Globe2, HardDrive, LayoutGrid, List, MapPin, MemoryStick, Monitor, Moon, MoveHorizontal, Palette, PieChart, RefreshCw, Rows3, Rows4, Search, Server, Sun, TrendingUp, Trophy, Unplug, Wallet, Wifi, XCircle, ZoomIn, ZoomOut } from 'lucide-react'
+import { Activity, ArrowDown, ArrowDownUp, ArrowUp, BadgeDollarSign, Calendar, CalendarClock, Check, CheckCircle2, ChevronDown, ChevronUp, CircleDollarSign, Clock, Clock3, Cpu, Crown, Database, Gauge, Gem, Globe2, HardDrive, LayoutGrid, List, MapPin, MemoryStick, Monitor, Moon, MoveHorizontal, Palette, PieChart, RefreshCw, Rows3, Rows4, Search, Server, Sun, SunMoon, TrendingUp, Trophy, Unplug, Wallet, Wifi, XCircle, ZoomIn, ZoomOut } from 'lucide-react'
 import { siAlmalinux, siAlpinelinux, siApple, siArchlinux, siCentos, siDebian, siFedora, siFreebsd, siGentoo, siKalilinux, siLinux, siLinuxmint, siNixos, siOpensuse, siProxmox, siRedhat, siRockylinux, siUbuntu } from 'simple-icons'
 import { Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import type { ProbeBucket, ProbePingSeries, ProbeReturnRoute, ProbeServer, ThemeName } from './types'
@@ -2594,14 +2594,22 @@ export function App() {
   // 主控下发 Lumina-Gold / Lumina-Platinum 时 darkMode state 为 null，但页面已挂 gold/platinum——用 classList 兜底识别，否则循环从错误位置起步
   const isGold = darkMode === 'gold' || (darkMode === null && document.documentElement.classList.contains('gold'))
   const isPlatinum = darkMode === 'platinum' || (darkMode === null && document.documentElement.classList.contains('platinum'))
-  // 配色按钮三态: auto(跟随主控/时间) → 浅色 → 暗色; 旧的 gold/platinum 视为 auto(不再作为独立态)
+  // 配色按钮: Lumina 保持四态(浅/暗/黑金/白金); 其余主题三态 auto → 浅色 → 暗色
+  const isLuminaTheme = activeTheme === 'lumina'
   const colorMode: 'auto' | 'light' | 'dark' =
     darkMode === 'dark' || darkMode === 'light' ? darkMode : 'auto'
   const toggleDark = () => {
-    // 三态循环: auto → 浅色(太阳) → 暗色(月亮) → auto
-    const next = colorMode === 'auto' ? 'light' : colorMode === 'light' ? 'dark' : null
-    setDarkOverride(next)
-    setDarkMode(next)
+    if (isLuminaTheme) {
+      // 四态循环: 浅色 → 暗色 → 黑金 → 白金 → 浅色
+      const next = isPlatinum ? 'light' : isGold ? 'platinum' : isDark ? 'gold' : 'dark'
+      setDarkOverride(next)
+      setDarkMode(next)
+    } else {
+      // 三态循环: auto → 浅色(太阳) → 暗色(月亮) → auto(去掉 4 态时第二行注释)
+      const next = colorMode === 'auto' ? 'light' : colorMode === 'light' ? 'dark' : null
+      setDarkOverride(next)
+      setDarkMode(next)
+    }
   }
   const setMode = (next: 'card' | 'list' | 'mini') => {
     setView(next)
@@ -2684,9 +2692,11 @@ export function App() {
           <button aria-label="列表视图" title="列表视图" className={view === 'list' ? 'active' : ''} onClick={() => setMode('list')}>
             <List size={18} />
           </button>
-          <button aria-label="切换配色" title={colorMode === 'auto' ? '自动模式（跟随主控/时间）· 点击切换' : colorMode === 'light' ? '白色模式 · 点击切换' : '黑色模式 · 点击切换'} onClick={toggleDark}>
-            {colorMode === 'auto' ? (
-              <span className="topbar-color-auto">自动</span>
+          <button aria-label="切换配色" title={isLuminaTheme ? (isPlatinum ? '切换浅色模式' : isGold ? '切换白金配色' : isDark ? '切换黑金配色' : '切换暗色模式') : colorMode === 'auto' ? '自动模式（跟随主控/时间）· 点击切换' : colorMode === 'light' ? '白色模式 · 点击切换' : '黑色模式 · 点击切换'} onClick={toggleDark}>
+            {isLuminaTheme ? (
+              isPlatinum ? <Crown size={18} /> : isGold ? <Gem size={18} /> : isDark ? <Sun size={18} /> : <Moon size={18} />
+            ) : colorMode === 'auto' ? (
+              <SunMoon size={18} />
             ) : colorMode === 'light' ? (
               <Sun size={18} />
             ) : (

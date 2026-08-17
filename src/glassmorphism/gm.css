@@ -87,12 +87,6 @@
 }
 .gm-header-btn .rotated { transform: rotate(180deg); }
 .gm-color-btn { width: auto; min-width: 36px; padding: 0 9px; font-size: 12px; }
-.gm-color-btn .gm-color-auto {
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.05em;
-  color: #2fd4a1;
-}
 
 /* ===== 主题下拉 ===== */
 .gm-theme-menu { position: relative; }

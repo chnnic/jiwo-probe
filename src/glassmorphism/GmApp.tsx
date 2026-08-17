@@ -18,6 +18,7 @@ import {
   PieChart,
   Search,
   Sun,
+  SunMoon,
   Table2,
   Wallet,
   X,
@@ -688,7 +689,7 @@ export default function GmApp({
             onClick={toggleColorMode}
           >
             {colorMode === 'auto' ? (
-              <span className="gm-color-auto">自动</span>
+              <SunMoon size={18} />
             ) : colorMode === 'light' ? (
               <Sun size={18} />
             ) : (
