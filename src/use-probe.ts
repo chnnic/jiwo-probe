@@ -169,14 +169,9 @@ export function applyAppearance(input?: ProbeAppearance) {
       dark = false
     } else {
       // 主控只写 premium 无后缀 → auto 模式: 北京时间 6:00-18:00 白金, 夜间黑金
-      if (appearance.color_mode === 'system') {
-        root.classList.toggle('platinum', !matchMedia('(prefers-color-scheme: dark)').matches)
-      } else if (appearance.color_mode === 'light' || appearance.color_mode === 'dark') {
-        root.classList.toggle('platinum', appearance.color_mode === 'light')
-      } else {
-        const hour = (new Date().getUTCHours() + 8) % 24
-        root.classList.toggle('platinum', hour >= 6 && hour < 18)
-      }
+      // (不跟随主控 color_mode 字段; 用户手动三态 premium-probe-color-mode 已在前置分支处理)
+      const hour = (new Date().getUTCHours() + 8) % 24
+      root.classList.toggle('platinum', hour >= 6 && hour < 18)
       dark = false
     }
   } else if (darkOverride === 'gold' || (parsed.gold && !themeOverride && !darkOverride)) {
@@ -195,12 +190,11 @@ export function applyAppearance(input?: ProbeAppearance) {
   } else if (darkOverride === 'light') {
     dark = false
   } else {
-    // 其余主题: 主控明确 color_mode 优先; system 跟随系统偏好;
-    // 主控未上报明暗(如只写主题名无后缀) → auto 模式: 北京时间 6:00-18:00 浅色, 其余深色
-    if (appearance.color_mode === 'system') {
-      dark = matchMedia('(prefers-color-scheme: dark)').matches
-    } else if (appearance.color_mode === 'dark' || appearance.color_mode === 'light') {
-      dark = appearance.color_mode === 'dark'
+    // 其余主题(经典内置 + glassmorphism): 带明暗后缀(glassmorphism-light/dark)固定对应模式;
+    // 无后缀(不写 light/dark) → auto 模式: 北京时间 6:00-18:00 浅色, 其余深色。
+    // 不跟随主控 color_mode 字段(主控总是携带该字段, 若采信则 auto 永远失效)。
+    if (parsed.light !== undefined) {
+      dark = !parsed.light
     } else {
       const hour = (new Date().getUTCHours() + 8) % 24
       dark = !(hour >= 6 && hour < 18)

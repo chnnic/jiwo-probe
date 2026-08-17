@@ -2434,7 +2434,17 @@ export function PremiumProbePage({
     apply()
     if (colorMode !== 'auto') return
     const timer = window.setInterval(apply, 60_000) // 跨 6/18 点自动切换
-    return () => window.clearInterval(timer)
+    // iOS/Safari 后台标签 interval 会被冻结: 回到前台立即重算, 不等下一个 60s tick
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') apply()
+    }
+    document.addEventListener('visibilitychange', onVisible)
+    window.addEventListener('focus', onVisible)
+    return () => {
+      window.clearInterval(timer)
+      document.removeEventListener('visibilitychange', onVisible)
+      window.removeEventListener('focus', onVisible)
+    }
   }, [colorMode])
   const cycleColorMode = () => {
     manualColorRef.current = true

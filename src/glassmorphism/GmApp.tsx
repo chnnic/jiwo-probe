@@ -641,7 +641,19 @@ export default function GmApp({
         setColorMode(master === 'light' || master === 'dark' ? master : 'auto')
       }
     }, 30_000)
-    return () => window.clearInterval(timer)
+    // iOS/Safari 后台标签 interval 冻结: 回到前台立即重算一次(auto 时间判断)
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') {
+        setColorMode((mode) => (mode === 'auto' ? 'auto' : mode))
+      }
+    }
+    document.addEventListener('visibilitychange', onVisible)
+    window.addEventListener('focus', onVisible)
+    return () => {
+      window.clearInterval(timer)
+      document.removeEventListener('visibilitychange', onVisible)
+      window.removeEventListener('focus', onVisible)
+    }
   }, [])
 
   // 详情页/弹窗是 portal 到 body 下, 需要在 body 上挂主题类供 CSS 变量覆盖
