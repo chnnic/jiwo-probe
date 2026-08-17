@@ -6,6 +6,13 @@ import { siAlmalinux, siAlpinelinux, siApple, siArchlinux, siCentos, siDebian, s
 import { Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import type { ProbeBucket, ProbePingSeries, ProbeReturnRoute, ProbeServer, ThemeName } from './types'
 import { EnrichedServer, getActiveTheme, getDarkOverride, getThemeOverride, setDarkOverride, setTheme, useProbe } from './use-probe'
+import {
+  dailyTrafficRows,
+  hasTrafficPeriod,
+  trafficFormulaLabel,
+  trafficRuleLabel,
+  type TrafficRange,
+} from './traffic-display'
 import { Twemoji } from './Twemoji'
 import { ServerDetail } from './ServerDetail'
 import { computeRemainingValue, formatMoney } from './value'
@@ -861,16 +868,54 @@ export function TrafficChart({ daily, containerClass = 'detail-chart' }: { daily
 }
 
 export function TrafficDialog({ server, close }: { server: ProbeServer; close: () => void }) {
+  const hasPeriod = hasTrafficPeriod(server)
+  const [range, setRange] = useState<TrafficRange>(() => (hasPeriod ? 'period' : 'recent7'))
+  const rows = dailyTrafficRows(server, range)
+  const total = rows.reduce((sum, row) => sum + (row.total || row.uplink + row.downlink), 0)
+  const formula = trafficFormulaLabel(server)
   return createPortal(
-    <div className="modal-backdrop" role="presentation" onMouseDown={close}>
-      <section className="modal" onMouseDown={(e) => e.stopPropagation()} onClick={(e) => e.stopPropagation()}>
+    <div className='modal-backdrop' role='presentation' onMouseDown={close}>
+      <section className='modal' onMouseDown={(e) => e.stopPropagation()} onClick={(e) => e.stopPropagation()}>
         <header>
-          <h2>{server.name} · 日流量趋势</h2>
-          <button aria-label="关闭" onClick={close}>
+          <h2>{server.name} · 原始上下行日流量趋势</h2>
+          <button type='button' aria-label='关闭' onClick={close}>
             ×
           </button>
         </header>
-        <TrafficChart daily={server.daily_traffic || []} containerClass="chart" />
+        <div className='traffic-dialog-toolbar'>
+          <div className='traffic-range' role='group' aria-label='趋势范围'>
+            {hasPeriod && (
+              <button
+                type='button'
+                className={range === 'period' ? 'active' : ''}
+                onClick={() => setRange('period')}
+              >
+                当前周期
+              </button>
+            )}
+            <button
+              type='button'
+              className={range === 'recent7' ? 'active' : ''}
+              onClick={() => setRange('recent7')}
+            >
+              最近 7 日
+            </button>
+          </div>
+          <strong>
+            {range === 'period' ? '当前周期' : '最近 7 日'}原始合计：{bytes(total, false)}
+          </strong>
+          <small>
+            趋势展示原始上、下行，不应用计费方向或对账调整；卡片按{trafficRuleLabel(server)}计费
+            {formula ? `（${formula}）` : ''}。
+          </small>
+        </div>
+        <div className='chart'>
+          {rows.length === 0 ? (
+            <div className='empty traffic-empty'>暂无每日流量趋势数据</div>
+          ) : (
+            <TrafficChart daily={rows} containerClass='chart' />
+          )}
+        </div>
       </section>
     </div>,
     document.body,

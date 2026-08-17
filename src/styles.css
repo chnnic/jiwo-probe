@@ -1087,6 +1087,52 @@ button {
   color: var(--muted);
   text-align: center;
 }
+/* 原始上下行日流量趋势弹窗工具栏(照上游 6221dd1 bug fix) */
+.traffic-dialog-toolbar {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 8px 14px;
+  margin: 14px 0 8px;
+}
+.traffic-dialog-toolbar > strong {
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 500;
+}
+.traffic-dialog-toolbar > small {
+  grid-column: 1 / -1;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.5;
+}
+.traffic-range {
+  display: inline-flex;
+  overflow: hidden;
+  width: max-content;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+}
+.traffic-range button {
+  padding: 5px 10px;
+  border: 0;
+  color: var(--muted);
+  background: transparent;
+  font: inherit;
+  font-size: 11px;
+  cursor: pointer;
+}
+.traffic-range button + button {
+  border-left: 1px solid var(--border);
+}
+.traffic-range button.active {
+  color: #fff;
+  background: var(--primary);
+}
+.traffic-empty {
+  height: 100%;
+  padding: 0;
+}
 footer {
   padding: 20px;
   color: var(--muted);

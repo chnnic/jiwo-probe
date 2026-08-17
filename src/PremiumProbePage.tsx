@@ -31,7 +31,12 @@ import { parseThemeName } from './use-probe'
 import { EXTRA_LICENSE_BADGES, HEADER_LICENSE_BADGES } from './license-badges'
 import { FLAG_OPTIONS } from './country-flag'
 import { displayServerName } from './server-name'
-import { trafficRuleLabel } from './traffic-display'
+import {
+  dailyTrafficRows,
+  hasTrafficPeriod,
+  trafficRuleLabel,
+  type TrafficRange,
+} from './traffic-display'
 import { BlackGoldGlobe, type PremiumProbeRegion } from './BlackGoldGlobe'
 import './premium-probe.css'
 
@@ -2062,7 +2067,15 @@ function ServerDetailDrawer({
   const mem = resourcePercentage(server.mem_used, server.mem_total)
   const disk = resourcePercentage(server.disk_used, server.disk_total)
   const latency = averageLatency(server)
-  const traffic = summarizeSevenDayTraffic([server])
+  // 原始上下行日流量: 周期/最近7日切换(照上游 6221dd1 + 主控 drawer)
+  const hasDailyPeriod = hasTrafficPeriod(server)
+  const [trafficRange, setTrafficRange] = useState<TrafficRange>(() =>
+    hasDailyPeriod ? 'period' : 'recent7',
+  )
+  const traffic = dailyTrafficRows(server, trafficRange).map((item) => ({
+    ...item,
+    total: item.total || item.uplink + item.downlink,
+  }))
   const maxTraffic = Math.max(1, ...traffic.map((item) => item.total))
   // 流量计费口径(照主控 premium drawer: 本周期计费用量/原始周期/校准调整/对账/周期/开机网卡)
   const accounting =
@@ -2177,22 +2190,49 @@ function ServerDetailDrawer({
           </section>
         )}
         <section className='premium-probe-drawer-section'>
-          <h3>近 7 日流量</h3>
+          <div className='premium-probe-traffic-heading'>
+            <h3>原始上下行日流量</h3>
+            <div role='group' aria-label='趋势范围'>
+              {hasDailyPeriod && (
+                <button
+                  type='button'
+                  className={trafficRange === 'period' ? 'is-active' : ''}
+                  onClick={() => setTrafficRange('period')}
+                >
+                  当前周期
+                </button>
+              )}
+              <button
+                type='button'
+                className={trafficRange === 'recent7' ? 'is-active' : ''}
+                onClick={() => setTrafficRange('recent7')}
+              >
+                最近 7 日
+              </button>
+            </div>
+          </div>
+          <p className='premium-probe-traffic-note'>
+            以下为原始上、下行，不应用计费方向或对账调整。
+          </p>
           <div className='premium-probe-drawer-traffic'>
-            {traffic.map((item) => (
-              <div key={item.date}>
-                <span>{item.date.slice(5)}</span>
-                <i>
-                  <b
-                    style={{ width: `${(item.downlink / maxTraffic) * 100}%` }}
-                  />
-                  <b
-                    style={{ width: `${(item.uplink / maxTraffic) * 100}%` }}
-                  />
-                </i>
-                <strong>{formatTrafficCompact(item.total)}</strong>
-              </div>
-            ))}
+            {traffic.length === 0 ? (
+              <p>暂无每日流量数据</p>
+            ) : (
+              traffic.map((item) => (
+                <div key={item.date}>
+                  <span>{item.date.slice(5)}</span>
+                  <i>
+                    <b
+                      style={{ width: `${(item.downlink / maxTraffic) * 100}%` }}
+                    />
+                    <b
+                      style={{ width: `${(item.uplink / maxTraffic) * 100}%` }}
+                    />
+                  </i>
+                  <strong>{formatTrafficCompact(item.total)}</strong>
+                </div>
+              ))
+            )}
           </div>
         </section>
         <section className='premium-probe-drawer-section'>

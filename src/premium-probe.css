@@ -3075,6 +3075,46 @@
   line-height: 1.5;
 }
 
+/* 原始上下行日流量: 周期/最近7日切换(照上游 6221dd1) */
+.premium-probe-traffic-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.65rem;
+  margin-bottom: 0.45rem;
+}
+.premium-probe-traffic-heading h3 {
+  margin: 0;
+}
+.premium-probe-traffic-heading > div {
+  display: inline-flex;
+  overflow: hidden;
+  border: 1px solid rgba(216, 180, 106, 0.18);
+  border-radius: 0.25rem;
+}
+.premium-probe-traffic-heading button {
+  padding: 0.28rem 0.42rem;
+  color: #827a6c;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  font-size: 0.56rem;
+  cursor: pointer;
+}
+.premium-probe-traffic-heading button + button {
+  border-left: 1px solid rgba(216, 180, 106, 0.18);
+}
+.premium-probe-traffic-heading button.is-active {
+  color: #17130d;
+  background: #d8b46a;
+}
+.premium-probe-traffic-note {
+  margin: 0 0 0.45rem;
+  color: #827a6c;
+  font-size: 0.6rem;
+  line-height: 1.45;
+}
+
 .premium-probe-drawer-traffic > div {
   display: grid;
   min-height: 28px;
@@ -4030,5 +4070,22 @@
 }
 :root.theme-premium.platinum .premium-probe-drawer-accounting span,
 :root.theme-premium.platinum .premium-probe-drawer-accounting p {
+  color: #746b5c;
+}
+/* 白金: 原始上下行日流量切换按钮/说明(浅底深字) */
+:root.theme-premium.platinum .premium-probe-traffic-heading > div {
+  border-color: rgba(168, 124, 34, 0.25);
+}
+:root.theme-premium.platinum .premium-probe-traffic-heading button {
+  color: #746b5c;
+}
+:root.theme-premium.platinum .premium-probe-traffic-heading button + button {
+  border-left-color: rgba(168, 124, 34, 0.25);
+}
+:root.theme-premium.platinum .premium-probe-traffic-heading button.is-active {
+  color: #fff4cb;
+  background: linear-gradient(100deg, #4a300d, #d7a63d 48%, #6b4712);
+}
+:root.theme-premium.platinum .premium-probe-traffic-note {
   color: #746b5c;
 }
