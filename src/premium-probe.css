@@ -3371,10 +3371,9 @@
   color: #5f5244;
   background: rgba(168, 124, 34, 0.06);
 }
-/* 白金: 服务器摘要筛选按钮(全部/在线/离线)照主控统计卡 — 淡金底+浅金边 78px 卡,
-   选中深棕金渐变+浅金字(2026-08-17) */
+/* 白金: 服务器摘要筛选按钮(全部/在线/离线)高度与"全部地区"label 一致(38px, 2026-08-17) */
 :root.theme-premium.platinum .premium-probe-filters button {
-  min-height: 78px;
+  min-height: 38px;
   padding: 0 1.1rem;
   color: #2c251a;
   font-size: 1rem;
@@ -3944,7 +3943,7 @@
   }
 }
 
-/* 手机端: 白金筛选按钮行均分 + 地区选择独占第二行(一行放不下, 2026-08-17) */
+/* 手机端: 白金筛选统计卡与"全部地区"label 同高(38px), 按钮均分一行 + 地区选择独占第二行 */
 @media (max-width: 760px) {
   :root.theme-premium.platinum .premium-probe-filters {
     row-gap: 0.35rem;
@@ -3952,6 +3951,9 @@
   :root.theme-premium.platinum .premium-probe-filters button {
     flex: 1 1 0;
     min-width: 0;
+    min-height: 38px;
+    padding: 0 0.8rem;
+    font-size: 0.85rem;
   }
   :root.theme-premium.platinum .premium-probe-filters label {
     flex-basis: 100%;
