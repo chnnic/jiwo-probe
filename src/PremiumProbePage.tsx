@@ -27,6 +27,7 @@ import type {
   ProbePayload,
 } from './types'
 import { Twemoji } from './Twemoji'
+import { parseThemeName } from './use-probe'
 import { EXTRA_LICENSE_BADGES, HEADER_LICENSE_BADGES } from './license-badges'
 import { FLAG_OPTIONS } from './country-flag'
 import { displayServerName } from './server-name'
@@ -2244,6 +2245,24 @@ export function PremiumProbePage({
     const saved = localStorage.getItem('premium-probe-color-mode')
     return saved === 'platinum' || saved === 'dark' ? saved : 'auto'
   })
+  // 用户手动点过按钮后, 主控下发不再驱动配色
+  const manualColorRef = useRef(false)
+  // 主控下发驱动: 纯 premium → auto; premiumplatinum/premiumlight → 白金。
+  // 仅当用户从未在探针上选过配色(localStorage 无 premium-probe-color-mode)时才驱动;
+  // 用户点过(含 auto)即持久记忆, 刷新后主控黑金/白金也不覆盖(2026-08-17 用户规则)
+  useEffect(() => {
+    if (manualColorRef.current) return
+    if (localStorage.getItem('premium-probe-color-mode')) return
+    const themeRaw = data?.appearance?.theme
+    if (!themeRaw) return
+    const parsed = parseThemeName(themeRaw)
+    if (parsed.platinum) {
+      if (colorMode !== 'platinum') setColorMode('platinum')
+    } else if (colorMode !== 'auto') {
+      setColorMode('auto')
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data?.appearance?.theme])
   const [autoPlatinum, setAutoPlatinum] = useState<boolean>(() => {
     if (typeof window === 'undefined') return true
     const now = new Date()
@@ -2269,6 +2288,7 @@ export function PremiumProbePage({
     return () => window.clearInterval(timer)
   }, [colorMode])
   const cycleColorMode = () => {
+    manualColorRef.current = true
     setColorMode((prev) => (prev === 'auto' ? 'platinum' : prev === 'platinum' ? 'dark' : 'auto'))
   }
   // 底部许可证动画开关（默认开，localStorage 记忆）
