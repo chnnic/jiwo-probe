@@ -2387,7 +2387,7 @@ function ProbeLicenseNameplate({ name, displayName }: { name?: string; displayNa
     if (!plate || !text || !stars || !shine) return
 
     const palette = document.documentElement.classList.contains('platinum')
-      ? ['#8a6210', '#a87c22', '#c9962b', '#d7a63d', '#6f4e0c']
+      ? ['#8c5d17', '#d7a63d', '#f2d78a', '#fff1b9', '#c78e24']
       : ['#f2d28b', '#d8b46a', '#e0b96e', '#f5c542', '#f3ecdc']
     const random = (min: number, max: number) => min + Math.random() * (max - min)
     const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(max, value))
@@ -2424,7 +2424,7 @@ function ProbeLicenseNameplate({ name, displayName }: { name?: string; displayNa
     let frameID = 0
     const start = performance.now()
     const frame = (now: number) => {
-      const progress = ((now - start) % 5500) / 5500
+      const progress = ((now - start) % 5596) / 5596
       const reveal = clamp(progress / 0.36, 0, 1)
       let rotateX = 0
       let scale = 1

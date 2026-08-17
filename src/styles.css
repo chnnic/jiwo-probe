@@ -3431,12 +3431,15 @@ footer a:hover {
   background: linear-gradient(90deg, #8f651d, #e5c367);
   border-color: #a87c22;
 }
-/* 白金: 许可证徽章浅色化(替代默认砖橙/棕) */
+/* 白金: 许可证铭牌照主控白金原色(深棕金渐变+浅金字, 替代浅色化 — 主控 theme-premium light 实测, 2026-08-17) */
 :root.theme-lumina.platinum .probe-license-nameplate {
-  border-color: rgba(168, 124, 34, 0.45);
-  background: linear-gradient(135deg, #fffdf8 0%, #f7f4ec 48%, #eee9de 100%);
-  box-shadow: 2px 2px 0 rgba(70, 48, 10, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.85);
-  color: #6f4e0c;
+  border-color: #b47a1c;
+  background: linear-gradient(100deg, #4a300d, #d7a63d 48%, #6b4712);
+  box-shadow: 0 0 16px -7px #d7a63d;
+  color: #fff4cb;
+}
+:root.theme-lumina.platinum .probe-license-nameplate .probe-license-text {
+  text-shadow: 0 1px #4b3009;
 }
 /* 白金: 页面角落金色光斑(浅底版) */
 :root.theme-lumina.platinum .app-shell {

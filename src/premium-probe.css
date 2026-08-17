@@ -3486,16 +3486,7 @@
 :root.theme-premium.platinum .premium-probe-resource i {
   background: rgba(70, 48, 10, 0.1);
 }
-/* 许可证铭牌白金化(动画版: 浅金底深棕字; 静态版: 浅金边) */
-:root.theme-premium.platinum .license-nameplate {
-  border-color: #a87c22;
-  background: linear-gradient(100deg, #fffdf8, #d7c59a 48%, #f1e8d5);
-  box-shadow: 0 0 16px -7px #a87c22;
-}
-:root.theme-premium.platinum .license-nameplate .np-text {
-  color: #6f4e0c;
-  text-shadow: none;
-}
+/* 白金: 许可证铭牌照主控白金原色(不浅色化 — 主控 theme-premium light 实测为深棕金渐变+浅金字, 2026-08-17) */
 :root.theme-premium.platinum .license-nameplate.is-static {
   border-color: rgba(168, 124, 34, 0.32);
 }

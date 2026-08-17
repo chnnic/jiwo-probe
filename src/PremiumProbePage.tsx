@@ -38,7 +38,7 @@ function cn(...values: Array<string | false | null | undefined>): string {
   return values.filter(Boolean).join(' ')
 }
 
-const LICENSE_CYCLE_MS = 5500
+const LICENSE_CYCLE_MS = 5596 // 主控 license-nameplate 实测周期(2026-08-17)
 const LICENSE_REVEAL_END = 0.36
 const licenseStarPalette = ['#8c5d17', '#d7a63d', '#f2d78a', '#fff1b9', '#c78e24']
 const licenseClamp = (value: number, min: number, max: number) =>
