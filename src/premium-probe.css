@@ -312,6 +312,19 @@
   height: 0.95rem;
 }
 
+/* 顶栏水印/配色三态开关: 加大到 36px 高 + 18px 图标(2026-08-17) */
+.premium-probe-page .premium-probe-watermark-toggle,
+.premium-probe-page .premium-probe-platinum-toggle {
+  min-height: 36px;
+  padding: 0.4rem 0.85rem;
+  font-size: 0.85rem;
+}
+.premium-probe-page .premium-probe-watermark-toggle svg,
+.premium-probe-page .premium-probe-platinum-toggle svg {
+  width: 1.125rem;
+  height: 1.125rem;
+}
+
 /* 主题切换下拉（黑金风，复用 .premium-probe-login 按钮外观） */
 .premium-probe-theme-select {
   position: relative;
