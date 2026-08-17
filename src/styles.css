@@ -1268,7 +1268,9 @@ footer a:hover {
 }
 .modal {
   position: relative;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
+  max-height: calc(100vh - 36px);
   width: 85vw;
   min-width: 0;
   max-width: 100%;
