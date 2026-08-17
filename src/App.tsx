@@ -745,7 +745,7 @@ const TRAFFIC_LINES = [
   { key: 'downlink', label: '下行流量', stroke: '#22c55e' },
 ] as const
 
-export function TrafficChart({ daily, containerClass = 'detail-chart' }: { daily: ProbeServer['daily_traffic']; containerClass?: string }) {
+export function TrafficChart({ daily, containerClass = 'detail-chart', showRange = true }: { daily: ProbeServer['daily_traffic']; containerClass?: string; showRange?: boolean }) {
   const rows = daily || []
   const chartRef = useRef<HTMLDivElement>(null)
   const [trafficRange, setTrafficRange] = useState<'all' | '7d' | '30d'>('7d')
@@ -754,10 +754,11 @@ export function TrafficChart({ daily, containerClass = 'detail-chart' }: { daily
   const [hidden, setHidden] = useState<Set<string>>(new Set())
   const shown = useMemo(() => {
     if (!rows.length) return []
+    if (!showRange) return rows // 外部已按周期/最近7日过滤(弹窗/drawer 场景)
     if (trafficRange === 'all') return rows
     const days = trafficRange === '7d' ? 7 : 30
     return rows.slice(-days)
-  }, [rows, trafficRange])
+  }, [rows, trafficRange, showRange])
   const fitZoom = () => {
     const el = chartRef.current
     if (!el || !shown.length) return
@@ -787,15 +788,19 @@ export function TrafficChart({ daily, containerClass = 'detail-chart' }: { daily
   return (
     <>
       <div className="ranges">
-        <button type="button" className={trafficRange === 'all' ? 'active' : ''} onClick={() => setTrafficRange('all')}>
-          全部
-        </button>
-        <button type="button" className={trafficRange === '7d' ? 'active' : ''} onClick={() => setTrafficRange('7d')}>
-          7日
-        </button>
-        <button type="button" className={trafficRange === '30d' ? 'active' : ''} onClick={() => setTrafficRange('30d')}>
-          30日
-        </button>
+        {showRange && (
+          <>
+            <button type="button" className={trafficRange === 'all' ? 'active' : ''} onClick={() => setTrafficRange('all')}>
+              全部
+            </button>
+            <button type="button" className={trafficRange === '7d' ? 'active' : ''} onClick={() => setTrafficRange('7d')}>
+              7日
+            </button>
+            <button type="button" className={trafficRange === '30d' ? 'active' : ''} onClick={() => setTrafficRange('30d')}>
+              30日
+            </button>
+          </>
+        )}
         <span className="ranges-sep" />
         <button
           type="button"
@@ -913,7 +918,7 @@ export function TrafficDialog({ server, close }: { server: ProbeServer; close: (
           {rows.length === 0 ? (
             <div className='empty traffic-empty'>暂无每日流量趋势数据</div>
           ) : (
-            <TrafficChart daily={rows} containerClass='chart' />
+            <TrafficChart daily={rows} containerClass='chart' showRange={false} />
           )}
         </div>
       </section>
