@@ -1,17 +1,17 @@
-const emojiPattern = /(?:\p{Extended_Pictographic}|\p{Regional_Indicator}|[#*0-9]\uFE0F?\u20E3)/u
+const leadingCountryFlagPattern = /^\s*[\u{1F1E6}-\u{1F1FF}]{2}\s*/u
 
 /**
- * Adds the generated region flag only when the configured server name does not
- * already contain an emoji. This avoids labels such as "🇯🇵 🇯🇵 Tokyo" while
- * keeping the original configured name untouched.
+ * Keeps the country flag consistent with the authoritative public region
+ * fields. A stale leading flag is replaced for display only; the configured
+ * server name is not modified.
  */
 export function displayServerName(
   name: string | undefined,
   fallback: string,
-  generatedEmoji = '',
+  generatedEmoji = ''
 ): string {
   const label = name?.trim() || fallback
-  return generatedEmoji && !emojiPattern.test(label)
-    ? `${generatedEmoji} ${label}`
-    : label
+  if (!generatedEmoji) return label
+  const withoutStaleFlag = label.replace(leadingCountryFlagPattern, '').trim()
+  return `${generatedEmoji} ${withoutStaleFlag || fallback}`
 }

@@ -1,8 +1,7 @@
 export type ThemeName = 'pixel' | 'flat' | 'anime' | 'glass' | 'lumina' | 'premium' | 'ran' | 'glassmorphism'
 
 export interface ProbeAppearance {
-  // theme 是主控下发名，可为任意自定义主题名（探针挂 theme-{name} 类，无对应 CSS 时回退默认）
-  theme: string
+  theme: ThemeName
   color_mode?: 'light' | 'dark' | 'system'
   revision?: string
 }
@@ -31,20 +30,28 @@ export interface ProbeServer {
   upload_speed?: number
   download_speed?: number
   traffic_used?: number
-  traffic_limit?: number
   traffic_used_up?: number
   traffic_used_down?: number
   traffic_used_total?: number
+  traffic_limit?: number
+  traffic_source?: 'xray' | 'system'
+  traffic_stats_mode?: 'both' | 'upload' | 'download' | 'max'
   traffic_adjustment?: number
-  traffic_source?: string
-  traffic_stats_mode?: string
-  boot_traffic_up?: number
-  boot_traffic_down?: number
-  boot_traffic_scope?: string
+  traffic_used_scope?: 'configured_period' | 'counter_since_reset' | string
   period_start?: string
   period_end?: string
+  daily_traffic_scope?:
+    | 'configured_period_and_recent_7d'
+    | 'recent_7d'
+    | string
+  daily_traffic_start?: string
+  daily_traffic_end?: string
+  boot_traffic_up?: number
+  boot_traffic_down?: number
+  boot_traffic_scope?: 'current_boot' | string
   cumulative_up?: number
   cumulative_down?: number
+  cumulative_traffic_scope?: 'current_boot' | string
   daily_traffic?: Array<{
     date: string
     uplink: number

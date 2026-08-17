@@ -66,16 +66,16 @@ function LaserBeam({ from, to, projection, delayMs }: { from: [number, number]; 
 export function RegionGlobe({ regions }: { regions: string[] }) {
   const [rotation, setRotation] = useState<[number, number]>([-105, -18])
   const drag = useRef<{ x: number; y: number; rotation: [number, number] } | undefined>(undefined)
-  // 地区拓扑以首次展开时的快照为准，避免探针轮询导致全量弧线重建和动画重启。
-  const initialRegionKey = useRef(regions.filter(Boolean).join('\u0001')).current
+  // 地区集合不变时保持 key 稳定；节点地区变化时同步刷新地图高亮。
+  const regionKey = [...regions].filter(Boolean).sort().join('\u0001')
   const activeRegions = useMemo(() => {
     const result = new Map<string, number>()
-    for (const region of initialRegionKey.split('\u0001')) {
+    for (const region of regionKey.split('\u0001')) {
       const code = countryCode(region)
       if (code) result.set(code, (result.get(code) || 0) + 1)
     }
     return result
-  }, [initialRegionKey])
+  }, [regionKey])
   const collection = useMemo(() => feature(
     world as unknown as Topology,
     (world as unknown as Topology).objects.countries as GeometryCollection,

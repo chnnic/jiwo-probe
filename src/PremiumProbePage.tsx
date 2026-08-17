@@ -31,6 +31,7 @@ import { parseThemeName } from './use-probe'
 import { EXTRA_LICENSE_BADGES, HEADER_LICENSE_BADGES } from './license-badges'
 import { FLAG_OPTIONS } from './country-flag'
 import { displayServerName } from './server-name'
+import { trafficRuleLabel } from './traffic-display'
 import { BlackGoldGlobe, type PremiumProbeRegion } from './BlackGoldGlobe'
 import './premium-probe.css'
 
@@ -2069,22 +2070,7 @@ function ServerDetailDrawer({
       ? null
       : {
           used: formatTrafficCompact(server.traffic_used),
-          meter: [
-            server.traffic_source === 'system'
-              ? '系统网卡'
-              : server.traffic_source === 'v2ray'
-                ? 'V2Ray 统计'
-                : server.traffic_source || '',
-            server.traffic_stats_mode === 'both'
-              ? '上行 + 下行'
-              : server.traffic_stats_mode === 'oneway'
-                ? '单向(仅上行)'
-                : server.traffic_stats_mode === 'oneway_down'
-                  ? '单向(仅下行)'
-                  : server.traffic_stats_mode || '',
-          ]
-            .filter(Boolean)
-            .join(' · '),
+          meter: trafficRuleLabel(server),
           rawUp: formatTrafficCompact(server.traffic_used_up ?? 0),
           rawDown: formatTrafficCompact(server.traffic_used_down ?? 0),
           hasRaw:
