@@ -1349,6 +1349,15 @@ footer a:hover {
   .modal .chart { height: min(38vh, 250px); height: min(38dvh, 250px); }
   .traffic-dialog-toolbar { margin: 10px 0 4px; gap: 6px 10px; }
   .traffic-line-toggle { margin: 6px 0 0; }
+  /* 手机端: 图表缩放按钮(缩小/适应/放大)加大, 便于点击 */
+  .modal .ranges { gap: 8px; margin: 10px 0 6px; }
+  .modal .ranges .zoom-btn {
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    border-radius: var(--radius);
+  }
+  .modal .ranges .zoom-btn svg { width: 17px; height: 17px; }
 }
 .ranges {
   display: flex;
