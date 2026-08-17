@@ -141,7 +141,37 @@ export function applyAppearance(input?: ProbeAppearance) {
   root.classList.add(`theme-${theme}`)
   const darkOverride = localStorage.getItem(DARK_OVERRIDE)
   let dark: boolean
-  if (darkOverride === 'gold' || (parsed.gold && !themeOverride && !darkOverride)) {
+  // premium 配色三态(auto/白金/黑金, 由 PremiumProbePage 控制 localStorage premium-probe-color-mode):
+  // applyAppearance 在 WS/轮询每帧(5s)都会跑, 必须尊重三态, 否则 remove('platinum') 会冲掉
+  // auto/手动白金类造成白金黑金横跳(2026-08-17 用户实测)
+  if (theme === 'premium') {
+    const premiumMode = localStorage.getItem('premium-probe-color-mode')
+    if (premiumMode === 'platinum') {
+      root.classList.add('platinum')
+      dark = false
+    } else if (premiumMode === 'auto') {
+      const now = new Date()
+      const hour = (now.getUTCHours() + 8) % 24 // 北京时间(UTC+8)
+      root.classList.toggle('platinum', hour >= 6 && hour < 18)
+      dark = false
+    } else if (premiumMode === 'dark') {
+      dark = false // premium 基础样式即黑金, 不挂 dark 类
+    } else if (darkOverride === 'platinum' || (parsed.platinum && !themeOverride && !darkOverride)) {
+      // 未设置三态时沿用旧逻辑: 手动 darkOverride 或主控下发 premiumplatinum → 白金
+      root.classList.add('platinum')
+      dark = false
+    } else if (darkOverride === 'gold') {
+      root.classList.add('gold')
+      dark = false
+    } else if (darkOverride === 'dark') {
+      dark = true
+    } else if (darkOverride === 'light') {
+      dark = false
+    } else {
+      dark = appearance.color_mode === 'dark' ||
+        (appearance.color_mode === 'system' && matchMedia('(prefers-color-scheme: dark)').matches)
+    }
+  } else if (darkOverride === 'gold' || (parsed.gold && !themeOverride && !darkOverride)) {
     // 黑金配色（lumina 第三配色）: 不挂 dark, 挂 gold。
     // 手动 override 为 gold，或主控下发组合名且用户从未手动干预（主题/配色都没选过）才进入。
     // 用户一旦手动切过配色（darkOverride 任意值），主控的 gold 不再强制，尊重用户选择。
