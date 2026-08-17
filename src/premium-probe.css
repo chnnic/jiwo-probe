@@ -3943,3 +3943,19 @@
     font-size: 0.85rem;
   }
 }
+
+/* 手机端: 白金筛选按钮行均分 + 地区选择独占第二行(一行放不下, 2026-08-17) */
+@media (max-width: 760px) {
+  :root.theme-premium.platinum .premium-probe-filters {
+    row-gap: 0.35rem;
+  }
+  :root.theme-premium.platinum .premium-probe-filters button {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+  :root.theme-premium.platinum .premium-probe-filters label {
+    flex-basis: 100%;
+    width: 100%;
+    margin-left: 0;
+  }
+}
