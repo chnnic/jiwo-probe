@@ -914,13 +914,11 @@ export function TrafficDialog({ server, close }: { server: ProbeServer; close: (
             {formula ? `（${formula}）` : ''}。
           </small>
         </div>
-        <div className='chart'>
-          {rows.length === 0 ? (
-            <div className='empty traffic-empty'>暂无每日流量趋势数据</div>
-          ) : (
-            <TrafficChart daily={rows} containerClass='chart' showRange={false} />
-          )}
-        </div>
+        {rows.length === 0 ? (
+          <div className='empty traffic-empty'>暂无每日流量趋势数据</div>
+        ) : (
+          <TrafficChart daily={rows} containerClass='chart' showRange={false} />
+        )}
       </section>
     </div>,
     document.body,

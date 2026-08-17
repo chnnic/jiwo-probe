@@ -1270,7 +1270,8 @@ footer a:hover {
   position: relative;
   overflow-x: hidden;
   overflow-y: auto;
-  max-height: calc(100vh - 36px);
+  max-height: calc(100vh - 12px);
+  max-height: calc(100dvh - 12px);
   width: 85vw;
   min-width: 0;
   max-width: 100%;
@@ -1335,6 +1336,19 @@ footer a:hover {
 .chart-scroll-inner { height: 100%; }
 @media (max-width: 640px) {
   .modal { width: 90vw; padding: 18px 14px; }
+}
+/* 手机端: 趋势弹窗撑满屏幕(减少上下滑动, 三线按钮直接可见) */
+@media (max-width: 640px) {
+  .modal-backdrop { padding: 6px; }
+  .modal {
+    width: calc(100vw - 12px);
+    max-height: calc(100vh - 12px);
+    max-height: calc(100dvh - 12px);
+    padding: 14px 12px;
+  }
+  .modal .chart { height: min(38vh, 250px); height: min(38dvh, 250px); }
+  .traffic-dialog-toolbar { margin: 10px 0 4px; gap: 6px 10px; }
+  .traffic-line-toggle { margin: 6px 0 0; }
 }
 .ranges {
   display: flex;
@@ -1411,7 +1425,8 @@ footer a:hover {
 }
 .chart {
   position: relative;
-  height: 300px;
+  height: min(42vh, 300px);
+  height: min(42dvh, 300px);
 }
 .loading,
 .loading-overlay,
