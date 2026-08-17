@@ -3045,6 +3045,36 @@
   font-size: 0.74rem;
 }
 
+/* 流量计费口径(照主控 premium drawer, 2026-08-17) */
+.premium-probe-drawer-accounting {
+  display: grid;
+  gap: 0.35rem;
+  padding: 0.7rem;
+  border: 1px solid rgba(216, 180, 106, 0.2);
+  background: rgba(216, 180, 106, 0.035);
+}
+.premium-probe-drawer-accounting > div {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  margin-bottom: 0.1rem;
+}
+.premium-probe-drawer-accounting span {
+  color: #827a6c;
+  font-size: 0.62rem;
+}
+.premium-probe-drawer-accounting strong {
+  color: var(--pp-gold-bright);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+.premium-probe-drawer-accounting p {
+  margin: 0;
+  color: #827a6c;
+  font-size: 0.62rem;
+  line-height: 1.5;
+}
+
 .premium-probe-drawer-traffic > div {
   display: grid;
   min-height: 28px;
@@ -3573,6 +3603,7 @@
 :root.theme-premium.platinum .premium-probe-daily-list small:first-of-type,
 :root.theme-premium.platinum .premium-probe-drawer > header h2,
 :root.theme-premium.platinum .premium-probe-drawer-health span,
+:root.theme-premium.platinum .premium-probe-drawer-accounting strong,
 :root.theme-premium.platinum .premium-probe-drawer-metrics strong,
 :root.theme-premium.platinum .premium-probe-drawer-pings strong,
 :root.theme-premium.platinum .premium-probe-drawer-routes b,
@@ -3990,4 +4021,14 @@
     width: 100%;
     margin-left: 0;
   }
+}
+
+/* 白金: 流量计费口径面板(照主控 light 实测: 淡金底+浅金边, 说明文字 muted #746b5c) */
+:root.theme-premium.platinum .premium-probe-drawer-accounting {
+  border-color: rgba(168, 124, 34, 0.2);
+  background: rgba(168, 124, 34, 0.035);
+}
+:root.theme-premium.platinum .premium-probe-drawer-accounting span,
+:root.theme-premium.platinum .premium-probe-drawer-accounting p {
+  color: #746b5c;
 }

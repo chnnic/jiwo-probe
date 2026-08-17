@@ -2063,6 +2063,58 @@ function ServerDetailDrawer({
   const latency = averageLatency(server)
   const traffic = summarizeSevenDayTraffic([server])
   const maxTraffic = Math.max(1, ...traffic.map((item) => item.total))
+  // 流量计费口径(照主控 premium drawer: 本周期计费用量/原始周期/校准调整/对账/周期/开机网卡)
+  const accounting =
+    server.traffic_used === undefined
+      ? null
+      : {
+          used: formatTrafficCompact(server.traffic_used),
+          meter: [
+            server.traffic_source === 'system'
+              ? '系统网卡'
+              : server.traffic_source === 'v2ray'
+                ? 'V2Ray 统计'
+                : server.traffic_source || '',
+            server.traffic_stats_mode === 'both'
+              ? '上行 + 下行'
+              : server.traffic_stats_mode === 'oneway'
+                ? '单向(仅上行)'
+                : server.traffic_stats_mode === 'oneway_down'
+                  ? '单向(仅下行)'
+                  : server.traffic_stats_mode || '',
+          ]
+            .filter(Boolean)
+            .join(' · '),
+          rawUp: formatTrafficCompact(server.traffic_used_up ?? 0),
+          rawDown: formatTrafficCompact(server.traffic_used_down ?? 0),
+          hasRaw:
+            server.traffic_used_up !== undefined ||
+            server.traffic_used_down !== undefined,
+          adj:
+            server.traffic_adjustment === undefined
+              ? null
+              : `${server.traffic_adjustment < 0 ? '−' : '+'}${formatTrafficCompact(Math.abs(server.traffic_adjustment))}`,
+          recon:
+            server.traffic_used_total !== undefined &&
+            server.traffic_adjustment !== undefined
+              ? `${formatTrafficCompact(server.traffic_used_total)} ${
+                  server.traffic_adjustment < 0 ? '−' : '+'
+                } ${formatTrafficCompact(Math.abs(server.traffic_adjustment))} = ${formatTrafficCompact(server.traffic_used)}`
+              : null,
+          period:
+            server.period_start && server.period_end
+              ? `${server.period_start.slice(5)} — ${server.period_end.slice(5)}`
+              : null,
+          boot:
+            (server.boot_traffic_up !== undefined ||
+              server.boot_traffic_down !== undefined) &&
+            server.boot_traffic_scope !== 'all_time'
+              ? {
+                  up: formatTrafficCompact(server.boot_traffic_up ?? 0),
+                  down: formatTrafficCompact(server.boot_traffic_down ?? 0),
+                }
+              : null,
+        }
   useEffect(() => {
     const close = (event: KeyboardEvent) => event.key === 'Escape' && onClose()
     window.addEventListener('keydown', close)
@@ -2113,6 +2165,31 @@ function ServerDetailDrawer({
             <strong>{latency === undefined ? '—' : `${latency} ms`}</strong>
           </div>
         </div>
+        {accounting && (
+          <section className='premium-probe-drawer-section'>
+            <h3>流量计费口径</h3>
+            <div className='premium-probe-drawer-accounting'>
+              <div>
+                <span>本周期计费用量</span>
+                <strong>{accounting.used}</strong>
+              </div>
+              {accounting.meter && <p>计费口径：{accounting.meter}</p>}
+              {accounting.hasRaw && (
+                <p>
+                  原始周期：↑ {accounting.rawUp} · ↓ {accounting.rawDown}
+                </p>
+              )}
+              {accounting.adj && <p>校准/周期边界调整：{accounting.adj}</p>}
+              {accounting.recon && <p>对账：{accounting.recon}</p>}
+              {accounting.period && <p>周期：{accounting.period}</p>}
+              {accounting.boot && (
+                <p>
+                  本次开机网卡：↑ {accounting.boot.up} · ↓ {accounting.boot.down}
+                </p>
+              )}
+            </div>
+          </section>
+        )}
         <section className='premium-probe-drawer-section'>
           <h3>近 7 日流量</h3>
           <div className='premium-probe-drawer-traffic'>
