@@ -3802,7 +3802,20 @@
   border: 1px solid rgba(168, 124, 34, 0.62);
 }
 :root.theme-premium.platinum .premium-probe-orbit-label-count {
-  background: rgba(168, 124, 34, 0.16);
+  background: rgba(168, 124, 34, 0.2);
+}
+/* 白金轨道标签数字: 8px→12px, 盒 15px→22px, 深金 #8a6210 — 浅底不再模糊(2026-08-17) */
+:root.theme-premium.platinum .premium-probe-orbit-label-count {
+  width: 22px;
+  height: 22px;
+  flex-basis: 22px;
+  color: #8a6210;
+  font-size: 12px;
+  font-weight: 700;
+}
+/* 白金轨道标签区名 9px→11px 跟随放大, 深棕保持不变 */
+:root.theme-premium.platinum .premium-probe-orbit-label-content {
+  font-size: 11px;
 }
 :root.theme-premium.platinum .premium-probe-target-toolbar {
   background: rgba(168, 124, 34, 0.018);
