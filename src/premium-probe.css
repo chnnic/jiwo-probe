@@ -3756,7 +3756,7 @@
   background: linear-gradient(90deg, #8c641c, #e3bd63);
 }
 :root.theme-premium.platinum .premium-probe-hotspot-list i b {
-  box-shadow: 0 0 5px rgba(168, 124, 34, 0.38);
+  box-shadow: 0 0 5px rgba(216, 180, 106, 0.38);
 }
 :root.theme-premium.platinum .premium-probe-route-badges > span {
   border: 1px solid rgba(168, 124, 34, 0.4);
@@ -3773,6 +3773,7 @@
 }
 :root.theme-premium.platinum .premium-probe-resource i b {
   background: linear-gradient(90deg, #a66f19, #e7c266);
+  box-shadow: 0 0 9px -2px #a87c22;
 }
 :root.theme-premium.platinum .premium-probe-node-connections circle {
   fill: #8a6210;
@@ -3883,8 +3884,13 @@
   border: 1px solid rgba(168, 124, 34, 0.08);
 }
 :root.theme-premium.platinum .premium-probe-quota-rank i b {
-  /* 白金: 进度条统一用黑金原版金渐变(深金→亮金) */
+  /* 白金: 进度条统一用黑金原版金渐变(深金→亮金) + 主控白金金辉光 */
   background: linear-gradient(90deg, #8f651d, #e5c367);
+  box-shadow: 0 0 9px -2px #a87c22;
+}
+:root.theme-premium.platinum .premium-probe-quota-rank i {
+  /* 白金: 轨道胶囊圆角(对齐主控配额条) */
+  border-radius: 999px;
 }
 :root.theme-premium.platinum .premium-probe-renewal-track::before {
   background: linear-gradient(
