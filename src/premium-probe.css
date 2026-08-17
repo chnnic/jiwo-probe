@@ -3323,17 +3323,20 @@
     linear-gradient(90deg, rgba(70, 48, 10, 0.024) 1px, transparent 1px);
   background-size: 48px 48px;
 }
-/* 白金: 水印层 = 主控背景金色光斑(照 mmwx.289599.top theme-premium light 实测 3 处;
-   由 premium-probe-watermark-toggle 按钮开关, localStorage premium-probe-watermark) */
+/* 白金: 水印层 = 主控背景金色光斑 + premium-pro-marks 平铺水印图
+   (照 mmwx.289599.top theme-premium light 实测: body 光斑 + body:before 平铺 marks 图;
+   由 premium-probe-watermark-toggle 按钮开关, localStorage premium-probe-watermark)
+   marks 图本身金描边 #d7a63d 组透明度 .15, 与主控一致 */
 :root.theme-premium.platinum .premium-probe-watermarks {
   opacity: 1;
   background-image:
+    url('/images/premium-pro-marks.svg'),
     radial-gradient(circle at 18% 8%, rgba(168, 124, 34, 0.09), transparent 384px),
     radial-gradient(circle at 82% 72%, rgba(168, 124, 34, 0.05), transparent 448px),
     radial-gradient(circle at 70% 12%, rgba(168, 124, 34, 0.09), transparent 416px);
-  background-repeat: no-repeat, no-repeat, no-repeat;
-  background-size: auto, auto, auto;
-  background-position: 0 0, 0 0, 0 0;
+  background-repeat: repeat, no-repeat, no-repeat, no-repeat;
+  background-size: 520px 360px, auto, auto, auto;
+  background-position: 24px 18px, 0 0, 0 0, 0 0;
 }
 /* ---- 表面色 ---- */
 :root.theme-premium.platinum .premium-probe-topbar {
