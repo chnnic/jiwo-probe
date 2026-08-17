@@ -591,11 +591,12 @@ export default function GmApp({
   const [search, setSearch] = useState('')
   const [view, setView] = useState<'card' | 'list'>(() => (localStorage.getItem('probe-view') === 'list' ? 'list' : 'card'))
   const [detailIndex, setDetailIndex] = useState<number | null>(null)
-  const [colorMode, setColorMode] = useState<'light' | 'dark'>(() => {
-    // 优先级: 用户手动切过 > 主控下发(glassmorphism light/dark) > 默认夜间
+  const [colorMode, setColorMode] = useState<'auto' | 'light' | 'dark'>(() => {
+    // 优先级: 用户手动切过 > 主控下发(glassmorphism / light / dark) > 默认 auto
     const user = localStorage.getItem('gm-color-mode')
     const master = localStorage.getItem('gm-color-mode-master')
-    return (user ?? master) === 'light' ? 'light' : 'dark'
+    const saved = user ?? master
+    return saved === 'light' || saved === 'dark' ? saved : 'auto'
   })
   const [themeOverride, setThemeOverride] = useState<ThemeName | null>(() => {
     const v = localStorage.getItem('mmwx-probe-theme-override')
@@ -604,11 +605,22 @@ export default function GmApp({
 
   const toggleColorMode = () => {
     setColorMode((mode) => {
-      const next = mode === 'dark' ? 'light' : 'dark'
+      // auto → light(白色) → dark(黑色) → auto 循环
+      const next = mode === 'auto' ? 'light' : mode === 'light' ? 'dark' : 'auto'
       localStorage.setItem('gm-color-mode', next)
       return next
     })
   }
+
+  // auto 模式: 北京时间 6:00-18:00 白天(浅色), 其余夜间(深色); 与 premium auto 同口径
+  const resolvedColorMode: 'light' | 'dark' =
+    colorMode === 'auto'
+      ? (() => {
+          const now = new Date()
+          const hour = (now.getUTCHours() + 8) % 24
+          return hour >= 6 && hour < 18 ? 'light' : 'dark'
+        })()
+      : colorMode
 
   useEffect(() => {
     const applyHash = () => {
@@ -620,10 +632,21 @@ export default function GmApp({
     return () => window.removeEventListener('hashchange', applyHash)
   }, [])
 
+  // 主控下发 glassmorphism light/dark(auto) 实时跟随(主控改主题名每帧写 master; 用户手动切过则不跟随)
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      const master = localStorage.getItem('gm-color-mode-master')
+      if (!localStorage.getItem('gm-color-mode') && master) {
+        setColorMode(master === 'light' || master === 'dark' ? master : 'auto')
+      }
+    }, 30_000)
+    return () => window.clearInterval(timer)
+  }, [])
+
   // 详情页/弹窗是 portal 到 body 下, 需要在 body 上挂主题类供 CSS 变量覆盖
   useEffect(() => {
     document.body.classList.add('gm-body')
-    document.body.classList.toggle('gm-light-body', colorMode === 'light')
+    document.body.classList.toggle('gm-light-body', resolvedColorMode === 'light')
     return () => {
       document.body.classList.remove('gm-body', 'gm-light-body')
     }
@@ -647,7 +670,7 @@ export default function GmApp({
   }
 
   return (
-    <div className={`gm-app gm-${colorMode}`}>
+    <div className={`gm-app gm-${resolvedColorMode}`}>
       <div className="gm-bg" aria-hidden="true" />
       <header className="gm-header">
         <a className="gm-brand" href="#/" onClick={() => setDetailIndex(null)}>
@@ -657,12 +680,20 @@ export default function GmApp({
         <div className="gm-header-actions">
           <button
             type="button"
-            className="gm-header-btn"
-            title={colorMode === 'dark' ? '切换到白天模式' : '切换到夜间模式'}
-            aria-label={colorMode === 'dark' ? '切换到白天模式' : '切换到夜间模式'}
+            className="gm-header-btn gm-color-btn"
+            title={
+              colorMode === 'auto' ? '自动模式(北京时间6-18白天) · 点击切换' : colorMode === 'light' ? '白色模式 · 点击切换' : '黑色模式 · 点击切换'
+            }
+            aria-label={colorMode === 'auto' ? '自动模式' : colorMode === 'light' ? '白色模式' : '黑色模式'}
             onClick={toggleColorMode}
           >
-            {colorMode === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+            {colorMode === 'auto' ? (
+              <span className="gm-color-auto">自动</span>
+            ) : colorMode === 'light' ? (
+              <Sun size={18} />
+            ) : (
+              <Moon size={18} />
+            )}
           </button>
           <GmThemeMenu current={themeOverride} onChange={handleThemeChange} />
         </div>

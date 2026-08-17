@@ -55,10 +55,12 @@
 | `ran-mint` | Ran · 薄荷（薄荷绿） |
 | `ran-butter` | Ran · 奶油（奶油黄） |
 | `ran-ji` | Ran · 霁（雨后青） |
-| `glassmorphism` | Glassmorphism 玻璃拟态整页（默认夜间） |
-| `glassmorphism-light` | Glassmorphism · 白天模式（浅蓝白玻璃） |
-| `glassmorphism-dark` | Glassmorphism · 夜间模式（深蓝黑玻璃） |
+| `glassmorphism` | Glassmorphism 玻璃拟态整页（默认 **auto 模式**） |
+| `glassmorphism-light` | Glassmorphism · 白色模式（浅蓝白玻璃） |
+| `glassmorphism-dark` | Glassmorphism · 黑色模式（深蓝黑玻璃） |
 | 其他自定义名 | 经典界面 + `theme-{name}` 类（站长自写 CSS 接管） |
+
+> **auto 模式**：主控**不写明暗后缀**（如 `glassmorphism`、`pixel`、`flat`、`anime`、`glass`、`premium`）默认进入 auto——按北京时间自动切换（6:00–18:00 浅色/白金，夜间深色/黑金；premium 为白金↔黑金、glassmorphism 为白色↔黑色、经典主题为浅色↔深色）。访客侧主题内切换按钮为 **auto → 白色 → 黑色** 三态循环（glassmorphism 顶部按钮显示"自动/太阳/月亮"），手动切换后优先于主控下发。
 
 > 主控主题名仅允许字母、数字、下划线、连字符（≤64 字符），上表均为合规写法；大小写不敏感。
 
