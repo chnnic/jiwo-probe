@@ -2418,7 +2418,8 @@ footer a:hover {
   .probe-license-footer {
     flex-wrap: nowrap;
     overflow-x: auto;
-    justify-content: flex-start;
+    /* safe center: 内容不满一行时居中(时刻居中); 内容溢出时自动回退flex-start, 完整横滚可达 */
+    justify-content: safe center;
     scrollbar-width: none;
   }
   .probe-license-footer::-webkit-scrollbar {
