@@ -1416,7 +1416,7 @@ function ReturnRouteIcon({ premium }: { premium: boolean }) {
   return <Lottie animationData={premium ? premiumRouteAnimation : commonRouteAnimation} aria-hidden="true" className="route-badge-icon" loop />
 }
 
-export function ReturnRouteBadges({ routes, telecomPaidPeer, variant }: { routes: ProbeReturnRoute[]; telecomPaidPeer?: boolean; variant?: 'lumina' | 'anime' }) {
+export function ReturnRouteBadges({ routes, telecomPaidPeer, variant }: { routes: ProbeReturnRoute[]; telecomPaidPeer?: boolean; variant?: 'lumina' | 'anime' | 'glass' }) {
   const byCarrier = new Map(routes.map((route) => [route.carrier, route]))
   const items = (['telecom', 'unicom', 'mobile'] as const).map((carrier) => {
     const route = byCarrier.get(carrier)
@@ -1424,9 +1424,9 @@ export function ReturnRouteBadges({ routes, telecomPaidPeer, variant }: { routes
     const routeType = carrier === 'telecom' && telecomPaidPeer && detectedRouteType === '163' ? '163 PP' : detectedRouteType
     return { carrier, route, routeType, premium: goldRoutes.has(routeType.toUpperCase().replace(/[^A-Z0-9]/g, '')) }
   })
-  if (variant === 'lumina' || variant === 'anime') {
-    // 扁平版勋章：无 Lottie 动画、无渐变、无阴影。lumina=细边框低饱和 chip；anime=直角+紫色调 chip
-    const flat = variant === 'lumina' ? 'lumina-route' : 'anime-route'
+  if (variant === 'lumina' || variant === 'anime' || variant === 'glass') {
+    // 扁平版勋章：无 Lottie 动画、无渐变、无阴影。lumina=细边框低饱和 chip；anime=直角+紫色调 chip；glass=半透明玻璃面+镜面高光 chip（样式见 gm.css）
+    const flat = variant === 'lumina' ? 'lumina-route' : variant === 'anime' ? 'anime-route' : 'glass-route'
     return (
       <div className={`${flat}-badges`}>
         {items.map(({ carrier, route, routeType, premium }) => (

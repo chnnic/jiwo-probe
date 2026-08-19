@@ -480,7 +480,7 @@ export function ServerDetail({ server, index, onClose, showHealthScore = false }
               {!!server.return_routes?.length && (
                 <section className="detail-panel">
                   <h3>回程路由</h3>
-                  <ReturnRouteBadges routes={server.return_routes} telecomPaidPeer={server.telecom_paid_peer} variant={document.documentElement.classList.contains('theme-lumina') ? 'lumina' : document.documentElement.classList.contains('theme-anime') ? 'anime' : undefined} />
+                  <ReturnRouteBadges routes={server.return_routes} telecomPaidPeer={server.telecom_paid_peer} variant={document.documentElement.classList.contains('theme-lumina') ? 'lumina' : document.documentElement.classList.contains('theme-anime') ? 'anime' : document.documentElement.classList.contains('theme-glassmorphism') ? 'glass' : undefined} />
                 </section>
               )}
             </div>
