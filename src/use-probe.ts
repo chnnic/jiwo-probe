@@ -271,6 +271,22 @@ export function setTheme(name: ThemeName | null): ThemeName | null {
   return name
 }
 
+// 浏览器标签页图标(favicon): 主控下发的 icon 为 base64 data URI 或 URL,
+// 这里每帧幂等设置, 只有变化才动 DOM; 无图标时不干预(保留 index.html 默认)。
+let faviconHref = ''
+function applyFavicon(icon?: string) {
+  const href = (icon || '').trim()
+  if (!href || href === faviconHref) return
+  faviconHref = href
+  let link = document.querySelector<HTMLLinkElement>("link[rel~='icon']")
+  if (!link) {
+    link = document.createElement('link')
+    link.rel = 'icon'
+    document.head.appendChild(link)
+  }
+  link.href = href
+}
+
 export function useProbe(): { data?: ProbePayload; error?: string } {
   const [data, setData] = useState<ProbePayload>()
   const [error, setError] = useState<string>()
@@ -283,6 +299,7 @@ export function useProbe(): { data?: ProbePayload; error?: string } {
     const accept = (payload: ProbePayload) => {
       if (stopped) return
       applyAppearance(payload.appearance)
+      applyFavicon(payload.icon)
       setData(enrichPayload(payload))
       setError(undefined)
       if (payload.title) document.title = payload.title

@@ -102,6 +102,7 @@ export interface ProbePayload {
   show_health_score?: boolean
   title?: string
   logo?: string
+  icon?: string
   appearance?: ProbeAppearance
   license_badge?: {
     name?: string
