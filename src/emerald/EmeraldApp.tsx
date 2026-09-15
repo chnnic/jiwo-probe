@@ -36,11 +36,12 @@ import {
 } from 'lucide-react'
 import { RegionGlobe } from '../RegionGlobe'
 import { ServerDetail } from '../ServerDetail'
-import { TrafficDialog, TrendDialog } from '../App'
+import { TrafficDialog } from '../App'
+import { CardPingGroups } from '../CardPingGroups'
 import { Twemoji } from '../Twemoji'
 import { PasskeyLogin } from '../PasskeyLogin'
 import { flagToCountryCode } from '../country-flag'
-import type { ProbeBucket, ProbePayload, ProbeServer, ThemeName } from '../types'
+import type { ProbePayload, ProbeServer, ThemeName } from '../types'
 import type { EnrichedServer } from '../use-probe'
 import { getDarkOverride, setDarkOverride } from '../use-probe'
 import { computeRemainingValue, formatMoney } from '../value'
@@ -384,49 +385,6 @@ function metricTone(value: number): string {
   return value >= 90 ? 'danger' : value >= 70 ? 'warn' : 'good'
 }
 
-function latencyTone(ms: number): string {
-  if (ms < 0) return 'empty'
-  if (ms > 240) return 'bad'
-  if (ms > 180) return 'warn'
-  if (ms > 60) return 'fair'
-  return 'good'
-}
-
-function lossTone(loss: number): string {
-  if (loss < 0) return 'empty'
-  if (loss > 9) return 'bad'
-  if (loss > 6) return 'warn'
-  if (loss > 1) return 'fair'
-  return 'good'
-}
-
-function aggregatePingBuckets(server: ProbeServer): ProbeBucket[] {
-  const series = (server.ping || []).filter((item) => item.buckets?.length)
-  const count = Math.min(12, Math.max(0, ...series.map((item) => item.buckets.length)))
-  return Array.from({ length: count }, (_, index) => {
-    const latency: number[] = []
-    const loss: number[] = []
-    for (const item of series) {
-      const bucket = item.buckets[item.buckets.length - count + index]
-      if (!bucket) continue
-      if (Number.isFinite(bucket.ms) && bucket.ms >= 0) latency.push(bucket.ms)
-      if (Number.isFinite(bucket.loss) && bucket.loss >= 0) loss.push(bucket.loss)
-    }
-    return {
-      ms: latency.length ? latency.reduce((sum, value) => sum + value, 0) / latency.length : -1,
-      loss: loss.length ? loss.reduce((sum, value) => sum + value, 0) / loss.length : -1,
-    }
-  })
-}
-
-function padPingBuckets(buckets: ProbeBucket[]): ProbeBucket[] {
-  const recent = buckets.slice(-12)
-  return [
-    ...Array.from({ length: Math.max(0, 12 - recent.length) }, () => ({ ms: -1, loss: -1 })),
-    ...recent,
-  ]
-}
-
 const routeCarriers = [
   { key: 'telecom', label: '电信' },
   { key: 'unicom', label: '联通' },
@@ -470,31 +428,14 @@ function GlowCard({ children, className, index, onClick, label }: {
 
 function NodeCard({ server, index, open }: { server: EnrichedServer; index: number; open: () => void }) {
   const [trafficOpen, setTrafficOpen] = useState(false)
-  const [trendMode, setTrendMode] = useState<'latency' | 'loss' | null>(null)
-  const [latencySource, setLatencySource] = useState('__avg__')
-  const [lossSource, setLossSource] = useState('__avg__')
   const name = server.name || `服务器 ${index + 1}`
   const flag = regionFlag(server)
   const cpu = server.cpu_pct || 0
   const memory = percentage(server.mem_used, server.mem_total)
   const disk = percentage(server.disk_used, server.disk_total)
   const traffic = percentage(server.traffic_used, server.traffic_limit)
-  const ping = averagePing(server)
-  const pingBuckets = aggregatePingBuckets(server)
-  const pingSeries = server.ping || []
-  const selectedLatencySeries = latencySource === '__avg__' ? null : pingSeries[Number(latencySource)]
-  const selectedLossSeries = lossSource === '__avg__' ? null : pingSeries[Number(lossSource)]
-  const latencyValue = selectedLatencySeries ? selectedLatencySeries.current_ms : ping?.latency
-  const lossValue = selectedLossSeries ? selectedLossSeries.loss_pct : ping?.loss
-  const latencyBars = padPingBuckets(selectedLatencySeries?.buckets || pingBuckets)
-  const lossBars = padPingBuckets(selectedLossSeries?.buckets || pingBuckets)
   const routes = new Map((server.return_routes || []).map((route) => [route.carrier, route]))
   const remaining = computeRemainingValue(server)
-  const trendTarget = (source: string) => {
-    if (source === '__avg__') return '__avg__'
-    const selected = pingSeries[Number(source)]
-    return selected?.key || selected?.label || '__avg__'
-  }
 
   const metrics = [
     { key: 'cpu', label: 'CPU', value: cpu, detail: server.loadavg || `${server.cpu_cores || '—'} 核`, icon: <Cpu size={12} /> },
@@ -551,32 +492,7 @@ function NodeCard({ server, index, open }: { server: EnrichedServer; index: numb
           <span><Wallet size={11} /><b>{remaining ? formatMoney(remaining.value, 'CNY', true) : '—'}</b></span>
         </div>
       </div>
-      <div className="emerald-ping-panels" aria-label={`${name} 延迟与丢包`}>
-        <div className="emerald-ping-panel is-latency is-interactive" role="button" tabIndex={0} title="点击查看延迟趋势" aria-label={`${name} 延迟趋势`} onClick={(event) => { event.stopPropagation(); setTrendMode('latency') }} onKeyDown={(event) => { event.stopPropagation(); if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); setTrendMode('latency') } }}>
-          <div>
-            <select value={latencySource} aria-label={`${name} 延迟数据源`} title="选择延迟数据源" onClick={(event) => event.stopPropagation()} onKeyDown={(event) => event.stopPropagation()} onChange={(event) => setLatencySource(event.target.value)}>
-              <option value="__avg__">平均延迟</option>
-              {pingSeries.map((series, sourceIndex) => <option value={String(sourceIndex)} key={series.key || `${series.label}-${sourceIndex}`}>{series.label || `探测 ${sourceIndex + 1}`}</option>)}
-            </select>
-            <b>{latencyValue === undefined ? '—' : latencyValue < 0 ? '超时' : `${latencyValue.toFixed(0)} ms`}</b>
-          </div>
-          <span className="emerald-ping-bars">
-            {latencyBars.map((bucket, bucketIndex) => <i key={bucketIndex} className={`is-${latencyTone(bucket.ms)}`} title={bucket.ms < 0 ? '暂无数据' : `${bucket.ms.toFixed(0)} ms`} />)}
-          </span>
-        </div>
-        <div className="emerald-ping-panel is-loss is-interactive" role="button" tabIndex={0} title="点击查看丢包趋势" aria-label={`${name} 丢包趋势`} onClick={(event) => { event.stopPropagation(); setTrendMode('loss') }} onKeyDown={(event) => { event.stopPropagation(); if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); setTrendMode('loss') } }}>
-          <div>
-            <select value={lossSource} aria-label={`${name} 丢包数据源`} title="选择丢包数据源" onClick={(event) => event.stopPropagation()} onKeyDown={(event) => event.stopPropagation()} onChange={(event) => setLossSource(event.target.value)}>
-              <option value="__avg__">平均丢包</option>
-              {pingSeries.map((series, sourceIndex) => <option value={String(sourceIndex)} key={series.key || `${series.label}-${sourceIndex}`}>{series.label || `探测 ${sourceIndex + 1}`}</option>)}
-            </select>
-            <b>{lossValue === undefined || lossValue < 0 ? '—' : `${lossValue.toFixed(1)}%`}</b>
-          </div>
-          <span className="emerald-ping-bars">
-            {lossBars.map((bucket, bucketIndex) => <i key={bucketIndex} className={`is-${lossTone(bucket.loss)}`} title={bucket.loss < 0 ? '暂无数据' : `${bucket.loss.toFixed(1)}%`} />)}
-          </span>
-        </div>
-      </div>
+      <CardPingGroups variant="emerald" ping={server.ping} serverIndex={index} serverName={server.name} />
       <div className="emerald-route-badges" aria-label={`${name} 三网回程`}>
         {routeCarriers.map(({ key, label }) => {
           const route = routes.get(key)
@@ -592,7 +508,6 @@ function NodeCard({ server, index, open }: { server: EnrichedServer; index: numb
       </div>
     </GlowCard>
     {trafficOpen && <TrafficDialog server={server} close={() => setTrafficOpen(false)} />}
-    {trendMode && <TrendDialog serverIndex={index} initial={server.ping || []} targetKey={trendTarget(trendMode === 'latency' ? latencySource : lossSource)} title={name} mode={trendMode} close={() => setTrendMode(null)} />}
     </>
   )
 }

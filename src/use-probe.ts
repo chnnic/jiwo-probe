@@ -1,11 +1,13 @@
 import { createContext, createElement, useContext, useEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import type { ProbeAppearance, ProbeBackgroundAppearance, ProbePayload, ProbeServer, ThemeName } from './types'
+import { DEFAULT_PING_GROUP_CONFIG, parsePingGroupConfig, type PingGroupConfig } from './ping-groups'
 
 const APPEARANCE_CACHE = 'mmwx-probe-appearance'
 const DARK_OVERRIDE = 'mmwx-probe-dark-override'
 const THEME_OVERRIDE = 'mmwx-probe-theme-override'
 let runtimeBackground: ProbeBackgroundAppearance | undefined
+let runtimePingGroups = DEFAULT_PING_GROUP_CONFIG
 let runtimeThemeConfigPromise: Promise<void> | undefined
 let lastAppliedAppearance: ProbeAppearance | undefined
 
@@ -59,8 +61,9 @@ function loadRuntimeThemeConfig(): Promise<void> {
   runtimeThemeConfigPromise = fetch('/api/theme-config', { cache: 'no-store' })
     .then(async (response) => {
       if (!response.ok) return
-      const config = await response.json() as { background?: ProbeBackgroundAppearance }
+      const config = await response.json() as { background?: ProbeBackgroundAppearance; pingGroups?: PingGroupConfig }
       if (config.background?.url) runtimeBackground = config.background
+      runtimePingGroups = parsePingGroupConfig(config.pingGroups)
       if (lastAppliedAppearance) applyAppearance(lastAppliedAppearance)
     })
     .catch(() => {
@@ -367,6 +370,7 @@ function applyFavicon(icon?: string) {
 export interface ProbeState {
   data?: ProbePayload
   error?: string
+  pingGroups: PingGroupConfig
 }
 
 const ProbeContext = createContext<ProbeState | null>(null)
@@ -374,6 +378,7 @@ const ProbeContext = createContext<ProbeState | null>(null)
 function useProbeConnection(): ProbeState {
   const [data, setData] = useState<ProbePayload>()
   const [error, setError] = useState<string>()
+  const [pingGroups, setPingGroups] = useState(runtimePingGroups)
   const timer = useRef<number | undefined>(undefined)
   const watchdogTimer = useRef<number | undefined>(undefined)
   const lastFrameAt = useRef(0)
@@ -413,7 +418,9 @@ function useProbeConnection(): ProbeState {
     }
 
     applyAppearance()
-    void loadRuntimeThemeConfig()
+    void loadRuntimeThemeConfig().then(() => {
+      if (!stopped) setPingGroups(runtimePingGroups)
+    })
     // 先轮询一次拿首帧数据, 同时连 WS; 之后由 watchdog 统一裁决:
     // WS 有帧 → 暂停轮询(帧即数据, 免每 5s 打主控一次);
     // WS 无帧 15s / 关闭 / 出错 → 恢复轮询兜底。
@@ -457,7 +464,7 @@ function useProbeConnection(): ProbeState {
     }
   }, [])
 
-  return { data, error }
+  return { data, error, pingGroups }
 }
 
 // 全站只在 Provider 内建立一套 HTTP/WS 连接。各主题调用 useProbe() 时只读取

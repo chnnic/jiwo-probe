@@ -15,6 +15,8 @@ import {
 } from './traffic-display'
 import { Twemoji } from './Twemoji'
 import { PasskeyLogin } from './PasskeyLogin'
+import { CardPingGroups } from './CardPingGroups'
+import { pingTargetOptions, isPingAverage } from './ping-groups'
 import { ServerDetail } from './ServerDetail'
 import { computeRemainingValue, formatMoney } from './value'
 import commonRouteAnimation from './assets/return-route/common.json'
@@ -972,9 +974,9 @@ export function SystemIcon({ server }: { server: ProbeServer }) {
   )
 }
 
-export function TrendDialog({ serverIndex, initial, targetKey, title, mode, close }: { serverIndex: number; initial: ProbePingSeries[]; targetKey: string; title: string; mode: 'latency' | 'loss'; close: () => void }) {
+export function TrendDialog({ serverIndex, initial, targetKey, cardTarget, title, mode, close }: { serverIndex: number; initial: ProbePingSeries[]; targetKey: string; cardTarget?: string; title: string; mode: 'latency' | 'loss'; close: () => void }) {
   const [range, setRange] = useState<RangeKey>('1h')
-  const [group, setGroup] = useState<'all' | 'cn' | 'idc'>('all')
+  const [group, setGroup] = useState<'all' | 'cn' | 'idc'>(cardTarget === '__avg_cn__' ? 'cn' : cardTarget === '__avg_intl__' ? 'idc' : 'all')
   const [hidden, setHidden] = useState<Set<string>>(new Set())
   const [series, setSeries] = useState<ProbePingSeries[]>(initial)
   const [loading, setLoading] = useState(false)
@@ -988,11 +990,18 @@ export function TrendDialog({ serverIndex, initial, targetKey, title, mode, clos
 
   const isCnLabel = (label: string) => /电信|联通|移动/.test(label)
   const groupSeries = useMemo(() => {
+    if (cardTarget) {
+      // 卡片指定的范围平均由真实线路重新计算，切换时间范围后也不退回全部平均。
+      const scope = group === 'cn' ? 'cn' : group === 'idc' ? 'intl' : 'all'
+      const averageKey = scope === 'cn' ? '__avg_cn__' : scope === 'intl' ? '__avg_intl__' : '__avg__'
+      return pingTargetOptions(series).filter(option => option.series && (option.key === averageKey || (!isPingAverage(option.key) && (scope === 'all' || option.scope === scope))))
+        .map((option, index) => ({ item: option.series!, index }))
+    }
     const list = series.map((item, index) => ({ item, index }))
     if (group === 'all') return list
     const cn = group === 'cn'
     return list.filter(({ item }) => item.key !== '__avg__' && isCnLabel(item.label) === cn)
-  }, [series, group])
+  }, [series, group, cardTarget])
   const displaySeries = useMemo(
     () => groupSeries.filter(({ item }) => !hidden.has(item.key || item.label)),
     [groupSeries, hidden],
@@ -1053,13 +1062,13 @@ export function TrendDialog({ serverIndex, initial, targetKey, title, mode, clos
           ts,
         }
         for (const { item } of displaySeries) {
-          const bucket = item.buckets[index]
+          const bucket = item.buckets[cardTarget ? item.buckets.length - (displaySeries[0]?.item.buckets.length || 0) + index : index]
           const value = mode === 'loss' ? bucket?.loss : bucket?.ms
           row[item.key || item.label] = value !== undefined && value >= 0 ? value : null
         }
         return row
       }),
-    [displaySeries, mode, timeMeta, range],
+    [displaySeries, mode, timeMeta, range, cardTarget],
   )
   const dynamicLossScale = useMemo(() => lossScale(rows), [rows])
   const fitZoom = () => {
@@ -1164,7 +1173,7 @@ export function TrendDialog({ serverIndex, initial, targetKey, title, mode, clos
                 />
                 <Tooltip
                   contentStyle={{ fontSize: 11, borderRadius: 8 }}
-                  formatter={(value, _name, item) => [`${Number(value).toFixed(mode === 'loss' ? 1 : 0)}${mode === 'loss' ? '%' : 'ms'}`, series.find((line) => (line.key || line.label) === item.dataKey)?.label || String(item.dataKey)]}
+                  formatter={(value, _name, item) => [`${Number(value).toFixed(mode === 'loss' ? 1 : 0)}${mode === 'loss' ? '%' : 'ms'}`, (cardTarget ? groupSeries.map(entry => entry.item) : series).find((line) => (line.key || line.label) === item.dataKey)?.label || String(item.dataKey)]}
                   labelFormatter={(_value, payload) => formatAxisDateTime(Number((payload?.[0]?.payload as { ts?: number } | undefined)?.ts ?? 0), true)}
                 />
                 {displaySeries.map(({ item, index }) => {
@@ -1360,54 +1369,6 @@ function SystemTrendDialog({ serverIndex, title, metric, close }: { serverIndex:
   )
 }
 
-export function PingPanel({ ping, serverIndex }: { ping: ProbePingSeries[]; serverIndex: number }) {
-  const [mode, setMode] = useState<'latency' | 'loss' | null>(null)
-  const [selected, setSelected] = useState('__avg__')
-  const average = averagePing(ping)
-  const lines = [{ ...average, key: '__avg__' }, ...ping]
-  const current = selected === '__avg__' ? average : ping.find((item) => (item.key || item.label) === selected) || average
-  const blocks = (kind: 'latency' | 'loss') =>
-    current.buckets.map((bucket, index) => {
-      const value = kind === 'loss' ? bucket.loss : bucket.ms
-      const level = value < 0 ? 'none' : kind === 'loss' ? (value >= 20 ? 'bad' : value > 0 ? 'warn' : 'good') : value >= 200 ? 'warn' : 'good'
-      return <i key={index} className={level} />
-    })
-  return (
-    <div onClick={(event) => event.stopPropagation()} onKeyDown={(event) => event.stopPropagation()}>
-      <div className="ping-grid">
-        <div className="ping-head">
-          <span>
-            <Clock size={14} />
-            <select value={selected} onChange={(event) => setSelected(event.target.value)}>
-              <option value="__avg__">平均</option>
-              {ping.map((item) => (
-                <option key={item.key || item.label} value={item.key || item.label}>
-                  {item.label}
-                </option>
-              ))}
-            </select>
-          </span>
-          <strong>{current.current_ms < 0 ? '超时' : `${current.current_ms.toFixed(0)} ms`}</strong>
-        </div>
-        <div className="ping-head">
-          <span>
-            <Wifi size={14} />
-            丢包率
-          </span>
-          <strong className={current.loss_pct > 0 ? 'warning' : ''}>{current.loss_pct.toFixed(1)}%</strong>
-        </div>
-        <button className="ping-blocks" type="button" aria-label="查看延迟趋势" onClick={() => setMode('latency')}>
-          {blocks('latency')}
-        </button>
-        <button className="ping-blocks" type="button" aria-label="查看丢包率趋势" onClick={() => setMode('loss')}>
-          {blocks('loss')}
-        </button>
-      </div>
-      {mode && <TrendDialog serverIndex={serverIndex} initial={lines} targetKey={selected} title={current.label} mode={mode} close={() => setMode(null)} />}
-    </div>
-  )
-}
-
 const routeCarrierLabels = {
   telecom: '电信',
   unicom: '联通',
@@ -1600,7 +1561,7 @@ function LuminaTrafficPulse({ samples, dots }: { samples: ProbeServer['daily_tra
   )
 }
 
-function luminaHeatColor(kind: 'latency' | 'loss', value: number): string {
+export function luminaHeatColor(kind: 'latency' | 'loss', value: number): string {
   // 黑金配色: 延迟/丢包柱状条金色分档(低值暗金 → 高值亮金, 保留亮度层次)
   if (document.documentElement.classList.contains('gold')) {
     if (value < 0) return 'var(--progress-bg)'
@@ -1640,7 +1601,7 @@ function luminaHeatColor(kind: 'latency' | 'loss', value: number): string {
   return 'var(--status-error)'
 }
 
-function LuminaHealthBars({ buckets, kind }: { buckets: ProbeBucket[]; kind: 'latency' | 'loss' }) {
+export function LuminaHealthBars({ buckets, kind }: { buckets: ProbeBucket[]; kind: 'latency' | 'loss' }) {
   const bars = buckets.slice(-LUMINA_QUOTA_SEGMENTS)
   const values = bars.map((b) => (kind === 'latency' ? b.ms : b.loss)).filter((v) => v >= 0)
   const max = Math.max(1, ...values)
@@ -1667,13 +1628,9 @@ function LuminaHealthBars({ buckets, kind }: { buckets: ProbeBucket[]; kind: 'la
 }
 
 function ServerCardLumina({ server, index }: { server: EnrichedServer; index: number }) {
-  const isGold = document.documentElement.classList.contains('gold')
-  const isPlatinum = document.documentElement.classList.contains('platinum')
   const [trafficOpen, setTrafficOpen] = useState(false)
   const [cpuOpen, setCpuOpen] = useState(false)
   const [memOpen, setMemOpen] = useState(false)
-  const [healthTarget, setHealthTarget] = useState('__avg__')
-  const [healthTrend, setHealthTrend] = useState<'latency' | 'loss' | null>(null)
   const name = server.name || `服务器 ${index + 1}`
   const flag = regionFlag(server.region)
   const isOffline = !server.online
@@ -1681,12 +1638,6 @@ function ServerCardLumina({ server, index }: { server: EnrichedServer; index: nu
   const loadParts = (server.loadavg || '').split(/\s+/).map(Number).filter((v) => Number.isFinite(v))
   const load1 = loadParts[0]
   const loadFraction = load1 !== undefined && cores > 0 ? Math.max(0, Math.min(1, load1 / cores)) : 0
-  const pingList = server.ping?.length ? server.ping : []
-  const pingCurrent = healthTarget === '__avg__' || !pingList.length
-    ? averagePing(pingList)
-    : (pingList.find((item) => (item.key || item.label) === healthTarget) || averagePing(pingList))
-  const currentMs = pingCurrent.current_ms >= 0 ? pingCurrent.current_ms : null
-  const lossAvg = !pingList.length ? -1 : (pingCurrent.loss_pct ?? 0)
   const trafficFraction = server.traffic_limit ? pct(server.traffic_used, server.traffic_limit) / 100 : 0
   const upRate = server.upload_speed
   const downRate = server.download_speed
@@ -1887,75 +1838,7 @@ function ServerCardLumina({ server, index }: { server: EnrichedServer; index: nu
           </div>
         )}
 
-        <div className="lumina-health">
-          <div className="lumina-health-item">
-            <div className="lumina-health-head">
-              <span className="lumina-health-label">
-                <Clock3 size={13} />
-                <select
-                  className="lumina-health-select"
-                  value={healthTarget}
-                  aria-label="延迟展示内容"
-                  onMouseDown={(event) => event.stopPropagation()}
-                  onClick={(event) => event.stopPropagation()}
-                  onKeyDown={(event) => event.stopPropagation()}
-                  onChange={(event) => {
-                    event.stopPropagation()
-                    setHealthTarget(event.target.value)
-                  }}
-                >
-                  <option value="__avg__">平均延迟</option>
-                  {pingList.map((item) => (
-                    <option key={item.key || item.label} value={item.key || item.label}>{item.label}</option>
-                  ))}
-                </select>
-                <ChevronDown size={10} className="lumina-health-select-arrow" aria-hidden />
-              </span>
-              <strong className="tabular" style={{ color: currentMs === null ? 'var(--text-tertiary)' : isGold ? '#f2d28b' : isPlatinum ? luminaHeatColor('latency', currentMs) : currentMs < 60 ? 'var(--status-success)' : currentMs < 120 ? 'var(--status-warning)' : 'var(--status-error)' }}>
-                {currentMs === null ? '—' : `${Math.round(currentMs)}`}
-                <small>ms</small>
-              </strong>
-            </div>
-            <button
-              type="button"
-              className="lumina-health-bars-btn"
-              aria-label="查看延迟趋势"
-              title="点击查看延迟趋势"
-              onMouseDown={(event) => event.stopPropagation()}
-              onClick={(event) => {
-                event.stopPropagation()
-                setHealthTrend('latency')
-              }}
-            >
-              <LuminaHealthBars buckets={pingCurrent.buckets} kind="latency" />
-            </button>
-          </div>
-          <div className="lumina-health-item">
-            <div className="lumina-health-head">
-              <span className="lumina-health-label">
-                <Unplug size={13} />
-                丢包率
-              </span>
-              <strong className="tabular" style={{ color: lossAvg < 0 ? 'var(--text-tertiary)' : isGold ? '#f2d28b' : isPlatinum ? luminaHeatColor('loss', lossAvg) : lossAvg < 1 ? 'var(--status-success)' : lossAvg < 5 ? 'var(--status-warning)' : 'var(--status-error)' }}>
-                {lossAvg < 0 ? '—' : lossAvg.toFixed(1)}
-                <small>%</small>
-              </strong>
-            </div>
-            <button
-              type="button"
-              className="lumina-health-bars-btn"
-              aria-label="查看丢包率趋势"
-              title="点击查看丢包率趋势"
-              onMouseDown={(event) => event.stopPropagation()}
-              onClick={(event) => {
-                event.stopPropagation()
-                setHealthTrend('loss')
-              }}
-            >
-              <LuminaHealthBars buckets={pingCurrent.buckets} kind="loss" />
-            </button>
-          </div>
-        </div>
+        <CardPingGroups variant="lumina" ping={server.ping} serverIndex={index} serverName={server.name} />
 
         {!!server.return_routes?.length && (
           <ReturnRouteBadges routes={server.return_routes} telecomPaidPeer={server.telecom_paid_peer} variant="lumina" />
@@ -1980,16 +1863,6 @@ function ServerCardLumina({ server, index }: { server: EnrichedServer; index: nu
           )}
         </footer>
       </article>
-      {healthTrend && (
-        <TrendDialog
-          serverIndex={index}
-          initial={[{ ...averagePing(pingList), key: '__avg__' }, ...pingList]}
-          targetKey={healthTarget}
-          title={pingCurrent.label}
-          mode={healthTrend}
-          close={() => setHealthTrend(null)}
-        />
-      )}
       {trafficOpen && <TrafficDialog server={server} close={() => setTrafficOpen(false)} />}
       {cpuOpen && <SystemTrendDialog serverIndex={index} title={name} metric="cpu" close={() => setCpuOpen(false)} />}
       {memOpen && <SystemTrendDialog serverIndex={index} title={name} metric="mem" close={() => setMemOpen(false)} />}
@@ -2058,7 +1931,7 @@ function ServerCard({ server, index }: { server: ProbeServer; index: number }) {
           </span>
         </div>
       )}
-      {!!server.ping?.length && <PingPanel ping={server.ping} serverIndex={index} />}
+      <CardPingGroups variant="classic" ping={server.ping} serverIndex={index} serverName={server.name} />
       {!!server.return_routes?.length && <ReturnRouteBadges routes={server.return_routes} telecomPaidPeer={server.telecom_paid_peer} variant={document.documentElement.classList.contains('theme-anime') ? 'anime' : undefined} />}
       {(server.expires_at || server.renewal_price !== undefined) && (
         <div className="server-meta" onClick={(event) => event.stopPropagation()}>

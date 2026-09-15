@@ -89,6 +89,58 @@ PROBE_BACKGROUND_THEMES=pixel,flat,anime,glass,lumina,premium,ran,glassmorphism,
 
 仓库已在 `package.json` 声明这四项配置，并在 Worker 代码中提供默认值和校验。站点自己的图片地址不会硬编码到仓库，避免公开站点配置；`wrangler.jsonc` 启用了 `keep_vars`，因此从 Cloudflare 后台设置的变量不会被普通代码部署删除。背景配置由 Worker 的公开只读接口下发，不包含任何 Secret，请勿在这些变量中填写 token。未设置图片、链接无效或当前主题不在应用范围时，会自动回退到主题原生背景。
 
+<a id="multi-ping-groups"></a>
+
+#### 首页卡片的多组延迟 / 丢包
+
+支持 **pixel、flat、anime、glass、lumina、glassmorphism、emerald** 七个主题。**Premium 和 Ran 不接入**，保留原有显示；列表视图和详情页的布局也不改变。各组纵向排列，中间不加分隔线；目标下拉框直接整合在左侧延迟行，不再单独占用标题行。组内延迟与丢包来自同一测试目标，不会新增探测请求或提高刷新频率。
+
+**如何启用（Cloudflare 后台）**
+
+1. 先同步本仓库最新代码，并确认 Cloudflare 已成功部署包含此功能的版本。
+2. 在探针中使用上述任一支持主题的**首页卡片视图**。主控需要已经向探针下发延迟 / 丢包测试数据；这些变量只控制显示，不会替主控创建测试目标。
+3. **新版本默认已经开启三组**：平均延迟、内地延迟、海外延迟。不需要另找功能开关；如需调整，进入 **Workers & Pages → 你的 Worker → Settings → Variables and Secrets**，添加或编辑下面的 **Text（文本）运行时变量**，不要填到 Build Variables 中。
+4. 例如要显示三组，将变量名称填为 `PROBE_PING_GROUP_COUNT`，值单独填 `3`，不要把整行 `PROBE_PING_GROUP_COUNT=3` 填进值输入框。默认目标和备用目标可按下表选填。
+5. 点击 **Save / Deploy（保存并部署）**，完成后刷新探针页面。已有后台变量优先：如果以前设置过组数 `1`，更新代码后仍是单组，需要改为 `2` 或 `3`。
+
+**配置项与示例**
+
+| 变量 | 默认值 | 说明 |
+| --- | --- | --- |
+| `PROBE_PING_GROUP_COUNT` | `3` | 显示 `1`、`2` 或 `3` 组，未设置或无效时使用脚本默认 `3` |
+| `PROBE_PING_DEFAULT_TARGETS` | `平均延迟，内地延迟，海外延迟` | 按位置匹配第 1–3 组；只使用组数范围内的目标 |
+| `PROBE_PING_INTL_TARGETS` | `intl-web-cloudflare,intl-web-google,intl-tg-dc5` | 依次对应 Cloudflare、Google、Telegram DC5；未命中时按此顺序补位，可通过后台改成其他国际目标 |
+
+脚本默认值集中在 [`src/ping-groups.ts`](src/ping-groups.ts) 顶部的 `PING_GROUP_DEFAULTS`。后台变量优先，后台未设置或留空才使用脚本默认；部署不会覆盖已有的后台变量。卡片下拉菜单始终提供“平均延迟、内地延迟、海外延迟”三个范围选项（范围内没有目标时禁用），并保留各个实际测试目标。
+
+变量名保持英文，**目标变量的值可以写中文**。支持英文逗号、中文逗号或换行分隔，自动去除首尾空格。例如，三组范围平均配合三个国际候补：
+
+```text
+PROBE_PING_GROUP_COUNT=3
+PROBE_PING_DEFAULT_TARGETS=平均延迟，内地延迟，海外延迟
+PROBE_PING_INTL_TARGETS=intl-web-cloudflare,intl-web-google,intl-tg-dc5
+```
+
+只显示内地、海外两组时，设置以下两项，国际候补继续使用默认值即可：
+
+```text
+PROBE_PING_GROUP_COUNT=2
+PROBE_PING_DEFAULT_TARGETS=内地延迟，海外延迟
+```
+
+只显示一组平均延迟时，分别设为 `PROBE_PING_GROUP_COUNT=1`、`PROBE_PING_DEFAULT_TARGETS=平均延迟`。组数只决定显示几个位置，不会自动改写目标顺序。
+
+三个范围均计算平均值：**平均延迟**为全部目标平均，**内地延迟**为内地目标平均，**海外延迟**为国际目标平均，对应丢包率也使用相同范围。兼容旧写法：`平均` / `全部平均` / `avg`、`内地平均` / `国内平均` / `avg-cn`、`海外平均` / `国际平均` / `avg-intl`。普通目标填写主控实际下发的完整名称或 key（例如 `sh-ct-v4`、`intl-web-cloudflare`），不是模糊匹配；同名目标请使用 key 消歧。
+
+- 每台服务器独立匹配：先保留所有命中的默认目标，再给缺失位置补国际目标，同一目标不重复占用两组。
+- **超时或高丢包不是“未命中”**，不会换目标掩盖故障；只在没有这个探测目标时回落。没有内地探测点时，“内地延迟”也会回落到国际备用，不需要配置落地机名单。
+- 国际备用只接受已明确分类为国际的目标；显式填写名单后不会再擅自选名单外目标。备用不足则显示“未配置”，可在该组下拉菜单中手动选择。
+- 所有平均按范围内有效值算术平均，负值等无效延迟不当作 0；丢包按实际有效丢包值平均（包括 100%）。只有超时延迟时显示“超时”；没有有效丢包值显示 `—`。
+- 访客可在每张卡片的下拉菜单选择目标，浏览器记忆选择；修改过选择后，点击第一组丢包标题旁的重置图标，可恢复该卡片全部组的后台默认。服务器改名或后台配置变化会启用新的默认配置。
+- 保存变量并部署后刷新网页生效，无须修改前端源码。上述三项为公开显示配置，请勿填写密钥。未配置时默认显示三组范围平均；Premium、Ran 仍保持原样。
+
+**没有显示多组时**：先确认最新版本已经部署、当前是支持主题的卡片视图、变量放在运行时设置中且组数不是 `1`。若显示“未配置”，检查主控是否为该服务器下发了相应测试目标，以及备用目标名称 / key 是否匹配；这不是开启更多组数就能补出的数据。
+
 ### 数据与交互增强
 
 - **主控公开开关联动**——支持 `show_name` 隐藏服务器名称、`show_forward` 隐藏 Premium 网络状况中的转发链入口、`block_login` 禁止独立探针 `/login` 跳转主控；字段缺省时保持旧版行为
@@ -186,8 +238,12 @@ ProbeHub 连接或快照异常时会自动回退到原来的主控直连，不�
    | `PROBE_BACKGROUND_OVERLAY` | Text（可选） | 背景遮罩强度，默认 `0.32` |
    | `PROBE_BACKGROUND_POSITION` | Text（可选） | 背景位置，默认 `center` |
    | `PROBE_BACKGROUND_THEMES` | Text（可选） | 默认 `pixel,flat,anime,glass,lumina,premium,ran,glassmorphism,emerald`，可删除不需要的主题 |
+   | `PROBE_PING_GROUP_COUNT` | Text（可选） | 首页卡片显示 `1` / `2` / `3` 组延迟与丢包，默认 `3`；Premium / Ran 不受影响 |
+   | `PROBE_PING_DEFAULT_TARGETS` | Text（可选） | 默认目标，支持中文，如 `平均延迟，内地延迟，海外延迟` |
+   | `PROBE_PING_INTL_TARGETS` | Text（可选） | 未命中的国际备用目标，逗号分隔；默认 Cloudflare、Google、Telegram DC5 |
 
    注意这里是 Worker 的运行时 **Settings → Variables and Secrets**，不是 **Build Variables and Secrets**。保存后点击 Deploy，使变量进入当前部署。`PROBE_BACKGROUND_THEMES` 默认已经包含全部九个内置主题，不需要背景的主题可从列表中删除。
+   多组延迟默认已开启；调整组数、中文默认目标及国际候补，参见[首页卡片的多组延迟 / 丢包](#multi-ping-groups)。
    Durable Object 绑定和首次命名空间创建已经写在 `wrangler.jsonc`，构建部署时会自动完成，**不需要在 Dashboard 手动创建或开启 ProbeHub**。
 5. 打开 Worker 地址，确认服务器列表、趋势图和实时更新正常。
 6. 最后回到主控，开启"仅允许独立探针访问"。此后直接访问主控的探针接口会返回 `404`。

@@ -28,16 +28,14 @@ import { computeRemainingValue, formatMoney } from '../value'
 import { flagToCountryCode } from '../country-flag'
 import { Twemoji } from '../Twemoji'
 import { PasskeyLogin } from '../PasskeyLogin'
+import { CardPingGroups } from '../CardPingGroups'
 import './gm.css'
 import { ServerDetail } from '../ServerDetail'
 import { useVisitorInfo } from '../ran/hooks/useVisitorInfo'
 import {
-  PingPanel,
   ReturnRouteBadges,
   SystemIcon,
   TrafficDialog,
-  TrendDialog,
-  averagePing,
   bytes,
   expiring,
   expired,
@@ -148,7 +146,6 @@ function buildRegions(servers: ProbeServer[]): GmRegion[] {
 /* ================= 节点卡（照搬 Komari NodeCard 结构） ================= */
 function GmNodeCard({ server, index }: { server: EnrichedServer; index: number }) {
   const [trafficOpen, setTrafficOpen] = useState(false)
-  const [trendMode, setTrendMode] = useState<'latency' | 'loss' | null>(null)
   const name = server.name || `服务器 ${index + 1}`
   const flag = regionFlag(server.region)
   const isOffline = !server.online
@@ -186,36 +183,6 @@ function GmNodeCard({ server, index }: { server: EnrichedServer; index: number }
   const daysText = server.expires_at ? remainingDays(server.expires_at) : null
   const remainValue = computeRemainingValue(server)
   const remainValueText = remainValue ? formatMoney(remainValue.value, 'CNY', true) : null
-  // 延迟/丢包脉冲(平均线 buckets)
-  const pingAvg = server.ping?.length ? averagePing(server.ping) : undefined
-  const latencyBars: string[] = []
-  const lossBars: string[] = []
-  const latencyTitles: string[] = []
-  const lossTitles: string[] = []
-  let avgMs = -1
-  let avgLoss = 0
-  if (pingAvg) {
-    avgMs = pingAvg.current_ms
-    avgLoss = pingAvg.loss_pct ?? 0
-    for (const bucket of pingAvg.buckets) {
-      if (bucket.ms < 0) {
-        latencyBars.push('none')
-        latencyTitles.push('超时')
-      } else if (bucket.ms >= 200) {
-        latencyBars.push('bad')
-        latencyTitles.push(`${bucket.ms} ms`)
-      } else if (bucket.ms >= 100) {
-        latencyBars.push('warn')
-        latencyTitles.push(`${bucket.ms} ms`)
-      } else {
-        latencyBars.push('ok')
-        latencyTitles.push(`${bucket.ms} ms`)
-      }
-      const loss = bucket.loss ?? 0
-      lossBars.push(loss >= 20 ? 'bad' : loss > 0 ? 'warn' : 'ok')
-      lossTitles.push(`${loss.toFixed(1)}%`)
-    }
-  }
   // 三网回程文字标签
   const carrierLabels: Record<string, string> = { telecom: '电信', unicom: '联通', mobile: '移动' }
   const displayRoute = (route: string): string => {
@@ -345,48 +312,8 @@ function GmNodeCard({ server, index }: { server: EnrichedServer; index: number }
               </div>
             </div>
           </div>
-          {/* 延迟/丢包脉冲块 */}
-          {(latencyBars.length > 0 || lossBars.length > 0) && (
-            <div className="gm-ping-row">
-              {latencyBars.length > 0 && (
-                <button type="button" className="gm-ping-cell" title={`平均延迟 ${avgMs >= 0 ? avgMs.toFixed(0) : '超时'} ms · 点击看趋势`} aria-label={`${name} 延迟监测`} onClick={(event) => { event.stopPropagation(); setTrendMode('latency') }}>
-                  <div className="gm-ping-head">
-                    <span>延迟</span>
-                    <span className="gm-ping-value">{avgMs < 0 ? '超时' : `${avgMs.toFixed(0)} ms`}</span>
-                  </div>
-                  <div className="gm-ping-bars">
-                    {latencyBars.map((level, i) => (
-                      <span key={i} className={`gm-ping-bar gm-sig-${level}`} title={latencyTitles[i]} />
-                    ))}
-                  </div>
-                </button>
-              )}
-              {lossBars.length > 0 && (
-                <button type="button" className="gm-ping-cell" title={`平均丢包 ${avgLoss.toFixed(1)}% · 点击看趋势`} aria-label={`${name} 丢包监测`} onClick={(event) => { event.stopPropagation(); setTrendMode('loss') }}>
-                  <div className="gm-ping-head">
-                    <span>丢包</span>
-                    <span className="gm-ping-value">{avgLoss.toFixed(1)}%</span>
-                  </div>
-                  <div className="gm-ping-bars">
-                    {lossBars.map((level, i) => (
-                      <span key={i} className={`gm-ping-bar gm-sig-${level}`} title={lossTitles[i]} />
-                    ))}
-                  </div>
-                </button>
-              )}
-            </div>
-          )}
+          <CardPingGroups variant="gm" ping={server.ping} serverIndex={index} serverName={server.name} />
           {/* 三网回程文字标签 */}
-          {trendMode && (
-            <TrendDialog
-              serverIndex={index}
-              initial={server.ping || []}
-              targetKey="__avg__"
-              title={name}
-              mode={trendMode}
-              close={() => setTrendMode(null)}
-            />
-          )}
           {routeLines.length > 0 ? (
             <div className="gm-tags">
               {routeLines.map((line) => (

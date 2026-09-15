@@ -1,3 +1,5 @@
+import { parsePingGroupConfig } from '../src/ping-groups'
+
 interface Env {
   ASSETS: Fetcher
   MMWX_ORIGIN: string
@@ -8,6 +10,9 @@ interface Env {
   PROBE_BACKGROUND_OVERLAY?: string
   PROBE_BACKGROUND_POSITION?: string
   PROBE_BACKGROUND_THEMES?: string
+  PROBE_PING_GROUP_COUNT?: string
+  PROBE_PING_DEFAULT_TARGETS?: string
+  PROBE_PING_INTL_TARGETS?: string
 }
 
 const PROBE_CACHE_TTL_SECONDS = 3
@@ -25,6 +30,17 @@ const BACKGROUND_POSITIONS = new Set(['center', 'top', 'bottom', 'left', 'right'
 const DEFAULT_BACKGROUND_THEMES = 'pixel,flat,anime,glass,lumina,premium,ran,glassmorphism,emerald'
 
 function runtimeThemeConfig(env: Env): Record<string, unknown> {
+  return {
+    ...runtimeBackgroundConfig(env),
+    pingGroups: parsePingGroupConfig({
+      count: env.PROBE_PING_GROUP_COUNT,
+      defaultTargets: env.PROBE_PING_DEFAULT_TARGETS,
+      intlTargets: env.PROBE_PING_INTL_TARGETS,
+    }),
+  }
+}
+
+function runtimeBackgroundConfig(env: Env): Record<string, unknown> {
   const rawUrl = env.PROBE_BACKGROUND_URL?.trim()
   if (!rawUrl) return {}
 
