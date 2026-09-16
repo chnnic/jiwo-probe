@@ -6,6 +6,7 @@ interface Env {
   PROBE_TOKEN: string
   PROBE_HUB: DurableObjectNamespace
   PROBE_POLL_INTERVAL_SECONDS?: string
+  PROBE_NETWORK_SPEED_UNIT?: string
   PROBE_BACKGROUND_URL?: string
   PROBE_BACKGROUND_OVERLAY?: string
   PROBE_BACKGROUND_POSITION?: string
@@ -32,6 +33,7 @@ const DEFAULT_BACKGROUND_THEMES = 'pixel,flat,anime,glass,lumina,premium,ran,gla
 function runtimeThemeConfig(env: Env): Record<string, unknown> {
   return {
     ...runtimeBackgroundConfig(env),
+    networkSpeedUnit: env.PROBE_NETWORK_SPEED_UNIT?.trim().toLowerCase() === 'bits' ? 'bits' : 'bytes',
     pingGroups: parsePingGroupConfig({
       count: env.PROBE_PING_GROUP_COUNT,
       defaultTargets: env.PROBE_PING_DEFAULT_TARGETS,

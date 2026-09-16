@@ -2,3 +2,4 @@
 MMWX_ORIGIN=https://panel.example.com
 PROBE_TOKEN=replace-with-the-generated-probe-token
 PROBE_POLL_INTERVAL_SECONDS=3
+PROBE_NETWORK_SPEED_UNIT=bytes

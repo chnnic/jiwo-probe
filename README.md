@@ -238,6 +238,7 @@ ProbeHub 连接或快照异常时会自动回退到原来的主控直连，不�
    | `MMWX_ORIGIN` | Text | 主控 HTTPS 地址，例如 `https://panel.example.com` |
    | `PROBE_TOKEN` | Secret | 主控"系统设置 → 探针"生成的访问密钥 |
    | `PROBE_POLL_INTERVAL_SECONDS` | Text（可选） | 实时快照间隔，默认 `3`；降载时可设为 `5` |
+   | `PROBE_NETWORK_SPEED_UNIT` | Text（可选） | 「网络情况」总上下行网速单位：`bytes`（默认，自动显示 B/s、KB/s、MB/s、GB/s、TB/s）或 `bits`（自动显示 bps、Kbps、Mbps、Gbps、Tbps）；未设置或无效值使用 `bytes` |
    | `PROBE_BACKGROUND_URL` | Text（可选） | 自定义背景图片 HTTPS 地址 |
    | `PROBE_BACKGROUND_OVERLAY` | Text（可选） | 背景遮罩强度，默认 `0.32` |
    | `PROBE_BACKGROUND_POSITION` | Text（可选） | 背景位置，默认 `center` |
@@ -312,7 +313,10 @@ cp .dev.vars.example .dev.vars
 MMWX_ORIGIN=https://panel.example.com
 PROBE_TOKEN=主控生成的访问密钥
 PROBE_POLL_INTERVAL_SECONDS=3
+PROBE_NETWORK_SPEED_UNIT=bytes
 ```
+
+「网络情况」默认复用节点卡片的字节网速格式，按 1024 进位，例如 `3 MB/s`；设为 `bits` 时按 1000 进位显示带宽单位。该配置同时控制展开数值、进度条刻度和折叠摘要，不改变节点卡片。修改 `.dev.vars` 后重启本地 Worker 并刷新页面；线上在 Worker 的 Variables and Secrets 中保存并部署后刷新页面。
 
 分别启动 Worker 和 Vite：
 

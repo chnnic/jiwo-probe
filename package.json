@@ -14,6 +14,9 @@
       "PROBE_POLL_INTERVAL_SECONDS": {
         "description": "ProbeHub 从主控采集实时快照的间隔（秒），默认 3；需要降载时可设置为 5。"
       },
+      "PROBE_NETWORK_SPEED_UNIT": {
+        "description": "可选。网络情况的总上下行网速单位：bytes（默认，自动显示 B/s、KB/s、MB/s、GB/s）或 bits（自动显示 bps、Kbps、Mbps、Gbps）。"
+      },
       "PROBE_PING_GROUP_COUNT": {
         "description": "可选覆盖项，无需填写。脚本已内置三组延迟/丢包，安装即启用；需要时可设为 1、2 或 3。Premium、Ran 不受影响。"
       },

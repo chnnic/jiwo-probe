@@ -5,7 +5,7 @@ import { Activity, ArrowDown, ArrowDownUp, ArrowUp, BadgeDollarSign, Calendar, C
 import { siAlmalinux, siAlpinelinux, siApple, siArchlinux, siCentos, siDebian, siFedora, siFreebsd, siGentoo, siKalilinux, siLinux, siLinuxmint, siNixos, siOpensuse, siProxmox, siRedhat, siRockylinux, siUbuntu } from 'simple-icons'
 import { Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import type { ProbeBucket, ProbePingSeries, ProbeReturnRoute, ProbeServer, ThemeName } from './types'
-import { EnrichedServer, getActiveTheme, getDarkOverride, getThemeOverride, setDarkOverride, setTheme, useProbe } from './use-probe'
+import { EnrichedServer, getActiveTheme, getDarkOverride, getThemeOverride, setDarkOverride, setTheme, useProbe, type NetworkSpeedUnit } from './use-probe'
 import {
   dailyTrafficRows,
   hasTrafficPeriod,
@@ -126,7 +126,10 @@ function bitSpeed(bytesPerSecond = 0): string {
   const digits = value >= 100 ? 0 : value >= 10 ? 1 : 2
   return `${value.toFixed(digits)} ${units[unit]}`
 }
-function speedScale(bytesPerSecond: number): {
+function networkSpeed(bytesPerSecond: number, unit: NetworkSpeedUnit): string {
+  return unit === 'bits' ? bitSpeed(bytesPerSecond) : speed(bytesPerSecond)
+}
+function speedScale(bytesPerSecond: number, unit: NetworkSpeedUnit): {
   percent: number
   label: string
 } {
@@ -135,7 +138,7 @@ function speedScale(bytesPerSecond: number): {
   const ceiling = steps.find((value) => bps <= value) || steps[steps.length - 1]
   return {
     percent: Math.min(100, (bps / ceiling) * 100),
-    label: bitSpeed(ceiling / 8),
+    label: networkSpeed(ceiling / 8, unit),
   }
 }
 const cycleLabel = {
@@ -338,7 +341,8 @@ function ThemeSelect({ value, onChange }: { value: ThemeName | null; onChange: (
 }
 
 function SpeedSummary({ label, value, direction }: { label: string; value: number; direction: 'up' | 'down' }) {
-  const scale = speedScale(value)
+  const { networkSpeedUnit } = useProbe()
+  const scale = speedScale(value, networkSpeedUnit)
   return (
     <div className={`speed-summary ${direction}`}>
       <div>
@@ -346,7 +350,7 @@ function SpeedSummary({ label, value, direction }: { label: string; value: numbe
           {direction === 'up' ? <ArrowUp size={19} /> : <ArrowDown size={19} />}
           {label}
         </span>
-        <strong>{bitSpeed(value)}</strong>
+        <strong>{networkSpeed(value, networkSpeedUnit)}</strong>
       </div>
       <div className="speed-progress">
         <i style={{ width: `${scale.percent}%` }} />
@@ -2430,7 +2434,7 @@ function ProbeLicenseNameplate({ name, displayName }: { name?: string; displayNa
 import { EXTRA_LICENSE_BADGES } from './license-badges'
 
 export function App() {
-  const { data, error } = useProbe()
+  const { data, error, networkSpeedUnit } = useProbe()
   const servers = data?.servers || []
   const [view, setView] = useState<'card' | 'list' | 'mini'>(() => (localStorage.getItem('probe-view') as 'card' | 'list' | 'mini') || 'card')
   const [miniExpanded, setMiniExpanded] = useState<boolean>(() => localStorage.getItem('probe-mini-expanded') === '1')
@@ -2690,8 +2694,8 @@ export function App() {
               <span className="summary-toggle-info">
                 {summaryCollapsed.has('network') && (
                   <>
-                    <b>↓{bitSpeed(totalDownload)}</b>
-                    <b>↑{bitSpeed(totalUpload)}</b>
+                    <b>↓{networkSpeed(totalDownload, networkSpeedUnit)}</b>
+                    <b>↑{networkSpeed(totalUpload, networkSpeedUnit)}</b>
                   </>
                 )}
                 <ChevronDown size={17} />
