@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { aggregatePingGroup, parsePingGroupConfig, pingScope, pingTargetOptions, resolvePingGroups } from './ping-groups.ts'
+import { aggregatePingGroup, parsePingGroupConfig, PING_GROUP_SCRIPT_VARS, pingScope, pingTargetOptions, resolvePingGroups } from './ping-groups.ts'
 
 const line = (key, label, isp, ms = 50, loss = 0) => ({ key, label, isp, current_ms: ms, loss_pct: loss, buckets: [{ ms, loss }] })
 const cn = line('sh-ct-v4', '上海电信', 'telecom')
@@ -11,6 +11,19 @@ const defaultBackups = ['intl-web-cloudflare', 'intl-web-google', 'intl-tg-dc5']
 const all = pingTargetOptions([cn, cf, google])
 const resolve = (defaults, backup = 'Cloudflare，Google', options = all, count = 3, overrides) => resolvePingGroups(options, parsePingGroupConfig({ count, defaultTargets: defaults, intlTargets: backup }), overrides)
 const keys = groups => groups.map(group => group.target?.key)
+
+test('fresh installation uses the embedded variables without CF setup', () => {
+  assert.deepEqual(PING_GROUP_SCRIPT_VARS, {
+    PROBE_PING_GROUP_COUNT: 3,
+    PROBE_PING_DEFAULT_TARGETS: '平均延迟，内地延迟，海外延迟',
+    PROBE_PING_INTL_TARGETS: 'intl-web-cloudflare,intl-web-google,intl-tg-dc5',
+  })
+  assert.deepEqual(parsePingGroupConfig(), parsePingGroupConfig({
+    count: PING_GROUP_SCRIPT_VARS.PROBE_PING_GROUP_COUNT,
+    defaultTargets: PING_GROUP_SCRIPT_VARS.PROBE_PING_DEFAULT_TARGETS,
+    intlTargets: PING_GROUP_SCRIPT_VARS.PROBE_PING_INTL_TARGETS,
+  }))
+})
 
 test('script defaults are three groups and three international backups; explicit CF settings win', () => {
   assert.deepEqual(parsePingGroupConfig(), { count: 3, defaultTargets: ['__avg__', '__avg_cn__', '__avg_intl__'], intlTargets: defaultBackups })

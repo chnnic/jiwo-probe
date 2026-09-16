@@ -95,7 +95,9 @@ PROBE_BACKGROUND_THEMES=pixel,flat,anime,glass,lumina,premium,ran,glassmorphism,
 
 支持 **pixel、flat、anime、glass、lumina、glassmorphism、emerald** 七个主题。**Premium 和 Ran 不接入**，保留原有显示；列表视图和详情页的布局也不改变。各组纵向排列，中间不加分隔线；目标下拉框直接整合在左侧延迟行，不再单独占用标题行。组内延迟与丢包来自同一测试目标，不会新增探测请求或提高刷新频率。
 
-**如何启用（Cloudflare 后台）**
+**直接安装即启用，无需配置这三项 CF 变量。** 仓库脚本已内置三组：平均延迟、内地延迟、海外延迟；国际候补依次为 Cloudflare、Google、Telegram DC5。按下方部署流程完成主控地址和访问密钥配置后，多组延迟自动生效。
+
+**安装与可选调整（Cloudflare 后台）**
 
 1. 先同步本仓库最新代码，并确认 Cloudflare 已成功部署包含此功能的版本。
 2. 在探针中使用上述任一支持主题的**首页卡片视图**。主控需要已经向探针下发延迟 / 丢包测试数据；这些变量只控制显示，不会替主控创建测试目标。
@@ -111,7 +113,7 @@ PROBE_BACKGROUND_THEMES=pixel,flat,anime,glass,lumina,premium,ran,glassmorphism,
 | `PROBE_PING_DEFAULT_TARGETS` | `平均延迟，内地延迟，海外延迟` | 按位置匹配第 1–3 组；只使用组数范围内的目标 |
 | `PROBE_PING_INTL_TARGETS` | `intl-web-cloudflare,intl-web-google,intl-tg-dc5` | 依次对应 Cloudflare、Google、Telegram DC5；未命中时按此顺序补位，可通过后台改成其他国际目标 |
 
-脚本默认值集中在 [`src/ping-groups.ts`](src/ping-groups.ts) 顶部的 `PING_GROUP_DEFAULTS`。后台变量优先，后台未设置或留空才使用脚本默认；部署不会覆盖已有的后台变量。卡片下拉菜单始终提供“平均延迟、内地延迟、海外延迟”三个范围选项（范围内没有目标时禁用），并保留各个实际测试目标。
+脚本默认值集中在 [`src/ping-groups.ts`](src/ping-groups.ts) 顶部的 `PING_GROUP_SCRIPT_VARS`，三个配置名称与 CF 后台变量相同。**不想配置 CF 后台时，保持脚本原样直接安装即可；想改变安装默认值时，只改脚本顶部这三项。** 后台变量优先，后台未设置或留空才使用脚本默认；部署不会覆盖已有的后台变量。卡片下拉菜单始终提供“平均延迟、内地延迟、海外延迟”三个范围选项（范围内没有目标时禁用），并保留各个实际测试目标。
 
 变量名保持英文，**目标变量的值可以写中文**。支持英文逗号、中文逗号或换行分隔，自动去除首尾空格。例如，三组范围平均配合三个国际候补：
 
@@ -227,7 +229,7 @@ ProbeHub 连接或快照异常时会自动回退到原来的主控直连，不�
    - Build command：`npm run build`
    - Deploy command：`./scripts/deploy.sh`
    - Root directory：留空
-4. 首次部署后，进入 Worker 的 **Settings → Variables and Secrets**，添加运行时变量：
+4. 首次部署后，进入 Worker 的 **Settings → Variables and Secrets**，添加运行时变量。连接主控需要配置 `MMWX_ORIGIN` 和 `PROBE_TOKEN`；**`PROBE_PING_*` 三项均已内置默认值，安装时全部跳过即可显示三组**，仅自定义时需要填写：
 
    | 名称 | 类型 | 值 |
    | --- | --- | --- |

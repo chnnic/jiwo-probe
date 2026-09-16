@@ -15,13 +15,13 @@
         "description": "ProbeHub 从主控采集实时快照的间隔（秒），默认 3；需要降载时可设置为 5。"
       },
       "PROBE_PING_GROUP_COUNT": {
-        "description": "首页卡片延迟/丢包显示 1、2 或 3 组，默认 3。Premium、Ran 保持原有显示，不受此项影响。"
+        "description": "可选覆盖项，无需填写。脚本已内置三组延迟/丢包，安装即启用；需要时可设为 1、2 或 3。Premium、Ran 不受影响。"
       },
       "PROBE_PING_DEFAULT_TARGETS": {
-        "description": "按顺序填写默认测试目标，逗号分隔。默认：平均延迟，内地延迟，海外延迟；也可填探测目标的完整名称或 key。"
+        "description": "可选覆盖项，无需填写。脚本已内置：平均延迟，内地延迟，海外延迟。自定义时按顺序填目标完整名称或 key，逗号分隔。"
       },
       "PROBE_PING_INTL_TARGETS": {
-        "description": "默认目标未命中时的国际备用目标，逗号分隔，按优先级使用且不重复。默认依次为 Cloudflare、Google、Telegram DC5。"
+        "description": "可选覆盖项，无需填写。脚本已内置 Cloudflare、Google、Telegram DC5 三个国际候补；默认目标未命中时依次补位且不重复。"
       },
       "PROBE_BACKGROUND_URL": {
         "description": "可选。自定义全站背景图片的 HTTPS 地址；也可填写仓库 public 目录下以 / 开头的静态资源路径。"

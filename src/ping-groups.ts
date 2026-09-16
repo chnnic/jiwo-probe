@@ -6,15 +6,27 @@ export interface PingGroupConfig {
   intlTargets: string[]
 }
 
-/** 脚本默认值：未配置 CF 变量时使用；后台设置优先，不在部署时覆盖后台变量。 */
+/**
+ * 安装默认配置：直接部署即启用三组，无需在 CF 后台另外添加这些变量。
+ * 需要修改脚本默认值时，只改下面三项；中文、英文逗号或换行均可分隔目标。
+ * CF 后台的同名运行时变量仍可覆盖默认值，普通部署不会重置后台自定义设置。
+ * Premium / Ran 不使用这套卡片配置。
+ */
+export const PING_GROUP_SCRIPT_VARS: {
+  PROBE_PING_GROUP_COUNT: 1 | 2 | 3
+  PROBE_PING_DEFAULT_TARGETS: string
+  PROBE_PING_INTL_TARGETS: string
+} = {
+  PROBE_PING_GROUP_COUNT: 3,
+  PROBE_PING_DEFAULT_TARGETS: '平均延迟，内地延迟，海外延迟',
+  // 依次候补：Cloudflare、Google、Telegram DC5。
+  PROBE_PING_INTL_TARGETS: 'intl-web-cloudflare,intl-web-google,intl-tg-dc5',
+}
+
 export const PING_GROUP_DEFAULTS: PingGroupConfig = {
-  count: 3, // 可改为 1、2、3；Premium / Ran 不使用这套卡片配置。
-  defaultTargets: ['平均延迟', '内地延迟', '海外延迟'],
-  intlTargets: [
-    'intl-web-cloudflare', // 第一候补：Cloudflare
-    'intl-web-google',     // 第二候补：Google
-    'intl-tg-dc5',         // 第三候补：Telegram DC5
-  ],
+  count: PING_GROUP_SCRIPT_VARS.PROBE_PING_GROUP_COUNT,
+  defaultTargets: PING_GROUP_SCRIPT_VARS.PROBE_PING_DEFAULT_TARGETS.split(/[,，\n]/).map(value => value.trim()),
+  intlTargets: PING_GROUP_SCRIPT_VARS.PROBE_PING_INTL_TARGETS.split(/[,，\n]/).map(value => value.trim()).filter(Boolean),
 }
 
 export const PING_AVERAGES = [
