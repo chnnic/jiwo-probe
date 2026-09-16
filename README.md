@@ -95,13 +95,13 @@ PROBE_BACKGROUND_THEMES=pixel,flat,anime,glass,lumina,premium,ran,glassmorphism,
 
 支持 **pixel、flat、anime、glass、lumina、glassmorphism、emerald** 七个主题。**Premium 和 Ran 不接入**，保留原有显示；列表视图和详情页的布局也不改变。各组纵向排列，中间不加分隔线；目标下拉框直接整合在左侧延迟行，不再单独占用标题行。组内延迟与丢包来自同一测试目标，不会新增探测请求或提高刷新频率。
 
-**直接安装即启用，无需配置这三项 CF 变量。** 仓库脚本已内置三组：平均延迟、内地延迟、海外延迟；国际候补依次为 Cloudflare、Google、Telegram DC5。按下方部署流程完成主控地址和访问密钥配置后，多组延迟自动生效。
+**直接安装即启用，无需手动添加这三项 CF 变量。** 仓库脚本已内置三组：平均延迟、内地延迟、海外延迟；国际候补依次为 Cloudflare、Google、Telegram DC5。使用 `npm run deploy` / `./scripts/deploy.sh` 时，会自动把缺失的三项创建为 CF 后台可见的 **Text 变量**，已有值原样保留。按下方部署流程完成主控地址和访问密钥配置后，多组延迟自动生效。
 
 **安装与可选调整（Cloudflare 后台）**
 
 1. 先同步本仓库最新代码，并确认 Cloudflare 已成功部署包含此功能的版本。
 2. 在探针中使用上述任一支持主题的**首页卡片视图**。主控需要已经向探针下发延迟 / 丢包测试数据；这些变量只控制显示，不会替主控创建测试目标。
-3. **新版本默认已经开启三组**：平均延迟、内地延迟、海外延迟。不需要另找功能开关；如需调整，进入 **Workers & Pages → 你的 Worker → Settings → Variables and Secrets**，添加或编辑下面的 **Text（文本）运行时变量**，不要填到 Build Variables 中。
+3. **新版本默认已经开启三组**：平均延迟、内地延迟、海外延迟。不需要另找功能开关；如需调整，进入 **Workers & Pages → 你的 Worker → Settings → Variables and Secrets**，编辑脚本已创建的 **Text（文本）运行时变量**，不要填到 Build Variables 中。
 4. 例如要显示三组，将变量名称填为 `PROBE_PING_GROUP_COUNT`，值单独填 `3`，不要把整行 `PROBE_PING_GROUP_COUNT=3` 填进值输入框。默认目标和备用目标可按下表选填。
 5. 点击 **Save / Deploy（保存并部署）**，完成后刷新探针页面。已有后台变量优先：如果以前设置过组数 `1`，更新代码后仍是单组，需要改为 `2` 或 `3`。
 
@@ -114,6 +114,8 @@ PROBE_BACKGROUND_THEMES=pixel,flat,anime,glass,lumina,premium,ran,glassmorphism,
 | `PROBE_PING_INTL_TARGETS` | `intl-web-cloudflare,intl-web-google,intl-tg-dc5` | 依次对应 Cloudflare、Google、Telegram DC5；未命中时按此顺序补位，可通过后台改成其他国际目标 |
 
 脚本默认值集中在 [`src/ping-groups.ts`](src/ping-groups.ts) 顶部的 `PING_GROUP_SCRIPT_VARS`，三个配置名称与 CF 后台变量相同。**不想配置 CF 后台时，保持脚本原样直接安装即可；想改变安装默认值时，只改脚本顶部这三项。** 后台变量优先，后台未设置或留空才使用脚本默认；部署不会覆盖已有的后台变量。卡片下拉菜单始终提供“平均延迟、内地延迟、海外延迟”三个范围选项（范围内没有目标时禁用），并保留各个实际测试目标。
+
+部署脚本只补缺失项，不会把你改成的 `1` / `2` 组、目标名单或其他站点配置重置。读取 CF 配置遇到权限 / 网络错误时会停止，不会把错误当作“全新安装”。如果这里没有设置项，确认部署命令使用 `./scripts/deploy.sh` 或 `npm run deploy`：直接执行 `npx wrangler deploy` 仍能使用代码默认三组，但不会自动创建这些后台设置项；重新运行仓库部署脚本即可补齐。
 
 变量名保持英文，**目标变量的值可以写中文**。支持英文逗号、中文逗号或换行分隔，自动去除首尾空格。例如，三组范围平均配合三个国际候补：
 
