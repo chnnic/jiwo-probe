@@ -31,6 +31,8 @@
 .card-ping-lumina .card-ping-metrics { gap: 22px; }
 .card-ping-lumina .lumina-health-bars { width: 100%; }
 .card-ping-lumina option { color: var(--text-primary); background: var(--bg-card, #fff); }
+.card-ping-gm, .card-ping-emerald { gap: 6px; }
+:is(.card-ping-gm, .card-ping-emerald) .card-ping-group + .card-ping-group { padding-top: 0; }
 .card-ping-gm .card-ping-metrics { gap: 6px; }
 .card-ping-gm .card-ping-metric { border-radius: 8px; padding: 8px; background: rgba(148,163,184,.05); }
 .card-ping-gm .card-ping-head > span { color: inherit; opacity: .65; }
