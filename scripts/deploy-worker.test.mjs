@@ -6,21 +6,23 @@ const defaults = {
   PROBE_PING_GROUP_COUNT: '3',
   PROBE_PING_DEFAULT_TARGETS: '平均延迟，内地延迟，海外延迟',
   PROBE_PING_INTL_TARGETS: 'intl-web-cloudflare,intl-web-google,intl-tg-dc5',
+  PROBE_NETWORK_SPEED_UNIT: 'bits',
 }
 const current = bindings => args => args[0] === 'deployments'
   ? { versions: [{ version_id: 'active' }] }
   : { resources: { bindings } }
 
-test('installer reads the same three defaults as the Worker and creates actual Text bindings', async () => {
+test('installer reads shared ping and speed defaults and creates actual Text bindings', async () => {
   assert.deepEqual(await readScriptDefaults(), defaults)
   assert.deepEqual(deployArgs(defaults), ['deploy', '--keep-vars',
     '--var', 'PROBE_PING_GROUP_COUNT:3',
     '--var', 'PROBE_PING_DEFAULT_TARGETS:平均延迟，内地延迟，海外延迟',
     '--var', 'PROBE_PING_INTL_TARGETS:intl-web-cloudflare,intl-web-google,intl-tg-dc5',
+    '--var', 'PROBE_NETWORK_SPEED_UNIT:bits',
   ])
 })
 
-test('existing Worker without ping bindings gets all three without copying unrelated bindings', () => {
+test('existing Worker gets missing defaults without copying unrelated bindings', () => {
   const bindings = readExistingBindings(current([
     { name: 'PROBE_TOKEN', type: 'secret_text' },
     { name: 'PROBE_BACKGROUND_URL', type: 'plain_text', text: 'https://example.test/image.jpg' },
@@ -34,10 +36,11 @@ test('custom count, Chinese target values, empty values and secret-typed overrid
     { name: 'PROBE_PING_GROUP_COUNT', type: 'plain_text', text: '2' },
     { name: 'PROBE_PING_DEFAULT_TARGETS', type: 'plain_text', text: '上海电信，海外延迟' },
     { name: 'PROBE_PING_INTL_TARGETS', type: 'secret_text' },
+    { name: 'PROBE_NETWORK_SPEED_UNIT', type: 'plain_text', text: 'bytes' },
   ]))
   assert.deepEqual(deployArgs(missingPingVars(defaults, bindings)), ['deploy', '--keep-vars'])
   const partial = missingPingVars(defaults, [{ name: 'PROBE_PING_GROUP_COUNT', type: 'plain_text', text: '' }])
-  assert.deepEqual(Object.keys(partial), ['PROBE_PING_DEFAULT_TARGETS', 'PROBE_PING_INTL_TARGETS'])
+  assert.deepEqual(Object.keys(partial), ['PROBE_PING_DEFAULT_TARGETS', 'PROBE_PING_INTL_TARGETS', 'PROBE_NETWORK_SPEED_UNIT'])
 })
 
 test('only a confirmed nonexistent Worker can use first-install defaults', () => {
@@ -67,7 +70,7 @@ test('gradual deployments preserve names present in either active version', () =
     if (args[0] === 'deployments') return { versions: [{ version_id: 'a' }, { version_id: 'b' }] }
     return { resources: { bindings: [{ name: args[2] === 'a' ? 'PROBE_PING_GROUP_COUNT' : 'PROBE_PING_DEFAULT_TARGETS' }] } }
   })
-  assert.deepEqual(missingPingVars(defaults, bindings), { PROBE_PING_INTL_TARGETS: defaults.PROBE_PING_INTL_TARGETS })
+  assert.deepEqual(missingPingVars(defaults, bindings), { PROBE_PING_INTL_TARGETS: defaults.PROBE_PING_INTL_TARGETS, PROBE_NETWORK_SPEED_UNIT: 'bits' })
 })
 
 test('malformed deployment or binding data aborts instead of restoring defaults', () => {

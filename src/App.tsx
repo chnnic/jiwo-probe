@@ -1,3 +1,4 @@
+import { useNetworkSpeed } from './use-network-speed'
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import Lottie from 'lottie-react'
@@ -112,21 +113,7 @@ export function bytes(value = 0, decimal = true): string {
   return `${out} ${units[i]}`
 }
 
-export function speed(value = 0): string {
-  return `${bytes(value)}/s`
-}
-function bitSpeed(bytesPerSecond = 0): string {
-  let value = Math.max(0, bytesPerSecond) * 8
-  const units = ['bps', 'Kbps', 'Mbps', 'Gbps', 'Tbps']
-  let unit = 0
-  while (value >= 1000 && unit < units.length - 1) {
-    value /= 1000
-    unit++
-  }
-  const digits = value >= 100 ? 0 : value >= 10 ? 1 : 2
-  return `${value.toFixed(digits)} ${units[unit]}`
-}
-function speedScale(bytesPerSecond: number): {
+function speedScale(bytesPerSecond: number, networkSpeed: (value: number) => string): {
   percent: number
   label: string
 } {
@@ -135,7 +122,7 @@ function speedScale(bytesPerSecond: number): {
   const ceiling = steps.find((value) => bps <= value) || steps[steps.length - 1]
   return {
     percent: Math.min(100, (bps / ceiling) * 100),
-    label: bitSpeed(ceiling / 8),
+    label: networkSpeed(ceiling / 8),
   }
 }
 const cycleLabel = {
@@ -338,7 +325,8 @@ function ThemeSelect({ value, onChange }: { value: ThemeName | null; onChange: (
 }
 
 function SpeedSummary({ label, value, direction }: { label: string; value: number; direction: 'up' | 'down' }) {
-  const scale = speedScale(value)
+  const networkSpeed = useNetworkSpeed()
+  const scale = speedScale(value, networkSpeed)
   return (
     <div className={`speed-summary ${direction}`}>
       <div>
@@ -346,7 +334,7 @@ function SpeedSummary({ label, value, direction }: { label: string; value: numbe
           {direction === 'up' ? <ArrowUp size={19} /> : <ArrowDown size={19} />}
           {label}
         </span>
-        <strong>{bitSpeed(value)}</strong>
+        <strong>{networkSpeed(value)}</strong>
       </div>
       <div className="speed-progress">
         <i style={{ width: `${scale.percent}%` }} />
@@ -542,6 +530,7 @@ const LEADERBOARD_TABS: { key: LeaderboardKey; label: string; icon: React.ReactN
 ]
 
 function Leaderboard({ servers }: { servers: ProbeServer[] }) {
+  const networkSpeed = useNetworkSpeed()
   const [open, setOpen] = useState(false)
   const [tab, setTab] = useState<LeaderboardKey>('cpu')
   const [desc, setDesc] = useState(true)
@@ -595,7 +584,7 @@ function Leaderboard({ servers }: { servers: ProbeServer[] }) {
     : tab === 'load' ? value.toFixed(2)
     : tab === 'traffic' ? bytes(value, false)
     : tab === 'usage' ? `${value.toFixed(1)}%`
-    : tab === 'speed' ? `↓${speed(server.download_speed ?? 0)} ↑${speed(server.upload_speed ?? 0)}`
+    : tab === 'speed' ? `↓${networkSpeed(server.download_speed ?? 0)} ↑${networkSpeed(server.upload_speed ?? 0)}`
     : tab === 'uptime' ? formatUptime(value)
     : tab === 'today' || tab === 'week' ? bytes(value, false)
     : tab === 'loss-cn' || tab === 'loss-idc' ? `${value.toFixed(2)}%`
@@ -1628,6 +1617,7 @@ export function LuminaHealthBars({ buckets, kind }: { buckets: ProbeBucket[]; ki
 }
 
 function ServerCardLumina({ server, index }: { server: EnrichedServer; index: number }) {
+  const networkSpeed = useNetworkSpeed()
   const [trafficOpen, setTrafficOpen] = useState(false)
   const [cpuOpen, setCpuOpen] = useState(false)
   const [memOpen, setMemOpen] = useState(false)
@@ -1753,7 +1743,7 @@ function ServerCardLumina({ server, index }: { server: EnrichedServer; index: nu
                 <ArrowUp size={15} />
               </span>
               <strong className="tabular" style={{ color: 'var(--traffic-up)' }}>
-                {speed(upRate)}
+                {networkSpeed(upRate)}
               </strong>
               <small className="tabular">{cycleUp !== undefined ? `周期 ${bytes(cycleUp)}` : ''}</small>
             </div>
@@ -1762,7 +1752,7 @@ function ServerCardLumina({ server, index }: { server: EnrichedServer; index: nu
                 <ArrowDown size={15} />
               </span>
               <strong className="tabular" style={{ color: 'var(--traffic-down)' }}>
-                {speed(downRate)}
+                {networkSpeed(downRate)}
               </strong>
               <small className="tabular">{cycleDown !== undefined ? `周期 ${bytes(cycleDown)}` : ''}</small>
             </div>
@@ -1871,6 +1861,7 @@ function ServerCardLumina({ server, index }: { server: EnrichedServer; index: nu
 }
 
 function ServerCard({ server, index }: { server: ProbeServer; index: number }) {
+  const networkSpeed = useNetworkSpeed()
   const [trafficOpen, setTrafficOpen] = useState(false)
   const name = server.name || `服务器 ${index + 1}`
   const flag = regionFlag(server.region)
@@ -1923,11 +1914,11 @@ function ServerCard({ server, index }: { server: ProbeServer; index: number }) {
         <div className="speed">
           <span className="download">
             <ArrowDown size={16} />
-            {speed(server.download_speed)}
+            {networkSpeed(server.download_speed)}
           </span>
           <span className="upload">
             <ArrowUp size={16} />
-            {speed(server.upload_speed)}
+            {networkSpeed(server.upload_speed)}
           </span>
         </div>
       )}
@@ -1992,6 +1983,7 @@ function MiniReturnRoutes({ server }: { server: ProbeServer }) {
 }
 
 function ServerMiniCard({ server, index, expanded }: { server: ProbeServer; index: number; expanded: boolean }) {
+  const networkSpeed = useNetworkSpeed()
   const name = server.name || `服务器 ${index + 1}`
   const flag = regionFlag(server.region)
   const memPct = server.mem_total ? pct(server.mem_used, server.mem_total) : undefined
@@ -2028,9 +2020,9 @@ function ServerMiniCard({ server, index, expanded }: { server: ProbeServer; inde
               </span>
             )}
             {server.download_speed !== undefined && (
-              <span className="mini-speed" title={`下行 ${speed(server.download_speed)}${server.upload_speed !== undefined ? ` / 上行 ${speed(server.upload_speed)}` : ''}`}>
+              <span className="mini-speed" title={`下行 ${networkSpeed(server.download_speed)}${server.upload_speed !== undefined ? ` / 上行 ${networkSpeed(server.upload_speed)}` : ''}`}>
                 <ArrowDown size={12} />
-                {speed(server.download_speed)}
+                {networkSpeed(server.download_speed)}
               </span>
             )}
           </div>
@@ -2097,15 +2089,15 @@ function ServerMiniCard({ server, index, expanded }: { server: ProbeServer; inde
             </span>
           )}
           {server.download_speed !== undefined && (
-            <span title={`下行 ${speed(server.download_speed)}`}>
+            <span title={`下行 ${networkSpeed(server.download_speed)}`}>
               <ArrowDown size={12} />
-              {speed(server.download_speed)}
+              {networkSpeed(server.download_speed)}
             </span>
           )}
           {server.upload_speed !== undefined && (
-            <span title={`上行 ${speed(server.upload_speed)}`}>
+            <span title={`上行 ${networkSpeed(server.upload_speed)}`}>
               <ArrowUp size={12} />
-              {speed(server.upload_speed)}
+              {networkSpeed(server.upload_speed)}
             </span>
           )}
         </div>
@@ -2209,6 +2201,7 @@ function sortValue(server: ProbeServer, key: SortKey): number | string {
 }
 
 function ServerTable({ servers }: { servers: ProbeServer[] }) {
+  const networkSpeed = useNetworkSpeed()
   const [sortKey, setSortKey] = useState<SortKey>('name')
   const [sortDir, setSortDir] = useState<SortDir>('asc')
 
@@ -2297,11 +2290,11 @@ function ServerTable({ servers }: { servers: ProbeServer[] }) {
                     <span className="table-speed">
                       <span>
                         <ArrowUp size={14} />
-                        {speed(server.upload_speed)}
+                        {networkSpeed(server.upload_speed)}
                       </span>
                       <span>
                         <ArrowDown size={14} />
-                        {speed(server.download_speed)}
+                        {networkSpeed(server.download_speed)}
                       </span>
                     </span>
                   </td>
@@ -2430,6 +2423,7 @@ function ProbeLicenseNameplate({ name, displayName }: { name?: string; displayNa
 import { EXTRA_LICENSE_BADGES } from './license-badges'
 
 export function App() {
+  const networkSpeed = useNetworkSpeed()
   const { data, error } = useProbe()
   const servers = data?.servers || []
   const [view, setView] = useState<'card' | 'list' | 'mini'>(() => (localStorage.getItem('probe-view') as 'card' | 'list' | 'mini') || 'card')
@@ -2690,8 +2684,8 @@ export function App() {
               <span className="summary-toggle-info">
                 {summaryCollapsed.has('network') && (
                   <>
-                    <b>↓{bitSpeed(totalDownload)}</b>
-                    <b>↑{bitSpeed(totalUpload)}</b>
+                    <b>↓{networkSpeed(totalDownload)}</b>
+                    <b>↑{networkSpeed(totalUpload)}</b>
                   </>
                 )}
                 <ChevronDown size={17} />

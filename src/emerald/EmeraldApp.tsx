@@ -1,3 +1,4 @@
+import { useNetworkSpeed } from '../use-network-speed'
 import {
   useEffect,
   useMemo,
@@ -88,18 +89,6 @@ function bytes(value = 0, decimals = true): string {
   }
   const digits = decimals && unit >= 2 ? (next >= 100 ? 0 : next >= 10 ? 1 : 2) : 0
   return `${next.toFixed(digits).replace(/\.0+$/, '')} ${units[unit]}`
-}
-
-function bitSpeed(value = 0): string {
-  const units = ['bps', 'Kbps', 'Mbps', 'Gbps', 'Tbps']
-  let next = Math.max(0, value) * 8
-  let unit = 0
-  while (next >= 1000 && unit < units.length - 1) {
-    next /= 1000
-    unit += 1
-  }
-  const digits = next >= 100 ? 0 : next >= 10 ? 1 : 2
-  return `${next.toFixed(digits)} ${units[unit]}`
 }
 
 function splitMetric(text: string): { value: string; unit: string } {
@@ -221,6 +210,7 @@ interface OverviewMetric {
 }
 
 function Overview({ servers }: { servers: EnrichedServer[] }) {
+  const networkSpeed = useNetworkSpeed()
   const [globeCollapsed, setGlobeCollapsed] = useState(true)
   const metrics = useMemo<OverviewMetric[]>(() => {
     const memoryUsed = servers.reduce((sum, server) => sum + (server.mem_used || 0), 0)
@@ -236,14 +226,14 @@ function Overview({ servers }: { servers: EnrichedServer[] }) {
       { key: 'disk', label: '硬盘用量', icon: <HardDrive size={17} />, text: bytes(diskUsed), unit: `/ ${bytes(diskTotal)}`, tone: 'amber' },
       { key: 'value', label: '剩余价值', icon: <Coins size={17} />, text: remaining ? formatMoney(remaining, 'CNY', true) : '—', unit: remaining ? 'CNY' : '', tone: 'mint' },
       { key: 'traffic', label: '累计流量', icon: <Database size={17} />, text: bytes(traffic), unit: '', tone: 'cyan' },
-      { key: 'upload', label: '实时上行', icon: <ArrowUp size={17} />, text: bitSpeed(upload), unit: '', tone: 'blue' },
-      { key: 'download', label: '实时下行', icon: <ArrowDown size={17} />, text: bitSpeed(download), unit: '', tone: 'indigo' },
+      { key: 'upload', label: '实时上行', icon: <ArrowUp size={17} />, text: networkSpeed(upload), unit: '', tone: 'blue' },
+      { key: 'download', label: '实时下行', icon: <ArrowDown size={17} />, text: networkSpeed(download), unit: '', tone: 'indigo' },
     ]
     return rows.map((row) => {
       const split = splitMetric(row.text)
       return { key: row.key, label: row.label, icon: row.icon, value: split.value, unit: [split.unit, row.unit].filter(Boolean).join(' '), tone: row.tone }
     })
-  }, [servers])
+  }, [servers, networkSpeed])
 
   const regions = useMemo(() => servers.map((server) => server.region || server.region_country || '').filter(Boolean), [servers])
   const online = servers.filter((server) => server.online).length
@@ -292,6 +282,7 @@ function rankingTraffic(server: ProbeServer): number {
 }
 
 function RankingPanel({ servers, type, openServer }: { servers: EnrichedServer[]; type: RankingType; openServer: (index: number) => void }) {
+  const networkSpeed = useNetworkSpeed()
   const [expanded, setExpanded] = useState(false)
   const rows = useMemo(() => {
     if (type === 'uptime') {
@@ -328,8 +319,8 @@ function RankingPanel({ servers, type, openServer }: { servers: EnrichedServer[]
       const max = Math.max(1, ...ranked.map((row) => row.total))
       return ranked.map(({ server, total }) => ({
         server,
-        value: bitSpeed(total),
-        sub: `↓ ${bitSpeed(server.download_speed)} · ↑ ${bitSpeed(server.upload_speed)}`,
+        value: networkSpeed(total),
+        sub: `↓ ${networkSpeed(server.download_speed)} · ↑ ${networkSpeed(server.upload_speed)}`,
         score: (total / max) * 100,
       }))
     }
@@ -341,7 +332,7 @@ function RankingPanel({ servers, type, openServer }: { servers: EnrichedServer[]
       sub: `收 ${bytes(server.cumulative_down)} · 发 ${bytes(server.cumulative_up)}`,
       score: (total / max) * 100,
     }))
-  }, [servers, type])
+  }, [servers, type, networkSpeed])
 
   const visibleRows = expanded ? rows : rows.slice(0, 3)
   const meta = type === 'uptime'
@@ -427,6 +418,7 @@ function GlowCard({ children, className, index, onClick, label }: {
 }
 
 function NodeCard({ server, index, open }: { server: EnrichedServer; index: number; open: () => void }) {
+  const networkSpeed = useNetworkSpeed()
   const [trafficOpen, setTrafficOpen] = useState(false)
   const name = server.name || `服务器 ${index + 1}`
   const flag = regionFlag(server)
@@ -480,8 +472,8 @@ function NodeCard({ server, index, open }: { server: EnrichedServer; index: numb
       </div>
       <div className="emerald-node-quick">
         <div>
-          <span className="is-down"><ArrowDown size={11} />下 <b><MetricValue value={bitSpeed(server.download_speed)} /></b></span>
-          <span className="is-up"><ArrowUp size={11} />上 <b><MetricValue value={bitSpeed(server.upload_speed)} /></b></span>
+          <span className="is-down"><ArrowDown size={11} />下 <b><MetricValue value={networkSpeed(server.download_speed)} /></b></span>
+          <span className="is-up"><ArrowUp size={11} />上 <b><MetricValue value={networkSpeed(server.upload_speed)} /></b></span>
         </div>
         <div>
           <span title="当前周期下行流量"><ArrowDown size={11} />下行 <b>{bytes(server.traffic_used_down)}</b></span>
@@ -513,6 +505,7 @@ function NodeCard({ server, index, open }: { server: EnrichedServer; index: numb
 }
 
 function TableView({ servers, allServers, open }: { servers: EnrichedServer[]; allServers: EnrichedServer[]; open: (index: number) => void }) {
+  const networkSpeed = useNetworkSpeed()
   return (
     <div className="emerald-table-shell">
       <table>
@@ -529,7 +522,7 @@ function TableView({ servers, allServers, open }: { servers: EnrichedServer[]; a
                 <td>{percentage(server.mem_used, server.mem_total).toFixed(1)}%</td>
                 <td>{percentage(server.disk_used, server.disk_total).toFixed(1)}%</td>
                 <td>{bytes(server.traffic_used)}</td>
-                <td><span className="is-down">{bitSpeed(server.download_speed)}</span> / <span className="is-up">{bitSpeed(server.upload_speed)}</span></td>
+                <td><span className="is-down">{networkSpeed(server.download_speed)}</span> / <span className="is-up">{networkSpeed(server.upload_speed)}</span></td>
                 <td>{ping ? `${ping.latency.toFixed(0)} ms` : '—'}</td>
               </tr>
             )
@@ -541,6 +534,7 @@ function TableView({ servers, allServers, open }: { servers: EnrichedServer[]; a
 }
 
 function StatusView({ servers, allServers, open }: { servers: EnrichedServer[]; allServers: EnrichedServer[]; open: (index: number) => void }) {
+  const networkSpeed = useNetworkSpeed()
   return (
     <div className="emerald-status-list">
       {servers.map((server, rowIndex) => {
@@ -550,7 +544,7 @@ function StatusView({ servers, allServers, open }: { servers: EnrichedServer[]; 
           <GlowCard key={server.name} className="emerald-status-row" index={rowIndex} onClick={() => open(index)} label={`查看节点 ${server.name || index + 1} 详情`}>
             <div className="emerald-status-ident"><span className={`emerald-status-dot${server.online ? ' is-online' : ''}`} />{regionFlag(server) && <Twemoji>{regionFlag(server)}</Twemoji>}<strong>{server.name || `服务器 ${index + 1}`}</strong><small>{server.os || server.cpu_model || '系统信息'}</small></div>
             <div className="emerald-status-metrics"><span>CPU <b>{(server.cpu_pct || 0).toFixed(1)}%</b></span><span>内存 <b>{percentage(server.mem_used, server.mem_total).toFixed(1)}%</b></span><span>硬盘 <b>{percentage(server.disk_used, server.disk_total).toFixed(1)}%</b></span></div>
-            <div className="emerald-status-speed"><span className="is-down">↓ {bitSpeed(server.download_speed)}</span><span className="is-up">↑ {bitSpeed(server.upload_speed)}</span></div>
+            <div className="emerald-status-speed"><span className="is-down">↓ {networkSpeed(server.download_speed)}</span><span className="is-up">↑ {networkSpeed(server.upload_speed)}</span></div>
             <div className="emerald-status-ping"><b>{ping ? `${ping.latency.toFixed(0)} ms` : '—'}</b><span>丢包 {ping?.loss.toFixed(1) || '0.0'}%</span></div>
           </GlowCard>
         )

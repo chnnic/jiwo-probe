@@ -1,3 +1,4 @@
+import { useNetworkSpeed } from '../use-network-speed'
 import { useEffect, useMemo, useState } from 'react'
 import {
   Activity,
@@ -43,7 +44,6 @@ import {
   pct,
   regionFlag,
   remainingDays,
-  speed,
 } from '../App'
 import type { EnrichedServer } from '../use-probe'
 import { GmEarth, type GmRegion } from './GmEarth'
@@ -78,20 +78,8 @@ function splitBytesText(value: number): { value: string; unit: string } {
   return { value: match[1], unit: match[2] || '' }
 }
 
-function bitSpeed(bytesPerSecond = 0): string {
-  let value = Math.max(0, bytesPerSecond) * 8
-  const units = ['bps', 'Kbps', 'Mbps', 'Gbps', 'Tbps']
-  let unit = 0
-  while (value >= 1000 && unit < units.length - 1) {
-    value /= 1000
-    unit++
-  }
-  const digits = value >= 100 ? 0 : value >= 10 ? 1 : 2
-  return `${value.toFixed(digits)} ${units[unit]}`
-}
-
-function splitSpeedText(value: number): { value: string; unit: string } {
-  const v = bitSpeed(value)
+function splitSpeedText(value: number, networkSpeed: (value: number) => string): { value: string; unit: string } {
+  const v = networkSpeed(value)
   const match = /^([\d.]+)\s*([\w/]+)?$/.exec(v)
   if (!match) return { value: v, unit: '' }
   return { value: match[1], unit: match[2] || '' }
@@ -145,6 +133,7 @@ function buildRegions(servers: ProbeServer[]): GmRegion[] {
 
 /* ================= 节点卡（照搬 Komari NodeCard 结构） ================= */
 function GmNodeCard({ server, index }: { server: EnrichedServer; index: number }) {
+  const networkSpeed = useNetworkSpeed()
   const [trafficOpen, setTrafficOpen] = useState(false)
   const name = server.name || `服务器 ${index + 1}`
   const flag = regionFlag(server.region)
@@ -284,11 +273,11 @@ function GmNodeCard({ server, index }: { server: EnrichedServer; index: number }
             <div className="gm-quick-cell">
               <div className="gm-quick-line gm-q-up">
                 <ArrowUp size={11} />
-                <span>{bitSpeed(server.upload_speed)}</span>
+                <span>{networkSpeed(server.upload_speed)}</span>
               </div>
               <div className="gm-quick-line gm-q-down">
                 <ArrowDown size={11} />
-                <span>{bitSpeed(server.download_speed)}</span>
+                <span>{networkSpeed(server.download_speed)}</span>
               </div>
             </div>
             <div className="gm-quick-cell">
@@ -347,6 +336,7 @@ interface GmGeneralCard {
 }
 
 function GmGeneralCards({ servers }: { servers: ProbeServer[] }) {
+  const networkSpeed = useNetworkSpeed()
   const [earthCollapsed, setEarthCollapsed] = useState(true)
   const cards = useMemo<GmGeneralCard[]>(() => {
     const memUsed = servers.reduce((acc, s) => acc + (s.mem_used || 0), 0)
@@ -366,8 +356,8 @@ function GmGeneralCards({ servers }: { servers: ProbeServer[] }) {
     const mem = splitBytesText(memUsed)
     const disk = splitBytesText(diskUsed)
     const traffic = splitBytesText(trafficUsed)
-    const upSpeed = splitSpeedText(up)
-    const downSpeed = splitSpeedText(down)
+    const upSpeed = splitSpeedText(up, networkSpeed)
+    const downSpeed = splitSpeedText(down, networkSpeed)
     const valueText = totalValue > 0 ? formatMoney(totalValue, 'CNY', true).replace(/¥/, '') : '—'
     const result: GmGeneralCard[] = [
       {
@@ -408,7 +398,7 @@ function GmGeneralCards({ servers }: { servers: ProbeServer[] }) {
         icon: <ArrowUp size={20} />,
         value: upSpeed.value,
         unit: upSpeed.unit,
-        tooltip: `所有在线节点实时上行合计 ${bitSpeed(up)}`,
+        tooltip: `所有在线节点实时上行合计 ${networkSpeed(up)}`,
       },
       {
         key: 'downloadSpeed',
@@ -416,11 +406,11 @@ function GmGeneralCards({ servers }: { servers: ProbeServer[] }) {
         icon: <ArrowDown size={20} />,
         value: downSpeed.value,
         unit: downSpeed.unit,
-        tooltip: `所有在线节点实时下行合计 ${bitSpeed(down)}`,
+        tooltip: `所有在线节点实时下行合计 ${networkSpeed(down)}`,
       },
     ]
     return result
-  }, [servers])
+  }, [servers, networkSpeed])
 
   const regions = useMemo(() => buildRegions(servers), [servers])
 
@@ -536,6 +526,7 @@ export default function GmApp({
   data: ProbePayload
   onThemeChange: (name: ThemeName | null) => void
 }) {
+  const networkSpeed = useNetworkSpeed()
   const servers = useMemo(() => (data.servers || []) as EnrichedServer[], [data.servers])
   const title = data.title?.trim() || '服务器状态'
   const [search, setSearch] = useState('')
@@ -741,9 +732,9 @@ export default function GmApp({
                         <td className="tabular">{server.disk_total ? `${pct(server.disk_used, server.disk_total).toFixed(1)}%` : '—'}</td>
                         <td className="tabular">{server.traffic_used !== undefined ? bytes(server.traffic_used, false) : '—'}</td>
                         <td className="tabular">
-                          <span className="gm-table-speed-down">{bitSpeed(server.download_speed)}</span>
+                          <span className="gm-table-speed-down">{networkSpeed(server.download_speed)}</span>
                           {' / '}
-                          <span className="gm-table-speed-up">{bitSpeed(server.upload_speed)}</span>
+                          <span className="gm-table-speed-up">{networkSpeed(server.upload_speed)}</span>
                         </td>
                       </tr>
                     )

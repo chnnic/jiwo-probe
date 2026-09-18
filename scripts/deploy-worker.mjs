@@ -27,11 +27,11 @@ export function readWranglerJson(args) {
 export async function readScriptDefaults() {
   // 与前端 / Worker 使用同一份默认值，避免部署脚本另存一套而发生偏差。
   const bundle = await build({
-    entryPoints: [fileURLToPath(new URL('../src/ping-groups.ts', import.meta.url))],
+    entryPoints: [fileURLToPath(new URL('../src/runtime-defaults.ts', import.meta.url))],
     bundle: true, write: false, format: 'esm', platform: 'node',
   })
   const module = await import(`data:text/javascript;base64,${Buffer.from(bundle.outputFiles[0].text).toString('base64')}`)
-  return Object.fromEntries(Object.entries(module.PING_GROUP_SCRIPT_VARS).map(([name, value]) => [name, String(value)]))
+  return Object.fromEntries(Object.entries(module.RUNTIME_SCRIPT_VARS).map(([name, value]) => [name, String(value)]))
 }
 
 export function readExistingBindings(readJson = readWranglerJson) {
@@ -78,8 +78,8 @@ async function main() {
   const missing = missingPingVars(defaults, readExistingBindings())
   const names = Object.keys(missing)
   console.log(names.length
-    ? `将自动创建 CF 延迟设置项：${names.join('、')}；已有设置保持不变。`
-    : 'CF 延迟设置项已存在，将保留后台当前值。')
+    ? `将自动创建 CF 设置项：${names.join('、')}；已有设置保持不变。`
+    : 'CF 设置项已存在，将保留后台当前值。')
   if (process.argv.includes('--check')) return
   execFileSync(process.execPath, [wrangler, ...deployArgs(missing)], { cwd: root, stdio: 'inherit' })
 }
