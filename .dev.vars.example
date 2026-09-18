@@ -2,4 +2,5 @@
 MMWX_ORIGIN=https://panel.example.com
 PROBE_TOKEN=replace-with-the-generated-probe-token
 PROBE_POLL_INTERVAL_SECONDS=3
-PROBE_NETWORK_SPEED_UNIT=bytes
+# 网速显示单位：bits 或 bytes（不影响 Ran 与累计流量）。
+PROBE_NETWORK_SPEED_UNIT=bits

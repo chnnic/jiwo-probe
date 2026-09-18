@@ -1,4 +1,5 @@
 import { parsePingGroupConfig } from '../src/ping-groups'
+import { parseNetworkSpeedUnit } from '../src/network-speed'
 
 interface Env {
   ASSETS: Fetcher
@@ -33,7 +34,7 @@ const DEFAULT_BACKGROUND_THEMES = 'pixel,flat,anime,glass,lumina,premium,ran,gla
 function runtimeThemeConfig(env: Env): Record<string, unknown> {
   return {
     ...runtimeBackgroundConfig(env),
-    networkSpeedUnit: env.PROBE_NETWORK_SPEED_UNIT?.trim().toLowerCase() === 'bits' ? 'bits' : 'bytes',
+    networkSpeedUnit: parseNetworkSpeedUnit(env.PROBE_NETWORK_SPEED_UNIT),
     pingGroups: parsePingGroupConfig({
       count: env.PROBE_PING_GROUP_COUNT,
       defaultTargets: env.PROBE_PING_DEFAULT_TARGETS,

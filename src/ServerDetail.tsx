@@ -1,10 +1,11 @@
+import { useNetworkSpeed } from './use-network-speed'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Activity, ArrowDown, ArrowUp, BadgeDollarSign, CalendarClock, ChevronLeft, Clock, Cpu, Database, HardDrive, MemoryStick, Monitor, MoveHorizontal, PieChart, TrendingUp, Wallet, Wifi, X, ZoomIn, ZoomOut } from 'lucide-react'
 import { Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import type { ProbePingSeries, ProbeServer } from './types'
 import { Twemoji } from './Twemoji'
-import { Meter, ReturnRouteBadges, SystemIcon, TrafficChart, SystemTrendChart, averagePing, bytes, expiring, expired, formatAxisDateTime, formatLossTick, hasLeadingFlag, HorizontalChart, lossScale, pct, regionFlag, regionLabel, remainingDays, speed } from './App'
+import { Meter, ReturnRouteBadges, SystemIcon, TrafficChart, SystemTrendChart, averagePing, bytes, expiring, expired, formatAxisDateTime, formatLossTick, hasLeadingFlag, HorizontalChart, lossScale, pct, regionFlag, regionLabel, remainingDays } from './App'
 import { serverHealth } from './PremiumProbePage'
 import { computeRemainingValue, formatMoney } from './value'
 
@@ -299,6 +300,7 @@ function DetailMetric({ icon, label, value, percent, sub }: { icon: React.ReactN
 }
 
 export function ServerDetail({ server, index, onClose, showHealthScore = false }: { server: ProbeServer; index: number; onClose: () => void; showHealthScore?: boolean }) {
+  const networkSpeed = useNetworkSpeed()
   const [selected, setSelected] = useState('__avg__')
   const [trendMode, setTrendMode] = useState<'latency' | 'loss' | 'traffic' | 'cpu' | 'mem'>('latency')
   const name = server.name || `服务器 ${index + 1}`
@@ -380,11 +382,11 @@ export function ServerDetail({ server, index, onClose, showHealthScore = false }
                   <div className="detail-speed">
                     <span className="download" title="下行速度">
                       <ArrowDown size={16} />
-                      {speed(server.download_speed)}
+                      {networkSpeed(server.download_speed)}
                     </span>
                     <span className="upload" title="上行速度">
                       <ArrowUp size={16} />
-                      {speed(server.upload_speed)}
+                      {networkSpeed(server.upload_speed)}
                     </span>
                   </div>
                 )}

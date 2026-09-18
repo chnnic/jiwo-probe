@@ -89,6 +89,20 @@ PROBE_BACKGROUND_THEMES=pixel,flat,anime,glass,lumina,premium,ran,glassmorphism,
 
 仓库已在 `package.json` 声明这四项配置，并在 Worker 代码中提供默认值和校验。站点自己的图片地址不会硬编码到仓库，避免公开站点配置；`wrangler.jsonc` 启用了 `keep_vars`，因此从 Cloudflare 后台设置的变量不会被普通代码部署删除。背景配置由 Worker 的公开只读接口下发，不包含任何 Secret，请勿在这些变量中填写 token。未设置图片、链接无效或当前主题不在应用范围时，会自动回退到主题原生背景。
 
+#### 全局网速单位（Ran 除外）
+
+默认使用 **bits**（bps / Kbps / Mbps / Gbps），也可统一切换为 **bytes**（B/s / KB/s / MB/s / GB/s）。适用于 pixel、flat、anime、glass、lumina、glassmorphism、emerald、premium 八个主题中的实时网速显示，包括网速概览、卡片、迷你/列表视图、网速榜单、二级详情页，以及网速历史图表的提示。**Ran 完全保持原样，不跟随这项设置。**
+
+| CF 运行时变量 | 默认值 | 可选值 |
+| --- | --- | --- |
+| `PROBE_NETWORK_SPEED_UNIT` | `bits` | `bits` 或 `bytes`（不区分大小写） |
+
+使用 `npm run deploy` / `./scripts/deploy.sh` 时，会自动创建缺失的 `PROBE_NETWORK_SPEED_UNIT=bits` **Text 变量**；后台已设为 `bytes` 时，后续更新不会覆盖。该项和三项延迟配置使用同一个部署流程，但彼此独立。默认值集中在 `src/network-speed.ts` 的 `DEFAULT_NETWORK_SPEED_UNIT`。
+
+修改路径：**Cloudflare → Workers & Pages → 你的 Worker → Settings → Variables and Secrets → `PROBE_NETWORK_SPEED_UNIT`**，将值改为 `bytes` 或 `bits`，**保存并部署后刷新探针页面**。不要填到 Build Variables 中。直接运行 `npx wrangler deploy` 也会使用代码默认值，但不会自动补出后台设置项。
+
+这只是显示单位切换，不改变原始采集值、刷新频率或排序：原始网速始终是字节/秒，bits 显示时乘以 8、按 1000 进位，bytes 沿用 1024 进位。**累计/周期/每日流量仍显示 GB/TB，内存和磁盘容量也不受影响。** 未设置、留空或填入无效值时回退到 `bits`。
+
 <a id="multi-ping-groups"></a>
 
 #### 首页卡片的多组延迟 / 丢包
@@ -238,7 +252,7 @@ ProbeHub 连接或快照异常时会自动回退到原来的主控直连，不�
    | `MMWX_ORIGIN` | Text | 主控 HTTPS 地址，例如 `https://panel.example.com` |
    | `PROBE_TOKEN` | Secret | 主控"系统设置 → 探针"生成的访问密钥 |
    | `PROBE_POLL_INTERVAL_SECONDS` | Text（可选） | 实时快照间隔，默认 `3`；降载时可设为 `5` |
-   | `PROBE_NETWORK_SPEED_UNIT` | Text（可选） | 「网络情况」总上下行网速单位：`bytes`（默认，自动显示 B/s、KB/s、MB/s、GB/s、TB/s）或 `bits`（自动显示 bps、Kbps、Mbps、Gbps、Tbps）；未设置或无效值使用 `bytes` |
+   | `PROBE_NETWORK_SPEED_UNIT` | Text（可选） | 全局网速单位，默认 `bits`，可改 `bytes`；Ran 和累计流量不受影响 |
    | `PROBE_BACKGROUND_URL` | Text（可选） | 自定义背景图片 HTTPS 地址 |
    | `PROBE_BACKGROUND_OVERLAY` | Text（可选） | 背景遮罩强度，默认 `0.32` |
    | `PROBE_BACKGROUND_POSITION` | Text（可选） | 背景位置，默认 `center` |
@@ -313,10 +327,7 @@ cp .dev.vars.example .dev.vars
 MMWX_ORIGIN=https://panel.example.com
 PROBE_TOKEN=主控生成的访问密钥
 PROBE_POLL_INTERVAL_SECONDS=3
-PROBE_NETWORK_SPEED_UNIT=bytes
 ```
-
-「网络情况」默认复用节点卡片的字节网速格式，按 1024 进位，例如 `3 MB/s`；设为 `bits` 时按 1000 进位显示带宽单位。该配置同时控制展开数值、进度条刻度和折叠摘要，不改变节点卡片。修改 `.dev.vars` 后重启本地 Worker 并刷新页面；线上在 Worker 的 Variables and Secrets 中保存并部署后刷新页面。
 
 分别启动 Worker 和 Vite：
 

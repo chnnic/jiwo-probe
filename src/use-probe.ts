@@ -2,14 +2,14 @@ import { createContext, createElement, useContext, useEffect, useRef, useState }
 import type { ReactNode } from 'react'
 import type { ProbeAppearance, ProbeBackgroundAppearance, ProbePayload, ProbeServer, ThemeName } from './types'
 import { DEFAULT_PING_GROUP_CONFIG, parsePingGroupConfig, type PingGroupConfig } from './ping-groups'
+import { DEFAULT_NETWORK_SPEED_UNIT, parseNetworkSpeedUnit, type NetworkSpeedUnit } from './network-speed'
 
 const APPEARANCE_CACHE = 'mmwx-probe-appearance'
 const DARK_OVERRIDE = 'mmwx-probe-dark-override'
 const THEME_OVERRIDE = 'mmwx-probe-theme-override'
-export type NetworkSpeedUnit = 'bytes' | 'bits'
 let runtimeBackground: ProbeBackgroundAppearance | undefined
 let runtimePingGroups = DEFAULT_PING_GROUP_CONFIG
-let runtimeNetworkSpeedUnit: NetworkSpeedUnit = 'bytes'
+let runtimeNetworkSpeedUnit = DEFAULT_NETWORK_SPEED_UNIT
 let runtimeThemeConfigPromise: Promise<void> | undefined
 let lastAppliedAppearance: ProbeAppearance | undefined
 
@@ -63,10 +63,10 @@ function loadRuntimeThemeConfig(): Promise<void> {
   runtimeThemeConfigPromise = fetch('/api/theme-config', { cache: 'no-store' })
     .then(async (response) => {
       if (!response.ok) return
-      const config = await response.json() as { background?: ProbeBackgroundAppearance; pingGroups?: PingGroupConfig; networkSpeedUnit?: NetworkSpeedUnit }
+      const config = await response.json() as { background?: ProbeBackgroundAppearance; pingGroups?: PingGroupConfig; networkSpeedUnit?: unknown }
       if (config.background?.url) runtimeBackground = config.background
       runtimePingGroups = parsePingGroupConfig(config.pingGroups)
-      runtimeNetworkSpeedUnit = config.networkSpeedUnit === 'bits' ? 'bits' : 'bytes'
+      runtimeNetworkSpeedUnit = parseNetworkSpeedUnit(config.networkSpeedUnit)
       if (lastAppliedAppearance) applyAppearance(lastAppliedAppearance)
     })
     .catch(() => {

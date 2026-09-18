@@ -1,3 +1,4 @@
+import { useNetworkSpeed } from './use-network-speed'
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
 import {
   Activity,
@@ -355,17 +356,6 @@ function localizedRegionLabel(server: ProbeServer, code?: string): string {
       ? [country, place].filter(Boolean).join(' · ')
       : country || place
   return [flag, detail || server.region || '未知地区'].filter(Boolean).join(' ')
-}
-
-function formatBitSpeed(bytesPerSecond: number): string {
-  let value = Math.max(0, bytesPerSecond) * 8
-  const units = ['bps', 'Kbps', 'Mbps', 'Gbps', 'Tbps']
-  let unit = 0
-  while (value >= 1000 && unit < units.length - 1) {
-    value /= 1000
-    unit++
-  }
-  return `${value.toFixed(value >= 100 ? 0 : value >= 10 ? 1 : 2)} ${units[unit]}`
 }
 
 function formatAxisDateTime(unixSeconds: number): string {
@@ -1268,6 +1258,7 @@ function DailyTrafficTrend({ servers }: { servers: ProbeServer[] }) {
 }
 
 function TrafficHotspots({ servers }: { servers: ProbeServer[] }) {
+  const networkSpeed = useNetworkSpeed()
   const ranked = servers
     .map((server, index) => ({
       server,
@@ -1282,7 +1273,7 @@ function TrafficHotspots({ servers }: { servers: ProbeServer[] }) {
     <div className='premium-probe-overview-chart-card premium-probe-hotspots'>
       <div className='premium-probe-overview-chart-heading'>
         <span>实时流量热点</span>
-        <strong>{formatBitSpeed(total)}</strong>
+        <strong>{networkSpeed(total)}</strong>
       </div>
       <div className='premium-probe-hotspot-list'>
         {rows.map((row) => {
@@ -2985,6 +2976,7 @@ export function PremiumProbePage({
   isError,
   onThemeChange,
 }: PremiumProbePageProps) {
+  const networkSpeed = useNetworkSpeed()
   const servers = useMemo(() => data?.servers || [], [data?.servers])
   const regions = useMemo(() => buildRegions(servers), [servers])
   const totalDownload = servers.reduce(
@@ -3087,8 +3079,8 @@ export function PremiumProbePage({
   }, [])
   const sampledPayload = useRef<ProbeData | undefined>(undefined)
   const [liveSpeedHistory, setLiveSpeedHistory] = useState<{
-    download: TrendSample[]
-    upload: TrendSample[]
+    download: Omit<TrendSample, 'formatted'>[]
+    upload: Omit<TrendSample, 'formatted'>[]
   }>({ download: [], upload: [] })
 
   useEffect(() => {
@@ -3110,7 +3102,6 @@ export function PremiumProbePage({
           {
             label,
             value: totalDownload,
-            formatted: formatBitSpeed(totalDownload),
           },
         ],
         upload: [
@@ -3118,7 +3109,6 @@ export function PremiumProbePage({
           {
             label,
             value: totalUpload,
-            formatted: formatBitSpeed(totalUpload),
           },
         ],
       }))
@@ -3365,13 +3355,13 @@ export function PremiumProbePage({
                 >
                   <SpeedSnapshot
                     label='总下行网速'
-                    value={formatBitSpeed(totalDownload)}
-                    samples={liveSpeedHistory.download}
+                    value={networkSpeed(totalDownload)}
+                    samples={liveSpeedHistory.download.map((sample) => ({ ...sample, formatted: networkSpeed(sample.value) }))}
                   />
                   <SpeedSnapshot
                     label='总上行网速'
-                    value={formatBitSpeed(totalUpload)}
-                    samples={liveSpeedHistory.upload}
+                    value={networkSpeed(totalUpload)}
+                    samples={liveSpeedHistory.upload.map((sample) => ({ ...sample, formatted: networkSpeed(sample.value) }))}
                   />
                   {showDailyTrend && <DailyTrafficTrend servers={servers} />}
                   {showTrafficHotspots && <TrafficHotspots servers={servers} />}
