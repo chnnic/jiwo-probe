@@ -7,7 +7,7 @@ import type { ProbePingSeries, ProbeServer } from './types'
 import { Twemoji } from './Twemoji'
 import { Meter, ReturnRouteBadges, SystemIcon, TrafficChart, SystemTrendChart, averagePing, bytes, expiring, expired, formatAxisDateTime, formatLossTick, hasLeadingFlag, HorizontalChart, lossScale, pct, regionFlag, regionLabel, remainingDays } from './App'
 import { serverHealth } from './PremiumProbePage'
-import { computeRemainingValue, formatMoney } from './value'
+import { computeMonthlyTrafficCost, computeRemainingValue, formatMoney } from './value'
 
 const cycleLabel = {
   month: '月',
@@ -50,6 +50,21 @@ function RemainingValueBlock({ server }: { server: ProbeServer }) {
         <i style={{ width: `${percent}%` }} />
       </div>
     </div>
+  )
+}
+
+function MonthlyTrafficCostItem({ server }: { server: ProbeServer }) {
+  const cost = computeMonthlyTrafficCost(server)
+  const value = !cost ? '无法计算' : cost.perTB > 0 && cost.perTB < 0.01
+    ? `< ${formatMoney(0.01, cost.currency, cost.isCny, true)} / TB / 月`
+    : `${formatMoney(cost.perTB, cost.currency, cost.isCny, true)} / TB / 月`
+  return (
+    <span className="detail-traffic-cost" title="按配置额度为每月额度估算：续费价格先按 1 / 3 / 6 / 12 个月折算，再除以计费额度（1 TB = 1024 GB）。单向或取最大值计费不自动翻倍。非月度流量套餐不适用；不按实际已用流量计算。">
+      <Database size={13} />
+      每月每 TB 费用
+      <strong>{value}{cost && `（${cost.currency}）`}</strong>
+      {!cost && <small>缺少有效续费价格或流量额度</small>}
+    </span>
   )
 }
 
@@ -446,7 +461,7 @@ export function ServerDetail({ server, index, onClose, showHealthScore = false }
             </section>
 
             <div className="detail-col-stack">
-              {(server.expires_at || server.renewal_price !== undefined) && (
+              {(server.expires_at || server.renewal_price !== undefined || server.renewal_price_cny !== undefined) && (
                 <section className="detail-panel">
                   <h3>到期与续费</h3>
                   <div className="detail-meta">
@@ -471,6 +486,7 @@ export function ServerDetail({ server, index, onClose, showHealthScore = false }
                         {server.renewal_price_cny !== undefined && server.renewal_currency !== 'CNY' && <small>（{server.renewal_currency} {server.renewal_price}）</small>}
                       </span>
                     )}
+                    <MonthlyTrafficCostItem server={server} />
                     {server.provider_name && (
                       <span>
                         <Wifi size={13} />

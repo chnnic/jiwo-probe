@@ -2756,6 +2756,21 @@ footer a:hover {
 .detail-meta .warning {
   color: #d97706;
 }
+.detail-meta > .detail-traffic-cost {
+  flex-basis: 100%;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+.detail-traffic-cost > svg {
+  flex-shrink: 0;
+}
+.detail-traffic-cost strong {
+  overflow-wrap: anywhere;
+}
+.detail-traffic-cost small {
+  flex-basis: 100%;
+  margin-left: 19px;
+}
 .detail-hw {
   display: flex;
   flex-wrap: wrap;
