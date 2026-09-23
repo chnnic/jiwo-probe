@@ -16,13 +16,8 @@ function UnlockServiceIcon({ service }: { service: string }) {
 
 export function ConnectionCounts({ server, variant = 'detail' }: { server: Pick<ProbeServer, 'tcp_connections' | 'udp_connections'>; variant?: 'detail' | 'card' | 'inline' }) {
   const help = 'TCP：整机已建立连接；UDP：整机 socket。非代理用户数；未上报显示 —。'
-  if (variant === 'inline') return (
-    <div className="probe-connections probe-connections--inline" aria-label={`TCP 连接数 ${connectionCount(server.tcp_connections)}，UDP 连接数 ${connectionCount(server.udp_connections)}`} title={`TCP ${connectionCount(server.tcp_connections)} / UDP ${connectionCount(server.udp_connections)}。${help}`}>
-      <span>TCP/UDP</span><strong>{connectionCount(server.tcp_connections)}/{connectionCount(server.udp_connections)}</strong>
-    </div>
-  )
   return (
-    <div className={`probe-connections${variant === 'card' ? ' probe-connections--card' : ''}`} aria-label="整机连接数" title={help}>
+    <div className={`probe-connections${variant !== 'detail' ? ` probe-connections--${variant}` : ''}`} aria-label="整机连接数" title={help}>
       {variant === 'detail' && <span>连接数</span>}
       <span title={`整机 TCP ESTABLISHED 连接数：${connectionCount(server.tcp_connections)}；不等于代理用户数`}>TCP <strong>{connectionCount(server.tcp_connections)}</strong></span>
       <span title={`整机 UDP socket 数：${connectionCount(server.udp_connections)}；不等于代理用户数`}>UDP <strong>{connectionCount(server.udp_connections)}</strong></span>

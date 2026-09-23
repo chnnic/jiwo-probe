@@ -182,13 +182,20 @@ button.probe-unlock-button:hover { border-color: var(--cap-accent); }
 .speed--connections .card-speed-pair > span { display: flex; align-items: center; justify-content: flex-start; min-width: 0; gap: 3px; white-space: nowrap; font-size: 12px; }
 .speed--connections .card-speed-pair svg { flex-shrink: 0; }
 .speed--connections .card-speed-value { display: block; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
-.probe-connections.probe-connections--inline { flex: 0 1 auto; flex-wrap: nowrap; min-width: 0; max-width: 50%; padding: 0; gap: 5px; font-size: 12px; white-space: nowrap; }
-.probe-connections--inline > span { flex-shrink: 0; font-weight: 400; }
+/* 像素、扁平、动漫、玻璃与 Lumina：TCP / UDP 各带标签，组间留白。 */
+.probe-connections.probe-connections--inline { flex: 0 1 44%; flex-wrap: nowrap; justify-content: space-between; min-width: 0; max-width: 50%; padding: 0; gap: 12px; font-size: 12px; white-space: nowrap; }
+.probe-connections--inline > span { flex-shrink: 1; min-width: 0; font-weight: 400; }
 .probe-connections--inline strong { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 @container card-network (max-width: 310px) {
   .speed--connections .card-speed-pair { gap: 6px; }
   .speed--connections .card-speed-pair > span,
   .probe-connections.probe-connections--inline { font-size: 11px; }
+  .probe-connections.probe-connections--inline { flex-basis: auto; gap: 10px; }
+  .probe-connections--inline > span { gap: 4px; }
+}
+@container card-network (max-width: 260px) {
+  .speed--connections .card-speed-pair { gap: 2px; }
+  .speed--connections .card-speed-pair > span { gap: 1px; }
 }
 .server-mini-card:has(> .probe-connections--card) { flex-direction: column; align-items: stretch; }
 .emerald-node-card .probe-connections--card { margin-top: 10px; }
