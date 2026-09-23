@@ -176,26 +176,31 @@ button.probe-unlock-button:hover { border-color: var(--cap-accent); }
 .probe-connections--card > span { min-width: 0; white-space: nowrap; }
 .probe-connections--card > span:not(:first-child) { justify-content: flex-end; }
 .probe-connections--card strong { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
-/* 通用与 Lumina 卡片：下行/上行靠左，TCP/UDP 数量靠右，共用一行。 */
-.speed.speed--connections, .lumina-network-row { display: flex; align-items: center; gap: 12px; container: card-network / inline-size; }
-.speed--connections .card-speed-pair { display: flex; align-items: center; flex: 1; min-width: 0; gap: 12px; }
+/* 与上方指标共用等宽两列：左列网速，右列连接数，不随数字长度移动。 */
+.speed.speed--connections, .lumina-network-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: center; gap: 20px; container: card-network / inline-size; }
+.lumina-network-row { column-gap: 14px; }
+.speed--connections .card-speed-pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: center; min-width: 0; gap: 8px; }
 .speed--connections .card-speed-pair > span { display: flex; align-items: center; justify-content: flex-start; min-width: 0; gap: 3px; white-space: nowrap; font-size: 12px; }
 .speed--connections .card-speed-pair svg { flex-shrink: 0; }
 .speed--connections .card-speed-value { display: block; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
-/* 像素、扁平、动漫、玻璃与 Lumina：TCP / UDP 各带标签，组间留白。 */
-.probe-connections.probe-connections--inline { flex: 0 1 44%; flex-wrap: nowrap; justify-content: space-between; min-width: 0; max-width: 50%; padding: 0; gap: 12px; font-size: 12px; white-space: nowrap; }
-.probe-connections--inline > span { flex-shrink: 1; min-width: 0; font-weight: 400; }
+/* 五主题右列再等分：TCP 对齐指标左边缘，UDP 从中间起排而非贴右边缘。 */
+.probe-connections.probe-connections--inline { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); min-width: 0; padding: 0; gap: 8px; font-size: 12px; white-space: nowrap; }
+.probe-connections--inline > span { justify-content: flex-start; min-width: 0; font-weight: 400; }
 .probe-connections--inline strong { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
-@container card-network (max-width: 310px) {
+@container card-network (max-width: 340px) {
   .speed--connections .card-speed-pair { gap: 6px; }
   .speed--connections .card-speed-pair > span,
   .probe-connections.probe-connections--inline { font-size: 11px; }
-  .probe-connections.probe-connections--inline { flex-basis: auto; gap: 10px; }
   .probe-connections--inline > span { gap: 4px; }
 }
-@container card-network (max-width: 260px) {
+@container card-network (max-width: 280px) {
   .speed--connections .card-speed-pair { gap: 2px; }
-  .speed--connections .card-speed-pair > span { gap: 1px; }
+  .speed--connections .card-speed-pair > span { gap: 0; font-size: 10px; }
+  .speed--connections .card-speed-pair svg { width: 9px; height: 11px; }
+  .speed--connections .card-speed-value { font-weight: 500; }
+}
+@media (max-width: 760px) {
+  .speed.speed--connections { column-gap: 13px; }
 }
 .server-mini-card:has(> .probe-connections--card) { flex-direction: column; align-items: stretch; }
 .emerald-node-card .probe-connections--card { margin-top: 10px; }
