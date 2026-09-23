@@ -4069,38 +4069,9 @@ footer a:hover {
   grid-template-columns: 1fr 1fr;
   gap: 6px 14px;
 }
-.lumina-traffic-stat {
-  display: flex;
-  align-items: baseline;
-  gap: 6px;
-  min-width: 0;
-}
-.lumina-traffic-direction {
-  display: inline-flex;
-  align-items: center;
-  align-self: center;
-  color: var(--muted);
-  font-size: 11px;
-  flex-shrink: 0;
-}
-.lumina-traffic-direction svg {
-  display: block;
-}
-.lumina-traffic-stat strong {
-  font-size: 12.5px;
-  font-weight: 650;
-  white-space: nowrap;
-  flex: 0 0 auto;
-}
-.lumina-traffic-stat small {
-  margin-left: auto;
-  color: var(--muted);
-  font-size: 10.5px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  text-align: right;
-}
+.lumina-network-row { grid-column: 1 / -1; font-variant-numeric: tabular-nums; }
+.lumina-network-row .download { color: var(--traffic-down); }
+.lumina-network-row .upload { color: var(--traffic-up); }
 .lumina-traffic-pulse-wrap {
   grid-column: 1 / -1;
   display: grid;

@@ -14,8 +14,13 @@ function UnlockServiceIcon({ service }: { service: string }) {
   return <img className="probe-unlock-brand" src={icon.src} width={20} height={20} alt="" aria-hidden="true" onError={() => setFailed(true)} />
 }
 
-export function ConnectionCounts({ server, variant = 'detail' }: { server: Pick<ProbeServer, 'tcp_connections' | 'udp_connections'>; variant?: 'detail' | 'card' }) {
+export function ConnectionCounts({ server, variant = 'detail' }: { server: Pick<ProbeServer, 'tcp_connections' | 'udp_connections'>; variant?: 'detail' | 'card' | 'inline' }) {
   const help = 'TCP：整机已建立连接；UDP：整机 socket。非代理用户数；未上报显示 —。'
+  if (variant === 'inline') return (
+    <div className="probe-connections probe-connections--inline" aria-label={`TCP 连接数 ${connectionCount(server.tcp_connections)}，UDP 连接数 ${connectionCount(server.udp_connections)}`} title={`TCP ${connectionCount(server.tcp_connections)} / UDP ${connectionCount(server.udp_connections)}。${help}`}>
+      <span>TCP/UDP</span><strong>{connectionCount(server.tcp_connections)}/{connectionCount(server.udp_connections)}</strong>
+    </div>
+  )
   return (
     <div className={`probe-connections${variant === 'card' ? ' probe-connections--card' : ''}`} aria-label="整机连接数" title={help}>
       {variant === 'detail' && <span>连接数</span>}

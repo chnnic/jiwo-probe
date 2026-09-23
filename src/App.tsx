@@ -1641,29 +1641,6 @@ function ServerCardLumina({ server, index }: { server: EnrichedServer; index: nu
   const trafficFraction = server.traffic_limit ? pct(server.traffic_used, server.traffic_limit) / 100 : 0
   const upRate = server.upload_speed
   const downRate = server.download_speed
-  const trafficUp = server.cumulative_up
-  const trafficDown = server.cumulative_down
-  // 当前周期流量(物理口径): 主控 2026-08-10 新增 traffic_used_up/down(40/40 有值, 与Σdaily_traffic 精确一致)，
-  // 优先直读字段; 缺失回退 cycle_daily_traffic 每日上下行 sum 比例估算(物理口径), 再回退 cumulative, 再回退 0.5
-  // 注意: traffic_used(计费口径, oneway 只算单向) ≠ traffic_used_up+down(物理口径), 上下行展示用物理值
-  let cycleUp = server.traffic_used_up
-  let cycleDown = server.traffic_used_down
-  if (cycleUp === undefined || cycleDown === undefined) {
-    const cycleDaily = server.cycle_daily_traffic ?? server.daily_traffic ?? []
-    const dailyUp = cycleDaily.reduce((acc, item) => acc + (item.uplink ?? 0), 0)
-    const dailyDown = cycleDaily.reduce((acc, item) => acc + (item.downlink ?? 0), 0)
-    const cycleRatioUp =
-      dailyUp + dailyDown > 0
-        ? dailyUp / (dailyUp + dailyDown)
-        : trafficUp !== undefined && trafficDown !== undefined && trafficUp + trafficDown > 0
-          ? trafficUp / (trafficUp + trafficDown)
-          : 0.5
-    const base = server.traffic_used !== undefined ? server.traffic_used : server.traffic_used_total
-    if (base !== undefined) {
-      cycleUp = base * cycleRatioUp
-      cycleDown = base * (1 - cycleRatioUp)
-    }
-  }
   const expireValue = server.expires_at ? remainingDays(server.expires_at) : null
   // 今日流量用量(本地时区当天; 当天无记录时回退 daily_traffic 最后一天)
   const dailyRows = server.daily_traffic || []
@@ -1747,26 +1724,23 @@ function ServerCardLumina({ server, index }: { server: EnrichedServer; index: nu
           )}
         </div>
 
-        {(upRate !== undefined || downRate !== undefined) && (
-          <div className="lumina-traffic-section">
-            <div className="lumina-traffic-stat" title="上行速率与当前周期上行流量">
-              <span className="lumina-traffic-direction">
-                <ArrowUp size={15} />
-              </span>
-              <strong className="tabular" style={{ color: 'var(--traffic-up)' }}>
-                {networkSpeed(upRate)}
-              </strong>
-              <small className="tabular">{cycleUp !== undefined ? `周期 ${bytes(cycleUp)}` : ''}</small>
+        <div className="lumina-traffic-section">
+          <div className="lumina-network-row speed--connections">
+            <div className="card-speed-pair">
+              {(upRate !== undefined || downRate !== undefined) && <>
+                <span className="download" title={`下行 ${networkSpeed(downRate)}`}>
+                  <ArrowDown size={13} />
+                  <strong className="card-speed-value">{networkSpeed(downRate)}</strong>
+                </span>
+                <span className="upload" title={`上行 ${networkSpeed(upRate)}`}>
+                  <ArrowUp size={13} />
+                  <strong className="card-speed-value">{networkSpeed(upRate)}</strong>
+                </span>
+              </>}
             </div>
-            <div className="lumina-traffic-stat" title="下行速率与当前周期下行流量">
-              <span className="lumina-traffic-direction">
-                <ArrowDown size={15} />
-              </span>
-              <strong className="tabular" style={{ color: 'var(--traffic-down)' }}>
-                {networkSpeed(downRate)}
-              </strong>
-              <small className="tabular">{cycleDown !== undefined ? `周期 ${bytes(cycleDown)}` : ''}</small>
-            </div>
+            <ConnectionCounts server={server} variant="inline" />
+          </div>
+          {(upRate !== undefined || downRate !== undefined) && (
             <div className="lumina-traffic-pulse-wrap">
               <div className="lumina-today-stat" title="今日流量用量(总/上行/下行)">
                 <span className="lumina-today-head">
@@ -1796,8 +1770,8 @@ function ServerCardLumina({ server, index }: { server: EnrichedServer; index: nu
                 <LuminaTrafficPulse samples={server.daily_traffic} />
               </button>
             </div>
-          </div>
-        )}
+          )}
+        </div>
 
         {server.traffic_used !== undefined && (
           <div className="lumina-quota" title={`流量阈值 · 剩余 ${server.traffic_limit ? bytes(server.traffic_limit - server.traffic_used) : ''}`}>
@@ -1839,7 +1813,6 @@ function ServerCardLumina({ server, index }: { server: EnrichedServer; index: nu
           </div>
         )}
 
-        <ConnectionCounts server={server} variant="card" />
         <CardPingGroups variant="lumina" ping={server.ping} serverIndex={index} serverName={server.name} />
 
         {!!server.return_routes?.length && (
@@ -1923,19 +1896,21 @@ function ServerCard({ server, index }: { server: ProbeServer; index: number }) {
           </button>
         )}
       </div>
-      {(server.upload_speed !== undefined || server.download_speed !== undefined) && (
-        <div className="speed">
-          <span className="download">
-            <ArrowDown size={16} />
-            {networkSpeed(server.download_speed)}
-          </span>
-          <span className="upload">
-            <ArrowUp size={16} />
-            {networkSpeed(server.upload_speed)}
-          </span>
+      <div className="speed speed--connections">
+        <div className="card-speed-pair">
+          {(server.upload_speed !== undefined || server.download_speed !== undefined) && <>
+            <span className="download" title={`下行 ${networkSpeed(server.download_speed)}`}>
+              <ArrowDown size={13} />
+              <span className="card-speed-value">{networkSpeed(server.download_speed)}</span>
+            </span>
+            <span className="upload" title={`上行 ${networkSpeed(server.upload_speed)}`}>
+              <ArrowUp size={13} />
+              <span className="card-speed-value">{networkSpeed(server.upload_speed)}</span>
+            </span>
+          </>}
         </div>
-      )}
-      <ConnectionCounts server={server} variant="card" />
+        <ConnectionCounts server={server} variant="inline" />
+      </div>
       <CardPingGroups variant="classic" ping={server.ping} serverIndex={index} serverName={server.name} />
       {!!server.return_routes?.length && <ReturnRouteBadges routes={server.return_routes} telecomPaidPeer={server.telecom_paid_peer} variant={document.documentElement.classList.contains('theme-anime') ? 'anime' : undefined} />}
       {(server.expires_at || server.renewal_price !== undefined) && (

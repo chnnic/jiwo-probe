@@ -1,11 +1,11 @@
 import { useNetworkSpeed } from '../use-network-speed'
-import { ConnectionCounts, UnlockButton } from '../ServerCapabilities'
+import { UnlockButton } from '../ServerCapabilities'
+import { connectionCount } from '../unlocks'
 import { useEffect, useMemo, useState } from 'react'
 import {
   Activity,
   ArrowDown,
   ArrowUp,
-  CalendarClock,
   Check,
   ChevronDown,
   Clock3,
@@ -44,7 +44,6 @@ import {
   hasLeadingFlag,
   pct,
   regionFlag,
-  remainingDays,
 } from '../App'
 import type { EnrichedServer } from '../use-probe'
 import { GmEarth, type GmRegion } from './GmEarth'
@@ -156,7 +155,7 @@ function GmNodeCard({ server, index }: { server: EnrichedServer; index: number }
         : `${server.renewal_currency || 'CNY'} ${server.renewal_price} / ${CYCLE_LABELS[server.renewal_cycle || 'month'] || '月'}`
       : null
   const loadParts = (server.loadavg || '').split(/\s+/).map(Number).filter((v) => Number.isFinite(v))
-  // 周期流量(物理口径, 与 Lumina 卡同源逻辑)
+  // 周期流量（物理口径）
   let cycleUp = server.traffic_used_up
   let cycleDown = server.traffic_used_down
   if (cycleUp === undefined || cycleDown === undefined) {
@@ -170,9 +169,8 @@ function GmNodeCard({ server, index }: { server: EnrichedServer; index: number }
       cycleDown = base * (1 - ratio)
     }
   }
-  const daysText = server.expires_at ? remainingDays(server.expires_at) : null
-  const remainValue = computeRemainingValue(server)
-  const remainValueText = remainValue ? formatMoney(remainValue.value, 'CNY', true) : null
+  const tcpCount = connectionCount(server.tcp_connections)
+  const udpCount = connectionCount(server.udp_connections)
   // 三网回程文字标签
   const carrierLabels: Record<string, string> = { telecom: '电信', unicom: '联通', mobile: '移动' }
   const displayRoute = (route: string): string => {
@@ -270,7 +268,7 @@ function GmNodeCard({ server, index }: { server: EnrichedServer; index: number }
               </button>
             )}
           </div>
-          {/* 速率/周期流量/到期 3 列块 */}
+          {/* 速率/周期流量/连接数 3 列块 */}
           <div className="gm-quick-row">
             <div className="gm-quick-cell">
               <div className="gm-quick-line gm-q-up">
@@ -292,18 +290,17 @@ function GmNodeCard({ server, index }: { server: EnrichedServer; index: number }
                 <span>{cycleDown !== undefined ? bytes(cycleDown) : '—'}</span>
               </div>
             </div>
-            <div className="gm-quick-cell">
-              <div className="gm-quick-line gm-q-days">
-                <CalendarClock size={11} />
-                <span>{daysText ?? '—'}</span>
+            <div className="gm-quick-cell gm-connection-cell" aria-label="整机连接数">
+              <div className="gm-quick-line gm-q-connection" title={`TCP ${tcpCount}：整机已建立连接数，非代理用户数；未上报显示 —。`}>
+                <span>TCP</span>
+                <strong>{tcpCount}</strong>
               </div>
-              <div className="gm-quick-line gm-q-value">
-                <Wallet size={11} />
-                <span>{remainValueText ?? '—'}</span>
+              <div className="gm-quick-line gm-q-connection" title={`UDP ${udpCount}：整机 socket 数，非代理用户数；未上报显示 —。`}>
+                <span>UDP</span>
+                <strong>{udpCount}</strong>
               </div>
             </div>
           </div>
-          <ConnectionCounts server={server} variant="card" />
           <CardPingGroups variant="gm" ping={server.ping} serverIndex={index} serverName={server.name} />
           {/* 三网回程文字标签 */}
           {routeLines.length > 0 ? (

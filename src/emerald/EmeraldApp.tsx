@@ -1,5 +1,5 @@
 import { useNetworkSpeed } from '../use-network-speed'
-import { ConnectionCounts, UnlockButton } from '../ServerCapabilities'
+import { UnlockButton } from '../ServerCapabilities'
 import {
   useEffect,
   useMemo,
@@ -34,7 +34,6 @@ import {
   Sun,
   SunMoon,
   Table2,
-  Wallet,
   Waves,
   X,
 } from 'lucide-react'
@@ -130,13 +129,6 @@ function uptimeText(seconds?: number): string {
   const days = Math.floor(seconds / 86400)
   const hours = Math.floor((seconds % 86400) / 3600)
   return days ? `${days}天 ${hours}小时` : `${hours}小时`
-}
-
-function remainingDays(value?: string): string {
-  if (!value) return '永久'
-  const days = Math.ceil((new Date(`${value}T23:59:59`).getTime() - Date.now()) / 86400000)
-  if (days < 0) return `过期 ${Math.abs(days)}天`
-  return `剩余 ${days}天`
 }
 
 function MetricValue({ value, className = '' }: { value: string; className?: string }) {
@@ -445,7 +437,8 @@ function NodeCard({ server, index, open }: { server: EnrichedServer; index: numb
   const disk = percentage(server.disk_used, server.disk_total)
   const traffic = percentage(server.traffic_used, server.traffic_limit)
   const routes = new Map((server.return_routes || []).map((route) => [route.carrier, route]))
-  const remaining = computeRemainingValue(server)
+  const tcpCount = connectionCount(server.tcp_connections)
+  const udpCount = connectionCount(server.udp_connections)
 
   const metrics = [
     { key: 'cpu', label: 'CPU', value: cpu, detail: server.loadavg || `${server.cpu_cores || '—'} 核`, icon: <Cpu size={12} /> },
@@ -497,12 +490,11 @@ function NodeCard({ server, index, open }: { server: EnrichedServer; index: numb
           <span title="当前周期下行流量"><ArrowDown size={11} />下行 <b>{bytes(server.traffic_used_down)}</b></span>
           <span title="当前周期上行流量"><ArrowUp size={11} />上行 <b>{bytes(server.traffic_used_up)}</b></span>
         </div>
-        <div>
-          <span><Clock3 size={11} /><b>{remainingDays(server.expires_at)}</b></span>
-          <span><Wallet size={11} /><b>{remaining ? formatMoney(remaining.value, 'CNY', true) : '—'}</b></span>
+        <div className="emerald-connection-cell" aria-label="整机连接数">
+          <span title={`TCP ${tcpCount}：整机已建立连接数，非代理用户数；未上报显示 —。`}><small>TCP</small><b>{tcpCount}</b></span>
+          <span title={`UDP ${udpCount}：整机 socket 数，非代理用户数；未上报显示 —。`}><small>UDP</small><b>{udpCount}</b></span>
         </div>
       </div>
-      <ConnectionCounts server={server} variant="card" />
       <CardPingGroups variant="emerald" ping={server.ping} serverIndex={index} serverName={server.name} />
       <div className="emerald-route-badges" aria-label={`${name} 三网回程`}>
         {routeCarriers.map(({ key, label }) => {

@@ -743,7 +743,9 @@
 .emerald-node-quick span.is-up b,
 .emerald-table-shell .is-up,
 .emerald-status-speed .is-up { color: #2563eb; }
-.emerald-node-quick > div:last-child span { grid-template-columns: 11px minmax(0, 1fr); }
+.emerald-node-quick > .emerald-connection-cell span { grid-template-columns: 24px minmax(0, 1fr); }
+.emerald-connection-cell small { font: inherit; }
+.emerald-connection-cell b { text-align: right; }
 
 .emerald-ping-panels {
   margin-top: 10px;

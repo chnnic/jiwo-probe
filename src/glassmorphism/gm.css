@@ -664,7 +664,7 @@
 .gm-node-card.is-offline .gm-fill-warn,
 .gm-node-card.is-offline .gm-fill-danger { background: rgba(148, 163, 184, 0.35); }
 
-/* ===== 速率/周期流量/到期 3 列块（照搬原版 quick 区） ===== */
+/* ===== 速率/周期流量/连接数 3 列块 ===== */
 .gm-quick-row {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -689,6 +689,9 @@
   color: #94a3b8;
 }
 .gm-quick-line svg { flex-shrink: 0; }
+.gm-q-connection { justify-content: space-between; }
+.gm-q-connection > span { flex-shrink: 0; }
+.gm-q-connection > strong { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; font-variant-numeric: tabular-nums; }
 .gm-quick-line span {
   min-width: 0;
   overflow: hidden;
