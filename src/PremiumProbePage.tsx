@@ -1,4 +1,5 @@
 import { useNetworkSpeed } from './use-network-speed'
+import { ConnectionCounts, UnlockButton, UnlockDetails } from './ServerCapabilities'
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
 import {
   Activity,
@@ -2588,6 +2589,7 @@ function PremiumServerCard({
             {health.score} · {health.label}
           </span>
         )}
+        <UnlockButton server={server} />
         <span className='premium-probe-server-status'>
           <i
             className={cn(
@@ -2618,6 +2620,7 @@ function PremiumServerCard({
           percent={disk}
         />
       </div>
+      <ConnectionCounts server={server} variant="card" />
       <div className='premium-probe-server-footer'>
         <div className='premium-probe-card-traffic'>
           <span>周期流量</span>
@@ -2934,6 +2937,13 @@ function ServerDetailDrawer({
               ))
             )}
           </div>
+        </section>
+        <section className='premium-probe-drawer-section'>
+          <UnlockDetails key={index} unlocks={server.unlocks} />
+        </section>
+        <section className='premium-probe-drawer-section'>
+          <h3>网络连接</h3>
+          <ConnectionCounts server={server} />
         </section>
         <section className='premium-probe-drawer-section premium-probe-drawer-info'>
           <h3>系统与续费</h3>

@@ -1,4 +1,5 @@
 import { useNetworkSpeed } from '../use-network-speed'
+import { ConnectionCounts, UnlockButton } from '../ServerCapabilities'
 import { useEffect, useMemo, useState } from 'react'
 import {
   Activity,
@@ -202,6 +203,7 @@ function GmNodeCard({ server, index }: { server: EnrichedServer; index: number }
             <h2 className="gm-node-title" title={name}>{name}</h2>
           </div>
           <div className="gm-node-icons">
+            <UnlockButton server={server} />
             <span className="gm-node-os" title={systemTitle(server)} onClick={(event) => event.stopPropagation()}>
               <SystemIcon server={server} />
             </span>
@@ -301,6 +303,7 @@ function GmNodeCard({ server, index }: { server: EnrichedServer; index: number }
               </div>
             </div>
           </div>
+          <ConnectionCounts server={server} variant="card" />
           <CardPingGroups variant="gm" ping={server.ping} serverIndex={index} serverName={server.name} />
           {/* 三网回程文字标签 */}
           {routeLines.length > 0 ? (
@@ -725,6 +728,7 @@ export default function GmApp({
                         <td>
                           <span className={`status ${server.online ? 'online' : ''}`} />
                           <Twemoji>{server.name || `服务器 ${index + 1}`}</Twemoji>
+                          <UnlockButton server={server} />
                         </td>
                         <td>{server.online ? '在线' : '离线'}</td>
                         <td className="tabular">{server.cpu_pct !== undefined ? `${server.cpu_pct.toFixed(1)}%` : '—'}</td>

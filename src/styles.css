@@ -1778,6 +1778,7 @@ footer a:hover {
 .leaderboard-body {
   padding: 0 14px 14px;
 }
+.lb-note { margin: 0 0 10px; color: var(--muted); font-size: 11px; line-height: 1.5; }
 .leaderboard-tabs {
   display: flex;
   gap: 6px;

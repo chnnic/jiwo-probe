@@ -47,7 +47,7 @@
     "preview": "vite preview",
     "deploy": "./scripts/deploy.sh",
     "typecheck": "tsc --noEmit",
-    "test": "node --experimental-strip-types --test src/value.test.mjs src/network-speed.test.mjs src/ping-groups.test.mjs worker/ping-config.test.mjs scripts/deploy-worker.test.mjs src/ran/api/mmwx-adapter.test.mjs src/ran/utils/traffic.test.mjs"
+    "test": "node --experimental-strip-types --test src/value.test.mjs src/network-speed.test.mjs src/ping-groups.test.mjs src/unlocks.test.mjs src/leaderboards.test.mjs worker/ping-config.test.mjs scripts/deploy-worker.test.mjs src/ran/api/mmwx-adapter.test.mjs src/ran/utils/traffic.test.mjs"
   },
   "dependencies": {
     "@simplewebauthn/browser": "^14.0.0",

@@ -84,6 +84,11 @@ export interface ProbeServer {
   os?: string
   kernel?: string
   arch?: string
+  /** 整机 TCP ESTABLISHED 连接数，不等于代理用户数。 */
+  tcp_connections?: number
+  /** 整机 UDP socket 数。 */
+  udp_connections?: number
+  unlocks?: ProbeUnlock[]
   ping?: ProbePingSeries[]
   expires_at?: string
   renewal_price?: number
@@ -94,6 +99,13 @@ export interface ProbeServer {
   provider_url?: string
   telecom_paid_peer?: boolean
   return_routes?: ProbeReturnRoute[]
+}
+
+export interface ProbeUnlock {
+  service: string
+  status: string
+  region?: string
+  tested_at?: string
 }
 
 export interface ProbeReturnRoute {

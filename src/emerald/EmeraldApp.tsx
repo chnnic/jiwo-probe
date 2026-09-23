@@ -1,4 +1,5 @@
 import { useNetworkSpeed } from '../use-network-speed'
+import { ConnectionCounts, UnlockButton } from '../ServerCapabilities'
 import {
   useEffect,
   useMemo,
@@ -12,6 +13,7 @@ import {
   ArrowDown,
   ArrowDownUp,
   ArrowUp,
+  Cable,
   Check,
   ChevronDown,
   Clock3,
@@ -25,6 +27,7 @@ import {
   MemoryStick,
   Monitor,
   Moon,
+  Network,
   Palette,
   Search,
   Server,
@@ -46,6 +49,8 @@ import type { ProbePayload, ProbeServer, ThemeName } from '../types'
 import type { EnrichedServer } from '../use-probe'
 import { getDarkOverride, setDarkOverride } from '../use-probe'
 import { computeRemainingValue, formatMoney } from '../value'
+import { EMERALD_LEADERBOARD_ORDER, rankConnectionCounts, type EmeraldRankingType } from '../leaderboards'
+import { connectionCount } from '../unlocks'
 import './emerald.css'
 
 const THEME_OPTIONS: { value: ThemeName; label: string }[] = [
@@ -274,17 +279,34 @@ function Overview({ servers }: { servers: EnrichedServer[] }) {
   )
 }
 
-type RankingType = 'uptime' | 'quality' | 'traffic' | 'speed'
+const RANKING_META = {
+  speed: { title: '实时网速', nav: '网速', chip: '↓ + ↑', icon: <ArrowDownUp size={17} /> },
+  traffic: { title: '流量消耗', nav: '流量', chip: '累计', icon: <Database size={17} /> },
+  tcp: { title: 'TCP 连接数', nav: 'TCP', chip: '整机连接', icon: <Cable size={17} /> },
+  udp: { title: 'UDP 连接数', nav: 'UDP', chip: 'SOCKET', icon: <Network size={17} /> },
+  quality: { title: '网络质量', nav: '网络', chip: '延迟 + 丢包', icon: <Waves size={17} /> },
+  uptime: { title: '在线时长', nav: '在线', chip: 'UPTIME', icon: <Clock3 size={17} /> },
+}
 
 function rankingTraffic(server: ProbeServer): number {
   const cumulative = (server.cumulative_down || 0) + (server.cumulative_up || 0)
   return cumulative || server.traffic_used_total || server.traffic_used || 0
 }
 
-function RankingPanel({ servers, type, openServer }: { servers: EnrichedServer[]; type: RankingType; openServer: (index: number) => void }) {
+function RankingPanel({ servers, type, openServer }: { servers: EnrichedServer[]; type: EmeraldRankingType; openServer: (index: number) => void }) {
   const networkSpeed = useNetworkSpeed()
   const [expanded, setExpanded] = useState(false)
   const rows = useMemo(() => {
+    if (type === 'tcp' || type === 'udp') {
+      const ranked = rankConnectionCounts(servers, type)
+      const max = Math.max(1, ...ranked.map(row => row.value))
+      return ranked.map(({ server, value }) => ({
+        server,
+        value: connectionCount(value),
+        sub: `${type === 'tcp' ? '整机已建立连接' : '整机 UDP socket'}${server.online ? '' : ' · 离线最近值'}`,
+        score: (value / max) * 100,
+      }))
+    }
     if (type === 'uptime') {
       const max = Math.max(1, ...servers.map((server) => server.uptime || 0))
       return [...servers]
@@ -335,13 +357,7 @@ function RankingPanel({ servers, type, openServer }: { servers: EnrichedServer[]
   }, [servers, type, networkSpeed])
 
   const visibleRows = expanded ? rows : rows.slice(0, 3)
-  const meta = type === 'uptime'
-    ? { title: '在线时长', chip: 'UPTIME', icon: <Clock3 size={17} /> }
-    : type === 'quality'
-      ? { title: '网络质量', chip: '延迟 + 丢包', icon: <Waves size={17} /> }
-      : type === 'speed'
-        ? { title: '实时网速', chip: '↓ + ↑', icon: <ArrowDownUp size={17} /> }
-        : { title: '流量消耗', chip: '累计', icon: <Database size={17} /> }
+  const meta = RANKING_META[type]
 
   return (
     <article className={`emerald-ranking-panel is-${type}${expanded ? ' is-expanded' : ''}`} id={`emerald-rank-${type}`}>
@@ -351,6 +367,7 @@ function RankingPanel({ servers, type, openServer }: { servers: EnrichedServer[]
         <h2>{meta.title}</h2>
         <span className="emerald-panel-chip">{meta.chip}</span>
       </header>
+      {(type === 'tcp' || type === 'udp') && <p className="emerald-rank-note">非代理用户数；未上报不参与排名</p>}
       <ol>
         {visibleRows.map((row, index) => {
           const serverIndex = servers.indexOf(row.server)
@@ -367,7 +384,8 @@ function RankingPanel({ servers, type, openServer }: { servers: EnrichedServer[]
           )
         })}
       </ol>
-      <button type="button" className="emerald-panel-more" aria-expanded={expanded} onClick={() => setExpanded((value) => !value)}>{expanded ? '收起榜单' : `查看全部 ${rows.length}`}</button>
+      {!rows.length && <p className="emerald-rank-note">等待探针数据上报</p>}
+      {rows.length > 3 && <button type="button" className="emerald-panel-more" aria-expanded={expanded} onClick={() => setExpanded((value) => !value)}>{expanded ? '收起榜单' : `查看全部 ${rows.length}`}</button>}
     </article>
   )
 }
@@ -445,7 +463,7 @@ function NodeCard({ server, index, open }: { server: EnrichedServer; index: numb
           {flag && <Twemoji className="emerald-node-flag">{flag}</Twemoji>}
           <strong>{name}</strong>
         </div>
-        <Monitor size={15} className="emerald-node-os" />
+        <span className="probe-unlock-tools"><UnlockButton server={server} /><Monitor size={15} className="emerald-node-os" /></span>
       </header>
       <p className="emerald-node-system">{server.cpu_cores ? `${server.cpu_cores} 核 · ` : ''}{server.cpu_model || server.os || '系统信息暂缺'}</p>
       <div className="emerald-node-metrics">
@@ -484,6 +502,7 @@ function NodeCard({ server, index, open }: { server: EnrichedServer; index: numb
           <span><Wallet size={11} /><b>{remaining ? formatMoney(remaining.value, 'CNY', true) : '—'}</b></span>
         </div>
       </div>
+      <ConnectionCounts server={server} variant="card" />
       <CardPingGroups variant="emerald" ping={server.ping} serverIndex={index} serverName={server.name} />
       <div className="emerald-route-badges" aria-label={`${name} 三网回程`}>
         {routeCarriers.map(({ key, label }) => {
@@ -516,7 +535,7 @@ function TableView({ servers, allServers, open }: { servers: EnrichedServer[]; a
             const ping = averagePing(server)
             return (
               <tr key={server.name} tabIndex={0} onClick={() => open(index)} onKeyDown={(event) => { if (event.key === 'Enter') open(index) }}>
-                <td><span className={`emerald-status-dot${server.online ? ' is-online' : ''}`} />{regionFlag(server) && <Twemoji>{regionFlag(server)}</Twemoji>}<strong>{server.name || `服务器 ${index + 1}`}</strong></td>
+                <td><span className={`emerald-status-dot${server.online ? ' is-online' : ''}`} />{regionFlag(server) && <Twemoji>{regionFlag(server)}</Twemoji>}<strong>{server.name || `服务器 ${index + 1}`}</strong><UnlockButton server={server} /></td>
                 <td>{server.online ? '在线' : '离线'}</td>
                 <td>{(server.cpu_pct || 0).toFixed(1)}%</td>
                 <td>{percentage(server.mem_used, server.mem_total).toFixed(1)}%</td>
@@ -545,7 +564,7 @@ function StatusView({ servers, allServers, open }: { servers: EnrichedServer[]; 
             <div className="emerald-status-ident"><span className={`emerald-status-dot${server.online ? ' is-online' : ''}`} />{regionFlag(server) && <Twemoji>{regionFlag(server)}</Twemoji>}<strong>{server.name || `服务器 ${index + 1}`}</strong><small>{server.os || server.cpu_model || '系统信息'}</small></div>
             <div className="emerald-status-metrics"><span>CPU <b>{(server.cpu_pct || 0).toFixed(1)}%</b></span><span>内存 <b>{percentage(server.mem_used, server.mem_total).toFixed(1)}%</b></span><span>硬盘 <b>{percentage(server.disk_used, server.disk_total).toFixed(1)}%</b></span></div>
             <div className="emerald-status-speed"><span className="is-down">↓ {networkSpeed(server.download_speed)}</span><span className="is-up">↑ {networkSpeed(server.upload_speed)}</span></div>
-            <div className="emerald-status-ping"><b>{ping ? `${ping.latency.toFixed(0)} ms` : '—'}</b><span>丢包 {ping?.loss.toFixed(1) || '0.0'}%</span></div>
+            <div className="emerald-status-ping"><b>{ping ? `${ping.latency.toFixed(0)} ms` : '—'}</b><span>丢包 {ping?.loss.toFixed(1) || '0.0'}%</span><UnlockButton server={server} /></div>
           </GlowCard>
         )
       })}
@@ -698,16 +717,10 @@ export default function EmeraldApp({ data, onThemeChange }: { data: ProbePayload
             <div className="emerald-sidebar-title">
               <h2>多维榜单</h2>
               <div>
-                <button type="button" onClick={() => document.getElementById('emerald-rank-uptime')?.scrollIntoView({ behavior: 'smooth', block: 'center' })}><Clock3 size={12} />在线</button>
-                <button type="button" onClick={() => document.getElementById('emerald-rank-quality')?.scrollIntoView({ behavior: 'smooth', block: 'center' })}><Waves size={12} />网络</button>
-                <button type="button" onClick={() => document.getElementById('emerald-rank-traffic')?.scrollIntoView({ behavior: 'smooth', block: 'center' })}><Database size={12} />流量</button>
-                <button type="button" onClick={() => document.getElementById('emerald-rank-speed')?.scrollIntoView({ behavior: 'smooth', block: 'center' })}><ArrowDownUp size={12} />网速</button>
+                {EMERALD_LEADERBOARD_ORDER.map(type => <button key={type} type="button" data-rank={type} aria-label={`查看${RANKING_META[type].title}榜单`} onClick={() => document.getElementById(`emerald-rank-${type}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' })}>{RANKING_META[type].icon}{RANKING_META[type].nav}</button>)}
               </div>
             </div>
-            <RankingPanel servers={servers} type="uptime" openServer={openDetail} />
-            <RankingPanel servers={servers} type="quality" openServer={openDetail} />
-            <RankingPanel servers={servers} type="traffic" openServer={openDetail} />
-            <RankingPanel servers={servers} type="speed" openServer={openDetail} />
+            {EMERALD_LEADERBOARD_ORDER.map(type => <RankingPanel key={type} servers={servers} type={type} openServer={openDetail} />)}
           </aside>
         </div>
       </main>

@@ -1,4 +1,5 @@
 import { useNetworkSpeed } from './use-network-speed'
+import { ConnectionCounts, UnlockDetails } from './ServerCapabilities'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Activity, ArrowDown, ArrowUp, BadgeDollarSign, CalendarClock, ChevronLeft, Clock, Cpu, Database, HardDrive, MemoryStick, Monitor, MoveHorizontal, PieChart, TrendingUp, Wallet, Wifi, X, ZoomIn, ZoomOut } from 'lucide-react'
@@ -458,6 +459,7 @@ export function ServerDetail({ server, index, onClose, showHealthScore = false }
                   })()}
                 </div>
               )}
+              <ConnectionCounts server={server} />
             </section>
 
             <div className="detail-col-stack">
@@ -506,6 +508,10 @@ export function ServerDetail({ server, index, onClose, showHealthScore = false }
               )}
             </div>
           </div>
+
+          <section className="detail-panel">
+            <UnlockDetails key={index} unlocks={server.unlocks} />
+          </section>
 
           {!!ping.length && (
             <section className="detail-panel">
