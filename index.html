@@ -8,6 +8,17 @@
   </head>
   <body>
     <div id="root"></div>
+    <script>
+      try {
+        const choice = JSON.parse(localStorage.getItem('serverstatus:w2k-theme') || '"light"')
+        const dark = choice === 'dark' || (choice === 'auto' && matchMedia('(prefers-color-scheme: dark)').matches)
+        if (!dark) document.body.classList.add('light')
+      } catch { document.body.classList.add('light') }
+      try {
+        const skin = JSON.parse(localStorage.getItem('serverstatus:w2k-skin') || 'null')
+        if (['win31', 'win2000', 'xp', 'aqua'].includes(skin)) document.body.dataset.skin = skin
+      } catch { /* 默认 Windows 2000 皮肤 */ }
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

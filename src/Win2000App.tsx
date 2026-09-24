@@ -1,14 +1,15 @@
 import { useEffect, useMemo, useState } from 'react'
-import { ArrowDown, ArrowUp, Check, LayoutGrid, List, Monitor, Moon, Palette, RefreshCw, Sun } from 'lucide-react'
-import type { ProbeServer, ThemeName } from './types'
-import { getThemeOverride, setDarkOverride, setTheme, useProbe } from './use-probe'
+import { ArrowDown, ArrowUp, CalendarDays, Check, LayoutGrid, List, Monitor, Moon, Palette, RefreshCw, Sun } from 'lucide-react'
+import type { CSSProperties, ReactNode } from 'react'
+import type { ProbePingSeries, ProbeServer } from './types'
+import { getThemeOverride, setDarkOverride, useProbe } from './use-probe'
 import { useNetworkSpeed } from './use-network-speed'
+import { pingTargetOptions, resolvePingGroups, type PingGroupConfig } from './ping-groups'
 import { PasskeyLogin } from './PasskeyLogin'
-import { CardPingGroups } from './CardPingGroups'
 import { Twemoji } from './Twemoji'
 
 type Skin = 'win31' | 'win2000' | 'xp' | 'aqua'
-type View = 'cards' | 'rings' | 'table'
+type View = 'cards' | 'ring' | 'table'
 
 const SKINS: Array<{ value: Skin; label: string }> = [
   { value: 'win31', label: 'Windows 3.1' },
@@ -16,159 +17,238 @@ const SKINS: Array<{ value: Skin; label: string }> = [
   { value: 'xp', label: 'Windows XP' },
   { value: 'aqua', label: 'Mac OS X 10.6' },
 ]
-const THEMES: Array<{ value: ThemeName | null; label: string }> = [
-  { value: null, label: '跟随主控' },
-  { value: 'pixel', label: '像素' },
-  { value: 'flat', label: '扁平' },
-  { value: 'anime', label: '动漫' },
-  { value: 'glass', label: '玻璃' },
-  { value: 'lumina', label: 'Lumina' },
-  { value: 'premium', label: 'Premium' },
-  { value: 'ran', label: '岚 · Ran' },
-  { value: 'glassmorphism', label: 'Glassmorphism' },
-  { value: 'emerald', label: 'Emerald' },
-  { value: 'win2000', label: 'Windows 2000' },
-]
 
 function percent(value?: number, total?: number): number {
-  if (!total || !Number.isFinite(value)) return 0
-  return Math.max(0, Math.min(100, ((value || 0) / total) * 100))
-}
-
-function segment(value: number, count = 24): string {
-  const filled = Math.round(Math.max(0, Math.min(1, value)) * count)
-  return '▮'.repeat(filled) + '▯'.repeat(count - filled)
-}
-
-function latencyColor(ms: number): string {
-  if (ms < 80) return 'good'
-  if (ms < 160) return 'warn'
-  return 'bad'
-}
-
-function formatUptime(seconds?: number): string {
-  if (!seconds || seconds < 60) return '刚刚启动'
-  const days = Math.floor(seconds / 86400)
-  const hours = Math.floor((seconds % 86400) / 3600)
-  return days ? `在线 ${days} 天 ${hours} 小时` : `在线 ${hours} 小时`
-}
-
-function NodeMeter({ label, value }: { label: string; value: number }) {
-  return <div className="w2k-meter-row"><span>{label}</span><b>{segment(value / 100)}</b><em>{value.toFixed(1)}%</em></div>
-}
-
-function NodeCard({ server, index, speed }: { server: ProbeServer; index: number; speed: (value?: number) => string }) {
-  const name = server.name || `服务器 ${index + 1}`
-  const ping = server.ping?.filter((item) => item.current_ms >= 0).sort((a, b) => a.current_ms - b.current_ms)[0]
-  const used = percent(server.traffic_used, server.traffic_limit)
-  return (
-    <article className={`w2k-node ${server.online ? '' : 'offline'}`}>
-      <header className="w2k-node-title">
-        <span className={`w2k-led ${server.online ? 'online' : 'offline'}`} />
-        {server.region_country && <Twemoji>{server.region_country}</Twemoji>}
-        <strong title={name}>{name}</strong>
-        <span className="w2k-node-state">{server.online ? '在线' : '离线'}</span>
-      </header>
-      <div className="w2k-node-subtitle"><span>{server.os || server.cpu_model || '系统信息暂缺'}</span><span>{formatUptime(server.uptime)}</span></div>
-      <div className="w2k-meters">
-        <NodeMeter label="CPU" value={server.cpu_pct || 0} />
-        <NodeMeter label="内存" value={percent(server.mem_used, server.mem_total)} />
-        <NodeMeter label="硬盘" value={percent(server.disk_used, server.disk_total)} />
-        <NodeMeter label="用量" value={used} />
-      </div>
-      <div className="w2k-traffic">
-        <span className="up"><ArrowUp size={12} />{speed(server.upload_speed)}</span>
-        <span className="down"><ArrowDown size={12} />{speed(server.download_speed)}</span>
-        <span>↑ {formatTraffic(server.traffic_used_up)} </span>
-        <span>↓ {formatTraffic(server.traffic_used_down)}</span>
-      </div>
-      <CardPingGroups variant="classic" ping={server.ping} serverIndex={index} serverName={server.name} />
-      {ping && <div className={`w2k-ping-line ${latencyColor(ping.current_ms)}`}><span>{ping.label}</span><b>{ping.current_ms.toFixed(0)} ms</b><code>{segment(Math.max(0, 1 - ping.current_ms / 300))}</code><em>{ping.loss_pct.toFixed(1)}%</em></div>}
-    </article>
-  )
+  if (!Number.isFinite(value) || !Number.isFinite(total) || !total || total <= 0) return 0
+  return Math.max(0, Math.min(100, (value! / total!) * 100))
 }
 
 function formatTraffic(value?: number): string {
   if (!Number.isFinite(value) || value === undefined) return '—'
-  const units = ['B', 'KB', 'MB', 'GB', 'TB']
-  let n = Math.max(0, value)
-  let i = 0
-  while (n >= 1024 && i < units.length - 1) { n /= 1024; i++ }
-  return `${n >= 100 || i < 2 ? n.toFixed(0) : n.toFixed(1)} ${units[i]}`
+  const units = ['B', 'KB', 'MB', 'GB', 'TB', 'PB']
+  let amount = Math.max(0, value)
+  let index = 0
+  while (amount >= 1024 && index < units.length - 1) { amount /= 1024; index++ }
+  return `${amount >= 100 || index < 2 ? amount.toFixed(0) : amount.toFixed(1)} ${units[index]}`
 }
 
-function Ring({ value, label, tone }: { value: number; label: string; tone: string }) {
-  const deg = Math.round(Math.max(0, Math.min(100, value)) * 3.6)
-  return <div className={`w2k-ring ${tone}`} style={{ '--ring': `${deg}deg` } as React.CSSProperties}><div><strong>{value.toFixed(0)}%</strong><span>{label}</span></div></div>
+function formatUptime(seconds?: number): string {
+  if (!Number.isFinite(seconds) || !seconds || seconds < 60) return '刚刚启动'
+  const days = Math.floor(seconds / 86400)
+  const hours = Math.floor((seconds % 86400) / 3600)
+  if (days) return `在线 ${days} 天`
+  return `在线 ${hours} 小时`
+}
+
+function formatRemaining(expiresAt?: string): string {
+  if (!expiresAt) return '∞'
+  const remaining = Math.ceil((new Date(expiresAt).getTime() - Date.now()) / 86400000)
+  return Number.isFinite(remaining) ? String(Math.max(0, remaining)) : '∞'
+}
+
+function latencyTone(value: number): string {
+  if (!Number.isFinite(value) || value < 0) return 'var(--offline)'
+  if (value < 100) return 'var(--accent-green)'
+  if (value < 200) return 'var(--accent-yellow)'
+  return 'var(--accent-red)'
+}
+
+function lossTone(value: number): string {
+  if (!Number.isFinite(value) || value <= 0) return 'var(--accent-green)'
+  if (value < 5) return 'var(--accent-yellow)'
+  return 'var(--accent-red)'
+}
+
+function Progress({ value, unlimited = false }: { value: number; unlimited?: boolean }) {
+  const safe = Number.isFinite(value) ? Math.max(0, Math.min(100, value)) : 0
+  return <span className="progress" role="progressbar" aria-valuenow={Math.round(safe)} aria-valuemin={0} aria-valuemax={100}>
+    <span className={`progress-fill${safe >= 85 ? ' hot' : ''}${unlimited ? ' unlimited' : ''}`} style={{ width: `${unlimited ? 100 : safe}%` }} />
+  </span>
+}
+
+function Flag({ code }: { code?: string }) {
+  const normalized = code?.trim().toUpperCase()
+  return normalized && /^[A-Z]{2}$/.test(normalized) ? <Twemoji className="flag-fallback">{String.fromCodePoint(...[...normalized].map(char => 0x1f1e6 + char.charCodeAt(0) - 65))}</Twemoji> : <span className="flag-fallback">—</span>
+}
+
+function StatBox({ label, id, children }: { label: string; id: string; children: ReactNode }) {
+  return <fieldset className={`groupbox stat-box stat-${id}`}><legend>{label}</legend>{children}</fieldset>
+}
+
+function FleetBar({ servers }: { servers: ProbeServer[] }) {
+  return <span className="fleet-bar" role="img" aria-label={`${servers.filter(server => server.online).length} / ${servers.length}`}>
+    {servers.map((server, index) => <i className={server.online ? 'on' : 'off'} key={`${server.name}-${index}`} />)}
+  </span>
+}
+
+function SkinMenu({ skin, onSelect }: { skin: Skin; onSelect: (skin: Skin) => void }) {
+  const [open, setOpen] = useState(false)
+  useEffect(() => {
+    if (!open) return
+    const close = (event: MouseEvent) => {
+      if (!(event.target as HTMLElement).closest('.skin-menu')) setOpen(false)
+    }
+    const escape = (event: KeyboardEvent) => { if (event.key === 'Escape') setOpen(false) }
+    document.addEventListener('mousedown', close)
+    document.addEventListener('keydown', escape)
+    return () => { document.removeEventListener('mousedown', close); document.removeEventListener('keydown', escape) }
+  }, [open])
+  const selected = SKINS.find(item => item.value === skin)?.label || 'Windows 2000'
+  return <span className="skin-menu">
+    <button type="button" className="title-btn" title={`主题风格：${selected}`} aria-label={`主题风格：${selected}`} aria-haspopup="menu" aria-expanded={open} onClick={() => setOpen(value => !value)}><Palette size={12} /></button>
+    {open && <div className="skin-list" role="menu">{SKINS.map(item => <button type="button" role="menuitemradio" aria-checked={item.value === skin} className={`skin-item${item.value === skin ? ' active' : ''}`} key={item.value} onClick={() => { onSelect(item.value); setOpen(false) }}><span className="skin-check">{item.value === skin ? <Check size={10} /> : null}</span>{item.label}</button>)}</div>}
+  </span>
+}
+
+function ProbeRows({ ping, config }: { ping?: ProbePingSeries[]; config: PingGroupConfig }) {
+  const options = useMemo(() => pingTargetOptions(ping || []), [ping])
+  const resolved = useMemo(() => resolvePingGroups(options, config), [options, config])
+  return <div className="probes">
+    {resolved.map((group, index) => {
+      const series = group.target?.series
+      const latency = series?.current_ms ?? -1
+      const loss = series?.loss_pct ?? -1
+      const buckets = series?.buckets || []
+      const bucketAt = (slot: number) => buckets[slot - Math.max(0, 12 - buckets.length)]
+      return <div className="probe-row" key={`${group.requested}-${index}`}>
+        <span className="probe-name" title={group.target?.label || group.requested}>{group.target?.label || group.requested || `延迟 ${index + 1}`}</span>
+        <b className="probe-ms num" style={{ color: latencyTone(latency) }}>{latency < 0 ? '超时' : `${Math.round(latency)} ms`}</b>
+        <span className="pill-strip" title="窗口内每个采样桶的往返时延">{Array.from({ length: 12 }, (_, slot) => bucketAt(slot)).map((bucket, slot) => <i key={slot} style={{ background: latencyTone(bucket?.ms ?? -1) }} />)}</span>
+        <span className="probe-loss" style={{ color: lossTone(loss) }}>{loss < 0 ? '—' : <><b className="num">{loss.toFixed(1)}</b><i className="read-unit">%</i></>}</span>
+        <span className="pill-strip thin" title="窗口内每个采样桶的丢包比例">{Array.from({ length: 12 }, (_, slot) => bucketAt(slot)).map((bucket, slot) => <i key={slot} style={{ background: lossTone(bucket?.loss ?? -1) }} />)}</span>
+      </div>
+    })}
+  </div>
+}
+
+function CardData({ server, speed, pingGroups }: { server: ProbeServer; speed: (value?: number) => string; pingGroups: PingGroupConfig }) {
+  const up = speed(server.upload_speed).split(' ')
+  const down = speed(server.download_speed).split(' ')
+  return <div className="card-data">
+    <div className="reads">
+      <div className="read-col">
+        <span className="read read-up" title="上行速率"><ArrowUp className="read-icon" size={10} /><b className="num">{up[0]}</b><i className="read-unit">{up.slice(1).join(' ')}</i></span>
+        <span className="read read-down" title="下行速率"><ArrowDown className="read-icon" size={10} /><b className="num">{down[0]}</b><i className="read-unit">{down.slice(1).join(' ')}</i></span>
+      </div>
+      <div className="read-col">
+        <span className="read read-plain"><ArrowUp className="read-icon" size={10} /><b className="num">{formatTraffic(server.traffic_used_up)}</b></span>
+        <span className="read read-plain"><ArrowDown className="read-icon" size={10} /><b className="num">{formatTraffic(server.traffic_used_down)}</b></span>
+      </div>
+      <div className="read-col">
+        <span className={`read ${formatRemaining(server.expires_at) !== '∞' && Number(formatRemaining(server.expires_at)) <= 7 ? 'read-alert' : 'read-plain'}`}><CalendarDays className="read-icon" size={10} /><span className="read-text">剩余</span><b className="num" style={{ '--slot': '2.4ch' } as CSSProperties}>{formatRemaining(server.expires_at)}</b><i className="read-unit">天</i></span>
+        <span className="read read-plain read-price"><span className="read-text">价格</span><b>{server.renewal_price_cny || server.renewal_price ? `${server.renewal_price_cny || server.renewal_price} / 月` : '免费'}</b></span>
+      </div>
+    </div>
+    <ProbeRows ping={server.ping} config={pingGroups} />
+  </div>
+}
+
+function ServerTitle({ server }: { server: ProbeServer }) {
+  const name = server.name || '未命名节点'
+  return <div className={`title-bar${server.online ? '' : ' inactive'}`}>
+    <Monitor className="title-bar-icon" size={14} />
+    <Flag code={server.region_country} />
+    <span className="os-icon-img" title={server.os || '系统'}>{server.os?.toLowerCase().includes('windows') ? '⊞' : '◆'}</span>
+    <span className="title-bar-text" title={name}>{name}</span>
+    <span className="card-status"><span className={`led${server.online ? ' on' : ''}`} />{server.online ? '在线' : '离线'}</span>
+  </div>
+}
+
+function ServerCard({ server, index, speed, pingGroups, ring = false }: { server: ProbeServer; index: number; speed: (value?: number) => string; pingGroups: PingGroupConfig; ring?: boolean }) {
+  const trafficUsed = percent(server.traffic_used, server.traffic_limit)
+  const memory = percent(server.mem_used, server.mem_total)
+  const disk = percent(server.disk_used, server.disk_total)
+  const meta = server.online ? formatUptime(server.uptime) : '离线'
+  return <article className={`win server-card${ring ? ' ring-card' : ''}${server.online ? '' : ' offline'}`}>
+    <ServerTitle server={server} />
+    <div className="card-body">
+      <div className="card-meta"><span className={`card-meta-item${server.online ? '' : ' expired'}`}>{meta}</span><span className="card-meta-spacer" />{server.cpu_cores ? <span className="badge">{server.cpu_cores} 核</span> : null}{server.arch ? <span className="badge">{server.arch}</span> : null}</div>
+      {ring ? <div className="pies">
+        <div className="pie-item"><DiskPie value={server.cpu_pct || 0} /><b>CPU {Math.round(server.cpu_pct || 0)}%</b><span className="pie-sub">{server.cpu_cores || '—'} 核</span></div>
+        <div className="pie-item"><DiskPie value={memory} /><b>内存 {Math.round(memory)}%</b><span className="pie-sub">{formatTraffic(server.mem_used)} / {formatTraffic(server.mem_total)}</span></div>
+        <div className="pie-item"><DiskPie value={disk} /><b>硬盘 {Math.round(disk)}%</b><span className="pie-sub">{formatTraffic(server.disk_used)} / {formatTraffic(server.disk_total)}</span></div>
+      </div> : <div className="card-meters">
+        <span>CPU</span><Progress value={server.cpu_pct || 0} /><span className="num">{(server.cpu_pct || 0).toFixed(2)}%</span>
+        <span>内存</span><Progress value={memory} /><span className="num">{memory.toFixed(2)}%</span>
+        <span>硬盘</span><Progress value={disk} /><span className="num">{disk.toFixed(2)}%</span>
+        <span>用量</span><Progress value={trafficUsed} unlimited={!server.traffic_limit || server.traffic_limit <= 0} /><span className="num">{server.traffic_limit ? `${trafficUsed.toFixed(2)}%` : '∞'}</span>
+      </div>}
+      <CardData server={server} speed={speed} pingGroups={pingGroups} />
+    </div>
+  </article>
+}
+
+function DiskPie({ value }: { value: number }) {
+  return <span className="disk-pie" style={{ '--pie-pct': `${Math.max(0, Math.min(100, value))}%` } as CSSProperties}><span className="disk-pie-side" /><span className="disk-pie-top" /></span>
+}
+
+function SortableTable({ servers, speed }: { servers: ProbeServer[]; speed: (value?: number) => string }) {
+  const [sort, setSort] = useState<keyof ProbeServer | null>(null)
+  const [descending, setDescending] = useState(true)
+  const sorted = useMemo(() => [...servers].sort((left, right) => {
+    if (!sort) return 0
+    const a = Number(left[sort] || 0)
+    const b = Number(right[sort] || 0)
+    return descending ? b - a : a - b
+  }), [servers, sort, descending])
+  const header = (label: string, field?: keyof ProbeServer, className?: string) => <th className={className}><button type="button" className="col-head" onClick={() => { if (sort === field) setDescending(value => !value); else { setSort(field || null); setDescending(true) } }}>{label}{field && sort === field ? (descending ? ' ▼' : ' ▲') : ''}</button></th>
+  return <div className="table-scroll sunken"><table className="listview"><thead><tr>{header('', undefined, 'col-status')}{header('名称', 'name')}{header('在线', 'uptime')}{header('到期')}{header('负载', 'cpu_pct')}{header('实时网速 ↓|↑', 'download_speed')}{header('CPU', 'cpu_pct')}{header('内存', 'mem_used')}{header('硬盘', 'disk_used')}{header('流量', 'traffic_used')}</tr></thead><tbody>{sorted.length === 0 ? <tr className="table-empty"><td colSpan={10}>没有匹配的服务器</td></tr> : sorted.map((server, index) => { const memory = percent(server.mem_used, server.mem_total); const disk = percent(server.disk_used, server.disk_total); return <tr className={server.online ? '' : 'offline'} key={`${server.name}-${index}`}><td className="col-status"><span className={`led${server.online ? ' on' : ''}`} /></td><td><span className="cell-flex"><Flag code={server.region_country} /><span>{server.name || `服务器 ${index + 1}`}</span></span></td><td>{server.online ? formatUptime(server.uptime) : '离线'}</td><td>{formatRemaining(server.expires_at)} 天</td><td>{(server.cpu_pct || 0).toFixed(1)}%</td><td>{speed(server.download_speed)} ↓ / {speed(server.upload_speed)} ↑</td><td><span className="cell-meter"><Progress value={server.cpu_pct || 0} /><span className="num">{(server.cpu_pct || 0).toFixed(1)}%</span></span></td><td><span className="cell-meter"><Progress value={memory} /><span className="num">{memory.toFixed(1)}%</span></span></td><td><span className="cell-meter"><Progress value={disk} /><span className="num">{disk.toFixed(1)}%</span></span></td><td>{formatTraffic(server.traffic_used)}</td></tr> })}</tbody></table></div>
 }
 
 export function Win2000App() {
-  const { data, error } = useProbe()
+  const { data, error, pingGroups } = useProbe()
   const speed = useNetworkSpeed()
   const servers = data?.servers || []
   const [skin, setSkin] = useState<Skin>(() => {
-    const value = localStorage.getItem('win2000-skin') as Skin | null
-    return SKINS.some((item) => item.value === value) ? value! : 'win2000'
+    try { const value = JSON.parse(localStorage.getItem('serverstatus:w2k-skin') || 'null') as Skin; return SKINS.some(item => item.value === value) ? value : 'win2000' } catch { return 'win2000' }
   })
-  const [view, setView] = useState<View>(() => (localStorage.getItem('win2000-view') as View) || 'cards')
-  const [dark, setDark] = useState(() => document.documentElement.classList.contains('dark'))
-  const [region, setRegion] = useState('全部')
-  const [theme, setThemeState] = useState<ThemeName | null>(() => getThemeOverride())
+  const [view, setView] = useState<View>(() => {
+    try { const value = JSON.parse(localStorage.getItem('serverstatus:w2k-view') || '"cards"') as View; return value === 'ring' || value === 'table' ? value : 'cards' } catch { return 'cards' }
+  })
+  const [dark, setDark] = useState(() => {
+    try {
+      const choice = JSON.parse(localStorage.getItem('serverstatus:w2k-theme') || '"light"')
+      return choice === 'dark' || (choice === 'auto' && matchMedia('(prefers-color-scheme: dark)').matches)
+    } catch { return document.documentElement.classList.contains('dark') }
+  })
+  const [region, setRegion] = useState('')
+  const themeOverride = getThemeOverride()
 
   useEffect(() => {
-    localStorage.setItem('win2000-skin', skin)
-    document.documentElement.dataset.w2kSkin = skin
+    localStorage.setItem('serverstatus:w2k-skin', JSON.stringify(skin))
+    document.body.dataset.skin = skin
   }, [skin])
-  useEffect(() => { localStorage.setItem('win2000-view', view) }, [view])
+  useEffect(() => { localStorage.setItem('serverstatus:w2k-view', JSON.stringify(view)) }, [view])
+  useEffect(() => {
+    document.body.classList.toggle('light', !dark)
+    return () => { document.body.classList.remove('light') }
+  }, [dark])
 
-  const regions = useMemo(() => ['全部', ...new Set(servers.map((server) => server.region_country || server.region).filter(Boolean) as string[])], [servers])
-  const visible = region === '全部' ? servers : servers.filter((server) => (server.region_country || server.region) === region)
-  const online = servers.filter((server) => server.online).length
+  const regions = useMemo(() => [...new Set(servers.map(server => server.region_country || server.region).filter(Boolean) as string[])].sort(), [servers])
+  const visible = region ? servers.filter(server => (server.region_country || server.region) === region) : servers
+  const online = servers.filter(server => server.online).length
   const totalUp = servers.reduce((sum, server) => sum + (server.upload_speed || 0), 0)
   const totalDown = servers.reduce((sum, server) => sum + (server.download_speed || 0), 0)
   const totalTraffic = servers.reduce((sum, server) => sum + (server.traffic_used || 0), 0)
-  const worst = [...servers].sort((a, b) => (b.cpu_pct || 0) - (a.cpu_pct || 0))[0]
+  const busiest = [...servers].sort((a, b) => (b.cpu_pct || 0) - (a.cpu_pct || 0))[0]
+  const selectDark = () => { const next = !dark; setDark(next); localStorage.setItem('serverstatus:w2k-theme', JSON.stringify(next ? 'dark' : 'light')); setDarkOverride(next ? 'dark' : 'light') }
 
-  if (!data && !error) return <main className="center">正在启动 Win2000 主题…</main>
-  if (error && !data) return <main className="center error">主控暂时不可用<br /><small>{error}</small></main>
+  if (!data && !error) return <main className="center">正在连接 Win2000 主题…</main>
+  if (error && !data) return <main className="center error">连接中断：{error}</main>
   if (!data?.enabled) return <main className="center">探针尚未启用</main>
 
-  const changeTheme = (value: string) => {
-    const next = value === '' ? null : value as ThemeName
-    setTheme(next)
-    setThemeState(next)
-  }
-  const toggleDark = () => {
-    const next = dark ? 'light' : 'dark'
-    setDarkOverride(next)
-    setDark(!dark)
-  }
-  return (
-    <main className={`w2k-desktop ${dark ? 'dark' : 'light'} skin-${skin}`}>
-      <section className="w2k-window" aria-label="Win2000 服务器监控">
-        <header className="w2k-titlebar">
-          <div><Monitor size={14} /><strong>{data.title?.trim() || '服务器状态'}</strong></div>
-          <div className="w2k-title-controls"><button aria-label="最小化">_</button><button aria-label="最大化">□</button><button aria-label="关闭">×</button></div>
-        </header>
-        <nav className="w2k-toolbar">
-          <div className="w2k-toolbar-tabs"><button className={view === 'cards' ? 'active' : ''} onClick={() => setView('cards')}><LayoutGrid size={14} />卡片</button><button className={view === 'rings' ? 'active' : ''} onClick={() => setView('rings')}>◔ 圆环</button><button className={view === 'table' ? 'active' : ''} onClick={() => setView('table')}><List size={14} />表格</button></div>
-          <span className="w2k-toolbar-count">{servers.length} 台服务器</span>
-          <label className="w2k-skin-select"><Palette size={13} /><select value={skin} onChange={(event) => setSkin(event.target.value as Skin)}>{SKINS.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}</select></label>
-          <label className="w2k-theme-select"><select value={theme || ''} onChange={(event) => changeTheme(event.target.value)}>{THEMES.map((item) => <option key={item.value || 'master'} value={item.value || ''}>{item.label}</option>)}</select></label>
-          <button className="w2k-icon-button" onClick={toggleDark} title="切换明暗模式">{dark ? <Sun size={14} /> : <Moon size={14} />}</button><PasskeyLogin />
-        </nav>
-        <section className="w2k-summary">
-          <div><span>节点状态</span><strong><b>{online}</b> 在线 / {servers.length - online} 离线</strong><code className="w2k-segments">{segment(online / Math.max(1, servers.length), 16)}</code></div>
-          <div><span>实时速度</span><strong>{speed(totalDown)} <small>↓</small> / {speed(totalUp)} <small>↑</small></strong><em>当前总下行 / 总上行</em></div>
-          <div><span>累计流量</span><strong>{formatTraffic(totalTraffic)}</strong><em>所有节点合计</em></div>
-          <div><span>最忙节点</span><strong>{worst?.name || '—'}</strong><em>{worst ? `${(worst.cpu_pct || 0).toFixed(1)}% CPU` : '暂无数据'}</em></div>
-        </section>
-        <div className="w2k-filterbar">{regions.map((item) => <button key={item} className={region === item ? 'active' : ''} onClick={() => setRegion(item)}>{item} {item === '全部' ? servers.length : visible.filter((server) => (server.region_country || server.region) === item).length}</button>)}<button className="w2k-refresh" onClick={() => window.location.reload()} title="刷新"><RefreshCw size={13} /></button></div>
-        {view === 'cards' && <section className="w2k-grid">{visible.map((server, index) => <NodeCard key={`${server.name}-${index}`} server={server} index={servers.indexOf(server)} speed={speed} />)}</section>}
-        {view === 'rings' && <section className="w2k-rings">{visible.map((server, index) => <article className="w2k-ring-card" key={`${server.name}-${index}`}><header><span className={`w2k-led ${server.online ? 'online' : 'offline'}`} />{server.name || `服务器 ${index + 1}`}</header><div className="w2k-ring-row"><Ring value={server.cpu_pct || 0} label="CPU" tone="blue" /><Ring value={percent(server.mem_used, server.mem_total)} label="内存" tone="green" /><Ring value={percent(server.disk_used, server.disk_total)} label="硬盘" tone="orange" /></div><footer>{speed(server.download_speed)} ↓　{speed(server.upload_speed)} ↑</footer></article>)}</section>}
-        {view === 'table' && <div className="w2k-table-wrap"><table className="w2k-table"><thead><tr><th>状态</th><th>节点</th><th>CPU</th><th>内存</th><th>硬盘</th><th>实时速度</th><th>延迟</th></tr></thead><tbody>{visible.map((server, index) => { const ping = server.ping?.find((item) => item.current_ms >= 0); return <tr key={`${server.name}-${index}`}><td><span className={`w2k-led ${server.online ? 'online' : 'offline'}`} /></td><td>{server.name || `服务器 ${index + 1}`}</td><td>{(server.cpu_pct || 0).toFixed(1)}%</td><td>{percent(server.mem_used, server.mem_total).toFixed(1)}%</td><td>{percent(server.disk_used, server.disk_total).toFixed(1)}%</td><td>{speed(server.download_speed)} ↓ / {speed(server.upload_speed)} ↑</td><td>{ping ? `${ping.current_ms.toFixed(0)} ms` : '—'}</td></tr> })}</tbody></table></div>}
-        <footer className="w2k-statusbar"><span>已连接 · {online} 在线 / {servers.length - online} 离线</span><span>Powered by <a href="https://github.com/guboysky/win2000" target="_blank" rel="noreferrer">Win2000 Theme</a></span></footer>
-      </section>
-    </main>
-  )
+  return <main className="desktop">
+    <div className="win app-window">
+      <header className="title-bar"><Monitor className="title-bar-icon" size={14} /><span className="title-bar-text">{data.title?.trim() || '服务器监控'}</span><SkinMenu skin={skin} onSelect={setSkin} /><button type="button" className="title-btn" title={dark ? '切换到浅色' : '切换到深色'} aria-label={dark ? '切换到浅色' : '切换到深色'} onClick={selectDark}>{dark ? <Sun size={10} /> : <Moon size={10} />}</button><PasskeyLogin buttonClassName="title-btn title-btn-last" iconSize={10} /></header>
+      <main className="app-body"><div className="page">
+        <div className="toolbar"><button type="button" className={`tool-btn${view === 'cards' ? ' active' : ''}`} onClick={() => setView('cards')}><LayoutGrid size={14} />卡片</button><button type="button" className={`tool-btn${view === 'ring' ? ' active' : ''}`} onClick={() => setView('ring')}><span aria-hidden="true">◔</span>圆环</button><button type="button" className={`tool-btn${view === 'table' ? ' active' : ''}`} onClick={() => setView('table')}><List size={14} />表格</button><span className="tool-sep" /><span className="tool-label text-muted">{servers.length} 台服务器</span>{themeOverride && <span className="tool-label text-muted">主题：{themeOverride}</span>}<button type="button" className="tool-btn refresh-btn" onClick={() => window.location.reload()} title="刷新"><RefreshCw size={13} /></button></div>
+        <div className="page-content"><div className="dashboard-panel">
+          <div className="stats-grid"><StatBox label="服务器" id="fleet"><span className="stat-figure"><b className="stat-big"><span className="text-online">{online} 在线</span><span className="stat-sep"> | </span><span className="text-offline">{servers.length - online} 离线</span></b><FleetBar servers={servers} /></span></StatBox><StatBox label="实时速度" id="speed"><span className="stat-figure"><b className="stat-big num">{speed(totalDown + totalUp)}</b><span className="stat-sub"><i className="net-up">↑</i> {speed(totalUp)}<span className="stat-sep"> · </span><i className="net-down">↓</i> {speed(totalDown)}</span></span></StatBox><StatBox label="累计流量" id="total"><span className="stat-figure"><b className="stat-big num">{formatTraffic(totalTraffic)}</b><span className="stat-sub"><i className="net-up">↑</i> {formatTraffic(servers.reduce((sum, server) => sum + (server.traffic_used_up || 0), 0))}<span className="stat-sep"> · </span><i className="net-down">↓</i> {formatTraffic(servers.reduce((sum, server) => sum + (server.traffic_used_down || 0), 0))}</span></span></StatBox><StatBox label="最忙节点" id="busy">{busiest ? <div className="stat-busy"><span className="stat-busy-name" title={busiest.name}>{busiest.name || '—'}</span><b className="num">{(busiest.cpu_pct || 0).toFixed(1)}%</b><Progress value={busiest.cpu_pct || 0} /></div> : <span className="text-muted">—</span>}</StatBox></div>
+          <div className="tabs filter-tabs"><button type="button" className={`tab${region === '' ? ' active' : ''}`} onClick={() => setRegion('')}><span>ALL</span><span className="tab-count">全部 {servers.length}</span></button>{regions.map(item => <button type="button" className={`tab${region === item ? ' active' : ''}`} key={item} onClick={() => setRegion(item)}><Flag code={item} /><span>{item}</span><span className="tab-count">{servers.filter(server => (server.region_country || server.region) === item).length}</span></button>)}</div>
+          {visible.length === 0 ? <div className="tab-panel"><p className="empty-state">这个地区没有节点</p></div> : view === 'table' ? <SortableTable servers={visible} speed={speed} /> : <div className={`servers-grid${view === 'ring' ? ' ring-grid' : ''}`}>{visible.map((server, index) => <ServerCard key={`${server.name}-${index}`} server={server} index={index} speed={speed} pingGroups={pingGroups} ring={view === 'ring'} />)}</div>}
+        </div></div>
+      </div></main>
+      <footer className="status-bar"><div className="status-field grow">{error ? `连接中断：${error}` : `已连接 · ${online} 在线 / ${servers.length - online} 离线`}</div><div className="status-field status-credit">Powered by&nbsp;<a href="https://github.com/guboysky/win2000" target="_blank" rel="noreferrer">Win2000 Theme</a></div></footer>
+    </div>
+  </main>
 }
