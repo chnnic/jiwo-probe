@@ -48,11 +48,13 @@ function Bars({ variant, kind, buckets }: { variant: Variant; kind: Mode; bucket
 }
 
 /** 七个常规主题的卡片显示；Premium / Ran 不接入。仅复用快照，不新增轮询。 */
-export function CardPingGroups({ ping = [], serverIndex, serverName, variant }: {
+export function CardPingGroups({ ping = [], serverIndex, serverName, variant, averageOnly = false }: {
   ping?: ProbePingSeries[]
   serverIndex: number
   serverName?: string
   variant: Variant
+  /** Lite 紧凑卡片只显示全目标平均，不覆盖其他视图的已保存选择。 */
+  averageOnly?: boolean
 }) {
   const { pingGroups: config } = useProbe()
   const options = useMemo(() => pingTargetOptions(ping), [ping])
@@ -61,7 +63,9 @@ export function CardPingGroups({ ping = [], serverIndex, serverName, variant }: 
   const saved = useMemo(() => readSelections(storageKey), [storageKey])
   const [edited, setEdited] = useState<{ key: string; values: Array<string | null> }>()
   const overrides = edited?.key === storageKey ? edited.values : saved
-  const groups = useMemo(() => resolvePingGroups(options, config, overrides), [options, config, overrides])
+  const groups = useMemo(() => averageOnly
+    ? [{ requested: '__avg__', target: options.find(option => option.key === '__avg__' && option.series), fallback: false }]
+    : resolvePingGroups(options, config, overrides), [options, config, overrides, averageOnly])
   const [trend, setTrend] = useState<{ key: string; label: string; mode: Mode } | null>(null)
   const update = (values: Array<string | null>) => {
     setEdited({ key: storageKey, values })
@@ -71,7 +75,7 @@ export function CardPingGroups({ ping = [], serverIndex, serverName, variant }: 
     } catch { /* 隐私模式仍允许本次会话选择。 */ }
   }
   const name = serverName || `服务器 ${serverIndex + 1}`
-  return <div className={`card-ping-groups card-ping-${variant}`} data-group-count={config.count}
+  return <div className={`card-ping-groups card-ping-${variant}`} data-group-count={groups.length}
     onClick={event => event.stopPropagation()} onMouseDown={event => event.stopPropagation()} onKeyDown={event => event.stopPropagation()}>
     {groups.map((group, index) => {
       const current = group.target?.series
@@ -86,7 +90,7 @@ export function CardPingGroups({ ping = [], serverIndex, serverName, variant }: 
             const openTrend = () => group.target && setTrend({ key: targetKey, label: group.target.label, mode: kind })
             return <div key={kind} className={`card-ping-metric${!current ? ' is-unavailable' : ''}`} onClick={openTrend}>
               <div className="card-ping-head">
-                {kind === 'latency' ? <span className="card-ping-selector">
+                {kind === 'latency' ? averageOnly ? <span>平均延迟</span> : <span className="card-ping-selector">
                   <select aria-label={`${name} 第 ${index + 1} 组测试目标`} value={targetKey}
                     title={group.fallback ? `${options.find(option => option.key === group.requested)?.label || group.requested || '默认目标'} 未命中，使用 ${group.target?.label}` : group.target?.label || '没有可用的默认或国际备用目标'}
                     onClick={event => event.stopPropagation()}
@@ -101,7 +105,7 @@ export function CardPingGroups({ ping = [], serverIndex, serverName, variant }: 
                   </select>
                   <ChevronDown size={10} aria-hidden="true" />
                 </span> : <span>
-                  {index === 0 && overrides.some(Boolean)
+                  {!averageOnly && index === 0 && overrides.some(Boolean)
                     ? <button type="button" className="card-ping-reset" title="恢复后台默认目标" aria-label={`${name} 恢复后台默认目标`} onClick={event => { event.stopPropagation(); update([]) }}><RotateCcw size={11} /></button>
                     : <Unplug size={11} />}
                   丢包率

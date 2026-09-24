@@ -62,6 +62,7 @@ const THEME_OPTIONS: { value: ThemeName; label: string }[] = [
   { value: 'ran', label: '岚 · Ran' },
   { value: 'glassmorphism', label: 'Glassmorphism' },
   { value: 'emerald', label: 'Emerald' },
+  { value: 'mini', label: 'Lite' },
 ]
 
 type ViewMode = 'card' | 'table' | 'status'

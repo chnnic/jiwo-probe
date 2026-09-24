@@ -6,7 +6,7 @@ import Lottie from 'lottie-react'
 import { Activity, ArrowDown, ArrowDownUp, ArrowUp, BadgeDollarSign, Cable, Calendar, CalendarClock, Check, CheckCircle2, ChevronDown, ChevronUp, CircleDollarSign, Clock, Clock3, Cpu, Crown, Database, Gauge, Gem, Globe2, HardDrive, LayoutGrid, List, MapPin, MemoryStick, Monitor, Moon, MoveHorizontal, Network, Palette, PieChart, RefreshCw, Rows3, Rows4, Search, Server, Sun, SunMoon, TrendingUp, Trophy, Unplug, Wallet, Wifi, XCircle, ZoomIn, ZoomOut } from 'lucide-react'
 import { siAlmalinux, siAlpinelinux, siApple, siArchlinux, siCentos, siDebian, siFedora, siFreebsd, siGentoo, siKalilinux, siLinux, siLinuxmint, siNixos, siOpensuse, siProxmox, siRedhat, siRockylinux, siUbuntu } from 'simple-icons'
 import { Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
-import type { ProbeBucket, ProbePingSeries, ProbeReturnRoute, ProbeServer, ThemeName } from './types'
+import type { ProbeBucket, ProbePayload, ProbePingSeries, ProbeReturnRoute, ProbeServer, ThemeName } from './types'
 import { EnrichedServer, getActiveTheme, getDarkOverride, getThemeOverride, setDarkOverride, setTheme, useProbe } from './use-probe'
 import {
   dailyTrafficRows,
@@ -31,6 +31,8 @@ const RegionGlobe = lazy(() => import('./RegionGlobe').then((module) => ({ defau
 const PremiumProbePage = lazy(() => import('./PremiumProbePage').then((module) => ({ default: module.PremiumProbePage })))
 const GmApp = lazy(() => import('./glassmorphism/GmApp').then((module) => ({ default: module.default })))
 const EmeraldApp = lazy(() => import('./emerald/EmeraldApp').then((module) => ({ default: module.default })))
+const MiniApp = lazy(() => import('./mini/MiniApp'))
+const MiniServerDetail = lazy(() => import('./mini/MiniServerDetail'))
 const ranges = [
   {
     key: '1h',
@@ -252,9 +254,10 @@ const THEME_OPTIONS: { value: ThemeName; label: string }[] = [
   { value: 'ran', label: '岚 · Ran' },
   { value: 'glassmorphism', label: 'Glassmorphism' },
   { value: 'emerald', label: 'Emerald' },
+  { value: 'mini', label: 'Lite' },
 ]
 
-function ThemeSelect({ value, onChange }: { value: ThemeName | null; onChange: (name: ThemeName | null) => void }) {
+export function ThemeSelect({ value, onChange }: { value: ThemeName | null; onChange: (name: ThemeName | null) => void }) {
   const [open, setOpen] = useState(false)
   const [pos, setPos] = useState({ top: 0, right: 0 })
   const wrapRef = useRef<HTMLDivElement>(null)
@@ -2548,6 +2551,14 @@ export function App() {
       </Suspense>
     )
   }
+  if (activeTheme === 'mini') {
+    return (
+      <Suspense fallback={<main className="center">正在加载 Lite 主题…</main>}>
+        <MiniApp data={data} error={error} onThemeChange={(name) => { setTheme(name); setThemeState(name); setActiveTheme(name ?? getActiveTheme()) }} />
+        {detailIndex !== null && servers[detailIndex] && <MiniServerDetail key={detailIndex} server={servers[detailIndex]} index={detailIndex} onClose={closeDetail} showHealthScore={data.show_health_score === true} />}
+      </Suspense>
+    )
+  }
   const title = data.title?.trim() || '服务器状态'
   const onlineCount = servers.filter((server) => server.online).length
   const expiringCount = servers.filter(expiring).length
@@ -2762,21 +2773,7 @@ export function App() {
           MMWX Group
         </a>
       </footer>
-      {(data.license_badge || EXTRA_LICENSE_BADGES.length > 0) && (
-        <div className="probe-license-footer">
-          {(() => {
-            const live = data.license_badge ? (Array.isArray(data.license_badge) ? data.license_badge : [data.license_badge]) : []
-            const keyOf = (badge: { name?: string; display_name?: string }) => badge.name || badge.display_name || ''
-            const merged = EXTRA_LICENSE_BADGES.map((badge) => live.find((item) => keyOf(item) === keyOf(badge)) || badge)
-            const extras = live.filter((badge) => !EXTRA_LICENSE_BADGES.some((item) => keyOf(item) === keyOf(badge)))
-            return [...merged, ...extras]
-              .filter((badge, index, all) => all.findIndex((item) => keyOf(item) === keyOf(badge)) === index)
-              .map((badge, index) => (
-                <ProbeLicenseNameplate key={index} name={badge.name} displayName={badge.display_name} />
-              ))
-          })()}
-        </div>
-      )}
+      <ProbeLicenseFooter badges={data.license_badge} />
       {detailIndex !== null && servers[detailIndex] && (
         <ServerDetail
           server={servers[detailIndex]}
@@ -2787,4 +2784,18 @@ export function App() {
       )}
     </div>
   )
+}
+
+// 共用原有名牌与动画，独立主题不再遗漏许可证页尾。
+export function ProbeLicenseFooter({ badges }: { badges: ProbePayload['license_badge'] }) {
+  if (!badges && EXTRA_LICENSE_BADGES.length === 0) return null
+  const live = badges ? (Array.isArray(badges) ? badges : [badges]) : []
+  const keyOf = (badge: { name?: string; display_name?: string }) => badge.name || badge.display_name || ''
+  const merged = EXTRA_LICENSE_BADGES.map((badge) => live.find((item) => keyOf(item) === keyOf(badge)) || badge)
+  const extras = live.filter((badge) => !EXTRA_LICENSE_BADGES.some((item) => keyOf(item) === keyOf(badge)))
+  return <div className="probe-license-footer">
+    {[...merged, ...extras]
+      .filter((badge, index, all) => all.findIndex((item) => keyOf(item) === keyOf(badge)) === index)
+      .map((badge, index) => <ProbeLicenseNameplate key={index} name={badge.name} displayName={badge.display_name} />)}
+  </div>
 }
