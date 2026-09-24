@@ -32,6 +32,7 @@ const PremiumProbePage = lazy(() => import('./PremiumProbePage').then((module) =
 const GmApp = lazy(() => import('./glassmorphism/GmApp').then((module) => ({ default: module.default })))
 const EmeraldApp = lazy(() => import('./emerald/EmeraldApp').then((module) => ({ default: module.default })))
 const MiniApp = lazy(() => import('./mini/MiniApp'))
+const LuminaPlusApp = lazy(() => import('./luminaplus/LuminaPlusApp'))
 const MiniServerDetail = lazy(() => import('./mini/MiniServerDetail'))
 const ranges = [
   {
@@ -250,6 +251,7 @@ const THEME_OPTIONS: { value: ThemeName; label: string }[] = [
   { value: 'anime', label: '动漫' },
   { value: 'glass', label: '玻璃' },
   { value: 'lumina', label: 'Lumina' },
+  { value: 'luminaplus', label: 'LuminaPlus' },
   { value: 'premium', label: 'Premium' },
   { value: 'ran', label: '岚 · Ran' },
   { value: 'glassmorphism', label: 'Glassmorphism' },
@@ -285,12 +287,17 @@ export function ThemeSelect({ value, onChange }: { value: ThemeName | null; onCh
       if (menuRef.current?.contains(event.target as Node)) return
       setOpen(false)
     }
+    const handleScroll = (event: Event) => {
+      // More themes make the menu scrollable; scrolling its own options must not dismiss it.
+      if (event.target instanceof Node && menuRef.current?.contains(event.target)) return
+      close()
+    }
     document.addEventListener('mousedown', handle)
-    window.addEventListener('scroll', close, true)
+    window.addEventListener('scroll', handleScroll, true)
     window.addEventListener('resize', close)
     return () => {
       document.removeEventListener('mousedown', handle)
-      window.removeEventListener('scroll', close, true)
+      window.removeEventListener('scroll', handleScroll, true)
       window.removeEventListener('resize', close)
     }
   }, [open, close])
@@ -2548,6 +2555,14 @@ export function App() {
     return (
       <Suspense fallback={<main className="center">正在加载 Emerald 主题…</main>}>
         <EmeraldApp data={data} onThemeChange={(name) => { setTheme(name); setThemeState(name); setActiveTheme(name ?? getActiveTheme()) }} />
+      </Suspense>
+    )
+  }
+  if (activeTheme === 'luminaplus') {
+    return (
+      <Suspense fallback={<main className="center">正在加载 LuminaPlus 主题…</main>}>
+        <LuminaPlusApp data={data} error={error} onThemeChange={(name) => { setTheme(name); setThemeState(name); setActiveTheme(name ?? getActiveTheme()) }} />
+        {detailIndex !== null && servers[detailIndex] && <MiniServerDetail key={detailIndex} server={servers[detailIndex]} index={detailIndex} onClose={closeDetail} showHealthScore={data.show_health_score === true} />}
       </Suspense>
     )
   }

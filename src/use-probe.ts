@@ -4,6 +4,7 @@ import type { ProbeAppearance, ProbeBackgroundAppearance, ProbePayload, ProbeSer
 import { DEFAULT_PING_GROUP_CONFIG, parsePingGroupConfig, type PingGroupConfig } from './ping-groups'
 import { DEFAULT_NETWORK_SPEED_UNIT, parseNetworkSpeedUnit, type NetworkSpeedUnit } from './network-speed'
 import { canonicalThemeOverride, parseThemeName } from './theme-name'
+import { recordConnectionSnapshot, type ConnectionHistory } from './connection-history'
 export { isBuiltinTheme, parseThemeName } from './theme-name'
 
 const APPEARANCE_CACHE = 'mmwx-probe-appearance'
@@ -356,6 +357,7 @@ export interface ProbeState {
   error?: string
   pingGroups: PingGroupConfig
   networkSpeedUnit: NetworkSpeedUnit
+  connectionHistory: ConnectionHistory
 }
 
 const ProbeContext = createContext<ProbeState | null>(null)
@@ -365,6 +367,7 @@ function useProbeConnection(): ProbeState {
   const [error, setError] = useState<string>()
   const [pingGroups, setPingGroups] = useState(runtimePingGroups)
   const [networkSpeedUnit, setNetworkSpeedUnit] = useState(runtimeNetworkSpeedUnit)
+  const [connectionHistory, setConnectionHistory] = useState<ConnectionHistory>(() => new Map())
   const timer = useRef<number | undefined>(undefined)
   const watchdogTimer = useRef<number | undefined>(undefined)
   const lastFrameAt = useRef(0)
@@ -378,7 +381,10 @@ function useProbeConnection(): ProbeState {
       if (stopped) return
       applyAppearance(payload.appearance)
       applyFavicon(payload.icon)
-      setData(applyPayloadVisibility(enrichPayload(payload)))
+      const visiblePayload = applyPayloadVisibility(enrichPayload(payload))
+      setData(visiblePayload)
+      const receivedAt = Date.now() / 1000
+      setConnectionHistory(previous => recordConnectionSnapshot(previous, visiblePayload.servers || [], receivedAt))
       setError(undefined)
       if (payload.title) document.title = payload.title
     }
@@ -453,7 +459,7 @@ function useProbeConnection(): ProbeState {
     }
   }, [])
 
-  return { data, error, pingGroups, networkSpeedUnit }
+  return { data, error, pingGroups, networkSpeedUnit, connectionHistory }
 }
 
 // 全站只在 Provider 内建立一套 HTTP/WS 连接。各主题调用 useProbe() 时只读取

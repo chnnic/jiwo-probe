@@ -1,5 +1,6 @@
 import { useNetworkSpeed } from '../use-network-speed'
 import { UnlockButton } from '../ServerCapabilities'
+import { ConnectionLabel } from '../ConnectionLabel'
 import { connectionCount } from '../unlocks'
 import { useEffect, useMemo, useState } from 'react'
 import {
@@ -54,6 +55,7 @@ const THEME_OPTIONS: { value: ThemeName; label: string }[] = [
   { value: 'anime', label: '动漫' },
   { value: 'glass', label: '玻璃' },
   { value: 'lumina', label: 'Lumina' },
+  { value: 'luminaplus', label: 'LuminaPlus' },
   { value: 'premium', label: 'Premium' },
   { value: 'ran', label: '岚 · Ran' },
   { value: 'glassmorphism', label: 'Glassmorphism' },
@@ -293,11 +295,11 @@ function GmNodeCard({ server, index }: { server: EnrichedServer; index: number }
             </div>
             <div className="gm-quick-cell gm-connection-cell" aria-label="整机连接数">
               <div className="gm-quick-line gm-q-connection" title={`TCP ${tcpCount}：整机已建立连接数，非代理用户数；未上报显示 —。`}>
-                <span>TCP</span>
+                <ConnectionLabel protocol="TCP" size={11} />
                 <strong>{tcpCount}</strong>
               </div>
               <div className="gm-quick-line gm-q-connection" title={`UDP ${udpCount}：整机 socket 数，非代理用户数；未上报显示 —。`}>
-                <span>UDP</span>
+                <ConnectionLabel protocol="UDP" size={11} />
                 <strong>{udpCount}</strong>
               </div>
             </div>

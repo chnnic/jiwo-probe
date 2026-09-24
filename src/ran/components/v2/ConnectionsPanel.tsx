@@ -1,4 +1,5 @@
-import { memo } from 'react'
+import { memo, type ReactNode } from 'react'
+import { ConnectionLabel } from '../../../ConnectionLabel'
 import { CardFrame } from '@/components/panels/CardFrame'
 import { contentFs } from '@/utils/fontScale'
 
@@ -39,7 +40,7 @@ function ConnectionsPanel_({
   const peak = tcp.length > 0 ? Math.max(...tcp) : 0
   const spike = tcpMean != null && tcpMean > 0 && tcpNow != null ? tcpNow / tcpMean : undefined
 
-  const readout = (label: string, value: string) => (
+  const readout = (label: ReactNode, value: string) => (
     <div className="precision-inset" style={{ flex: 1, padding: '7px 9px', minWidth: 0 }}>
       <div
         style={{
@@ -70,8 +71,8 @@ function ConnectionsPanel_({
     <CardFrame title="Connections & Processes" code={code}>
       <div style={{ padding: '11px 12px 12px' }}>
         <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
-          {readout('TCP', fmtCount(tcpNow))}
-          {readout('UDP', fmtCount(udpNow))}
+          {readout(<ConnectionLabel protocol="TCP" size={11} />, fmtCount(tcpNow))}
+          {readout(<ConnectionLabel protocol="UDP" size={11} />, fmtCount(udpNow))}
           {readout('PROC', fmtCount(procNow))}
         </div>
 

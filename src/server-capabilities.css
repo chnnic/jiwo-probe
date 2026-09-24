@@ -1,4 +1,5 @@
-/* 只用于连接数/解锁检测：沿用主题配色，不创建新的 backdrop-filter。 */
+/* Server capabilities v1.1 · 2026-09-24 — TCP/UDP icons and session chart labels.
+ * 只用于连接数/解锁检测：沿用主题配色，不创建新的 backdrop-filter。 */
 :is(.probe-unlock-dialog, .probe-unlock-panel, .probe-unlock-button, .probe-connections) {
   --cap-bg: #fff;
   --cap-fg: var(--foreground, #172033);
@@ -167,6 +168,11 @@ button.probe-unlock-button:hover { border-color: var(--cap-accent); }
 .probe-unlock-result small { font-size: 11px; overflow-wrap: anywhere; max-width: 100%; }
 .probe-unlock-note, .probe-unlock-empty { color: var(--cap-muted); font-size: 11px; line-height: 1.65; margin: 12px 0 0; }
 .probe-unlock-empty { padding: 12px 0; }
+.probe-connection-label { display: inline-flex; align-items: center; flex-shrink: 0; gap: 4px; white-space: nowrap; }
+.probe-connection-label svg { flex-shrink: 0; }
+.mini-detail-connections { display: inline-flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 8px 20px; }
+.mini-detail-connections > span, .mini-connections-chart > header > span > span { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+.mini-connections-note { margin: 8px 0 0; color: var(--mini-muted); font-size: 11px; line-height: 1.6; }
 .probe-connections { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; padding-top: 12px; font-size: 12px; }
 .probe-connections > span { display: inline-flex; align-items: center; gap: 6px; color: var(--cap-muted); }
 .probe-connections strong { color: var(--cap-fg); font-variant-numeric: tabular-nums; }
@@ -194,6 +200,9 @@ button.probe-unlock-button:hover { border-color: var(--cap-accent); }
   .probe-connections--inline > span { gap: 4px; }
 }
 @container card-network (max-width: 280px) {
+  .probe-connections.probe-connections--inline { gap: 5px; font-size: 10px; }
+  .probe-connections--inline > span, .probe-connections--inline .probe-connection-label { gap: 2px; }
+  .probe-connections--inline .probe-connection-label svg { width: 10px; height: 11px; }
   .speed--connections .card-speed-pair { gap: 2px; }
   .speed--connections .card-speed-pair > span { gap: 0; font-size: 10px; }
   .speed--connections .card-speed-pair svg { width: 9px; height: 11px; }

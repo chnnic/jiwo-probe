@@ -1,6 +1,9 @@
 /** 主控主题名解析；旧 mini 标识仅作为 Lite 的兼容别名。 */
 export function parseThemeName(raw: string): { theme: string; gold: boolean; platinum: boolean; light?: boolean } {
   const lower = raw.toLowerCase().replace(/[\s_-]/g, '')
+  if (lower === 'luminaplus') return { theme: 'luminaplus', gold: false, platinum: false }
+  if (lower === 'luminapluslight') return { theme: 'luminaplus', gold: false, platinum: false, light: true }
+  if (lower === 'luminaplusdark') return { theme: 'luminaplus', gold: false, platinum: false, light: false }
   if (lower === 'luminagold') return { theme: 'lumina', gold: true, platinum: false }
   if (lower === 'luminaplatinum') return { theme: 'lumina', gold: false, platinum: true }
   if (lower === 'premiumplatinum' || lower === 'premiumlight') return { theme: 'premium', gold: false, platinum: true }
@@ -13,6 +16,7 @@ export function parseThemeName(raw: string): { theme: string; gold: boolean; pla
 }
 
 export function isBuiltinTheme(value?: string): boolean {
+  if (value === 'luminaplus') return true
   return value === 'pixel' || value === 'flat' || value === 'anime' || value === 'glass' || value === 'lumina' || value === 'premium' || value === 'luminagold' || value === 'luminaplatinum' || value === 'premiumplatinum' || value === 'premiumlight' || value === 'ran' || value === 'glassmorphism' || value === 'emerald' || value === 'lite' || value === 'mini'
 }
 

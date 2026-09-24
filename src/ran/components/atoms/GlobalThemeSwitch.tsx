@@ -16,6 +16,7 @@ const GLOBAL_THEMES = [
   { value: 'anime', label: '动漫' },
   { value: 'glass', label: '玻璃' },
   { value: 'lumina', label: 'Lumina' },
+  { value: 'luminaplus', label: 'LuminaPlus' },
   { value: 'premium', label: 'Premium' },
   { value: 'ran', label: '岚 · Ran' },
   { value: 'glassmorphism', label: 'Glassmorphism' },

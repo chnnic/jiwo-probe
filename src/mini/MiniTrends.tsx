@@ -2,6 +2,10 @@ import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import type { ProbePingSeries, ProbeServer } from '../types'
 import { useNetworkSpeed } from '../use-network-speed'
+import { useProbe } from '../use-probe'
+import { ConnectionLabel } from '../ConnectionLabel'
+import { connectionCount } from '../unlocks'
+import { connectionHistoryKey, connectionRows } from '../connection-history'
 import { MINI_RANGES, pingTrendRows, systemTrendRows, trendValue, type MiniRange, type SystemSeries, type TrendRow } from './mini-trends'
 
 const colors = ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444', '#06b6d4', '#ec4899', '#84cc16', '#f97316']
@@ -28,20 +32,20 @@ function RangePicker({ value, onChange }: { value: MiniRange; onChange: (value: 
   return <div className="mini-trend-ranges" role="group" aria-label="历史时间范围">{MINI_RANGES.map(item => <button key={item.key} type="button" aria-pressed={item.key === value} onClick={() => onChange(item.key)}>{item.label}</button>)}</div>
 }
 type TrendLine = { key: string; label: string; color: string }
-const clock = (time: number) => new Date(time * 1000).toLocaleTimeString('zh-CN', { hour12: false, hour: '2-digit', minute: '2-digit' })
-function TrendPlot({ rows, lines, format, loading, error, empty, percent = false }: { rows: TrendRow[]; lines: TrendLine[]; format: (value: number) => string; loading: boolean; error: boolean; empty?: string; percent?: boolean }) {
+const clock = (time: number, seconds = false) => new Date(time * 1000).toLocaleTimeString('zh-CN', { hour12: false, hour: '2-digit', minute: '2-digit', ...(seconds ? { second: '2-digit' } as const : {}) })
+function TrendPlot({ rows, lines, format, loading, error, empty, percent = false, integer = false }: { rows: TrendRow[]; lines: TrendLine[]; format: (value: number) => string; loading: boolean; error: boolean; empty?: string; percent?: boolean; integer?: boolean }) {
   const hasPoints = rows.some(row => lines.some(line => row[line.key] != null))
   const values = rows.flatMap(row => lines.map(line => row[line.key]).filter((value): value is number => value != null))
   const low = values.length ? Math.min(...values) : 0, high = values.length ? Math.max(...values) : 1
   const padding = Math.max((high - low) * .12, high * .02, .1)
-  const domain: [number, number] = [Math.max(0, low - padding), percent ? Math.max(high, Math.min(100, high + padding)) : high + padding]
+  const domain: [number, number] = [integer ? 0 : Math.max(0, low - padding), integer ? Math.max(1, Math.ceil(high + padding)) : percent ? Math.max(high, Math.min(100, high + padding)) : high + padding]
   return <div className="mini-trend-plot">
     {loading ? <p className="mini-trend-placeholder" role="status">加载历史数据…</p> : error ? <p className="mini-trend-placeholder" role="status">历史数据暂不可用，请切换时间范围重试。</p> : !hasPoints ? <p className="mini-trend-placeholder">{empty || '暂无历史记录，等待主控上报。'}</p> :
       <ResponsiveContainer width="100%" height="100%">
         <LineChart data={rows} margin={{ top: 10, right: 8, bottom: 0, left: 0 }} accessibilityLayer>
           <CartesianGrid vertical={false} stroke="var(--mini-border)" />
-          <XAxis dataKey="ts" type="number" domain={['dataMin', 'dataMax']} tickFormatter={clock} tick={{ fontSize: 10, fill: 'var(--mini-muted)' }} minTickGap={38} tickCount={3} axisLine={false} tickLine={false} />
-          <YAxis width={58} domain={domain} tickFormatter={value => format(value).replace(/\s+/g, '')} tick={{ fontSize: 10, fill: 'var(--mini-muted)' }} tickCount={4} axisLine={false} tickLine={false} />
+          <XAxis dataKey="ts" type="number" domain={['dataMin', 'dataMax']} tickFormatter={time => clock(time, integer)} tick={{ fontSize: 10, fill: 'var(--mini-muted)' }} minTickGap={38} tickCount={3} axisLine={false} tickLine={false} />
+          <YAxis width={58} domain={domain} allowDecimals={!integer} tickFormatter={value => format(value).replace(/\s+/g, '')} tick={{ fontSize: 10, fill: 'var(--mini-muted)' }} tickCount={4} axisLine={false} tickLine={false} />
           <Tooltip contentStyle={{ fontSize: 11, background: 'var(--mini-surface)', border: '1px solid var(--mini-border)', borderRadius: 10, color: 'var(--mini-text)' }} labelFormatter={label => new Date(Number(label) * 1000).toLocaleString('zh-CN', { hour12: false })} formatter={(value, name) => [format(Number(value)), name]} />
           {lines.map(line => <Line key={line.key} type="linear" dataKey={line.key} name={line.label} stroke={line.color} strokeWidth={1.6} dot={rows.length === 1 ? { r: 2 } : false} activeDot={{ r: 3 }} connectNulls={false} isAnimationActive={false} />)}
         </LineChart>
@@ -83,6 +87,9 @@ export function MiniSystemTrends({ server, index }: { server: ProbeServer; index
   const [range, setRange] = useState<MiniRange>('1h')
   const history = useHistory<{ success: boolean; series?: SystemSeries }>(index, range, 'system')
   const rows = useMemo(() => systemTrendRows(history.data?.series || {}), [history.data])
+  const { connectionHistory } = useProbe()
+  const connectionSamples = connectionHistory.get(connectionHistoryKey(server, index))
+  const connections = useMemo(() => connectionRows(connectionSamples || [], Number.parseInt(range)), [connectionSamples, range])
   const speed = useNetworkSpeed()
   const formatPercent = (value: number) => `${Number(value.toFixed(1))}%`
   const cpu = trendValue(server.cpu_pct)
@@ -94,5 +101,9 @@ export function MiniSystemTrends({ server, index }: { server: ProbeServer; index
     <ChartCard title="CPU 使用率" value={cpu === null ? '—' : formatPercent(cpu)}><TrendPlot rows={rows} lines={[{ key: 'cpu', label: 'CPU 使用率', color: 'var(--mini-accent)' }]} format={formatPercent} loading={history.loading} error={history.error} /></ChartCard>
     <ChartCard title="内存使用率" value={memory === null ? '—' : formatPercent(memory)}><TrendPlot rows={rows} lines={[{ key: 'mem', label: '内存使用率', color: 'var(--mini-green)' }]} format={formatPercent} loading={history.loading} error={history.error} percent /></ChartCard>
     <ChartCard title="网络速度" value={<><span className="mini-trend-down">↓ {currentSpeed(server.download_speed)}</span><span className="mini-trend-up">↑ {currentSpeed(server.upload_speed)}</span></>}><TrendPlot rows={rows} lines={[{ key: 'download', label: '下行', color: 'var(--mini-blue)' }, { key: 'upload', label: '上行', color: 'var(--mini-green)' }]} format={speed} loading={history.loading} error={history.error} /></ChartCard>
+    <ChartCard title="TCP / UDP 连接数" className="mini-connections-chart" value={<><span className="mini-trend-up"><ConnectionLabel protocol="TCP" />{connectionCount(server.tcp_connections)}</span><span className="mini-trend-down"><ConnectionLabel protocol="UDP" />{connectionCount(server.udp_connections)}</span></>}>
+      <TrendPlot rows={connections} lines={[{ key: 'tcp', label: 'TCP', color: 'var(--mini-green)' }, { key: 'udp', label: 'UDP', color: 'var(--mini-blue)' }]} format={value => Math.round(value).toLocaleString('zh-CN')} loading={false} error={false} integer empty="暂无当前会话连接数数据，等待在线节点上报。" />
+      <p className="mini-connections-note">当前会话 · 每 30 秒采样 · 最多保留 24 小时 · 刷新后重新累计。{connections.filter(point => point.tcp !== null || point.udp !== null).length === 1 ? '已收到首个采样点，等待后续数据连成曲线。' : '空档表示离线、未上报或页面未接收数据。'}整机连接数，非代理用户数。</p>
+    </ChartCard>
   </div>
 }

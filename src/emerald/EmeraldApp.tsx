@@ -1,5 +1,6 @@
 import { useNetworkSpeed } from '../use-network-speed'
 import { UnlockButton } from '../ServerCapabilities'
+import { ConnectionLabel } from '../ConnectionLabel'
 import {
   useEffect,
   useMemo,
@@ -58,6 +59,7 @@ const THEME_OPTIONS: { value: ThemeName; label: string }[] = [
   { value: 'anime', label: '动漫' },
   { value: 'glass', label: '玻璃' },
   { value: 'lumina', label: 'Lumina' },
+  { value: 'luminaplus', label: 'LuminaPlus' },
   { value: 'premium', label: 'Premium' },
   { value: 'ran', label: '岚 · Ran' },
   { value: 'glassmorphism', label: 'Glassmorphism' },
@@ -492,8 +494,8 @@ function NodeCard({ server, index, open }: { server: EnrichedServer; index: numb
           <span title="当前周期上行流量"><ArrowUp size={11} />上行 <b>{bytes(server.traffic_used_up)}</b></span>
         </div>
         <div className="emerald-connection-cell" aria-label="整机连接数">
-          <span title={`TCP ${tcpCount}：整机已建立连接数，非代理用户数；未上报显示 —。`}><small>TCP</small><b>{tcpCount}</b></span>
-          <span title={`UDP ${udpCount}：整机 socket 数，非代理用户数；未上报显示 —。`}><small>UDP</small><b>{udpCount}</b></span>
+          <span title={`TCP ${tcpCount}：整机已建立连接数，非代理用户数；未上报显示 —。`}><ConnectionLabel protocol="TCP" size={11} /><b>{tcpCount}</b></span>
+          <span title={`UDP ${udpCount}：整机 socket 数，非代理用户数；未上报显示 —。`}><ConnectionLabel protocol="UDP" size={11} /><b>{udpCount}</b></span>
         </div>
       </div>
       <CardPingGroups variant="emerald" ping={server.ping} serverIndex={index} serverName={server.name} />

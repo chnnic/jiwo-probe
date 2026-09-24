@@ -1,3 +1,4 @@
+/* Emerald v1.1 · 2026-09-24 — TCP/UDP labels share protocol icons. */
 .theme-emerald {
   color-scheme: light;
   background: #f7f9fc;
@@ -743,8 +744,8 @@
 .emerald-node-quick span.is-up b,
 .emerald-table-shell .is-up,
 .emerald-status-speed .is-up { color: #2563eb; }
-.emerald-node-quick > .emerald-connection-cell span { grid-template-columns: 24px minmax(0, 1fr); }
-.emerald-connection-cell small { font: inherit; }
+.emerald-node-quick > .emerald-connection-cell > span { grid-template-columns: auto minmax(0, 1fr); gap: 4px; }
+.emerald-node-quick .emerald-connection-cell .probe-connection-label { display: inline-flex; gap: 3px; }
 .emerald-connection-cell b { text-align: right; }
 
 .emerald-ping-panels {

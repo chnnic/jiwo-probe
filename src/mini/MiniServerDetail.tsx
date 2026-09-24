@@ -4,6 +4,7 @@ import { X } from 'lucide-react'
 import type { ProbeServer } from '../types'
 import { bytes, hasLeadingFlag, regionFlag, regionLabel, TrafficChart } from '../App'
 import { UnlockPanel } from '../ServerCapabilities'
+import { ConnectionLabel } from '../ConnectionLabel'
 import { connectionCount } from '../unlocks'
 import { useNetworkSpeed } from '../use-network-speed'
 import { computeMonthlyTrafficCost, computeRemainingValue, formatMoney } from '../value'
@@ -51,7 +52,7 @@ export default function MiniServerDetail({ server, index, onClose, showHealthSco
   const total = server.traffic_used_total ?? (server.cumulative_up !== undefined && server.cumulative_down !== undefined ? server.cumulative_up + server.cumulative_down : undefined)
   const networkRows: [string, ReactNode][] = [
     ['实时 下行 / 上行', `${speed(server.download_speed)} / ${speed(server.upload_speed)}`],
-    ['TCP / UDP 连接数', `${connectionCount(server.tcp_connections)} / ${connectionCount(server.udp_connections)}`],
+    ['连接数', <span className="mini-detail-connections"><span><ConnectionLabel protocol="TCP" />{connectionCount(server.tcp_connections)}</span><span><ConnectionLabel protocol="UDP" />{connectionCount(server.udp_connections)}</span></span>],
   ]
   const trafficRows: [string, ReactNode][] = [
     ['计费周期', period], ['周期流量', `${size(server.traffic_used)} / ${quota}`],

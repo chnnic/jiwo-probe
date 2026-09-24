@@ -4,6 +4,7 @@ import { Check, ChevronDown, CircleHelp, LockKeyhole, ShieldCheck, X } from 'luc
 import type { ProbeServer, ProbeUnlock } from './types'
 import { connectionCount, normalizeUnlocks, unlockCategories, unlockCategorySummaries, unlockService, unlockStatus, unlockSummary, type UnlockCategory } from './unlocks'
 import { unlockBrandIcon } from './unlock-icons'
+import { ConnectionLabel } from './ConnectionLabel'
 
 function UnlockServiceIcon({ service }: { service: string }) {
   const icon = unlockBrandIcon(service)
@@ -19,8 +20,8 @@ export function ConnectionCounts({ server, variant = 'detail' }: { server: Pick<
   return (
     <div className={`probe-connections${variant !== 'detail' ? ` probe-connections--${variant}` : ''}`} aria-label="整机连接数" title={help}>
       {variant === 'detail' && <span>连接数</span>}
-      <span title={`整机 TCP ESTABLISHED 连接数：${connectionCount(server.tcp_connections)}；不等于代理用户数`}>TCP <strong>{connectionCount(server.tcp_connections)}</strong></span>
-      <span title={`整机 UDP socket 数：${connectionCount(server.udp_connections)}；不等于代理用户数`}>UDP <strong>{connectionCount(server.udp_connections)}</strong></span>
+      <span title={`整机 TCP ESTABLISHED 连接数：${connectionCount(server.tcp_connections)}；不等于代理用户数`}><ConnectionLabel protocol="TCP" /><strong>{connectionCount(server.tcp_connections)}</strong></span>
+      <span title={`整机 UDP socket 数：${connectionCount(server.udp_connections)}；不等于代理用户数`}><ConnectionLabel protocol="UDP" /><strong>{connectionCount(server.udp_connections)}</strong></span>
       {variant === 'detail' && <span className="probe-connection-help" tabIndex={0} aria-label="TCP 为整机已建立连接数，UDP 为整机 socket 数；不是代理用户数。未上报显示横线。" title={help}><CircleHelp size={13} /></span>}
     </div>
   )
