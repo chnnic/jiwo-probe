@@ -249,6 +249,7 @@ const THEME_OPTIONS: { value: ThemeName; label: string }[] = [
   { value: 'ran', label: '岚 · Ran' },
   { value: 'glassmorphism', label: 'Glassmorphism' },
   { value: 'emerald', label: 'Emerald' },
+  { value: 'win2000', label: 'Windows 2000' },
 ]
 
 function ThemeSelect({ value, onChange }: { value: ThemeName | null; onChange: (name: ThemeName | null) => void }) {

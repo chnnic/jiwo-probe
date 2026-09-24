@@ -1,0 +1,245 @@
+/* Win2000 theme family, inspired by monitor-theme-win2000 (guboysky/win2000). */
+:root.theme-win2000 {
+  --w2k-desktop: #3a6ea5;
+  --w2k-face: #d4d0c8;
+  --w2k-window: #fff;
+  --w2k-window-alt: #f4f4f4;
+  --w2k-text: #000;
+  --w2k-muted: #404040;
+  --w2k-shadow: #808080;
+  --w2k-dkshadow: #404040;
+  --w2k-title-a: #0a246a;
+  --w2k-title-b: #a6caf0;
+  --w2k-title-text: #fff;
+  --w2k-select: #0a246a;
+  --w2k-bar: #000080;
+  --w2k-bar-hot: #a04000;
+  --w2k-trough: #eceae6;
+  --w2k-online: #008000;
+  --w2k-offline: #c00000;
+  --w2k-grid: #d9d9d9;
+  --w2k-link: #00e;
+  --w2k-font: Tahoma, 'Microsoft Sans Serif', 'Segoe UI', sans-serif;
+}
+:root.theme-win2000.dark {
+  --w2k-desktop: #1b2b40;
+  --w2k-face: #3c3c3c;
+  --w2k-window: #1e1e1e;
+  --w2k-window-alt: #252525;
+  --w2k-text: #e8e8e8;
+  --w2k-muted: #b4b4b4;
+  --w2k-shadow: #202020;
+  --w2k-dkshadow: #0e0e0e;
+  --w2k-title-a: #0a246a;
+  --w2k-title-b: #3a6ea5;
+  --w2k-title-text: #fff;
+  --w2k-select: #0a246a;
+  --w2k-bar: #4a6fa5;
+  --w2k-bar-hot: #e07030;
+  --w2k-trough: #242424;
+  --w2k-online: #3ccb5a;
+  --w2k-offline: #ff5a5a;
+  --w2k-grid: #2c2c2c;
+  --w2k-link: #8ab4ff;
+}
+:root.theme-win2000[data-w2k-skin='win31'] {
+  --w2k-desktop: #008080;
+  --w2k-face: #c0c0c0;
+  --w2k-title-a: #000080;
+  --w2k-title-b: #000080;
+  --w2k-window: #fff;
+  --w2k-bar: #000080;
+  --w2k-font: 'MS Sans Serif', Tahoma, sans-serif;
+}
+:root.theme-win2000[data-w2k-skin='xp'] {
+  --w2k-desktop: #5b9bd5;
+  --w2k-face: #ece9d8;
+  --w2k-title-a: #1c5da8;
+  --w2k-title-b: #6ea4dc;
+  --w2k-window: #fff;
+  --w2k-window-alt: #f5f5f5;
+  --w2k-bar: #316ac5;
+  --w2k-online: #078807;
+  --w2k-font: Tahoma, 'Segoe UI', sans-serif;
+}
+:root.theme-win2000[data-w2k-skin='aqua'] {
+  --w2k-desktop: #7e9bb8;
+  --w2k-face: #e9e9e9;
+  --w2k-title-a: #5c91c7;
+  --w2k-title-b: #d8ecff;
+  --w2k-window: #f8f8f8;
+  --w2k-window-alt: #fff;
+  --w2k-bar: #5a89bb;
+  --w2k-online: #16833b;
+  --w2k-font: -apple-system, BlinkMacSystemFont, 'Lucida Grande', sans-serif;
+}
+:root.theme-win2000 .w2k-desktop {
+  min-height: 100vh;
+  padding: clamp(8px, 2vw, 28px);
+  background: var(--w2k-desktop);
+  color: var(--w2k-text);
+  font-family: var(--w2k-font);
+  font-size: 12px;
+}
+:root.theme-win2000 .w2k-window {
+  width: min(1440px, 100%);
+  min-height: calc(100vh - clamp(16px, 4vw, 56px));
+  margin: 0 auto;
+  background: var(--w2k-face);
+  border: 2px solid var(--w2k-shadow);
+  box-shadow: 1px 1px 0 var(--w2k-dkshadow), inset 1px 1px 0 var(--w2k-window);
+  display: flex;
+  flex-direction: column;
+}
+:root.theme-win2000 .w2k-titlebar {
+  height: 27px;
+  padding: 3px 4px 3px 6px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: var(--w2k-title-text);
+  background: linear-gradient(90deg, var(--w2k-title-a), var(--w2k-title-b));
+  font-size: 12px;
+}
+:root.theme-win2000 .w2k-titlebar > div:first-child,
+:root.theme-win2000 .w2k-title-controls { display: flex; align-items: center; gap: 5px; }
+:root.theme-win2000 .w2k-titlebar strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+:root.theme-win2000 .w2k-title-controls button,
+:root.theme-win2000 .w2k-icon-button {
+  min-width: 18px;
+  height: 18px;
+  padding: 0;
+  border: 1px solid var(--w2k-dkshadow);
+  color: var(--w2k-text);
+  background: var(--w2k-face);
+  box-shadow: 1px 1px 0 var(--w2k-window) inset;
+  cursor: pointer;
+  line-height: 14px;
+}
+:root.theme-win2000 .w2k-toolbar {
+  min-height: 34px;
+  padding: 3px 6px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  border-bottom: 1px solid var(--w2k-shadow);
+  background: var(--w2k-face);
+}
+:root.theme-win2000 .w2k-toolbar-tabs { display: flex; gap: 2px; }
+:root.theme-win2000 .w2k-toolbar button,
+:root.theme-win2000 .w2k-toolbar select,
+:root.theme-win2000 .w2k-filterbar button {
+  min-height: 24px;
+  padding: 2px 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border: 1px solid var(--w2k-shadow);
+  border-radius: 0;
+  color: var(--w2k-text);
+  background: var(--w2k-face);
+  box-shadow: 1px 1px 0 var(--w2k-window) inset;
+  cursor: pointer;
+  font: inherit;
+}
+:root.theme-win2000 .w2k-toolbar button:active,
+:root.theme-win2000 .w2k-toolbar button.active,
+:root.theme-win2000 .w2k-filterbar button.active { box-shadow: 1px 1px 0 var(--w2k-dkshadow) inset; background: var(--w2k-window-alt); }
+:root.theme-win2000 .w2k-toolbar-count { padding-left: 5px; color: var(--w2k-muted); border-left: 1px solid var(--w2k-shadow); }
+:root.theme-win2000 .w2k-skin-select,
+:root.theme-win2000 .w2k-theme-select { margin-left: auto; display: inline-flex; align-items: center; gap: 3px; }
+:root.theme-win2000 .w2k-theme-select { margin-left: 0; }
+:root.theme-win2000 .w2k-toolbar select { min-height: 22px; padding: 1px 4px; }
+:root.theme-win2000 .w2k-summary {
+  padding: 7px;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+}
+:root.theme-win2000 .w2k-summary > div {
+  min-width: 0;
+  min-height: 64px;
+  padding: 7px 9px;
+  border: 1px solid var(--w2k-shadow);
+  background: var(--w2k-window-alt);
+  box-shadow: 1px 1px 0 var(--w2k-window) inset;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+:root.theme-win2000 .w2k-summary span,
+:root.theme-win2000 .w2k-summary em { color: var(--w2k-muted); font-style: normal; font-size: 11px; }
+:root.theme-win2000 .w2k-summary strong { font-size: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+:root.theme-win2000 .w2k-summary strong b { color: var(--w2k-online); }
+:root.theme-win2000 .w2k-summary code,
+:root.theme-win2000 .w2k-ping-line code { color: var(--w2k-online); font: 11px Consolas, monospace; letter-spacing: 1px; white-space: nowrap; }
+:root.theme-win2000 .w2k-filterbar { padding: 0 7px 7px; display: flex; flex-wrap: wrap; gap: 4px; }
+:root.theme-win2000 .w2k-filterbar button { min-height: 23px; padding: 1px 8px; }
+:root.theme-win2000 .w2k-filterbar .w2k-refresh { margin-left: auto; padding: 2px 6px; }
+:root.theme-win2000 .w2k-grid { padding: 0 7px 12px; display: grid; grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); gap: 7px; }
+:root.theme-win2000 .w2k-node {
+  min-width: 0;
+  padding: 0 6px 7px;
+  border: 1px solid var(--w2k-shadow);
+  background: var(--w2k-window);
+  box-shadow: 1px 1px 0 var(--w2k-window) inset;
+}
+:root.theme-win2000 .w2k-node.offline { opacity: .76; }
+:root.theme-win2000 .w2k-node-title { min-height: 24px; margin: 0 -6px 6px; padding: 3px 5px; display: flex; align-items: center; gap: 5px; color: var(--w2k-title-text); background: linear-gradient(90deg, var(--w2k-title-a), var(--w2k-title-b)); }
+:root.theme-win2000 .w2k-node-title strong { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+:root.theme-win2000 .w2k-node-state { margin-left: auto; padding: 0 3px; color: var(--w2k-text); background: var(--w2k-face); font-size: 10px; }
+:root.theme-win2000 .w2k-led { width: 9px; height: 9px; display: inline-block; flex: 0 0 auto; border: 1px solid var(--w2k-dkshadow); background: var(--w2k-offline); }
+:root.theme-win2000 .w2k-led.online { background: var(--w2k-online); }
+:root.theme-win2000 .w2k-node-subtitle { display: flex; justify-content: space-between; gap: 6px; color: var(--w2k-muted); font-size: 11px; }
+:root.theme-win2000 .w2k-node-subtitle span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+:root.theme-win2000 .w2k-meters { margin: 7px 0; display: grid; gap: 4px; }
+:root.theme-win2000 .w2k-meter-row { display: grid; grid-template-columns: 38px 1fr 48px; align-items: center; gap: 5px; }
+:root.theme-win2000 .w2k-meter-row span { font-size: 11px; }
+:root.theme-win2000 .w2k-meter-row b { min-width: 0; overflow: hidden; color: var(--w2k-bar); font: 12px Consolas, monospace; letter-spacing: 0; white-space: nowrap; }
+:root.theme-win2000.dark .w2k-meter-row b { color: #7da8ff; }
+:root.theme-win2000 .w2k-meter-row em { color: var(--w2k-muted); font-size: 10px; text-align: right; font-style: normal; }
+:root.theme-win2000 .w2k-traffic { padding: 5px 0; display: grid; grid-template-columns: 1fr 1fr; gap: 3px 12px; border-top: 1px solid var(--w2k-grid); border-bottom: 1px solid var(--w2k-grid); font-size: 11px; }
+:root.theme-win2000 .w2k-traffic span { display: inline-flex; align-items: center; gap: 3px; }
+:root.theme-win2000 .w2k-traffic .up { color: var(--w2k-online); }
+:root.theme-win2000 .w2k-traffic .down { color: #0b56a5; }
+:root.theme-win2000 .w2k-ping-line { margin-top: 5px; display: grid; grid-template-columns: minmax(0, 1fr) auto auto auto; align-items: center; gap: 5px; font-size: 10px; }
+:root.theme-win2000 .w2k-ping-line b { color: var(--w2k-online); }
+:root.theme-win2000 .w2k-ping-line.warn b { color: #a06a00; }
+:root.theme-win2000 .w2k-ping-line.bad b { color: var(--w2k-offline); }
+:root.theme-win2000 .w2k-ping-line em { font-style: normal; color: var(--w2k-muted); }
+:root.theme-win2000 .w2k-rings { padding: 0 7px 12px; display: grid; grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); gap: 7px; }
+:root.theme-win2000 .w2k-ring-card { padding: 8px; border: 1px solid var(--w2k-shadow); background: var(--w2k-window); }
+:root.theme-win2000 .w2k-ring-card header { display: flex; align-items: center; gap: 5px; font-weight: 700; }
+:root.theme-win2000 .w2k-ring-row { display: flex; justify-content: space-around; padding: 12px 0; }
+:root.theme-win2000 .w2k-ring { --ring: 0deg; position: relative; width: 82px; height: 82px; padding: 7px; display: grid; place-items: center; border-radius: 50%; background: conic-gradient(var(--ring-color), var(--ring-color) var(--ring), var(--w2k-trough) var(--ring)); }
+:root.theme-win2000 .w2k-ring::before { content: ''; position: absolute; width: 68px; height: 68px; border-radius: 50%; background: var(--w2k-window); }
+:root.theme-win2000 .w2k-ring > div { position: relative; display: grid; justify-items: center; }
+:root.theme-win2000 .w2k-ring strong { font-size: 15px; }
+:root.theme-win2000 .w2k-ring span { color: var(--w2k-muted); font-size: 10px; }
+:root.theme-win2000 .w2k-ring.blue { --ring-color: #0a246a; }
+:root.theme-win2000 .w2k-ring.green { --ring-color: #16833b; }
+:root.theme-win2000 .w2k-ring.orange { --ring-color: #a06a00; }
+:root.theme-win2000 .w2k-ring-card footer { padding-top: 6px; border-top: 1px solid var(--w2k-grid); color: var(--w2k-muted); text-align: center; }
+:root.theme-win2000 .w2k-table-wrap { margin: 0 7px 12px; overflow-x: auto; border: 1px solid var(--w2k-shadow); background: var(--w2k-window); }
+:root.theme-win2000 .w2k-table { width: 100%; border-collapse: collapse; min-width: 680px; }
+:root.theme-win2000 .w2k-table th { color: var(--w2k-title-text); background: var(--w2k-title-a); text-align: left; }
+:root.theme-win2000 .w2k-table th,
+:root.theme-win2000 .w2k-table td { padding: 6px 8px; border-right: 1px solid var(--w2k-grid); border-bottom: 1px solid var(--w2k-grid); white-space: nowrap; }
+:root.theme-win2000 .w2k-table tbody tr:nth-child(even) { background: var(--w2k-window-alt); }
+:root.theme-win2000 .w2k-statusbar { margin-top: auto; padding: 3px 7px; display: flex; justify-content: space-between; gap: 8px; border-top: 1px solid var(--w2k-shadow); color: var(--w2k-muted); background: var(--w2k-face); font-size: 10px; }
+:root.theme-win2000 .w2k-statusbar a { color: var(--w2k-link); }
+:root.theme-win2000 .w2k-desktop button:focus-visible,
+:root.theme-win2000 .w2k-desktop select:focus-visible { outline: 1px dotted var(--w2k-text); outline-offset: 1px; }
+@media (max-width: 760px) {
+  :root.theme-win2000 .w2k-desktop { padding: 0; }
+  :root.theme-win2000 .w2k-window { min-height: 100vh; border-width: 0; }
+  :root.theme-win2000 .w2k-toolbar { flex-wrap: wrap; }
+  :root.theme-win2000 .w2k-skin-select { margin-left: 0; }
+  :root.theme-win2000 .w2k-theme-select { display: none; }
+  :root.theme-win2000 .w2k-summary { grid-template-columns: 1fr 1fr; }
+  :root.theme-win2000 .w2k-summary > div { min-height: 58px; }
+  :root.theme-win2000 .w2k-summary strong { font-size: 13px; }
+  :root.theme-win2000 .w2k-grid,
+  :root.theme-win2000 .w2k-rings { grid-template-columns: 1fr; }
+  :root.theme-win2000 .w2k-statusbar { flex-direction: column; }
+}
