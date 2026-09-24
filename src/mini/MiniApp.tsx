@@ -137,9 +137,9 @@ export default function MiniApp({ data, error, onThemeChange }: { data: ProbePay
     <main className="mini-main">
       <section className="mini-summary" aria-label="集群概览">
         <div className="mini-summary-tile"><span><Server size={15} />服务器在线</span><strong><i className="mini-status-dot" />{summary.online}<small>/ {servers.length}</small></strong><p>{servers.length - summary.online} 台离线 · {servers.length} 台节点</p></div>
-        <div className="mini-summary-tile"><span><ArrowUp size={15} className="mini-upload" />实时上行</span><strong>{speed(summary.upload)}</strong><p>周期上行 {size(summary.outbound)}</p></div>
-        <div className="mini-summary-tile"><span><ArrowDown size={15} className="mini-download" />实时下行</span><strong>{speed(summary.download)}</strong><p>周期下行 {size(summary.inbound)}</p></div>
         <div className="mini-summary-tile"><span><Activity size={15} />已用流量</span><strong>{size(summary.traffic)}</strong><p>平均延迟 {summary.latency === undefined ? '—' : `${summary.latency.toFixed(0)} ms`}</p></div>
+        <div className="mini-summary-tile"><span><ArrowDown size={15} className="mini-download" />实时下行</span><strong>{speed(summary.download)}</strong><p>周期下行 {size(summary.inbound)}</p></div>
+        <div className="mini-summary-tile"><span><ArrowUp size={15} className="mini-upload" />实时上行</span><strong>{speed(summary.upload)}</strong><p>周期上行 {size(summary.outbound)}</p></div>
       </section>
       <div className="mini-section-title"><div><h2>节点总览</h2><p>共 {servers.length} 台节点，当前显示 {visible.length} 台</p></div><span className={`mini-sync${error ? ' has-error' : ''}`} role="status"><i />{error ? '连接暂时中断' : '数据已同步'}</span></div>
       <section className="mini-toolbar" aria-label="筛选与视图">
