@@ -1,4 +1,4 @@
-/* LuminaPlus · v0.1.6 · 2026-09-24 — equal-width, centered lifetime columns.
+/* LuminaPlus · v0.1.7 · 2026-09-24 — Lite-style compact single-row header.
  * Independent, opaque Jiwo skin. Visual reference attribution: NOTICE.md.
  * No animated backgrounds, nested blur, or continuously animating meters.
  */
@@ -33,16 +33,17 @@
 .lp-app :is(button, a, input, select):focus-visible, :root.theme-luminaplus .mini-detail-dialog :is(button, a, select, [tabindex]):focus-visible { outline: 2px solid var(--lp-accent); outline-offset: 3px; }
 .lp-app a { color: inherit; text-decoration: none; }
 .lp-header { background: var(--lp-surface); border-bottom: 1px solid var(--lp-border); }
-.lp-header-inner { max-width: 1520px; margin: auto; padding: 20px 28px; display: flex; align-items: center; justify-content: space-between; gap: 18px; }
-.lp-brand { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.lp-header-inner { max-width: 1520px; margin: auto; padding: 16px 28px; display: flex; flex-wrap: nowrap; align-items: center; justify-content: space-between; gap: 16px; }
+.lp-brand { display: flex; flex: 1; align-items: center; gap: 12px; min-width: 0; }
 .lp-brand-mark { display: grid; place-items: center; flex: 0 0 42px; height: 42px; border-radius: 13px; background: var(--lp-soft); color: var(--lp-accent); }
 .lp-brand-mark img { width: 32px; height: 32px; object-fit: contain; }
 .lp-brand > span:last-child { min-width: 0; }
 .lp-brand h1 { font-size: 18px; font-weight: 720; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.lp-brand small { display: block; font-size: 11px; color: var(--lp-muted); margin-top: 4px; }
-.lp-brand small b { margin: 0 4px; color: var(--lp-accent); }
-.lp-header nav { display: flex; align-items: center; gap: 9px; flex-shrink: 0; }
+.lp-brand small { display: block; font-size: 11px; color: var(--lp-muted); margin-top: 4px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.lp-header nav { display: flex; align-items: center; gap: 7px; flex-shrink: 0; }
 .lp-icon-button, .lp-app .theme-trigger { display: inline-flex; justify-content: center; align-items: center; gap: 6px; min-width: 32px; height: 32px; padding: 6px; border: 1px solid transparent; border-radius: 9px; background: transparent; color: var(--lp-muted); box-shadow: none; }
+.lp-header .lp-icon-button, .lp-header .theme-trigger { width: 35px; height: 35px; padding: 0; gap: 3px; border: 1px solid var(--lp-border); border-radius: 10px; background: var(--lp-surface); }
+.lp-header .theme-trigger { width: 46px; }
 .lp-icon-button:hover, .lp-app .theme-trigger:hover { background: var(--lp-soft); color: var(--lp-text); }
 .lp-toolbar > select { border: 1px solid var(--lp-border); border-radius: 9px; background: var(--lp-surface); color: var(--lp-secondary); font-size: 12px; padding: 8px; max-width: 170px; min-width: 0; }
 .lp-main { max-width: 1520px; padding: 28px 28px 90px; margin: 0 auto; }
@@ -158,8 +159,8 @@
 .lp-footer { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px; margin: 32px 0 20px; color: var(--lp-muted); font-size: 11px; }
 .lp-footer a:hover { color: var(--lp-accent); }
 .lp-view-picker { margin-left: auto; }
-.lp-app :is(.lp-view-picker,.lp-color-picker) { width: auto; flex: 0 0 auto; }
-.lp-app :is(.lp-view-picker,.lp-color-picker) button { width: 34px; height: 34px; padding: 0; justify-content: center; }
+.lp-app .lp-view-picker { width: auto; flex: 0 0 auto; }
+.lp-app .lp-view-picker button { width: 34px; height: 34px; padding: 0; justify-content: center; }
 .lp-view-compact .lp-card { padding: 17px; border-radius: 16px; }
 .lp-view-compact .lp-name h2 { font-size: 15px; }
 .lp-view-compact .lp-badges { margin: 8px 0 15px; }
@@ -257,8 +258,12 @@
   .lp-list-network { grid-column: 1; grid-row: 3; } .lp-list-connections { grid-column: 2/4; grid-row: 3; }
 }
 @media (max-width: 760px) {
-  .lp-header-inner { flex-wrap: wrap; padding: 16px; gap: 14px; }
-  .lp-header nav { margin-left: auto; }
+  .lp-header-inner { padding: 12px 16px; gap: 10px; }
+  .lp-brand { gap: 8px; }
+  .lp-brand h1 { font-size: 15px; }
+  .lp-brand-mark { width: 35px; height: 35px; flex-basis: 35px; border-radius: 10px; }
+  .lp-brand-mark img { width: 28px; height: 28px; }
+  .lp-header nav { gap: 5px; }
   .lp-main { padding: 20px 16px 100px; }
   .lp-summary { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; }
   .lp-summary > div { padding: 15px; }
@@ -281,6 +286,8 @@
   :root.theme-luminaplus .mini-detail-routes { grid-template-columns: minmax(0,1fr); }
 }
 @media (max-width: 390px) {
+  .lp-header-inner { padding: 12px; gap: 8px; }
+  .lp-brand-mark { display: none; }
   .lp-main { padding: 16px 10px 100px; } .lp-card { padding: 17px; } .lp-name h2 { font-size: 15px; }
   .lp-resources,.lp-speed-grid,.lp-card .card-ping-metrics,.lp-network .probe-connections { gap: 16px; }
   .lp-lifetime { gap: 8px; font-size: 10px; }

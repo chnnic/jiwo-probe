@@ -1,9 +1,9 @@
 import { useMemo, useState } from 'react'
-import { ArrowDown, ArrowUp, Database, LayoutGrid, List, Monitor, Moon, Network, Rows3, Search, Server, Sun } from 'lucide-react'
+import { ArrowDown, ArrowUp, Database, LayoutGrid, List, Moon, Network, Rows3, Search, Server, Sun } from 'lucide-react'
 import type { ProbePayload, ThemeName } from '../types'
 import { ThemeSelect, ProbeLicenseFooter } from '../App'
 import { PasskeyLogin } from '../PasskeyLogin'
-import { getDarkOverride, getThemeOverride, setDarkOverride } from '../use-probe'
+import { getThemeOverride, setDarkOverride } from '../use-probe'
 import { useNetworkSpeed } from '../use-network-speed'
 import { isExpiring, miniSummary, selectServers, providerName, type MiniStatus, type MiniSort } from '../mini/mini-model'
 import LuminaPlusCard, { size } from './LuminaPlusCard'
@@ -21,8 +21,7 @@ export default function LuminaPlusApp({ data, error, onThemeChange }: { data: Pr
   const [view, setView] = useState<LuminaPlusView>(() => { try { return parseLuminaPlusView(localStorage.getItem('jiwo-luminaplus-view')) } catch { return 'card' } })
   const changeView = (next: LuminaPlusView) => { setView(next); try { localStorage.setItem('jiwo-luminaplus-view', next) } catch { /* Private mode still works for this session. */ } }
   const [, setColorRevision] = useState(0)
-  const color = getDarkOverride()
-  const colorMode = color === 'gold' ? 'dark' : color === 'platinum' ? 'light' : color || 'auto'
+  const dark = document.documentElement.classList.contains('dark') || document.documentElement.classList.contains('gold')
   const formatSpeed = useNetworkSpeed()
   const speed = (value?: number) => value === undefined ? '—' : formatSpeed(value)
   const visible = useMemo(() => selectServers(servers, { query, status, provider, sort }), [servers, query, status, provider, sort])
@@ -33,9 +32,9 @@ export default function LuminaPlusApp({ data, error, onThemeChange }: { data: Pr
     { key: 'offline', label: '离线', count: servers.length - summary.online }, { key: 'expiring', label: '临期', count: servers.filter(server => isExpiring(server)).length },
   ]
   return <div className="lp-app">
-    <header className="lp-header"><div className="lp-header-inner"><a href="#" className="lp-brand"><span className="lp-brand-mark">{data.logo ? <img src={data.logo} alt="" /> : <Network size={23} />}</span><span><h1>{data.title?.trim() || '服务器状态'}</h1><small>LuminaPlus <b>·</b> 实时服务器监测</small></span></a>
+    <header className="lp-header"><div className="lp-header-inner"><a href="#" className="lp-brand" aria-label="返回首页"><span className="lp-brand-mark">{data.logo ? <img src={data.logo} alt="" /> : <Network size={23} />}</span><span><h1 title={data.title?.trim() || '服务器状态'}>{data.title?.trim() || '服务器状态'}</h1><small>集群实时探针</small></span></a>
       <nav aria-label="外观与登录"><PasskeyLogin buttonClassName="lp-icon-button" /><ThemeSelect value={getThemeOverride()} onChange={onThemeChange} />
-        <div className="lp-filter lp-color-picker" role="group" aria-label="明暗模式">{([{ key: 'auto', label: '自动明暗', Icon: Monitor }, { key: 'light', label: '浅色模式', Icon: Sun }, { key: 'dark', label: '深色模式', Icon: Moon }] as const).map(item => <button key={item.key} type="button" aria-label={item.label} title={item.label} aria-pressed={colorMode === item.key} onClick={() => { setDarkOverride(item.key === 'auto' ? null : item.key); setColorRevision(value => value + 1) }}><item.Icon size={16} aria-hidden="true" /></button>)}</div>
+        <button className="lp-icon-button" type="button" aria-label={dark ? '切换浅色模式' : '切换深色模式'} title={dark ? '切换浅色模式' : '切换深色模式'} onClick={() => { setDarkOverride(dark ? 'light' : 'dark'); setColorRevision(value => value + 1) }}>{dark ? <Sun size={18} aria-hidden="true" /> : <Moon size={18} aria-hidden="true" />}</button>
       </nav>
     </div></header>
     <main className="lp-main">
