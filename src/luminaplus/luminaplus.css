@@ -1,4 +1,4 @@
-/* LuminaPlus · v0.1.5 · 2026-09-24 — compact-view renewal price in the top badge row.
+/* LuminaPlus · v0.1.6 · 2026-09-24 — equal-width, centered lifetime columns.
  * Independent, opaque Jiwo skin. Visual reference attribution: NOTICE.md.
  * No animated backgrounds, nested blur, or continuously animating meters.
  */
@@ -138,8 +138,8 @@
 .lp-card .card-ping-bars i.is-bad { background: #eb8d94; }
 .lp-card .card-ping-bars i:is(.is-empty,.is-none) { background: var(--lp-track); }
 .lp-routes { margin-top: 14px; }
-.lp-lifetime { display: grid; grid-template-columns: .85fr 1.2fr 1fr; gap: 12px; border-top: 1px solid var(--lp-border); padding-top: 16px; margin-top: 16px; font-size: 11px; }
-.lp-lifetime > div { display: flex; flex-direction: column; align-items: flex-start; gap: 7px; min-width: 0; }
+.lp-lifetime { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 12px; border-top: 1px solid var(--lp-border); padding-top: 16px; margin-top: 16px; font-size: 11px; }
+.lp-lifetime > div { display: flex; flex-direction: column; align-items: center; gap: 7px; min-width: 0; text-align: center; }
 .lp-lifetime > div > span { display: inline-flex; align-items: center; gap: 5px; color: var(--lp-secondary); white-space: nowrap; }
 .lp-lifetime svg { flex-shrink: 0; }
 .lp-lifetime strong { color: var(--lp-green); font-size: 14px; font-weight: 650; overflow-wrap: anywhere; }
