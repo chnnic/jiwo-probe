@@ -31,7 +31,6 @@ function InfoRows({ rows }: { rows: [string, ReactNode][] }) {
 export default function MiniServerDetail({ server, index, onClose, showHealthScore = false }: { server: ProbeServer; index: number; onClose: () => void; showHealthScore?: boolean }) {
   const [tab, setTab] = useState<DetailTab>('overview')
   const dialog = useRef<HTMLElement>(null)
-  const content = useRef<HTMLDivElement>(null)
   const id = useId()
   const formatSpeed = useNetworkSpeed()
   const name = server.name || `服务器 ${index + 1}`
@@ -71,13 +70,12 @@ export default function MiniServerDetail({ server, index, onClose, showHealthSco
     dialog.current?.querySelector<HTMLButtonElement>('.mini-detail-close')?.focus({ preventScroll: true })
     return () => { document.body.style.overflow = overflow; previousFocus?.focus({ preventScroll: true }) }
   }, [])
-  useEffect(() => { content.current?.scrollTo({ top: 0 }) }, [tab])
 
-  return createPortal(<div className="server-detail-backdrop" onMouseDown={event => { if (event.target === event.currentTarget) onClose() }}>
+  return createPortal(<div className="server-detail-backdrop mini-detail-backdrop" onMouseDown={event => { if (event.target === event.currentTarget) onClose() }}>
     <section className="server-detail mini-detail-dialog" ref={dialog} role="dialog" aria-modal="true" aria-labelledby={`${id}-title`} onKeyDown={event => {
       if (event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); onClose() }
       if (event.key !== 'Tab') return
-      const elements = [...event.currentTarget.querySelectorAll<HTMLElement>('button:not(:disabled), a[href], select, [tabindex="0"]')].filter(element => element.getClientRects().length)
+      const elements = [...event.currentTarget.querySelectorAll<HTMLElement>('button:not(:disabled), a[href], select, [tabindex="0"]')].filter(element => !element.closest('[inert]') && element.getClientRects().length)
       const first = elements[0], last = elements[elements.length - 1]
       if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus() }
       else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus() }
@@ -94,8 +92,10 @@ export default function MiniServerDetail({ server, index, onClose, showHealthSco
           event.currentTarget.parentElement?.querySelectorAll<HTMLButtonElement>('[role="tab"]')[next]?.focus()
         }}>{item.label}</button>)}
       </div>
-      <div ref={content} className="mini-detail-content" role="tabpanel" id={`${id}-panel-${tab}`} aria-labelledby={`${id}-tab-${tab}`} tabIndex={0}>
-        {tab === 'overview' && <>
+      <div className="mini-detail-content">
+        {/* 同一网格叠放六页，保留自然高度，由内容最多的页决定公共高度。 */}
+        {tabs.map(item => <div key={item.key} className="mini-detail-panel" role="tabpanel" id={`${id}-panel-${item.key}`} aria-labelledby={`${id}-tab-${item.key}`} aria-hidden={tab !== item.key} inert={tab !== item.key} tabIndex={tab === item.key ? 0 : -1}>
+        {item.key === 'overview' && <>
           <div className="mini-detail-stats">{[
             ['CPU', percent(validNumber(server.cpu_pct))], ['内存', percent(ratio(server.mem_used, server.mem_total))],
             ['硬盘', percent(ratio(server.disk_used, server.disk_total))], ['平均延迟', latency === undefined ? '—' : `${latency.toFixed(0)} ms`],
@@ -107,14 +107,14 @@ export default function MiniServerDetail({ server, index, onClose, showHealthSco
             ...(showHealthScore ? [['健康评分', `${serverHealth(server).score} · ${serverHealth(server).label}`] as [string, ReactNode]] : []),
           ]} />
         </>}
-        {tab === 'latency' && <MiniLatencyTrends server={server} index={index} />}
-        {tab === 'system' && <MiniSystemTrends server={server} index={index} />}
-        {tab === 'traffic' && <>
+        {item.key === 'latency' && <MiniLatencyTrends server={server} index={index} />}
+        {item.key === 'system' && <MiniSystemTrends server={server} index={index} />}
+        {item.key === 'traffic' && <>
           <InfoRows rows={trafficRows} />
           <h3 className="mini-detail-chart-title">每日流量</h3>
           {server.daily_traffic?.length ? <TrafficChart daily={server.daily_traffic} /> : <p className="mini-detail-empty">暂无每日流量记录。</p>}
         </>}
-        {tab === 'routes' && <>
+        {item.key === 'routes' && <>
           <p className="mini-detail-description">三网回程 · 最近一次检测结果</p>
           <div className="mini-detail-routes">{(['telecom', 'unicom', 'mobile'] as const).map(carrier => {
             const route = server.return_routes?.find(item => item.carrier === carrier)
@@ -124,7 +124,8 @@ export default function MiniServerDetail({ server, index, onClose, showHealthSco
             return <section key={carrier}><span>{({ telecom: '中国电信', unicom: '中国联通', mobile: '中国移动' })[carrier]}</span><strong>{routeType}</strong><small>{route?.region || '地区未上报'}</small><small>{Number.isFinite(time) ? new Date(time).toLocaleString('zh-CN', { hour12: false }) : '检测时间未上报'}</small></section>
           })}</div>
         </>}
-        {tab === 'unlocks' && <UnlockPanel unlocks={server.unlocks} />}
+        {item.key === 'unlocks' && <UnlockPanel unlocks={server.unlocks} />}
+        </div>)}
       </div>
     </section>
   </div>, document.body)

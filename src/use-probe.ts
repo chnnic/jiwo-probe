@@ -3,6 +3,8 @@ import type { ReactNode } from 'react'
 import type { ProbeAppearance, ProbeBackgroundAppearance, ProbePayload, ProbeServer, ThemeName } from './types'
 import { DEFAULT_PING_GROUP_CONFIG, parsePingGroupConfig, type PingGroupConfig } from './ping-groups'
 import { DEFAULT_NETWORK_SPEED_UNIT, parseNetworkSpeedUnit, type NetworkSpeedUnit } from './network-speed'
+import { canonicalThemeOverride, parseThemeName } from './theme-name'
+export { isBuiltinTheme, parseThemeName } from './theme-name'
 
 const APPEARANCE_CACHE = 'mmwx-probe-appearance'
 const DARK_OVERRIDE = 'mmwx-probe-dark-override'
@@ -29,7 +31,7 @@ function applyCustomBackground(appearance: ProbeAppearance, theme: string): void
   const background = runtimeBackground || appearance.background
   const url = background?.url ? safeBackgroundUrl(background.url) : null
   const family = /^ran(-|$)/i.test(theme) ? 'ran' : theme.toLowerCase()
-  const allowedThemes = background?.themes?.map((item) => item.toLowerCase()) || []
+  const allowedThemes = background?.themes?.map((item) => canonicalThemeOverride(item.toLowerCase())) || []
   const applies = !!url && (
     !allowedThemes.length ||
     allowedThemes.includes('all') ||
@@ -171,29 +173,6 @@ function normalizeTheme(value?: string): ThemeName {
   return value === 'anime' || value === 'flat' || value === 'glass' || value === 'lumina' ? value : 'pixel'
 }
 
-// 主控下发组合名 "Lumina-Gold" / "Lumina Gold" / "LUMINAGOLD" → lumina 主题 + 黑金配色
-// "Lumina-Platinum" → lumina + 白金配色(浅底暗金, license.miaomiaowu.net premium light 移植)
-// "Premium-Platinum"/"Premium Light" → premium 整页主题 + 白金配色
-// "Glassmorphism Light/Dark" → glassmorphism 主题 + 白天/夜间模式
-export function parseThemeName(raw: string): { theme: string; gold: boolean; platinum: boolean; light?: boolean } {
-  const lower = raw.toLowerCase().replace(/[\s_-]/g, '')
-  if (lower === 'luminagold') return { theme: 'lumina', gold: true, platinum: false }
-  if (lower === 'luminaplatinum') return { theme: 'lumina', gold: false, platinum: true }
-  if (lower === 'premiumplatinum' || lower === 'premiumlight') return { theme: 'premium', gold: false, platinum: true }
-  if (lower === 'glassmorphismlight') return { theme: 'glassmorphism', gold: false, platinum: false, light: true }
-  if (lower === 'glassmorphismdark') return { theme: 'glassmorphism', gold: false, platinum: false, light: false }
-  if (lower === 'minilight') return { theme: 'mini', gold: false, platinum: false, light: true }
-  if (lower === 'minidark') return { theme: 'mini', gold: false, platinum: false, light: false }
-  return { theme: isBuiltinTheme(raw.toLowerCase()) ? raw.toLowerCase() : raw, gold: false, platinum: false }
-}
-
-// 主控可能下发自定义主题名（theme-{name} 类）。内置 6 主题走主题系统（含 premium 整页主题）；
-// 未知主题名照常挂 theme-{name} 类——站长可在自己的 CSS 里写 .theme-{name} 覆盖，
-// 没写则回退到默认(pixel)样式。返回值 = 是否内置主题（供 UI 判断"跟随主控"时如何显示）。
-export function isBuiltinTheme(value?: string): boolean {
-  return value === 'pixel' || value === 'flat' || value === 'anime' || value === 'glass' || value === 'lumina' || value === 'premium' || value === 'luminagold' || value === 'luminaplatinum' || value === 'premiumplatinum' || value === 'premiumlight' || value === 'ran' || value === 'glassmorphism' || value === 'emerald' || value === 'mini'
-}
-
 export function applyAppearance(input?: ProbeAppearance) {
   const cached = (() => {
     try {
@@ -204,7 +183,7 @@ export function applyAppearance(input?: ProbeAppearance) {
   })()
   const appearance = input || cached || { theme: 'pixel', color_mode: 'light' }
   lastAppliedAppearance = appearance
-  const themeOverride = localStorage.getItem(THEME_OVERRIDE) as ThemeName | null
+  const themeOverride = getThemeOverride()
   // 用户手动选择的内置主题优先；否则用主控下发的主题名。
   // 内置主题名大小写不敏感归一化（主控可能下发 Lumina/LUMINA → lumina）；
   // 自定义主题名原样保留挂 theme-{name}（站长 CSS 怎么写就怎么匹配）。
@@ -311,7 +290,7 @@ export function setDarkOverride(mode: 'dark' | 'light' | 'gold' | 'platinum' | n
 const THEME_CYCLE: ThemeName[] = ['pixel', 'flat', 'anime', 'glass', 'lumina']
 
 export function getThemeOverride(): ThemeName | null {
-  return localStorage.getItem(THEME_OVERRIDE) as ThemeName | null
+  return canonicalThemeOverride(localStorage.getItem(THEME_OVERRIDE)) as ThemeName | null
 }
 
 // 当前生效主题: 用户手动 override 优先，否则主控下发的 theme（内置名归一化小写，自定义名原样）。

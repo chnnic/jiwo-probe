@@ -254,7 +254,7 @@ const THEME_OPTIONS: { value: ThemeName; label: string }[] = [
   { value: 'ran', label: '岚 · Ran' },
   { value: 'glassmorphism', label: 'Glassmorphism' },
   { value: 'emerald', label: 'Emerald' },
-  { value: 'mini', label: 'Lite' },
+  { value: 'lite', label: 'Lite' },
 ]
 
 export function ThemeSelect({ value, onChange }: { value: ThemeName | null; onChange: (name: ThemeName | null) => void }) {
@@ -2551,7 +2551,7 @@ export function App() {
       </Suspense>
     )
   }
-  if (activeTheme === 'mini') {
+  if (activeTheme === 'lite') {
     return (
       <Suspense fallback={<main className="center">正在加载 Lite 主题…</main>}>
         <MiniApp data={data} error={error} onThemeChange={(name) => { setTheme(name); setThemeState(name); setActiveTheme(name ?? getActiveTheme()) }} />

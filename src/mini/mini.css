@@ -1,5 +1,5 @@
-/* Lite v0.8 · 2026-09-24 — 详细卡片增加周期流量、剩余天数、续费价格三列摘要。 */
-:root.theme-mini {
+/* Lite v0.10 · 2026-09-24 — 详情概览四项指标改为单行四列，压缩高度；窄屏同步紧凑显示。 */
+:root.theme-lite {
   color-scheme: light;
   --mini-page: #f5f7fb;
   --mini-surface: #fff;
@@ -27,7 +27,7 @@
   color: var(--mini-text);
   background: var(--mini-page);
 }
-:root.theme-mini:is(.dark, .gold) {
+:root.theme-lite:is(.dark, .gold) {
   color-scheme: dark;
   --mini-page: #10151f;
   --mini-surface: #1a2130;
@@ -122,9 +122,10 @@
 .mini-speed-row svg { flex-shrink: 0; }
 .mini-app .mini-upload { color: var(--mini-green); }
 .mini-app .mini-download { color: var(--mini-blue); }
-.mini-app .mini-node-network .probe-connections { --cap-muted: var(--mini-muted); --cap-fg: var(--mini-text); gap: 8px; font-size: 10px; }
-.mini-app .mini-node-network .probe-connections > span { justify-content: flex-start; gap: 4px; }
-.mini-app .mini-node-network .probe-connections > span:last-child { justify-content: flex-end; }
+.mini-app .mini-node-network .probe-connections { gap: 8px; font-size: 11px; font-weight: 600; }
+.mini-app .mini-node-network .probe-connections > span { justify-content: flex-start; gap: 4px; font-weight: inherit; color: var(--mini-green); }
+.mini-app .mini-node-network .probe-connections > span:last-child { justify-content: flex-end; color: var(--mini-blue); }
+.mini-app .mini-node-network .probe-connections strong { font-weight: inherit; color: inherit; }
 .mini-node-card .card-ping-classic { margin: 0; padding: 12px 0 0; gap: 8px; }
 .mini-node-card .card-ping-group + .card-ping-group { padding-top: 0; }
 .mini-node-card .card-ping-head { font-size: 10px; }
@@ -171,20 +172,22 @@
 .mini-empty button { background: var(--mini-surface); color: var(--mini-accent); border: 1px solid var(--mini-border); border-radius: 8px; padding: 7px 12px; }
 .mini-app .mini-footer { display: flex; justify-content: center; gap: 6px; margin-top: 30px; padding: 15px 0; color: var(--mini-muted); font-size: 11px; }
 .mini-footer > span { margin-left: 8px; border-left: 1px solid var(--mini-border); padding-left: 12px; }
-:root.theme-mini .server-detail { color: var(--mini-text); background: var(--mini-page); }
-:root.theme-mini :is(.probe-unlock-dialog, .probe-unlock-panel, .probe-unlock-button) { --cap-bg: var(--mini-surface); --cap-fg: var(--mini-text); --cap-muted: var(--mini-muted); }
-/* 详情 / 解锁统一使用可视区最大高度；切换页签时外框与关闭按钮不跳位。 */
-:root.theme-mini { --mini-dialog-height: min(820px, calc(100dvh - 32px)); }
-:root.theme-mini .server-detail-backdrop { padding: 16px; align-items: center; overflow: hidden; backdrop-filter: none; }
-:root.theme-mini .server-detail,
-:root.theme-mini .probe-unlock-dialog[open] { height: var(--mini-dialog-height); max-height: var(--mini-dialog-height); display: flex; flex-direction: column; overflow: hidden; }
-:root.theme-mini .server-detail-header,
-:root.theme-mini .probe-unlock-dialog-head { flex-shrink: 0; }
-:root.theme-mini .server-detail-body { flex: 1; min-height: 0; overflow: auto; overscroll-behavior: contain; }
-:root.theme-mini .probe-unlock-dialog > .probe-unlock-panel { flex: 1; min-height: 0; overflow: auto; overscroll-behavior: contain; }
-:root.theme-mini .probe-unlock-dialog::backdrop { backdrop-filter: none; }
-/* 名称 / 元信息 / 六项固定标签，只有当前项目的内容滚动。 */
-:root.theme-mini .mini-detail-dialog { width: min(940px, 100%); border-radius: 20px; background: var(--mini-surface); }
+:root.theme-lite .server-detail { color: var(--mini-text); background: var(--mini-page); }
+:root.theme-lite :is(.probe-unlock-dialog, .probe-unlock-panel, .probe-unlock-button) { --cap-bg: var(--mini-surface); --cap-fg: var(--mini-text); --cap-muted: var(--mini-muted); }
+/* 独立趋势 / 解锁弹窗保持原有可视区高度。 */
+:root.theme-lite { --mini-dialog-height: min(820px, calc(100dvh - 32px)); }
+:root.theme-lite .server-detail-backdrop { padding: 16px; align-items: center; overflow: hidden; backdrop-filter: none; }
+:root.theme-lite .server-detail,
+:root.theme-lite .probe-unlock-dialog[open] { height: var(--mini-dialog-height); max-height: var(--mini-dialog-height); display: flex; flex-direction: column; overflow: hidden; }
+:root.theme-lite .server-detail-header,
+:root.theme-lite .probe-unlock-dialog-head { flex-shrink: 0; }
+:root.theme-lite .server-detail-body { flex: 1; min-height: 0; overflow: auto; overscroll-behavior: contain; }
+:root.theme-lite .probe-unlock-dialog > .probe-unlock-panel { flex: 1; min-height: 0; overflow: auto; overscroll-behavior: contain; }
+:root.theme-lite .probe-unlock-dialog::backdrop { backdrop-filter: none; }
+/* 六个详情标签按最高内容统一高度；只允许整个浮层移动，不产生内部滚动条。 */
+:root.theme-lite .mini-detail-backdrop { align-items: flex-start; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: none; }
+:root.theme-lite .mini-detail-backdrop::-webkit-scrollbar { display: none; }
+:root.theme-lite .mini-detail-dialog { width: min(940px, 100%); height: auto; min-height: var(--mini-dialog-height); max-height: none; flex-shrink: 0; overflow: visible; margin: 0 auto; border-radius: 20px; background: var(--mini-surface); }
 .mini-detail-header { flex-shrink: 0; padding: 22px 24px 14px; }
 .mini-detail-heading { display: flex; align-items: center; gap: 10px; min-width: 0; }
 .mini-detail-heading h2 { margin: 0; flex: 1; min-width: 0; font-size: 23px; line-height: 1.4; color: var(--mini-text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -196,20 +199,22 @@
 .mini-detail-tablist button { padding: 12px 5px; min-width: 0; font-size: 14px; color: var(--mini-muted); background: transparent; border: 1px solid transparent; border-radius: 10px; cursor: pointer; }
 .mini-detail-tablist button[aria-selected="true"] { color: var(--mini-text); font-weight: 650; border-color: var(--mini-border); background: var(--mini-surface); box-shadow: 0 2px 5px #00000008; }
 .mini-detail-dialog :is(button, select, [tabindex]):focus-visible { outline: 2px solid var(--mini-accent); outline-offset: 2px; }
-.mini-detail-content { flex: 1; min-height: 0; overflow: auto; overscroll-behavior: contain; scrollbar-gutter: stable; padding: 0 24px 24px; color: var(--mini-text); }
-.mini-detail-stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-bottom: 20px; }
-.mini-detail-stats > div { min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 9px; padding: 18px; border: 1px solid var(--mini-border); border-radius: 15px; }
+.mini-detail-content { display: grid; grid-template-columns: minmax(0, 1fr); align-items: start; flex: none; min-height: 0; overflow: visible; padding: 0 24px 24px; color: var(--mini-text); }
+.mini-detail-panel { grid-area: 1 / 1; min-width: 0; align-self: start; }
+.mini-detail-panel[aria-hidden="true"] { visibility: hidden; pointer-events: none; }
+.mini-detail-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-bottom: 16px; }
+.mini-detail-stats > div { min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 6px; padding: 14px 16px; border: 1px solid var(--mini-border); border-radius: 15px; }
 .mini-detail-stats span { font-size: 12px; color: var(--mini-muted); }
-.mini-detail-stats strong { font-size: 22px; font-weight: 650; font-variant-numeric: tabular-nums; }
+.mini-detail-stats strong { max-width: 100%; font-size: 22px; font-weight: 650; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
 .mini-detail-rows { margin: 0; font-size: 13px; }
 .mini-detail-rows > div { display: grid; grid-template-columns: minmax(100px, .35fr) minmax(0, 1fr); gap: 16px; align-items: baseline; padding: 17px 2px; border-bottom: 1px dashed var(--mini-border); }
 .mini-detail-rows dt { color: var(--mini-muted); }
 .mini-detail-rows dd { min-width: 0; margin: 0; text-align: right; font-weight: 550; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
 .mini-detail-chart-title { margin: 24px 0 0; font-size: 14px; }
 .mini-trends { display: grid; gap: 12px; min-width: 0; }
-.mini-system-trends { height: 100%; min-height: 480px; grid-template-rows: auto repeat(3, minmax(0, 1fr)); }
+.mini-system-trends { grid-template-rows: auto; }
 .mini-system-trends .mini-trend-card { display: flex; flex-direction: column; }
-.mini-system-trends .mini-trend-plot { flex: 1; height: 0; min-height: 0; }
+.mini-system-trends .mini-trend-plot { flex: none; height: 140px; }
 .mini-trend-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
 .mini-trend-ranges { display: inline-flex; border: 1px solid var(--mini-border); border-radius: 18px; overflow: hidden; }
 .mini-trend-ranges button, .mini-trend-selection button { border: 0; background: transparent; color: var(--mini-muted); font: inherit; font-size: 11px; padding: 6px 12px; cursor: pointer; white-space: nowrap; }
@@ -242,13 +247,13 @@
 .mini-detail-routes span, .mini-detail-routes small { font-size: 12px; color: var(--mini-muted); overflow-wrap: anywhere; }
 .mini-detail-routes strong { font-size: 20px; color: var(--mini-accent); overflow-wrap: anywhere; }
 .mini-detail-empty { color: var(--mini-muted); padding: 60px 12px; text-align: center; font-size: 13px; }
-:root.theme-mini.probe-custom-background .mini-app {
+:root.theme-lite.probe-custom-background .mini-app {
   background-image: linear-gradient(rgb(245 247 251 / var(--probe-background-overlay, .32)), rgb(245 247 251 / var(--probe-background-overlay, .32))), var(--probe-background-image);
   background-position: center, var(--probe-background-position, center);
   background-size: cover;
   background-repeat: no-repeat;
 }
-:root.theme-mini:is(.dark, .gold).probe-custom-background .mini-app {
+:root.theme-lite:is(.dark, .gold).probe-custom-background .mini-app {
   background-image: linear-gradient(rgb(16 21 31 / var(--probe-background-overlay, .32)), rgb(16 21 31 / var(--probe-background-overlay, .32))), var(--probe-background-image);
 }
 @media (max-width: 1180px) {
@@ -264,9 +269,10 @@
   .mini-detail-tablist { margin: 0 16px 14px; gap: 2px; }
   .mini-detail-tablist button { padding: 10px 2px; font-size: 13px; }
   .mini-detail-content { padding: 0 16px 18px; }
-  .mini-detail-stats { gap: 10px; }
-  .mini-detail-stats > div { padding: 14px; }
-  .mini-detail-stats strong { font-size: 21px; }
+  .mini-detail-stats { gap: 6px; }
+  .mini-detail-stats > div { padding: 12px 6px; border-radius: 10px; }
+  .mini-detail-stats span { font-size: 10px; white-space: nowrap; }
+  .mini-detail-stats strong { font-size: clamp(12px, 3.6vw, 20px); }
   .mini-detail-rows > div { grid-template-columns: minmax(75px, .4fr) minmax(0, 1fr); gap: 12px; padding: 15px 0; }
   .mini-detail-routes { grid-template-columns: minmax(0, 1fr); }
   .mini-header-inner { padding: 12px 16px; }
@@ -295,7 +301,7 @@
   .mini-system > span { display: none; }
   .mini-view-list .mini-node-card { grid-template-columns: 1fr; gap: 14px; padding: 18px; }
   .mini-view-list .mini-node-network { grid-template-columns: 1.3fr 1fr; padding-top: 12px; border-top: 1px solid var(--mini-border); }
-  .mini-view-list .mini-node-network .probe-connections { font-size: 10px; }
+  .mini-view-list .mini-node-network .probe-connections { font-size: 11px; }
   .mini-view-list .mini-node-network .probe-connections > span:last-child { justify-content: flex-end; }
 }
 @media (max-width: 360px) {
