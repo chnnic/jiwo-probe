@@ -1,4 +1,12 @@
-/** 主控主题名解析；旧 mini 标识仅作为 Lite 的兼容别名。 */
+/** 内置主题与 Ran 变体统一忽略大小写；未知自定义 CSS 类名保持原样。 */
+const BUILTIN_THEMES = new Set([
+  'pixel', 'flat', 'anime', 'glass', 'lumina', 'luminaplus', 'premium',
+  'ran', 'glassmorphism', 'emerald', 'lite', 'mini',
+  'luminagold', 'luminaplatinum', 'premiumplatinum', 'premiumlight',
+  'ran-night', 'ran-mist', 'ran-ember', 'ran-sakura', 'ran-lavender',
+  'ran-tomcat', 'ran-teal', 'ran-midnight', 'ran-mint', 'ran-butter', 'ran-ji',
+])
+
 export function parseThemeName(raw: string): { theme: string; gold: boolean; platinum: boolean; light?: boolean } {
   const lower = raw.toLowerCase().replace(/[\s_-]/g, '')
   if (lower === 'luminaplus') return { theme: 'luminaplus', gold: false, platinum: false }
@@ -12,14 +20,16 @@ export function parseThemeName(raw: string): { theme: string; gold: boolean; pla
   if (lower === 'lite' || lower === 'mini') return { theme: 'lite', gold: false, platinum: false }
   if (lower === 'litelight' || lower === 'minilight') return { theme: 'lite', gold: false, platinum: false, light: true }
   if (lower === 'litedark' || lower === 'minidark') return { theme: 'lite', gold: false, platinum: false, light: false }
-  return { theme: isBuiltinTheme(raw.toLowerCase()) ? raw.toLowerCase() : raw, gold: false, platinum: false }
+  const name = raw.trim().toLowerCase()
+  return { theme: isBuiltinTheme(name) ? name : raw, gold: false, platinum: false }
 }
 
 export function isBuiltinTheme(value?: string): boolean {
-  if (value === 'luminaplus') return true
-  return value === 'pixel' || value === 'flat' || value === 'anime' || value === 'glass' || value === 'lumina' || value === 'premium' || value === 'luminagold' || value === 'luminaplatinum' || value === 'premiumplatinum' || value === 'premiumlight' || value === 'ran' || value === 'glassmorphism' || value === 'emerald' || value === 'lite' || value === 'mini'
+  return typeof value === 'string' && BUILTIN_THEMES.has(value.trim().toLowerCase())
 }
 
 export function canonicalThemeOverride(value: string | null): string | null {
-  return value?.toLowerCase() === 'mini' ? 'lite' : value
+  if (value === null) return null
+  const name = value.trim().toLowerCase()
+  return name === 'mini' ? 'lite' : isBuiltinTheme(name) ? name : value
 }

@@ -86,13 +86,16 @@
 | `glassmorphism` | Glassmorphism 玻璃拟态整页（默认 **auto 模式**） |
 | `glassmorphism-light` | Glassmorphism · 白色模式（浅蓝白玻璃） |
 | `glassmorphism-dark` | Glassmorphism · 黑色模式（深蓝黑玻璃） |
+| `emerald` | Emerald 整页主题 |
+| `lite` / `lite-light` / `lite-dark` | Lite 自动明暗 / 固定浅色 / 固定深色 |
+| `luminaplus` / `luminaplus-light` / `luminaplus-dark` | LuminaPlus 自动明暗 / 固定浅色 / 固定深色 |
 | 其他自定义名 | 经典界面 + `theme-{name}` 类（站长自写 CSS 接管） |
 
-> **auto 模式**：主控**不写明暗后缀**（如 `glassmorphism`、`pixel`、`flat`、`anime`、`glass`、`premium`）默认进入 auto——按北京时间自动切换（6:00–18:00 浅色/白金，夜间深色/黑金；premium 为白金↔黑金、glassmorphism 为白色↔黑色、经典主题为浅色↔深色）。访客侧主题内切换按钮为 **auto → 白色 → 黑色** 三态循环（glassmorphism 顶部按钮显示"自动/太阳/月亮"），手动切换后优先于主控下发。
+> **auto 模式**：主控**不写明暗后缀**（如 `glassmorphism`、`pixel`、`flat`、`anime`、`glass`、`premium`、`lite`、`luminaplus`）默认进入 auto——按北京时间自动切换（6:00–18:00 浅色/白金，夜间深色/黑金；premium 为白金↔黑金、glassmorphism 为白色↔黑色）。访客手动明暗选择优先；Lite 与 LuminaPlus 使用单个太阳／月亮按钮直接切换浅色和深色，其他主题保留各自的配色控件。
 
-> 主控主题名仅允许字母、数字、下划线、连字符（≤64 字符），上表均为合规写法；大小写不敏感。
+> 主控主题名仅允许字母、数字、下划线、连字符（≤64 字符），上表均为合规写法。所有内置主题、明暗后缀和 Ran 变体均忽略大小写，例如 `LuminaPlus`、`LUMINAPLUS`、`luminaplus` 等效；浏览器保存的内置主题选择也统一归一化。未知自定义主题仍保留原名，避免破坏站长现有的 CSS 类名。
 
-优先级：**主控明确下发变体 > 用户手动选过（浏览器记忆）> 本地缓存 > 默认**。探针实时监听主控下发（WS/轮询新帧），切换无需刷新页面。
+主题选择优先级：**访客手动选择（浏览器记忆）> 主控下发 > 默认**。要让主控设置生效，请先在探针主题菜单选择 **跟随主控**。探针实时监听主控下发（WS/轮询新帧），切换无需刷新页面。
 - 做过性能优化：backdrop-filter 合成层从 50+ 降到 2 层（仅顶部栏和遮罩），低 CPU / 低耗电，手机不发烫
 
 #### Cloudflare 自定义背景
