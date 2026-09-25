@@ -43,7 +43,8 @@ export function connectionTrendRows(series: SystemSeries, bucketSec: number): Tr
   })
 }
 
-export const formatConnectionAverage = (value: number) => value.toLocaleString('zh-CN', { maximumFractionDigits: 2 })
+// Display rounded counts while preserving the controller's original bucket averages.
+export const formatConnectionAverage = (value: number) => value.toLocaleString('zh-CN', { maximumFractionDigits: 0 })
 
 /** Buckets end at the same instant; align shorter histories to the right. */
 export function pingTrendRows(series: ProbePingSeries[], generatedAt: number, bucketSec: number, mode: 'latency' | 'loss'): TrendRow[] {

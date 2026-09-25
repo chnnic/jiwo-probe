@@ -30,9 +30,14 @@ test('连接数历史按主控时间戳对齐，保留桶平均小数和真实�
     { ts: 300, tcp: 0, udp: null }, { ts: 600, tcp: null, udp: 18 }, { ts: 900, tcp: 152.5, udp: 0 },
   ])
   assert.equal(systemTrendRows(series).at(-1).tcp, 152.5)
-  assert.equal(formatConnectionAverage(152.5), '152.5')
-  assert.equal(formatConnectionAverage(131.1122448979592), '131.11')
-  assert.equal(formatConnectionAverage(0), '0')
+})
+test('TCP/UDP 历史显示四舍五入为整数，不改变原始桶平均值', () => {
+  for (const [value, expected] of [[44.99, '45'], [14.01, '14'], [152.5, '153'], [131.1122448979592, '131'], [0, '0'], [0.49, '0'], [0.5, '1'], [999.99, '1,000']]) {
+    assert.equal(formatConnectionAverage(value), expected)
+    const rows = connectionTrendRows({ tcp_connections: [{ t: 300, value }], udp_connections: [{ t: 300, value }] }, 300)
+    assert.equal(rows[0].tcp, value)
+    assert.equal(rows[0].udp, value)
+  }
 })
 test('主控未返回连接历史或返回空数组时不以其他指标或当前快照补齐', () => {
   for (const series of [{}, { tcp_connections: [], udp_connections: [] }, { cpu_pct: [{ t: 300, value: 10 }] }]) {

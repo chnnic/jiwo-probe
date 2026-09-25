@@ -1,3 +1,4 @@
+/* Detail trends v2026.09.25.1 — TCP/UDP 主控历史入口与窄屏布局 */
 * {
   box-sizing: border-box;
 }
@@ -2628,6 +2629,7 @@ footer a:hover {
 }
 .detail-panel-head {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
@@ -2639,6 +2641,12 @@ footer a:hover {
 .trend-mode-switch {
   display: inline-flex;
   gap: 4px;
+}
+.detail-connections-note {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.6;
 }
 .trend-mode-switch button {
   min-width: auto;
@@ -4482,7 +4490,7 @@ footer a:hover {
   }
 }
 
-/* 详情页趋势 tab 扩到 6 个(延迟/丢包/流量/负载/CPU/内存): 手机端放不下时横滑而非换行破坏布局 */
+/* 详情页六项趋势：延迟/丢包/流量/CPU/内存/TCPUDP；手机端可横滑。 */
 @media (max-width: 640px) {
   .detail-panel-head {
     gap: 6px;
