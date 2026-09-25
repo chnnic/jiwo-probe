@@ -7,7 +7,7 @@ export const unlockCategories: { key: UnlockCategory; label: string }[] = [
   { key: 'other', label: '其他' },
 ]
 
-// 与主控的服务 key 对齐；地区/CDN/货币查询只展示信息，不计入解锁数量。
+// 与主控的服务 key 对齐；info 只影响单项展示，不排除在统计之外。
 type Service = { label: string; category: UnlockCategory; info?: boolean }
 const services: Record<string, Service> = {
   netflix: { label: 'Netflix', category: 'streaming' },
@@ -70,16 +70,21 @@ export function unlockStatus(item: ProbeUnlock): { label: string; tone: string }
 }
 
 export function unlockSummary(items: ProbeUnlock[]) {
-  const checked = items.filter(item => !unlockService(item.service).info)
+  // 主控口径：所有已返回的检测项计入总数，yes / originals_only 均计为解锁。
   return {
-    total: checked.length,
-    unlocked: checked.filter(item => item.status === 'yes').length,
-    partial: checked.filter(item => item.status === 'originals_only').length,
-    info: items.length - checked.length,
+    total: items.length,
+    unlocked: items.filter(item => item.status === 'yes' || item.status === 'originals_only').length,
+    partial: items.filter(item => item.status === 'originals_only').length,
+    info: items.filter(item => unlockService(item.service).info).length,
   }
 }
 
-/** 折叠标题沿用完整面板的统计口径，信息查询不算作已解锁服务。 */
+/** 与主控锁图标一致：有结果且全部解锁才为金色；0/0 不算全解锁。 */
+export function unlockIndicator(summary: { total: number; unlocked: number }): 'all' | 'some' | 'none' {
+  return summary.total > 0 && summary.unlocked >= summary.total ? 'all' : summary.unlocked > 0 ? 'some' : 'none'
+}
+
+/** 分类、折叠标题和完整面板统一使用主控统计口径。 */
 export function unlockCategorySummaries(value: unknown) {
   const items = normalizeUnlocks(value)
   return unlockCategories.map(category => ({

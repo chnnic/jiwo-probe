@@ -1,8 +1,8 @@
 import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { Check, ChevronDown, CircleHelp, LockKeyhole, ShieldCheck, X } from 'lucide-react'
+import { Check, ChevronDown, CircleHelp, LockKeyhole, LockKeyholeOpen, ShieldCheck, X } from 'lucide-react'
 import type { ProbeServer, ProbeUnlock } from './types'
-import { connectionCount, normalizeUnlocks, unlockCategories, unlockCategorySummaries, unlockService, unlockStatus, unlockSummary, type UnlockCategory } from './unlocks'
+import { connectionCount, normalizeUnlocks, unlockCategories, unlockCategorySummaries, unlockIndicator, unlockService, unlockStatus, unlockSummary, type UnlockCategory } from './unlocks'
 import { unlockBrandIcon } from './unlock-icons'
 import { ConnectionLabel } from './ConnectionLabel'
 
@@ -37,18 +37,19 @@ export function UnlockPanel({ unlocks }: { unlocks?: ProbeUnlock[] }) {
   const [selected, setSelected] = useState<UnlockCategory | null>(null)
   const category = selected ?? unlockCategories.find(cat => items.some(item => unlockService(item.service).category === cat.key))?.key ?? 'streaming'
   const summary = unlockSummary(items)
+  const categories = unlockCategorySummaries(items)
   const id = useId()
   if (!items.length) return <p className="probe-unlock-empty">暂无解锁检测数据，等待主控上报。</p>
   return (
     <div className="probe-unlock-panel">
-      <div className="probe-unlock-summary">
+      <div className="probe-unlock-summary" data-unlock-state={unlockIndicator(summary)}>
         <ShieldCheck size={16} />
         <strong>{summary.total ? `已解锁 ${summary.unlocked} / ${summary.total}` : '服务信息'}</strong>
-        {summary.partial > 0 && <span>{summary.partial} 项仅自制剧</span>}
-        {summary.info > 0 && <span>{summary.info} 项信息</span>}
+        {summary.partial > 0 && <span>含 {summary.partial} 项仅自制剧</span>}
+        {summary.info > 0 && <span>含 {summary.info} 项信息查询</span>}
       </div>
       <div className="probe-unlock-tabs" role="group" aria-label="解锁服务分类">
-        {unlockCategories.map(cat => <button key={cat.key} type="button" aria-pressed={category === cat.key} aria-controls={id} onClick={() => setSelected(cat.key)}>{cat.label}<small>{items.filter(item => unlockService(item.service).category === cat.key).length}</small></button>)}
+        {categories.map(cat => <button key={cat.key} type="button" aria-pressed={category === cat.key} aria-controls={id} onClick={() => setSelected(cat.key)}>{cat.label}<small>{cat.unlocked}/{cat.total}</small></button>)}
       </div>
       <div className="probe-unlock-results" id={id} role="region" aria-label="解锁检测结果">
         {unlockCategories.map(cat => {
@@ -75,7 +76,7 @@ export function UnlockPanel({ unlocks }: { unlocks?: ProbeUnlock[] }) {
           </div>
         })}
       </div>
-      <p className="probe-unlock-note">上次检测结果，非实时测试。地区、CDN、货币信息不计入解锁数量。</p>
+      <p className="probe-unlock-note">上次检测结果，非实时测试。统计与主控一致：信息查询计入总数，查询成功和仅自制剧均计为已解锁。</p>
     </div>
   )
 }
@@ -90,8 +91,8 @@ export function UnlockDetails({ unlocks }: { unlocks?: ProbeUnlock[] }) {
         <h3>解锁检测</h3>
         <span className="probe-unlock-category-counts" id={countsId}>
           {categories.map(category => <span key={category.key} title={category.total
-            ? `${category.label}：已解锁 ${category.unlocked} / ${category.total} 项${category.partial ? `，${category.partial} 项仅自制剧` : ''}；不含信息查询`
-            : `${category.label}：暂无可统计的解锁结果${category.info ? `，${category.info} 项信息查询不计入解锁数` : ''}`}>
+            ? `${category.label}：已解锁 ${category.unlocked} / ${category.total} 项${category.partial ? `，含 ${category.partial} 项仅自制剧` : ''}${category.info ? `；含 ${category.info} 项信息查询` : ''}；与主控口径一致`
+            : `${category.label}：暂无检测结果`}>
             {category.label}<strong>{category.total ? `${category.unlocked}/${category.total}` : '—'}</strong>
           </span>)}
         </span>
@@ -146,10 +147,14 @@ function UnlockDialog({ name, unlocks, close }: { name: string; unlocks: ProbeUn
 
 export function UnlockButton({ server }: { server: Pick<ProbeServer, 'name' | 'unlocks'> }) {
   const [open, setOpen] = useState(false)
-  if (!normalizeUnlocks(server.unlocks).length) return null
+  const items = normalizeUnlocks(server.unlocks)
+  if (!items.length) return null
+  const summary = unlockSummary(items)
+  const state = unlockIndicator(summary)
   const name = server.name || '服务器'
+  const label = `查看 ${name} 解锁检测：${summary.unlocked}/${summary.total}${state === 'all' ? '（全部解锁）' : ''}`
   return <>
-    <button type="button" className="probe-unlock-button" aria-label={`查看 ${name} 解锁检测`} aria-haspopup="dialog" aria-expanded={open} title="查看解锁检测" onKeyDown={event => event.stopPropagation()} onMouseDown={event => event.stopPropagation()} onClick={event => { event.stopPropagation(); setOpen(true) }}><LockKeyhole size={15} /></button>
-    {open && <UnlockDialog name={name} unlocks={server.unlocks!} close={() => setOpen(false)} />}
+    <button type="button" className="probe-unlock-button" data-unlock-state={state} aria-label={label} aria-haspopup="dialog" aria-expanded={open} title={label} onKeyDown={event => event.stopPropagation()} onMouseDown={event => event.stopPropagation()} onClick={event => { event.stopPropagation(); setOpen(true) }}>{state === 'none' ? <LockKeyhole size={15} /> : <LockKeyholeOpen size={15} />}</button>
+    {open && <UnlockDialog name={name} unlocks={items} close={() => setOpen(false)} />}
   </>
 }

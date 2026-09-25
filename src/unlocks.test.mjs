@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { connectionCount, normalizeUnlocks, unlockCategorySummaries, unlockService, unlockStatus, unlockSummary } from './unlocks.ts'
+import { connectionCount, normalizeUnlocks, unlockCategorySummaries, unlockIndicator, unlockService, unlockStatus, unlockSummary } from './unlocks.ts'
 import { unlockBrandIcon } from './unlock-icons.ts'
 import { existsSync, readFileSync } from 'node:fs'
 
@@ -18,13 +18,13 @@ test('服务排序稳定，重复服务采用最后一条', () => {
   assert.deepEqual(normalized.map(item => item.service), ['netflix', 'openai', 'steam'])
   assert.equal(normalized[0].status, 'yes')
 })
-test('地区/CDN/货币信息不计入解锁数量，部分解锁单独计数', () => {
+test('主控口径包含地区/CDN/货币信息，仅自制剧同时计入解锁和说明', () => {
   const items = normalizeUnlocks([
     { service: 'netflix', status: 'originals_only' }, { service: 'openai', status: 'yes' },
     { service: 'disneyplus', status: 'no' }, { service: 'claude', status: 'failed' },
     ...['iqiyi', 'bing', 'apple', 'google_play', 'steam', 'onetrust', 'youtube_cdn', 'netflix_cdn'].map(service => ({ service, status: 'yes', region: 'US' })),
   ])
-  assert.deepEqual(unlockSummary(items), { total: 4, unlocked: 1, partial: 1, info: 8 })
+  assert.deepEqual(unlockSummary(items), { total: 12, unlocked: 10, partial: 1, info: 8 })
 })
 test('信息查询与解锁状态分别展示；未知服务和状态可降级', () => {
   assert.deepEqual(unlockStatus({ service: 'steam', status: 'yes' }), { label: '信息', tone: 'info' })
@@ -32,7 +32,7 @@ test('信息查询与解锁状态分别展示；未知服务和状态可降级',
   for (const [status, label] of [['yes', '已解锁'], ['originals_only', '仅自制剧'], ['no', '未解锁'], ['banned', 'IP 被封禁'], ['future_status', '检测失败']]) assert.equal(unlockStatus({ service: 'netflix', status }).label, label)
   for (const key of ['future_service', 'constructor', '__proto__']) assert.deepEqual(unlockService(key), { label: key, category: 'other' })
 })
-test('折叠栏按流媒体、AI、其他统计已解锁数，排除信息项和部分解锁', () => {
+test('折叠栏按主控口径统计三类，与完整面板总数相加一致', () => {
   const input = [
     { service: 'netflix', status: 'no' }, { service: 'netflix', status: 'yes' },
     { service: 'disneyplus', status: 'originals_only' }, { service: 'spotify', status: 'no' },
@@ -43,9 +43,9 @@ test('折叠栏按流媒体、AI、其他统计已解锁数，排除信息项和
   ]
   const categories = unlockCategorySummaries(input)
   assert.deepEqual(categories, [
-    { key: 'streaming', label: '流媒体', total: 3, unlocked: 1, partial: 1, info: 1 },
+    { key: 'streaming', label: '流媒体', total: 4, unlocked: 3, partial: 1, info: 1 },
     { key: 'ai', label: 'AI', total: 2, unlocked: 1, partial: 0, info: 0 },
-    { key: 'other', label: '其他', total: 2, unlocked: 1, partial: 0, info: 1 },
+    { key: 'other', label: '其他', total: 3, unlocked: 2, partial: 0, info: 1 },
   ])
   const total = unlockSummary(normalizeUnlocks(input))
   for (const key of ['total', 'unlocked', 'partial', 'info']) assert.equal(categories.reduce((sum, cat) => sum + cat[key], 0), total[key])
@@ -58,10 +58,39 @@ test('折叠栏区分无检测数据、仅信息查询与已检测但零解锁',
   }
   const categories = unlockCategorySummaries([{ service: 'openai', status: 'no' }, { service: 'steam', status: 'yes' }])
   assert.deepEqual(categories.map(({ total, unlocked, info }) => ({ total, unlocked, info })), [
-    { total: 0, unlocked: 0, info: 0 }, { total: 1, unlocked: 0, info: 0 }, { total: 0, unlocked: 0, info: 1 },
+    { total: 0, unlocked: 0, info: 0 }, { total: 1, unlocked: 0, info: 0 }, { total: 1, unlocked: 1, info: 1 },
   ])
 })
-test('官方 22 项服务都有名称和分类', () => {
+test('锁图标遵循主控全解锁/部分/零解锁判定，0/0 不变金色', () => {
+  const indicator = input => unlockIndicator(unlockSummary(normalizeUnlocks(input)))
+  for (const input of [undefined, null, [], [{}]]) assert.equal(indicator(input), 'none')
+  assert.equal(indicator([{ service: 'netflix', status: 'yes' }]), 'all', 'only returned results count, no fixed service total')
+  assert.equal(indicator([{ service: 'netflix', status: 'originals_only' }, { service: 'steam', status: 'yes' }]), 'all')
+  assert.equal(indicator([{ service: 'steam', status: 'yes' }]), 'all', 'successful info-only result follows master')
+  for (const status of ['no', 'banned', 'failed', 'future_status']) {
+    assert.equal(indicator([{ service: 'netflix', status }]), 'none')
+    assert.equal(indicator([{ service: 'netflix', status: 'yes' }, { service: 'youtube_cdn', status }]), 'some', 'failed info result prevents gold')
+  }
+})
+test('21 项实测结构按主控统计 15/21，而非旧口径 8/13', () => {
+  const info = ['iqiyi', 'youtube_cdn', 'netflix_cdn', 'bing', 'apple', 'google_play', 'steam', 'onetrust']
+  const services = ['netflix', 'disneyplus', 'youtube_premium', 'prime_video', 'tvb_anywhere', 'dazn', 'openai', 'gemini', 'claude', 'wikipedia', 'google_search', 'reddit', 'sdggge']
+  const items = normalizeUnlocks([
+    ...services.map((service, i) => ({ service, status: i < 8 ? 'yes' : 'no' })),
+    ...info.map(service => ({ service, status: service === 'youtube_cdn' ? 'failed' : 'yes' })),
+  ])
+  assert.deepEqual(unlockSummary(items), { total: 21, unlocked: 15, partial: 0, info: 8 })
+  assert.equal(unlockIndicator(unlockSummary(items)), 'some')
+  const categories = unlockCategorySummaries(items)
+  assert.equal(categories.reduce((sum, cat) => sum + cat.unlocked, 0), 15)
+  assert.equal(categories.reduce((sum, cat) => sum + cat.total, 0), 21)
+})
+test('状态刷新后计数与锁图标同步变化，不保留过期的全解锁状态', () => {
+  const results = ['yes', 'failed', 'originals_only'].map(status => unlockSummary([{ service: 'netflix', status }, { service: 'openai', status: 'yes' }]))
+  assert.deepEqual(results.map(summary => summary.unlocked), [2, 1, 2])
+  assert.deepEqual(results.map(unlockIndicator), ['all', 'some', 'all'])
+})
+test('服务目录保留官方名称、分类与旧版 Spotify 兼容图标', () => {
   const keys = ['netflix', 'disneyplus', 'youtube_premium', 'prime_video', 'tvb_anywhere', 'iqiyi', 'dazn', 'youtube_cdn', 'netflix_cdn', 'spotify', 'openai', 'gemini', 'claude', 'bing', 'apple', 'wikipedia', 'google_play', 'google_search', 'steam', 'reddit', 'onetrust', 'sdggge']
   assert.equal(keys.length, 22)
   for (const key of keys) assert.notEqual(unlockService(key).label, key)

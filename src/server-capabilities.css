@@ -1,4 +1,4 @@
-/* Server capabilities v1.1 · 2026-09-24 — TCP/UDP icons and session chart labels.
+/* Server capabilities v1.2 · 2026-09-25 — 主控解锁计数与金/绿/灰锁图标。
  * 只用于连接数/解锁检测：沿用主题配色，不创建新的 backdrop-filter。 */
 :is(.probe-unlock-dialog, .probe-unlock-panel, .probe-unlock-button, .probe-connections) {
   --cap-bg: #fff;
@@ -10,6 +10,9 @@
   --cap-ok: #137847;
   --cap-warn: #986105;
   --cap-bad: #c53541;
+  --cap-unlock-all: #f59e0b;
+  --cap-unlock-some: #059669;
+  --cap-unlock-none: #64748b;
   color: var(--cap-fg);
   box-sizing: border-box;
 }
@@ -20,6 +23,9 @@ body.gm-body:not(.gm-light-body) :is(.probe-unlock-dialog, .probe-unlock-panel, 
   --cap-ok: #68dba3;
   --cap-warn: #ebc169;
   --cap-bad: #ff9098;
+  --cap-unlock-all: #fbbf24;
+  --cap-unlock-some: #34d399;
+  --cap-unlock-none: #94a3b8;
 }
 :root.theme-glass :is(.probe-unlock-dialog, .probe-unlock-panel, .probe-unlock-button, .probe-connections) { --cap-bg: #f2fafc; }
 :root.theme-glass.dark :is(.probe-unlock-dialog, .probe-unlock-panel, .probe-unlock-button, .probe-connections) { --cap-bg: #142833; }
@@ -42,6 +48,9 @@ body.gm-body:not(.gm-light-body) :is(.probe-unlock-dialog, .probe-unlock-panel, 
   --cap-ok: #68dba3;
   --cap-warn: #ebc169;
   --cap-bad: #ff9098;
+  --cap-unlock-all: #fbbf24;
+  --cap-unlock-some: #34d399;
+  --cap-unlock-none: #94a3b8;
 }
 :root.theme-premium.platinum :is(.probe-unlock-dialog, .probe-unlock-panel, .probe-unlock-button, .probe-connections) {
   --cap-bg: #fffdf8;
@@ -52,7 +61,15 @@ body.gm-body:not(.gm-light-body) :is(.probe-unlock-dialog, .probe-unlock-panel, 
   --cap-ok: #137847;
   --cap-warn: #986105;
   --cap-bad: #c53541;
+  --cap-unlock-all: #f59e0b;
+  --cap-unlock-some: #059669;
+  --cap-unlock-none: #64748b;
 }
+:is(.probe-unlock-button, .probe-unlock-summary)[data-unlock-state="all"] { --cap-unlock-color: var(--cap-unlock-all); }
+:is(.probe-unlock-button, .probe-unlock-summary)[data-unlock-state="some"] { --cap-unlock-color: var(--cap-unlock-some); }
+:is(.probe-unlock-button, .probe-unlock-summary)[data-unlock-state="none"] { --cap-unlock-color: var(--cap-unlock-none); }
+/* 状态色优先于主题按钮的常规强调色，保留各主题按钮尺寸、背景与形状。 */
+button.probe-unlock-button[data-unlock-state] { color: var(--cap-unlock-color); }
 button.probe-unlock-button {
   display: inline-flex;
   justify-content: center;
@@ -65,13 +82,13 @@ button.probe-unlock-button {
   margin: 0;
   border: 1px solid transparent;
   border-radius: min(var(--cap-radius), 8px);
-  color: var(--cap-accent);
-  background: color-mix(in srgb, var(--cap-accent) 9%, transparent);
+  color: var(--cap-unlock-color, var(--cap-accent));
+  background: color-mix(in srgb, var(--cap-unlock-color, var(--cap-accent)) 9%, transparent);
   box-shadow: none;
   cursor: pointer;
 }
 button.probe-unlock-button > svg { width: 15px; height: 15px; color: currentColor; }
-button.probe-unlock-button:hover { border-color: var(--cap-accent); }
+button.probe-unlock-button:hover { border-color: var(--cap-unlock-color, var(--cap-accent)); }
 .probe-unlock-tools { display: inline-flex; align-items: center; gap: 8px; flex-shrink: 0; }
 .probe-unlock-name-line { display: flex; align-items: center; gap: 8px; min-width: 0; }
 .probe-unlock-name-line > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
@@ -125,7 +142,7 @@ button.probe-unlock-button:hover { border-color: var(--cap-accent); }
 .probe-unlock-details[open] > summary { margin-bottom: 12px; }
 .probe-unlock-details[open] .probe-unlock-disclosure-hint > svg { transform: rotate(180deg); }
 .probe-unlock-summary { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 10px; margin: 0 0 14px; font-size: 13px; }
-.probe-unlock-summary > svg { color: var(--cap-accent); }
+.probe-unlock-summary > svg { color: var(--cap-unlock-color, var(--cap-accent)); }
 .probe-unlock-summary > strong { font-weight: 650; }
 .probe-unlock-summary > span { font-size: 11px; color: var(--cap-muted); }
 .probe-unlock-tabs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; padding: 4px; border-radius: min(var(--cap-radius), 10px); background: color-mix(in srgb, var(--cap-muted) 9%, transparent); }
