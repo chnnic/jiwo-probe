@@ -47,7 +47,7 @@ html.theme-winxp body.light .desktop {
 }
 html.theme-winxp .app-window { gap: 3px; }
 html.theme-winxp .win {
-  border-color: #6fa1e3 #003bda #003bda #6fa1e3;
+  border: 0;
   border-radius: 8px 8px 0 0;
   box-shadow: inset -1px -1px #00138c, inset 1px 1px #0831d9, inset -2px -2px #001ea0, inset 2px 2px #166aee, inset -3px -3px #003bda, inset 3px 3px #0855dd;
   padding: 3px;
@@ -61,6 +61,18 @@ html.theme-winxp .title-bar {
 html.theme-winxp .title-bar.inactive { background: linear-gradient(180deg, #a8c8ee, #7d9fce); text-shadow: none; color: #f0f6fd; }
 html.theme-winxp .title-btn { min-width: 21px; height: 21px; border: 1px solid #fff; border-radius: 3px; background: linear-gradient(180deg, #68b8ff, #0050ee 75%, #003dd7); color: #fff; box-shadow: 1px 1px 0 #003bda; }
 html.theme-winxp .title-btn-last { background: linear-gradient(180deg, #ffb19c, #e44821 72%, #bc2515); }
+html.theme-winxp .server-card .card-status {
+  flex: 0 0 48px;
+  min-width: 48px;
+  height: 21px;
+  justify-content: center;
+  padding: 0 4px;
+  font: 11px/19px Tahoma, 'Microsoft YaHei', SimSun, sans-serif;
+  letter-spacing: 0;
+  white-space: nowrap;
+  overflow: hidden;
+}
+html.theme-winxp .server-card .card-status .led { flex: 0 0 8px; }
 html.theme-winxp .tool-btn, html.theme-winxp .tab, html.theme-winxp .col-head, html.theme-winxp .retro-family-select {
   border: 1px solid #003c74; border-radius: 3px; background: linear-gradient(180deg, #fff 0%, #ecebe5 86%, #d8d0c4 100%); box-shadow: none;
 }
