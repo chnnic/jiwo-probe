@@ -1,6 +1,7 @@
+/* Glassmorphism · v2026.09.25.1 · 全界面实色面板，不透明、无背景模糊 */
 /* ============================================================
    Glassmorphism 主题（复刻 komari-theme-Glassmorphism 实测效果）
-   深蓝黑底 + 背景图 + 高不透明深色玻璃卡 + 翡翠绿状态色
+   深蓝黑底 + 背景图 + 完全不透明卡片 + 翡翠绿状态色
    ============================================================ */
 
 .gm-app {
@@ -965,8 +966,8 @@ body.gm-body .detail-body {
 body.gm-body {
   color: var(--foreground);
   --page-bg: #0b0f19;
-  --surface: rgba(17, 24, 39, 0.94);
-  --surface-elevated: rgba(30, 41, 59, 0.88);
+  --surface: #111827;
+  --surface-elevated: #1e293b;
   --border: rgba(148, 163, 184, 0.16);
   --muted: #94a3b8;
   --foreground: #f8fafc;
@@ -982,8 +983,8 @@ body.gm-body {
 .gm-app.gm-light,
 body.gm-body.gm-light-body {
   --page-bg: #eef1f7;
-  --surface: rgba(250, 251, 253, 0.96);
-  --surface-elevated: rgba(255, 255, 255, 0.92);
+  --surface: #fafbfd;
+  --surface-elevated: #ffffff;
   --border: rgba(15, 23, 42, 0.12);
   --muted: #3f4a63;
   --foreground: #10141f;
@@ -1059,7 +1060,7 @@ body.gm-body .chart-scroll {
   clip-path: inset(0 0 0 68px);
 }
 body.gm-body .chart-fixed-y-axis {
-  background: transparent;
+  background: var(--surface-elevated);
 }
 /* ping 等级块改用 gm 状态色 */
 body.gm-body .ping-blocks i.good { background: var(--green); }
@@ -1387,4 +1388,50 @@ body.gm-body.gm-light-body .detail-header,
 body.gm-body.gm-light-body .detail-body {
   background: rgba(238, 241, 247, 0.96);
   color: #10141f;
+}
+
+/* 实色面板：同时覆盖亮色、暗色、悬停和挂载到 body 的弹窗。
+   仅内容面板不透明；卡片外的壁纸、模态遮罩、阴影及状态装饰保持原意。 */
+:is(.gm-app, .gm-app.gm-light) :is(
+  .gm-header, .gm-general-card, .gm-general-card:hover,
+  .gm-node-card, .gm-table-wrap, .gm-theme-dropdown,
+  .probe-passkey-error, .gm-visitor, .gm-view-switch
+) {
+  background: var(--surface);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+:is(.gm-app, .gm-app.gm-light) :is(
+  .gm-header-btn, .gm-header-btn:hover, .gm-search, .gm-search:hover,
+  .gm-earth-toggle, .gm-earth-toggle:hover, .gm-earth-toggle:focus-visible
+) {
+  background: var(--surface-elevated);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+:is(.gm-app, .gm-app.gm-light) :is(.gm-quick-cell, .gm-ping-cell, .gm-chip, .gm-table th) {
+  background: color-mix(in srgb, var(--foreground) 5%, var(--surface));
+}
+
+body.gm-body :is(.server-detail, .server-detail-header, .modal, .detail-page, .detail-header, .detail-body),
+body.gm-body.gm-light-body :is(.modal, .detail-page, .detail-header, .detail-body),
+body.gm-body:not(.gm-light-body) .server-detail {
+  background: var(--surface);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+body.gm-body:not(.gm-light-body) :is(.detail-panel, .detail-value, .detail-cols > div) {
+  background: var(--surface-elevated);
+}
+
+body.gm-body :is(.modal-backdrop, .server-detail-backdrop, .probe-unlock-dialog, .probe-unlock-backdrop) {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+:is(.gm-app, .gm-app.gm-light) .gm-orbit-labels rect {
+  fill: var(--surface);
 }
