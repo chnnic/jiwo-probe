@@ -3,6 +3,8 @@ import { ConnectionCounts, UnlockButton, UnlockDetails } from './ServerCapabilit
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
 import {
   Activity,
+  ArrowDown,
+  ArrowUp,
   CalendarClock,
   CheckCircle2,
   ChevronDown,
@@ -2528,6 +2530,11 @@ function PremiumServerCard({
   onOpen: () => void
   showHealthScore: boolean
 }) {
+  const networkSpeed = useNetworkSpeed()
+  const currentSpeed = (value: number | undefined) =>
+    server.online && typeof value === 'number' && Number.isFinite(value) && value >= 0
+      ? networkSpeed(value)
+      : '—'
   const mem = resourcePercentage(server.mem_used, server.mem_total)
   const disk = resourcePercentage(server.disk_used, server.disk_total)
   const trafficUsed =
@@ -2622,7 +2629,19 @@ function PremiumServerCard({
           percent={disk}
         />
       </div>
-      <ConnectionCounts server={server} variant="card" />
+      <div className='premium-probe-card-network'>
+        <div className='premium-probe-card-speeds' role='group' aria-label='实时上下行速度'>
+          <div title='实时上行速度' aria-label={`实时上行 ${currentSpeed(server.upload_speed)}`}>
+            <ArrowUp aria-hidden='true' />
+            <strong>{currentSpeed(server.upload_speed)}</strong>
+          </div>
+          <div title='实时下行速度' aria-label={`实时下行 ${currentSpeed(server.download_speed)}`}>
+            <ArrowDown aria-hidden='true' />
+            <strong>{currentSpeed(server.download_speed)}</strong>
+          </div>
+        </div>
+        <ConnectionCounts server={server} variant="card" />
+      </div>
       <div className='premium-probe-server-footer'>
         <div className='premium-probe-card-traffic'>
           <span>周期流量</span>
