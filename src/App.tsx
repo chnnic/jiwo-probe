@@ -250,6 +250,8 @@ const THEME_OPTIONS: { value: ThemeName; label: string }[] = [
   { value: 'glassmorphism', label: 'Glassmorphism' },
   { value: 'emerald', label: 'Emerald' },
   { value: 'win2000', label: 'Windows 2000' },
+  { value: 'winxp', label: 'Windows XP' },
+  { value: 'macos9', label: 'Mac OS 9 Platinum' },
 ]
 
 function ThemeSelect({ value, onChange }: { value: ThemeName | null; onChange: (name: ThemeName | null) => void }) {

@@ -168,7 +168,7 @@ function applyPayloadVisibility(payload: ProbePayload): ProbePayload {
 }
 
 function normalizeTheme(value?: string): ThemeName {
-  return value === 'anime' || value === 'flat' || value === 'glass' || value === 'lumina' || value === 'win2000' ? value : 'pixel'
+  return value === 'anime' || value === 'flat' || value === 'glass' || value === 'lumina' || value === 'win2000' || value === 'winxp' || value === 'macos9' ? value : 'pixel'
 }
 
 // 主控下发组合名 "Lumina-Gold" / "Lumina Gold" / "LUMINAGOLD" → lumina 主题 + 黑金配色
@@ -189,7 +189,7 @@ export function parseThemeName(raw: string): { theme: string; gold: boolean; pla
 // 未知主题名照常挂 theme-{name} 类——站长可在自己的 CSS 里写 .theme-{name} 覆盖，
 // 没写则回退到默认(pixel)样式。返回值 = 是否内置主题（供 UI 判断"跟随主控"时如何显示）。
 export function isBuiltinTheme(value?: string): boolean {
-  return value === 'pixel' || value === 'flat' || value === 'anime' || value === 'glass' || value === 'lumina' || value === 'premium' || value === 'luminagold' || value === 'luminaplatinum' || value === 'premiumplatinum' || value === 'premiumlight' || value === 'ran' || value === 'glassmorphism' || value === 'emerald' || value === 'win2000'
+  return value === 'pixel' || value === 'flat' || value === 'anime' || value === 'glass' || value === 'lumina' || value === 'premium' || value === 'luminagold' || value === 'luminaplatinum' || value === 'premiumplatinum' || value === 'premiumlight' || value === 'ran' || value === 'glassmorphism' || value === 'emerald' || value === 'win2000' || value === 'winxp' || value === 'macos9'
 }
 
 export function applyAppearance(input?: ProbeAppearance) {
@@ -306,7 +306,7 @@ export function setDarkOverride(mode: 'dark' | 'light' | 'gold' | 'platinum' | n
   applyAppearance()
 }
 
-const THEME_CYCLE: ThemeName[] = ['pixel', 'flat', 'anime', 'glass', 'lumina', 'win2000']
+const THEME_CYCLE: ThemeName[] = ['pixel', 'flat', 'anime', 'glass', 'lumina', 'win2000', 'winxp', 'macos9']
 
 export function getThemeOverride(): ThemeName | null {
   return localStorage.getItem(THEME_OVERRIDE) as ThemeName | null

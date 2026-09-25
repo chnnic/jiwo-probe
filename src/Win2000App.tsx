@@ -2,14 +2,15 @@ import { useEffect, useMemo, useState } from 'react'
 import { ArrowDown, ArrowUp, CalendarDays, Check, LayoutGrid, List, Monitor, Moon, Palette, RefreshCw, Sun } from 'lucide-react'
 import type { CSSProperties, ReactNode } from 'react'
 import type { ProbePingSeries, ProbeServer } from './types'
-import { getThemeOverride, setDarkOverride, useProbe } from './use-probe'
+import { getThemeOverride, setDarkOverride, setTheme, useProbe } from './use-probe'
 import { useNetworkSpeed } from './use-network-speed'
-import { pingTargetOptions, resolvePingGroups, type PingGroupConfig } from './ping-groups'
+import { PING_AVERAGES, pingTargetOptions, resolvePingGroups, type PingGroupConfig } from './ping-groups'
 import { PasskeyLogin } from './PasskeyLogin'
 import { Twemoji } from './Twemoji'
 
 type Skin = 'win31' | 'win2000' | 'xp' | 'aqua'
 type View = 'cards' | 'ring' | 'table'
+type RetroFamily = 'win2000' | 'winxp' | 'macos9'
 
 const SKINS: Array<{ value: Skin; label: string }> = [
   { value: 'win31', label: 'Windows 3.1' },
@@ -110,8 +111,9 @@ function ProbeRows({ ping, config }: { ping?: ProbePingSeries[]; config: PingGro
       const loss = series?.loss_pct ?? -1
       const buckets = series?.buckets || []
       const bucketAt = (slot: number) => buckets[slot - Math.max(0, 12 - buckets.length)]
+      const label = group.target?.label || PING_AVERAGES.find(average => average.key === group.requested)?.label || group.requested || `延迟 ${index + 1}`
       return <div className="probe-row" key={`${group.requested}-${index}`}>
-        <span className="probe-name" title={group.target?.label || group.requested}>{group.target?.label || group.requested || `延迟 ${index + 1}`}</span>
+        <span className="probe-name" title={label}>{label}</span>
         <b className="probe-ms num" style={{ color: latencyTone(latency) }}>{latency < 0 ? '超时' : `${Math.round(latency)} ms`}</b>
         <span className="pill-strip" title="窗口内每个采样桶的往返时延">{Array.from({ length: 12 }, (_, slot) => bucketAt(slot)).map((bucket, slot) => <i key={slot} style={{ background: latencyTone(bucket?.ms ?? -1) }} />)}</span>
         <span className="probe-loss" style={{ color: lossTone(loss) }}>{loss < 0 ? '—' : <><b className="num">{loss.toFixed(1)}</b><i className="read-unit">%</i></>}</span>
@@ -195,7 +197,7 @@ function SortableTable({ servers, speed }: { servers: ProbeServer[]; speed: (val
   return <div className="table-scroll sunken"><table className="listview"><thead><tr>{header('', undefined, 'col-status')}{header('名称', 'name')}{header('在线', 'uptime')}{header('到期')}{header('负载', 'cpu_pct')}{header('实时网速 ↓|↑', 'download_speed')}{header('CPU', 'cpu_pct')}{header('内存', 'mem_used')}{header('硬盘', 'disk_used')}{header('流量', 'traffic_used')}</tr></thead><tbody>{sorted.length === 0 ? <tr className="table-empty"><td colSpan={10}>没有匹配的服务器</td></tr> : sorted.map((server, index) => { const memory = percent(server.mem_used, server.mem_total); const disk = percent(server.disk_used, server.disk_total); return <tr className={server.online ? '' : 'offline'} key={`${server.name}-${index}`}><td className="col-status"><span className={`led${server.online ? ' on' : ''}`} /></td><td><span className="cell-flex"><Flag code={server.region_country} /><span>{server.name || `服务器 ${index + 1}`}</span></span></td><td>{server.online ? formatUptime(server.uptime) : '离线'}</td><td>{formatRemaining(server.expires_at)} 天</td><td>{(server.cpu_pct || 0).toFixed(1)}%</td><td>{speed(server.download_speed)} ↓ / {speed(server.upload_speed)} ↑</td><td><span className="cell-meter"><Progress value={server.cpu_pct || 0} /><span className="num">{(server.cpu_pct || 0).toFixed(1)}%</span></span></td><td><span className="cell-meter"><Progress value={memory} /><span className="num">{memory.toFixed(1)}%</span></span></td><td><span className="cell-meter"><Progress value={disk} /><span className="num">{disk.toFixed(1)}%</span></span></td><td>{formatTraffic(server.traffic_used)}</td></tr> })}</tbody></table></div>
 }
 
-export function Win2000App() {
+export function RetroDesktopApp({ family }: { family: RetroFamily }) {
   const { data, error, pingGroups } = useProbe()
   const speed = useNetworkSpeed()
   const servers = data?.servers || []
@@ -206,8 +208,9 @@ export function Win2000App() {
     try { const value = JSON.parse(localStorage.getItem('serverstatus:w2k-view') || '"cards"') as View; return value === 'ring' || value === 'table' ? value : 'cards' } catch { return 'cards' }
   })
   const [dark, setDark] = useState(() => {
+    if (family === 'macos9') return false
     try {
-      const choice = JSON.parse(localStorage.getItem('serverstatus:w2k-theme') || '"light"')
+      const choice = JSON.parse(localStorage.getItem(`serverstatus:${family}-theme`) || '"light"')
       return choice === 'dark' || (choice === 'auto' && matchMedia('(prefers-color-scheme: dark)').matches)
     } catch { return document.documentElement.classList.contains('dark') }
   })
@@ -215,14 +218,21 @@ export function Win2000App() {
   const themeOverride = getThemeOverride()
 
   useEffect(() => {
-    localStorage.setItem('serverstatus:w2k-skin', JSON.stringify(skin))
-    document.body.dataset.skin = skin
-  }, [skin])
+    if (family === 'win2000') {
+      localStorage.setItem('serverstatus:w2k-skin', JSON.stringify(skin))
+      document.body.dataset.skin = skin
+    } else if (family === 'winxp') {
+      document.body.dataset.skin = 'xp'
+    } else {
+      document.body.removeAttribute('data-skin')
+    }
+    return () => { if (family !== 'win2000') document.body.removeAttribute('data-skin') }
+  }, [family, skin])
   useEffect(() => { localStorage.setItem('serverstatus:w2k-view', JSON.stringify(view)) }, [view])
   useEffect(() => {
-    document.body.classList.toggle('light', !dark)
+    document.body.classList.toggle('light', family === 'macos9' || !dark)
     return () => { document.body.classList.remove('light') }
-  }, [dark])
+  }, [dark, family])
 
   const regions = useMemo(() => [...new Set(servers.map(server => server.region_country || server.region).filter(Boolean) as string[])].sort(), [servers])
   const visible = region ? servers.filter(server => (server.region_country || server.region) === region) : servers
@@ -231,15 +241,18 @@ export function Win2000App() {
   const totalDown = servers.reduce((sum, server) => sum + (server.download_speed || 0), 0)
   const totalTraffic = servers.reduce((sum, server) => sum + (server.traffic_used || 0), 0)
   const busiest = [...servers].sort((a, b) => (b.cpu_pct || 0) - (a.cpu_pct || 0))[0]
-  const selectDark = () => { const next = !dark; setDark(next); localStorage.setItem('serverstatus:w2k-theme', JSON.stringify(next ? 'dark' : 'light')); setDarkOverride(next ? 'dark' : 'light') }
+  const selectDark = () => { const next = !dark; setDark(next); localStorage.setItem(`serverstatus:${family}-theme`, JSON.stringify(next ? 'dark' : 'light')); setDarkOverride(next ? 'dark' : 'light') }
+  const title = data?.title?.trim() || '服务器监控'
+  const familyControl = <select className="retro-family-select" aria-label="切换复古主题" value={family} onChange={event => setTheme(event.target.value as RetroFamily)}><option value="win2000">Windows 2000</option><option value="winxp">Windows XP</option><option value="macos9">Mac OS 9 Platinum</option></select>
 
   if (!data && !error) return <main className="center">正在连接 Win2000 主题…</main>
   if (error && !data) return <main className="center error">连接中断：{error}</main>
   if (!data?.enabled) return <main className="center">探针尚未启用</main>
 
-  return <main className="desktop">
-    <div className="win app-window">
-      <header className="title-bar"><Monitor className="title-bar-icon" size={14} /><span className="title-bar-text">{data.title?.trim() || '服务器监控'}</span><SkinMenu skin={skin} onSelect={setSkin} /><button type="button" className="title-btn" title={dark ? '切换到浅色' : '切换到深色'} aria-label={dark ? '切换到浅色' : '切换到深色'} onClick={selectDark}>{dark ? <Sun size={10} /> : <Moon size={10} />}</button><PasskeyLogin buttonClassName="title-btn title-btn-last" iconSize={10} /></header>
+  return <main className={`desktop retro-desktop retro-${family}`}>
+    {family === 'macos9' && <nav className="classic-menubar" aria-label="Mac OS 9 菜单栏"><span className="classic-menu-icon"><Monitor size={14} /></span><span className="classic-menu-item">文件</span><span className="classic-menu-item">视图</span><span className="classic-menu-item">服务器</span><span className="classic-menu-item">帮助</span><div className="classic-menu-trailing">{familyControl}<span className="classic-clock">{new Intl.DateTimeFormat('zh-CN', { hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date())}</span></div></nav>}
+    <div className={`win app-window retro-window retro-window-${family}`}>
+      <header className="title-bar retro-title-bar"><Monitor className="title-bar-icon" size={14} /><span className="title-bar-text">{title}</span>{family !== 'macos9' && familyControl}{family === 'win2000' && <SkinMenu skin={skin} onSelect={setSkin} />}{family !== 'macos9' && <button type="button" className="title-btn" title={dark ? '切换到浅色' : '切换到深色'} aria-label={dark ? '切换到浅色' : '切换到深色'} onClick={selectDark}>{dark ? <Sun size={10} /> : <Moon size={10} />}</button>}<PasskeyLogin buttonClassName="title-btn title-btn-last" iconSize={10} /></header>
       <main className="app-body"><div className="page">
         <div className="toolbar"><button type="button" className={`tool-btn${view === 'cards' ? ' active' : ''}`} onClick={() => setView('cards')}><LayoutGrid size={14} />卡片</button><button type="button" className={`tool-btn${view === 'ring' ? ' active' : ''}`} onClick={() => setView('ring')}><span aria-hidden="true">◔</span>圆环</button><button type="button" className={`tool-btn${view === 'table' ? ' active' : ''}`} onClick={() => setView('table')}><List size={14} />表格</button><span className="tool-sep" /><span className="tool-label text-muted">{servers.length} 台服务器</span>{themeOverride && <span className="tool-label text-muted">主题：{themeOverride}</span>}<button type="button" className="tool-btn refresh-btn" onClick={() => window.location.reload()} title="刷新"><RefreshCw size={13} /></button></div>
         <div className="page-content"><div className="dashboard-panel">
@@ -248,7 +261,7 @@ export function Win2000App() {
           {visible.length === 0 ? <div className="tab-panel"><p className="empty-state">这个地区没有节点</p></div> : view === 'table' ? <SortableTable servers={visible} speed={speed} /> : <div className={`servers-grid${view === 'ring' ? ' ring-grid' : ''}`}>{visible.map((server, index) => <ServerCard key={`${server.name}-${index}`} server={server} index={index} speed={speed} pingGroups={pingGroups} ring={view === 'ring'} />)}</div>}
         </div></div>
       </div></main>
-      <footer className="status-bar"><div className="status-field grow">{error ? `连接中断：${error}` : `已连接 · ${online} 在线 / ${servers.length - online} 离线`}</div><div className="status-field status-credit">Powered by&nbsp;<a href="https://github.com/guboysky/win2000" target="_blank" rel="noreferrer">Win2000 Theme</a></div></footer>
+      <footer className="status-bar"><div className="status-field grow">{error ? `连接中断：${error}` : `已连接 · ${online} 在线 / ${servers.length - online} 离线`}</div><div className="status-field status-credit">Powered by&nbsp;<a href={family === 'macos9' ? 'https://github.com/livid/exe' : family === 'winxp' ? 'https://github.com/botoxparty/XP.css' : 'https://github.com/guboysky/win2000'} target="_blank" rel="noreferrer">{family === 'macos9' ? 'Mac OS 9 Platinum' : family === 'winxp' ? 'Windows XP' : 'Win2000 Theme'}</a></div></footer>
     </div>
   </main>
 }
