@@ -200,13 +200,16 @@ export function applyAppearance(input?: ProbeAppearance) {
       return null
     }
   })()
-  const appearance = input || cached || { theme: 'pixel', color_mode: 'light' }
+  // 新设备没有主控外观缓存时使用 Luna 作为复古默认主题；已有缓存和主控下发仍保持原有优先级。
+  const appearance = input || cached || { theme: 'winxp', color_mode: 'light' }
   lastAppliedAppearance = appearance
   const themeOverride = localStorage.getItem(THEME_OVERRIDE) as ThemeName | null
   // 用户手动选择的内置主题优先；否则用主控下发的主题名。
   // 内置主题名大小写不敏感归一化（主控可能下发 Lumina/LUMINA → lumina）；
   // 自定义主题名原样保留挂 theme-{name}（站长 CSS 怎么写就怎么匹配）。
-  const raw = themeOverride || appearance.theme || 'pixel'
+  // 主控的 pixel 是旧版默认值；没有访客手动选择时将其映射到新的 Luna 默认主题。
+  // 手动选择 pixel 仍然有效，因此不会破坏主题选择器的显式覆盖。
+  const raw = themeOverride || (appearance.theme === 'pixel' ? 'winxp' : appearance.theme || 'winxp')
   // 组合名解析: "lumina-gold" → lumina 主题 + gold 黑金配色（主控下发可直接指定黑金）
   const parsed = parseThemeName(raw)
   const theme = parsed.theme
@@ -319,9 +322,10 @@ export function getActiveTheme(): string {
   if (override) return override
   try {
     const cached = JSON.parse(localStorage.getItem(APPEARANCE_CACHE) || 'null') as ProbeAppearance | null
-    return parseThemeName(cached?.theme || 'pixel').theme
+    const cachedTheme = cached?.theme === 'pixel' ? 'winxp' : cached?.theme || 'winxp'
+    return parseThemeName(cachedTheme).theme
   } catch {
-    return 'pixel'
+    return 'winxp'
   }
 }
 

@@ -216,3 +216,132 @@ html.theme-macos9 .retro-family-select { height: 19px; font: 11px Geneva, Verdan
   html.theme-macos9 .classic-menu-trailing { gap: 5px; }
   html.theme-macos9 .classic-menu-trailing .retro-family-select { max-width: 132px; }
 }
+
+/* XP Luna 节点详情：复用经典详情内容，外壳沿用 XP.css 的六层蓝色边框。 */
+html.theme-winxp .server-detail-backdrop {
+  padding: 12px;
+  background: rgba(0, 24, 80, .48);
+  backdrop-filter: none;
+}
+html.theme-winxp .server-detail {
+  width: min(980px, 100%);
+  border: 0;
+  border-radius: 8px 8px 0 0;
+  background: var(--face);
+  box-shadow: inset -1px -1px #00138c, inset 1px 1px #0831d9, inset -2px -2px #001ea0, inset 2px 2px #166aee, inset -3px -3px #003bda, inset 3px 3px #0855dd, 12px 16px 28px rgba(0, 0, 0, .38);
+  padding: 0 0 3px;
+  overflow: hidden;
+}
+html.theme-winxp .server-detail-header {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  min-height: 28px;
+  padding: 3px 5px 3px 3px;
+  border: 0;
+  border-top: 1px solid #0831d9;
+  border-left: 1px solid #0831d9;
+  border-right: 1px solid #001ea0;
+  border-radius: 8px 7px 0 0;
+  color: #fff;
+  background: linear-gradient(180deg, #0997ff 0%, #0053ee 8%, #0050ee 40%, #0066ff 88%, #0066ff 93%, #005bff 95%, #003dd7 96%, #003dd7 100%);
+  font: 700 13px/1.2 'Trebuchet MS', Tahoma, SimSun, sans-serif;
+  text-shadow: 1px 1px #0f1089;
+}
+html.theme-winxp .server-detail-header > button {
+  flex: 0 0 21px;
+  width: 21px;
+  height: 21px;
+  border: 1px solid #fff;
+  border-radius: 3px;
+  background: linear-gradient(180deg, #68b8ff, #0050ee 75%, #003dd7);
+  color: #fff;
+  box-shadow: 1px 1px 0 #003bda;
+}
+html.theme-winxp .server-detail-header > button:last-child {
+  background: linear-gradient(180deg, #ffb19c, #e44821 72%, #bc2515);
+}
+html.theme-winxp .server-detail-header > button:hover,
+html.theme-winxp .server-detail-header > button:focus-visible {
+  filter: brightness(1.12);
+  color: #fff;
+  outline: 1px dotted #fff;
+  outline-offset: -4px;
+}
+html.theme-winxp .server-detail-title { gap: 6px; }
+html.theme-winxp .server-detail-title h2 { color: #fff; font: inherit; text-shadow: 1px 1px #0f1089; }
+html.theme-winxp .detail-online,
+html.theme-winxp .detail-offline,
+html.theme-winxp .detail-health-score {
+  padding: 1px 5px;
+  border: 1px solid rgba(255, 255, 255, .65);
+  border-radius: 3px;
+  color: #fff;
+  background: rgba(0, 42, 150, .3);
+  font: 11px/16px Tahoma, 'Microsoft YaHei', SimSun, sans-serif;
+  text-shadow: 1px 1px #0f1089;
+}
+html.theme-winxp .detail-online { color: #d8ffd8; }
+html.theme-winxp .detail-offline { color: #ffd8d8; }
+html.theme-winxp .detail-health-score[data-tone='warning'],
+html.theme-winxp .detail-health-score[data-tone='critical'] { color: #fff0c0; background: rgba(128, 55, 0, .45); }
+html.theme-winxp .detail-region { color: #fff; font: 11px Tahoma, 'Microsoft YaHei', SimSun, sans-serif; text-shadow: 1px 1px #0f1089; }
+html.theme-winxp .server-detail-body {
+  gap: 8px;
+  margin: 0 3px;
+  padding: 8px 6px 9px;
+  background: var(--face);
+  color: var(--text);
+}
+html.theme-winxp .detail-panel {
+  padding: 8px 9px;
+  border: 1px solid #7f9db9;
+  border-radius: 0;
+  background: var(--window);
+  box-shadow: inset 1px 1px #fff, inset -1px -1px #d4d0c8;
+}
+html.theme-winxp .detail-panel h3 { color: #003399; font: 700 12px Tahoma, 'Microsoft YaHei', SimSun, sans-serif; }
+html.theme-winxp .detail-metric-head span,
+html.theme-winxp .detail-meta > span,
+html.theme-winxp .detail-meta > a,
+html.theme-winxp .detail-hw > span,
+html.theme-winxp .detail-loadavg,
+html.theme-winxp .detail-region { color: var(--text); }
+html.theme-winxp .detail-metric-sub,
+html.theme-winxp .detail-meta small,
+html.theme-winxp .detail-hw small { color: var(--text-muted); }
+html.theme-winxp .detail-panel-head { margin-bottom: 6px; }
+html.theme-winxp .trend-mode-switch { gap: 2px; }
+html.theme-winxp .trend-mode-switch button,
+html.theme-winxp .ranges button,
+html.theme-winxp .detail-ping-picker select,
+html.theme-winxp .zoom-btn {
+  min-height: 21px;
+  padding: 1px 7px;
+  border: 1px solid #003c74;
+  border-radius: 3px;
+  color: #000;
+  background: linear-gradient(180deg, #fff 0%, #ecebe5 86%, #d8d0c4 100%);
+  box-shadow: none;
+  font: 11px Tahoma, 'Microsoft YaHei', SimSun, sans-serif;
+}
+html.theme-winxp .trend-mode-switch button:hover,
+html.theme-winxp .trend-mode-switch button.active,
+html.theme-winxp .ranges button:hover,
+html.theme-winxp .ranges button.active,
+html.theme-winxp .zoom-btn:hover,
+html.theme-winxp .zoom-btn.active {
+  color: #000;
+  background: linear-gradient(180deg, #cdcac3 0%, #e3e3db 8%, #e5e5de 94%, #f2f2f1 100%);
+  box-shadow: inset -1px 1px #fff0cf, inset 1px 2px #fdd889, inset -2px 2px #fbc761, inset 2px -2px #e5a01a;
+}
+html.theme-winxp .detail-ping-picker select { background: #fff; }
+html.theme-winxp .detail-chart { background: #fff; border: 1px solid #7f9db9; }
+html.theme-winxp .detail-hw { border-top-color: #d4d0c8; }
+html.theme-winxp .detail-loadavg code { border: 1px solid #7f9db9; border-radius: 0; background: #ece9d8; }
+@media (max-width: 640px) {
+  html.theme-winxp .server-detail-backdrop { padding: 4px; }
+  html.theme-winxp .server-detail-body { padding: 6px 4px 7px; }
+  html.theme-winxp .server-detail-header { gap: 5px; }
+  html.theme-winxp .server-detail-title { gap: 4px; }
+}
