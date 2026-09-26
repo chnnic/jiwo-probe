@@ -45,20 +45,69 @@ html.theme-winxp body.light .desktop {
   background-size: cover;
   background-attachment: fixed;
 }
-html.theme-winxp .app-window { gap: 3px; }
+/* Luna geometry follows XP.css themes/XP/_window.scss: the caption meets the
+   outer frame; only the client area is inset by the three-pixel blue edge. */
 html.theme-winxp .win {
   border: 0;
   border-radius: 8px 8px 0 0;
   box-shadow: inset -1px -1px #00138c, inset 1px 1px #0831d9, inset -2px -2px #001ea0, inset 2px 2px #166aee, inset -3px -3px #003bda, inset 3px 3px #0855dd;
-  padding: 3px;
+  background: linear-gradient(180deg, #0050ee 0 28px, var(--face) 28px);
+  padding: 0 0 3px;
+  gap: 0;
 }
+html.theme-winxp .server-card.offline { background: linear-gradient(180deg, #7d9fce 0 28px, var(--face) 28px); }
 html.theme-winxp .title-bar {
-  height: 28px; padding: 3px 5px 3px 3px; border: 1px solid #0831d9;
-  border-radius: 7px 7px 0 0; font: 700 13px/1.2 'Trebuchet MS', Tahoma, sans-serif;
-  text-shadow: 1px 1px #0f1089;
+  flex: 0 0 28px;
+  height: 28px;
+  padding: 3px 5px 3px 3px;
+  border: 0;
+  border-top: 1px solid #0831d9;
+  border-left: 1px solid #0831d9;
+  border-right: 1px solid #001ea0;
+  border-radius: 8px 7px 0 0;
+  font: 700 13px/1.2 'Trebuchet MS', Tahoma, SimSun, sans-serif;
+  text-shadow: none;
   background: linear-gradient(180deg, #0997ff 0%, #0053ee 8%, #0050ee 40%, #0066ff 88%, #0066ff 93%, #005bff 95%, #003dd7 96%, #003dd7 100%);
 }
-html.theme-winxp .title-bar.inactive { background: linear-gradient(180deg, #a8c8ee, #7d9fce); text-shadow: none; color: #f0f6fd; }
+html.theme-winxp .title-bar-text { padding-left: 3px; text-shadow: 1px 1px #0f1089; }
+html.theme-winxp .title-bar.inactive { background: linear-gradient(180deg, #a8c8ee, #7d9fce); color: #f0f6fd; }
+html.theme-winxp .title-bar.inactive .title-bar-text { text-shadow: none; }
+html.theme-winxp .app-body {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  margin: 0 3px;
+  background: var(--face);
+}
+html.theme-winxp .server-card { transform: none; transition: none; }
+html.theme-winxp .card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  min-width: 0;
+  margin: 0 3px;
+  padding: 8px 6px;
+}
+html.theme-winxp .status-bar {
+  flex: 0 0 auto;
+  gap: 0;
+  margin: 0 3px;
+  padding: 2px 1px;
+  color: var(--text);
+  background: var(--face);
+  box-shadow: inset 0 1px 2px var(--shadow);
+  text-align: left;
+}
+html.theme-winxp .status-field {
+  border: 0;
+  border-left: 1px solid var(--hilight);
+  border-right: 1px solid var(--shadow);
+  border-radius: 0;
+  padding: 1px 2px;
+}
+html.theme-winxp .status-field:first-child { border-left: 0; }
+html.theme-winxp .status-field:last-child { border-right: 0; }
 html.theme-winxp .title-btn { min-width: 21px; height: 21px; border: 1px solid #fff; border-radius: 3px; background: linear-gradient(180deg, #68b8ff, #0050ee 75%, #003dd7); color: #fff; box-shadow: 1px 1px 0 #003bda; }
 html.theme-winxp .title-btn-last { background: linear-gradient(180deg, #ffb19c, #e44821 72%, #bc2515); }
 html.theme-winxp .server-card .card-status {
@@ -73,20 +122,27 @@ html.theme-winxp .server-card .card-status {
   overflow: hidden;
 }
 html.theme-winxp .server-card .card-status .led { flex: 0 0 8px; }
-html.theme-winxp .tool-btn, html.theme-winxp .tab, html.theme-winxp .col-head, html.theme-winxp .retro-family-select {
-  border: 1px solid #003c74; border-radius: 3px; background: linear-gradient(180deg, #fff 0%, #ecebe5 86%, #d8d0c4 100%); box-shadow: none;
+html.theme-winxp body[data-skin=xp] :is(.tool-btn, .tab, .col-head, .retro-family-select) {
+  color: #000; border: 1px solid #003c74; border-radius: 3px; background: linear-gradient(180deg, #fff 0%, #ecebe5 86%, #d8d0c4 100%); box-shadow: none;
 }
-html.theme-winxp .tool-btn:hover, html.theme-winxp .tab:hover, html.theme-winxp .col-head:hover {
+html.theme-winxp body[data-skin=xp] :is(.tool-btn, .tab, .col-head):hover:not(.active):not(.disabled) {
+  border-color: #003c74;
+  background: linear-gradient(180deg, #fff 0%, #ecebe5 86%, #d8d0c4 100%);
   box-shadow: inset -1px 1px #fff0cf, inset 1px 2px #fdd889, inset -2px 2px #fbc761, inset 2px -2px #e5a01a;
 }
-html.theme-winxp .tool-btn.active, html.theme-winxp .tab.active {
-  color: #000; background: linear-gradient(180deg, #cd cac3 0%, #e3e3db 8%, #e5e5de 94%, #f2f2f1 100%);
+html.theme-winxp body[data-skin=xp] :is(.tool-btn, .tab, .col-head):not(.disabled):not(:disabled):is(.active, :active) {
+  color: #000; border-color: #003c74; box-shadow: none;
+  background: linear-gradient(180deg, #cdcac3 0%, #e3e3db 8%, #e5e5de 94%, #f2f2f1 100%);
+}
+html.theme-winxp body[data-skin=xp] :is(.tool-btn, .tab, .col-head, .retro-family-select):focus-visible {
+  outline: 1px dotted #000;
+  outline-offset: -4px;
+  box-shadow: inset -1px 1px #cee7ff, inset 1px 2px #98b8ea, inset -2px 2px #bcd4f6, inset 2px -2px #89ade4;
 }
 html.theme-winxp .progress { height: 14px; border: 1px solid #686868; border-radius: 4px; background-color: #fff; box-shadow: inset 0 0 1px #686868; }
 html.theme-winxp .progress-fill { border-radius: 2px; background: repeating-linear-gradient(90deg, #fff 0 2px, transparent 2px 10px), linear-gradient(180deg, #acedad, #7be47d 14%, #4cda50 28%, #2ed330 42%, #42d845 57%, #76e275 71%, #8fe791 85%, #fff); }
 html.theme-winxp .progress-fill.hot { background: repeating-linear-gradient(90deg, #fff 0 2px, transparent 2px 10px), linear-gradient(180deg, #ffcc7a, #f87820 52%, #e94d10); }
-html.theme-winxp .app-body { background: var(--window); }
-html.theme-winxp .card-data { background: #fff; }
+html.theme-winxp .card-data { background: var(--window); }
 html.theme-winxp .retro-family-select { height: 21px; color: #000; font: 11px Tahoma, sans-serif; }
 html.theme-winxp .server-card .title-bar-icon { width: 14px; height: 14px; }
 html.theme-winxp .os-icon-img { width: 14px; text-align: center; color: #0058ee; font-weight: 700; }
