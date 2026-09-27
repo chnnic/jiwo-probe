@@ -252,6 +252,11 @@ html.theme-winxp .server-detail-header > button {
   flex: 0 0 21px;
   width: 21px;
   height: 21px;
+  padding: 0;
+  box-sizing: border-box;
+  place-items: center;
+  overflow: hidden;
+  min-width: 21px;
   border: 1px solid #fff;
   border-radius: 3px;
   background: linear-gradient(180deg, #68b8ff, #0050ee 75%, #003dd7);
@@ -336,12 +341,131 @@ html.theme-winxp .zoom-btn.active {
   box-shadow: inset -1px 1px #fff0cf, inset 1px 2px #fdd889, inset -2px 2px #fbc761, inset 2px -2px #e5a01a;
 }
 html.theme-winxp .detail-ping-picker select { background: #fff; }
-html.theme-winxp .detail-chart { background: #fff; border: 1px solid #7f9db9; }
 html.theme-winxp .detail-hw { border-top-color: #d4d0c8; }
 html.theme-winxp .detail-loadavg code { border: 1px solid #7f9db9; border-radius: 0; background: #ece9d8; }
+
+/* 参考 finch-xu/CF-Server-Monitor-theme-win2000 的主机表格和性能监视器。 */
+html:is(.theme-winxp, .theme-win2000) .retro-detail {
+  --graph-bg: #000;
+  --graph-grid: #008040;
+  --graph-axis: #8fd88f;
+  --graph-line-1: #00ff00;
+  --graph-line-2: #ffff00;
+  --graph-line-3: #00ffff;
+  --graph-line-4: #ff60ff;
+  --graph-line-5: #ff6060;
+  --graph-line-6: #6fa8ff;
+  --graph-line-7: #fff;
+  --graph-line-8: #ffa040;
+  --surface: var(--face);
+  --foreground: var(--text);
+  --muted: var(--text-muted);
+  --border: var(--shadow);
+  --radius: 0;
+  min-width: 0;
+  max-height: calc(100dvh - 24px);
+  display: flex;
+  flex-direction: column;
+  color: var(--text);
+  font: 12px/1.35 Tahoma, 'Microsoft YaHei', SimSun, sans-serif;
+}
+html.theme-winxp .retro-detail { --graph-axis: #9fd9a8; }
+html:is(.theme-winxp, .theme-win2000) .retro-detail .server-detail-header { flex-shrink: 0; }
+html:is(.theme-winxp, .theme-win2000) .retro-detail .server-detail-header > button > svg { display: block; }
+html:is(.theme-winxp, .theme-win2000) .retro-detail .server-detail-body { min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
+html:is(.theme-winxp, .theme-win2000) .retro-detail .detail-cols { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+html:is(.theme-winxp, .theme-win2000) .retro-detail .detail-panel { min-width: 0; }
+html:is(.theme-winxp, .theme-win2000) .retro-detail .detail-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+html:is(.theme-winxp, .theme-win2000) .retro-detail .detail-metric-head { flex-wrap: wrap; }
+html:is(.theme-winxp, .theme-win2000) .retro-detail .detail-panel-head { flex-wrap: wrap; }
+html:is(.theme-winxp, .theme-win2000) .retro-detail .detail-region { color: var(--title-text); }
+html:is(.theme-winxp, .theme-win2000) .retro-host-box,
+html:is(.theme-winxp, .theme-win2000) .retro-chart-box {
+  min-width: 0;
+  margin: 0;
+  padding: 8px;
+  border: 1px solid var(--shadow);
+  box-shadow: inset 1px 1px var(--hilight), 1px 1px var(--hilight);
+  background: var(--face);
+}
+html:is(.theme-winxp, .theme-win2000) .retro-detail fieldset > legend { padding: 0 4px; color: var(--text); font-weight: 700; }
+html.theme-winxp body.light .retro-detail fieldset > legend { color: #003399; }
+html.theme-winxp body:not(.light) .retro-detail .detail-panel h3 { color: var(--text); }
+html:is(.theme-winxp, .theme-win2000) .retro-host-head { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+html:is(.theme-winxp, .theme-win2000) .retro-host-head h3 { margin: 0; flex: 1; min-width: 0; overflow-wrap: anywhere; font-size: 13px; }
+html:is(.theme-winxp, .theme-win2000) .retro-host-status { flex-shrink: 0; padding: 1px 8px; border: 1px solid; border-color: var(--shadow) var(--hilight) var(--hilight) var(--shadow); background: var(--window); }
+html:is(.theme-winxp, .theme-win2000) .retro-host-grid { margin: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); padding: 2px; background: var(--window); border: 1px solid; border-color: var(--shadow) var(--hilight) var(--hilight) var(--shadow); box-shadow: inset 1px 1px var(--dkshadow); }
+html:is(.theme-winxp, .theme-win2000) .retro-host-item { min-width: 0; padding: 4px 8px; border-bottom: 1px solid var(--row-line); }
+html:is(.theme-winxp, .theme-win2000) .retro-host-item dt { color: var(--text-muted); font-size: 11px; }
+html:is(.theme-winxp, .theme-win2000) .retro-host-item dd { margin: 1px 0 0; overflow-wrap: anywhere; }
+html:is(.theme-winxp, .theme-win2000) .retro-detail .detail-chart {
+  height: 280px;
+  padding: 2px;
+  background: var(--graph-bg);
+  border: 1px solid;
+  border-color: var(--shadow) var(--hilight) var(--hilight) var(--shadow);
+}
+html:is(.theme-winxp, .theme-win2000) .retro-detail :is(.chart-fixed-y-axis, .chart-scroll) { background: var(--graph-bg); }
+html:is(.theme-winxp, .theme-win2000) .retro-detail .chart-fixed-y-axis { width: 52px; }
+html:is(.theme-winxp, .theme-win2000) .retro-detail .detail-chart-system .chart-fixed-y-axis { width: 40px; }
+html:is(.theme-winxp, .theme-win2000) .retro-detail .detail-chart-traffic .chart-fixed-y-axis { width: 60px; }
+html:is(.theme-winxp, .theme-win2000) .retro-detail .recharts-cartesian-grid line { stroke: var(--graph-grid); }
+html:is(.theme-winxp, .theme-win2000) .retro-detail .recharts-cartesian-axis-tick text { fill: var(--graph-axis) !important; font-size: 10px; }
+html:is(.theme-winxp, .theme-win2000) .retro-detail .recharts-default-tooltip { background: var(--tip-bg) !important; border: 1px solid var(--tip-text) !important; border-radius: 0 !important; color: var(--tip-text) !important; }
+html:is(.theme-winxp, .theme-win2000) .retro-detail .recharts-default-tooltip :is(.recharts-tooltip-label, .recharts-tooltip-item) { color: var(--tip-text) !important; }
+html:is(.theme-winxp, .theme-win2000) .retro-detail :is(.legend, .traffic-line-toggle) { padding: 4px; background: var(--graph-bg); border: 1px solid var(--shadow); }
+html:is(.theme-winxp, .theme-win2000) .retro-detail :is(.legend, .traffic-line-toggle) button { display: inline-flex; align-items: center; gap: 5px; min-width: 0; min-height: 22px; border: 0; border-radius: 0; padding: 2px 5px; color: var(--graph-axis); background: transparent; box-shadow: none; font-size: 11px; }
+html:is(.theme-winxp, .theme-win2000) .retro-detail :is(.legend, .traffic-line-toggle) button.active { color: #fff; }
+html:is(.theme-winxp, .theme-win2000) .retro-detail :is(.legend, .traffic-line-toggle) button.off { opacity: .5; text-decoration: line-through; }
+html:is(.theme-winxp, .theme-win2000) .retro-detail :is(.legend i, .traffic-line-toggle .dot) { border-radius: 0; width: 8px; height: 8px; flex-shrink: 0; }
+html:is(.theme-winxp, .theme-win2000) .retro-detail .ranges { flex-wrap: wrap; gap: 3px; }
+html:is(.theme-winxp, .theme-win2000) .retro-detail .detail-chart :is(.chart-empty, .loading-overlay) { color: var(--graph-axis); background: var(--graph-bg); }
+html:is(.theme-winxp, .theme-win2000) .retro-detail button:focus-visible { outline: 1px dotted currentColor; outline-offset: -3px; }
+
+html.theme-win2000 .server-detail-backdrop { background: var(--overlay); backdrop-filter: none; }
+html.theme-win2000 .retro-detail-win2000 { width: min(1200px, 100%); padding: 3px; border: 1px solid; border-color: var(--light) var(--dkshadow) var(--dkshadow) var(--light); border-radius: 0; background: var(--face); box-shadow: inset 1px 1px var(--hilight), inset -1px -1px var(--shadow), 3px 3px 8px #0006; overflow: hidden; }
+html.theme-win2000 .retro-detail .server-detail-header { min-height: 24px; padding: 2px 3px; gap: 6px; border: 0; border-radius: 0; background: linear-gradient(90deg, var(--title-a), var(--title-b)); color: var(--title-text); }
+html.theme-win2000 .retro-detail .server-detail-title { gap: 6px; }
+html.theme-win2000 .retro-detail .server-detail-title h2 { color: var(--title-text); font: 700 12px Tahoma, 'Microsoft YaHei', SimSun, sans-serif; }
+html.theme-win2000 .retro-detail .server-detail-header > button { display: grid; place-items: center; width: 18px; min-width: 18px; height: 18px; flex: 0 0 18px; padding: 0; border: 1px solid; border-color: var(--hilight) var(--dkshadow) var(--dkshadow) var(--hilight); background: var(--face); color: var(--text); box-shadow: inset -1px -1px var(--shadow); }
+html.theme-win2000 .retro-detail .server-detail-header > button > svg { width: 12px; height: 12px; stroke-width: 3; }
+html.theme-win2000 .retro-detail :is(.detail-online, .detail-offline, .detail-health-score) { padding: 1px 4px; border: 1px solid #ffffff80; border-radius: 0; background: transparent; color: var(--title-text); font: 11px/14px Tahoma, 'Microsoft YaHei', SimSun, sans-serif; }
+html.theme-win2000 .retro-detail .server-detail-body { padding: 10px 8px; gap: 10px; }
+html.theme-win2000 .retro-detail .detail-panel { border: 1px solid var(--shadow); background: var(--face); box-shadow: inset 1px 1px var(--hilight), 1px 1px var(--hilight); }
+html.theme-win2000 .retro-detail .detail-panel h3 { color: var(--text); font-size: 12px; }
+html.theme-win2000 .retro-detail .ranges button,
+html.theme-win2000 .retro-detail .retro-chart-expand { min-width: 22px; min-height: 22px; padding: 1px 6px; color: var(--text); background: var(--face); border: 1px solid; border-color: var(--hilight) var(--dkshadow) var(--dkshadow) var(--hilight); border-radius: 0; box-shadow: inset -1px -1px var(--shadow); font-size: 11px; }
+html.theme-win2000 .retro-detail .ranges button.active,
+html.theme-win2000 .retro-detail .ranges button:active,
+html.theme-win2000 .retro-detail .retro-chart-expand:active { border-color: var(--dkshadow) var(--hilight) var(--hilight) var(--dkshadow); box-shadow: inset 1px 1px var(--shadow); }
+html.theme-win2000 .retro-history-range { margin: 0; }
+html.theme-win2000 .retro-history-note { margin-left: auto; color: var(--text-muted); font-size: 11px; }
+html.theme-win2000 .retro-charts-grid { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 12px 10px; align-items: start; }
+html.theme-win2000 .retro-chart-box { position: relative; grid-column: span 2; }
+html.theme-win2000 .retro-chart-wide { grid-column: span 3; }
+html.theme-win2000 .retro-chart-box.expanded { grid-column: 1 / -1; }
+html.theme-win2000 .retro-chart-box > .ranges { padding-right: 24px; min-height: 22px; }
+html.theme-win2000 .retro-chart-expand { position: absolute; top: 8px; right: 8px; display: grid; place-items: center; width: 22px; padding: 0; }
+html.theme-win2000 .retro-detail .retro-chart-box .detail-chart { height: 200px; }
+html.theme-win2000 .retro-detail .retro-chart-box.expanded .detail-chart { height: 320px; }
+@media (max-width: 1100px) {
+  html.theme-win2000 .retro-charts-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  html.theme-win2000 .retro-chart-box { grid-column: span 1; }
+}
 @media (max-width: 640px) {
-  html.theme-winxp .server-detail-backdrop { padding: 4px; }
+  html:is(.theme-winxp, .theme-win2000) .server-detail-backdrop { padding: 4px; }
+  html:is(.theme-winxp, .theme-win2000) .retro-detail { max-height: calc(100dvh - 8px); }
+  html:is(.theme-winxp, .theme-win2000) .retro-detail .detail-cols { grid-template-columns: minmax(0, 1fr); }
+  html:is(.theme-winxp, .theme-win2000) .retro-host-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  html:is(.theme-winxp, .theme-win2000) .retro-detail .detail-region { display: none; }
+  html:is(.theme-winxp, .theme-win2000) .retro-detail .detail-chart { height: 220px; }
+  html.theme-win2000 .retro-charts-grid { grid-template-columns: minmax(0, 1fr); }
+  html.theme-win2000 .retro-history-note { width: 100%; margin-left: 0; }
   html.theme-winxp .server-detail-body { padding: 6px 4px 7px; }
   html.theme-winxp .server-detail-header { gap: 5px; }
   html.theme-winxp .server-detail-title { gap: 4px; }
+}
+@media (max-width: 360px) {
+  html:is(.theme-winxp, .theme-win2000) .retro-host-grid,
+  html:is(.theme-winxp, .theme-win2000) .retro-detail .detail-grid { grid-template-columns: minmax(0, 1fr); }
 }

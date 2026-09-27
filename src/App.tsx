@@ -4,7 +4,7 @@ import { createPortal } from 'react-dom'
 import Lottie from 'lottie-react'
 import { Activity, ArrowDown, ArrowDownUp, ArrowUp, BadgeDollarSign, Calendar, CalendarClock, Check, CheckCircle2, ChevronDown, ChevronUp, CircleDollarSign, Clock, Clock3, Cpu, Crown, Database, Gauge, Gem, Globe2, HardDrive, LayoutGrid, List, MapPin, MemoryStick, Monitor, Moon, MoveHorizontal, Palette, PieChart, RefreshCw, Rows3, Rows4, Search, Server, Sun, SunMoon, TrendingUp, Trophy, Unplug, Wallet, Wifi, XCircle, ZoomIn, ZoomOut } from 'lucide-react'
 import { siAlmalinux, siAlpinelinux, siApple, siArchlinux, siCentos, siDebian, siFedora, siFreebsd, siGentoo, siKalilinux, siLinux, siLinuxmint, siNixos, siOpensuse, siProxmox, siRedhat, siRockylinux, siUbuntu } from 'simple-icons'
-import { Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
+import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import type { ProbeBucket, ProbePingSeries, ProbeReturnRoute, ProbeServer, ThemeName } from './types'
 import { EnrichedServer, getActiveTheme, getDarkOverride, getThemeOverride, setDarkOverride, setTheme, useProbe } from './use-probe'
 import {
@@ -742,7 +742,8 @@ const TRAFFIC_LINES = [
   { key: 'downlink', label: '下行流量', stroke: '#22c55e' },
 ] as const
 
-export function TrafficChart({ daily, containerClass = 'detail-chart', showRange = true }: { daily: ProbeServer['daily_traffic']; containerClass?: string; showRange?: boolean }) {
+export function TrafficChart({ daily, containerClass = 'detail-chart', showRange = true, retro = false }: { daily: ProbeServer['daily_traffic']; containerClass?: string; showRange?: boolean; retro?: boolean }) {
+  const trafficLines = TRAFFIC_LINES.map((line, index) => ({ ...line, stroke: retro ? `var(--graph-line-${index + 1})` : line.stroke }))
   const rows = daily || []
   const chartRef = useRef<HTMLDivElement>(null)
   const [trafficRange, setTrafficRange] = useState<'all' | '7d' | '30d'>('7d')
@@ -834,25 +835,26 @@ export function TrafficChart({ daily, containerClass = 'detail-chart', showRange
         </button>
       </div>
       <div className={containerClass} ref={chartRef}>
-        <HorizontalChart width={Math.max(120, shown.length * 82 * zoom)}>
+        <HorizontalChart width={retro && isFit ? 0 : Math.max(120, shown.length * 82 * zoom)}>
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={shown} margin={{ top: 8, right: 12, bottom: 0, left: 8 }}>
-              <XAxis dataKey="date" tick={{ fontSize: 10 }} axisLine={false} tickLine={false} interval="preserveStartEnd" minTickGap={28} />
-              <YAxis width={52} tick={{ fontSize: 10 }} axisLine={false} tickLine={false} tickFormatter={(value) => bytes(Number(value), false)} />
+              {retro && <CartesianGrid stroke="var(--graph-grid)" />}
+              <XAxis dataKey="date" tick={{ fontSize: 10, ...(retro ? { style: { fill: 'var(--graph-axis)' } } : {}) }} axisLine={false} tickLine={false} interval="preserveStartEnd" minTickGap={28} />
+              <YAxis width={52} tick={{ fontSize: 10, ...(retro ? { style: { fill: 'var(--graph-axis)' } } : {}) }} axisLine={false} tickLine={false} tickFormatter={(value) => bytes(Number(value), false)} />
               <Tooltip
                 contentStyle={{ fontSize: 11, borderRadius: 8 }}
                 labelFormatter={(value) => String(value)}
                 formatter={(value, _name, item) => [bytes(Number(value)), (item as { dataKey?: string } | undefined)?.dataKey === 'total' ? '总流量' : (item as { dataKey?: string } | undefined)?.dataKey === 'uplink' ? '上行' : '下行']}
               />
-              {TRAFFIC_LINES.filter((line) => !hidden.has(line.key)).map((line) => (
-                <Line key={line.key} type="monotone" dataKey={line.key} name={line.label} stroke={line.stroke} strokeWidth={2} dot={false} isAnimationActive={false} />
+              {trafficLines.filter((line) => !hidden.has(line.key)).map((line) => (
+                <Line key={line.key} type={retro ? 'linear' : 'monotone'} dataKey={line.key} name={line.label} stroke={line.stroke} strokeWidth={2} dot={false} isAnimationActive={false} />
               ))}
             </LineChart>
           </ResponsiveContainer>
         </HorizontalChart>
       </div>
       <div className="traffic-line-toggle">
-        {TRAFFIC_LINES.map((line) => (
+        {trafficLines.map((line) => (
           <button
             type="button"
             key={line.key}
@@ -1219,8 +1221,9 @@ function systemLineColor(metric: 'cpu' | 'mem'): string {
   if (root.classList.contains('gold')) return '#d8b46a'
   return metric === 'cpu' ? 'var(--progress-cpu, #3b82f6)' : 'var(--progress-memory, #8b5cf6)'
 }
-export function SystemTrendChart({ serverIndex, metric, containerClass = 'detail-chart' }: { serverIndex: number; metric: 'cpu' | 'mem'; containerClass?: string }) {
-  const [range, setRange] = useState<RangeKey>('1h')
+export function SystemTrendChart({ serverIndex, metric, containerClass = 'detail-chart', retro = false, historyRange }: { serverIndex: number; metric: 'cpu' | 'mem'; containerClass?: string; retro?: boolean; historyRange?: RangeKey }) {
+  const [localRange, setRange] = useState<RangeKey>('1h')
+  const range = historyRange ?? localRange
   const [hidden, setHidden] = useState(false)
   const [rows, setRows] = useState<{ ts: number; time: string; value: number | null }[]>([])
   const [loading, setLoading] = useState(true)
@@ -1277,11 +1280,11 @@ export function SystemTrendChart({ serverIndex, metric, containerClass = 'detail
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [range, loading])
 
-  const line = { ...SYSTEM_LINES[metric], color: systemLineColor(metric) }
+  const line = { ...SYSTEM_LINES[metric], color: retro ? 'var(--graph-line-1)' : systemLineColor(metric) }
   return (
     <>
       <div className="ranges">
-        {ranges.map((item) => (
+        {!historyRange && ranges.map((item) => (
           <button type="button" className={range === item.key ? 'active' : ''} onClick={() => setRange(item.key)} key={item.key}>
             {item.label}
           </button>
@@ -1318,18 +1321,19 @@ export function SystemTrendChart({ serverIndex, metric, containerClass = 'detail
       <div className={containerClass} ref={chartRef}>
         {loading && <div className="loading-overlay">加载中…</div>}
         {!loading && !rows.length && <div className="chart-empty">暂无{metric === 'cpu' ? 'CPU' : '内存'}历史</div>}
-        <HorizontalChart width={Math.max(120, rows.length * 82 * zoom)}>
+        <HorizontalChart width={retro && isFit ? 0 : Math.max(120, rows.length * 82 * zoom)}>
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={rows} margin={{ top: 8, right: 12, bottom: 0, left: 0 }}>
-              <XAxis dataKey="time" tick={{ fontSize: 10 }} axisLine={false} tickLine={false} interval="preserveStartEnd" minTickGap={28} />
-              <YAxis width={40} tick={{ fontSize: 10 }} axisLine={false} tickLine={false} domain={[0, metric === 'mem' ? 100 : 'auto']} />
+              {retro && <CartesianGrid stroke="var(--graph-grid)" />}
+              <XAxis dataKey="time" tick={{ fontSize: 10, ...(retro ? { style: { fill: 'var(--graph-axis)' } } : {}) }} axisLine={false} tickLine={false} interval="preserveStartEnd" minTickGap={28} />
+              <YAxis width={40} tick={{ fontSize: 10, ...(retro ? { style: { fill: 'var(--graph-axis)' } } : {}) }} axisLine={false} tickLine={false} domain={[0, metric === 'mem' ? 100 : 'auto']} />
               <Tooltip
                 contentStyle={{ fontSize: 11, borderRadius: 8 }}
                 formatter={(value, _name, item) => [item.dataKey === 'value' ? `${Number(value).toFixed(1)}%` : Number(value).toFixed(1), line.label]}
                 labelFormatter={(_value, payload) => formatAxisDateTime(Number((payload?.[0]?.payload as { ts?: number } | undefined)?.ts ?? 0), true)}
               />
               {!hidden && (
-                <Line type="monotone" dataKey="value" name={line.label} stroke={line.color} strokeWidth={2.5} dot={false} connectNulls={false} isAnimationActive={false} />
+                <Line type={retro ? 'linear' : 'monotone'} dataKey="value" name={line.label} stroke={line.color} strokeWidth={retro ? 1.5 : 2.5} dot={false} connectNulls={false} isAnimationActive={false} />
               )}
             </LineChart>
           </ResponsiveContainer>

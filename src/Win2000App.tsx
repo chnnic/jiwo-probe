@@ -265,7 +265,7 @@ export function RetroDesktopApp({ family }: { family: RetroFamily }) {
         </div></div>
       </div></main>
       <footer className="status-bar"><div className="status-field grow">{error ? `连接中断：${error}` : `已连接 · ${online} 在线 / ${servers.length - online} 离线`}</div><div className="status-field status-credit">Powered by&nbsp;<a href={family === 'macos9' ? 'https://github.com/livid/exe' : family === 'winxp' ? 'https://github.com/botoxparty/XP.css' : 'https://github.com/guboysky/win2000'} target="_blank" rel="noreferrer">{family === 'macos9' ? 'Mac OS 9 Platinum' : family === 'winxp' ? 'Windows XP' : 'Win2000 Theme'}</a></div></footer>
-      {selectedServer !== null && servers[selectedServer] && <ServerDetail server={servers[selectedServer]} index={selectedServer} onClose={() => setSelectedServer(null)} showHealthScore={data.show_health_score === true} />}
+      {selectedServer !== null && servers[selectedServer] && <ServerDetail server={servers[selectedServer]} index={selectedServer} variant={family === 'macos9' ? undefined : family} onClose={() => setSelectedServer(null)} showHealthScore={data.show_health_score === true} />}
     </div>
   </main>
 }
