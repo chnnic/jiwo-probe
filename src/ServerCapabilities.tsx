@@ -44,7 +44,8 @@ export function UnlockPanel({ unlocks }: { unlocks?: ProbeUnlock[] }) {
     <div className="probe-unlock-panel">
       <div className="probe-unlock-summary" data-unlock-state={unlockIndicator(summary)}>
         <ShieldCheck size={16} />
-        <strong>{summary.total ? `已解锁 ${summary.unlocked} / ${summary.total}` : '服务信息'}</strong>
+        <strong>已解锁 {summary.unlocked} / {summary.total}</strong>
+        {summary.failed > 0 && <span className="probe-unlock-failed">{summary.failed} 项检测失败</span>}
         {summary.partial > 0 && <span>含 {summary.partial} 项仅自制剧</span>}
         {summary.info > 0 && <span>含 {summary.info} 项信息查询</span>}
       </div>
@@ -65,8 +66,7 @@ export function UnlockPanel({ unlocks }: { unlocks?: ProbeUnlock[] }) {
                     <span className="probe-unlock-service"><UnlockServiceIcon service={item.service} /><span>{service.label}</span></span>
                     <span className="probe-unlock-result" data-tone={status.tone}>
                       <span>{status.tone === 'ok' && <Check size={13} />}{status.label}</span>
-                      {item.region && <small>{item.region}</small>}
-                      {service.info && item.status === 'yes' && !item.region && <small>—</small>}
+                      {item.region && !(service.info && item.status === 'yes') && <small>{item.region}</small>}
                     </span>
                   </li>
                 )
@@ -76,7 +76,7 @@ export function UnlockPanel({ unlocks }: { unlocks?: ProbeUnlock[] }) {
           </div>
         })}
       </div>
-      <p className="probe-unlock-note">上次检测结果，非实时测试。统计与主控一致：信息查询计入总数，查询成功和仅自制剧均计为已解锁。</p>
+      <p className="probe-unlock-note">上次检测结果，非实时测试。与主控一致：总计排除检测失败项，分类数量保留失败项；信息查询成功和仅自制剧均计为已解锁。</p>
     </div>
   )
 }
@@ -91,7 +91,7 @@ export function UnlockDetails({ unlocks }: { unlocks?: ProbeUnlock[] }) {
         <h3>解锁检测</h3>
         <span className="probe-unlock-category-counts" id={countsId}>
           {categories.map(category => <span key={category.key} title={category.total
-            ? `${category.label}：已解锁 ${category.unlocked} / ${category.total} 项${category.partial ? `，含 ${category.partial} 项仅自制剧` : ''}${category.info ? `；含 ${category.info} 项信息查询` : ''}；与主控口径一致`
+            ? `${category.label}：已解锁 ${category.unlocked} / ${category.total} 项${category.failed ? `，${category.failed} 项检测失败` : ''}${category.partial ? `，含 ${category.partial} 项仅自制剧` : ''}${category.info ? `；含 ${category.info} 项信息查询` : ''}；分类包含检测失败项，与主控口径一致`
             : `${category.label}：暂无检测结果`}>
             {category.label}<strong>{category.total ? `${category.unlocked}/${category.total}` : '—'}</strong>
           </span>)}
@@ -152,7 +152,7 @@ export function UnlockButton({ server }: { server: Pick<ProbeServer, 'name' | 'u
   const summary = unlockSummary(items)
   const state = unlockIndicator(summary)
   const name = server.name || '服务器'
-  const label = `查看 ${name} 解锁检测：${summary.unlocked}/${summary.total}${state === 'all' ? '（全部解锁）' : ''}`
+  const label = `查看 ${name} 解锁检测：${summary.unlocked}/${summary.total}${state === 'all' ? '（全部解锁）' : ''}${summary.failed ? `，${summary.failed} 项检测失败` : ''}`
   return <>
     <button type="button" className="probe-unlock-button" data-unlock-state={state} aria-label={label} aria-haspopup="dialog" aria-expanded={open} title={label} onKeyDown={event => event.stopPropagation()} onMouseDown={event => event.stopPropagation()} onClick={event => { event.stopPropagation(); setOpen(true) }}>{state === 'none' ? <LockKeyhole size={15} /> : <LockKeyholeOpen size={15} />}</button>
     {open && <UnlockDialog name={name} unlocks={items} close={() => setOpen(false)} />}

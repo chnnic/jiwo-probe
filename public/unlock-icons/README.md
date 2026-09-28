@@ -14,6 +14,8 @@
 
 ## 品牌矢量图标
 
-Netflix、YouTube、Spotify、DAZN、Gemini、Claude、Apple、Wikipedia、Google Play、Google、Steam、Reddit 使用项目已安装的 `simple-icons` 图标，Netflix / YouTube CDN 复用对应品牌图标。
+Netflix、YouTube、Spotify、DAZN、Gemini、Claude、Apple、Wikipedia、Google Play、Google、Steam、Reddit、Binance、OKX 使用项目已安装的 `simple-icons` 图标，Netflix / YouTube CDN 复用对应品牌图标。
+
+`bybit.svg` 来自 [Bybit 官方新闻中心](https://www.bybit.com/en/press) 导航栏内嵌的官方 SVG（2026-09-28），保留原始路径，使用 CSS mask 随主题切换为单色，确保浅色与深色背景均可读。
 
 `prime-video.svg` 来自 [Simple Icons v14.0.0](https://github.com/simple-icons/simple-icons/blob/14.0.0/icons/primevideo.svg)（CC0），当前版本未包含该品牌。使用原始矢量轮廓，单色随主题保证可读性。Simple Icons 图标遵循其 [许可和免责声明](https://github.com/simple-icons/simple-icons/blob/develop/LICENSE.md)，品牌商标使用仍须遵守权利人的相关条款。

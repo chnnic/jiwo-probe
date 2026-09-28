@@ -1,5 +1,5 @@
 import {
-  siApple, siClaude, siDazn, siGoogle, siGooglegemini, siGoogleplay,
+  siApple, siBinance, siClaude, siDazn, siGoogle, siGooglegemini, siGoogleplay, siOkx,
   siNetflix, siReddit, siSpotify, siSteam, siWikipedia, siYoutube,
 } from 'simple-icons'
 
@@ -20,6 +20,9 @@ const icons: Record<string, BrandIcon> = {
   openai: { src: '/unlock-icons/openai.webp' },
   gemini: siGooglegemini,
   claude: siClaude,
+  bybit: { src: '/unlock-icons/bybit.svg', mask: true },
+  binance: siBinance,
+  okx: siOkx,
   bing: { src: '/unlock-icons/bing.png' },
   apple: siApple,
   wikipedia: siWikipedia,

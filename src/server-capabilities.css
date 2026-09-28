@@ -1,4 +1,4 @@
-/* Server capabilities v1.2 · 2026-09-25 — 主控解锁计数与金/绿/灰锁图标。
+/* Server capabilities v1.3 · 2026-09-28 — 四类解锁、交易所信息与主控失败计数口径。
  * 只用于连接数/解锁检测：沿用主题配色，不创建新的 backdrop-filter。 */
 :is(.probe-unlock-dialog, .probe-unlock-panel, .probe-unlock-button, .probe-connections) {
   --cap-bg: #fff;
@@ -145,7 +145,8 @@ button.probe-unlock-button:hover { border-color: var(--cap-unlock-color, var(--c
 .probe-unlock-summary > svg { color: var(--cap-unlock-color, var(--cap-accent)); }
 .probe-unlock-summary > strong { font-weight: 650; }
 .probe-unlock-summary > span { font-size: 11px; color: var(--cap-muted); }
-.probe-unlock-tabs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; padding: 4px; border-radius: min(var(--cap-radius), 10px); background: color-mix(in srgb, var(--cap-muted) 9%, transparent); }
+.probe-unlock-summary > .probe-unlock-failed { color: var(--cap-warn); }
+.probe-unlock-tabs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; padding: 4px; border-radius: min(var(--cap-radius), 10px); background: color-mix(in srgb, var(--cap-muted) 9%, transparent); }
 .probe-unlock-tabs > button {
   display: inline-flex;
   align-items: center;
@@ -178,7 +179,7 @@ button.probe-unlock-button:hover { border-color: var(--cap-unlock-color, var(--c
 .probe-unlock-brand-mask { background: currentColor; mask-repeat: no-repeat; mask-size: contain; mask-position: center; -webkit-mask-repeat: no-repeat; -webkit-mask-size: contain; -webkit-mask-position: center; }
 .probe-unlock-service > .probe-unlock-brand-fallback { display: inline-flex; align-items: center; justify-content: center; border: 1px solid var(--cap-line); border-radius: 4px; font-size: 9px; line-height: 1; }
 .probe-unlock-result { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex: 0 1 46%; min-width: 0; text-align: right; color: var(--cap-muted); }
-.probe-unlock-result > span { display: inline-flex; align-items: center; gap: 3px; font-size: 12px; }
+.probe-unlock-result > span { display: inline-flex; align-items: center; gap: 3px; max-width: 100%; overflow-wrap: anywhere; font-size: 12px; }
 .probe-unlock-result[data-tone="ok"] > span { color: var(--cap-ok); }
 .probe-unlock-result[data-tone="partial"] > span { color: var(--cap-warn); }
 .probe-unlock-result[data-tone="bad"] > span { color: var(--cap-bad); }
@@ -237,5 +238,6 @@ button.probe-unlock-button:hover { border-color: var(--cap-unlock-color, var(--c
   .probe-unlock-dialog { padding: 18px; }
   button.probe-unlock-button { flex-basis: 30px; width: 30px; height: 30px; }
   .probe-unlock-details > summary { flex-wrap: wrap; }
-  .probe-unlock-category-counts { order: 1; flex-basis: 100%; justify-content: flex-start; margin-left: 0; }
+  .probe-unlock-category-counts { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); order: 1; flex-basis: 100%; gap: 4px 8px; margin-left: 0; }
+  .probe-unlock-tabs > button { flex-direction: column; gap: 3px; padding: 7px 3px; font-size: 12px; line-height: 1.2; }
 }
