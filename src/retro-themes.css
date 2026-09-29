@@ -364,6 +364,27 @@ html:is(.theme-winxp, .theme-win2000) body.light .retro-route-medal .route-badge
 html:is(.theme-winxp, .theme-win2000) body.light .retro-route-medal .route-badge-text.silver { border-color: #c4cbd5; color: #475569; background: linear-gradient(#fff, #dbe1e8); }
 html:is(.theme-winxp, .theme-win2000) body:not(.light) .retro-route-medal .route-badge-animation.silver { border-color: #334155; }
 html:is(.theme-winxp, .theme-win2000) body:not(.light) .retro-route-medal .route-badge-text.silver { border-color: #64748b; color: #f8fafc; background: linear-gradient(#64748b, #334155); }
+html.theme-win2000 .app-body { background: var(--face); }
+html.theme-win2000 .retro-route-badges { gap: 3px; margin-top: 4px; }
+/* 路由信息采用状态栏凹槽，金银等级仅通过小奖牌和文字区分。 */
+html.theme-win2000 .retro-route-medal {
+  min-height: 24px;
+  background: var(--face);
+  border: 1px solid;
+  border-color: var(--shadow) var(--hilight) var(--hilight) var(--shadow);
+}
+html.theme-win2000 .retro-route-medal .route-badge-animation { padding: 1px 2px; }
+html.theme-win2000 .retro-route-medal .route-badge-icon { width: 15px; height: 15px; }
+html.theme-win2000 .retro-route-medal .route-badge-text { margin-left: 0; padding: 2px; }
+html.theme-win2000 body:is(.light, :not(.light)) .retro-route-medal :is(.route-badge-animation, .route-badge-text):is(.gold, .silver) {
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  color: var(--text);
+}
+html.theme-win2000 body.light .retro-route-medal .route-badge-text.gold { color: #765500; }
+html.theme-win2000 body:not(.light) .retro-route-medal .route-badge-text.gold { color: #e7c76d; }
+html.theme-win2000 .retro-route-medal small { font-weight: 400; opacity: 1; }
 html:is(.theme-winxp, .theme-win2000) .retro-detail {
   --graph-bg: #000;
   --graph-grid: #008040;
