@@ -1,4 +1,4 @@
-/* LuminaPlus · v0.2.0 · 2026-09-29 — Claude Paper palette and typography.
+/* LuminaPlus · v0.2.3 · 2026-09-29 — Deeper charcoal cards; original three-column layout.
  * Independent, opaque Jiwo skin. Visual reference attribution: NOTICE.md.
  * No animated backgrounds, nested blur, or continuously animating meters.
  */
@@ -19,14 +19,18 @@
   color-scheme: light; background: var(--lp-page); color: var(--lp-text);
 }
 :root.theme-luminaplus:is(.dark, .gold) {
-  --lp-page: #242320; --lp-surface: #2d2c28; --lp-soft: #35342f; --lp-text: #ece9e1;
-  --lp-secondary: #cec6b8; --lp-muted: #b2ab9e; --lp-border: #48463e; --lp-track: #424038;
+  --lp-page: #211f1d; --lp-surface: #1b1917; --lp-soft: #2b2824; --lp-text: #f5f1e9;
+  --lp-secondary: #e4dbce; --lp-muted: #cec5b7; --lp-border: #655d52; --lp-track: #454038;
   --lp-cpu: #91adbc; --lp-memory: #b6a6c5; --lp-disk: #d6a184; --lp-load: #d3adb2;
   --lp-blue: #8caebe; --lp-green: #8faf98; --lp-accent: #df967a; --lp-warn: #ccaf76; --lp-red: #e68b85;
   --lp-tint: #49372e; --lp-on-tint: #efb79d; --lp-ping-good: #8faf98;
   --lp-speed-low: #f2c66d;
   color-scheme: dark;
 }
+:root.theme-luminaplus:is(.dark, .gold) :is(.lp-resource p,.lp-speed-value > span,.lp-card .card-ping-selector select) { font-size: 12px; font-weight: 500; }
+:root.theme-luminaplus:is(.dark, .gold) .lp-app input::placeholder { color: var(--lp-muted); opacity: 1; }
+:root.theme-luminaplus:is(.dark, .gold) .mini-trend-targets button[aria-pressed="false"] { opacity: 1; color: var(--lp-muted); background: transparent; border-style: dashed; }
+:root.theme-luminaplus:is(.dark, .gold) .lp-card .card-ping-head strong.warning { color: var(--lp-warn) !important; }
 :root.theme-luminaplus body { margin: 0; background: var(--lp-page); color: var(--lp-text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; }
 :root.theme-luminaplus body::before, :root.theme-luminaplus body::after { display: none; }
 :root.theme-luminaplus .lp-app { min-height: 100vh; background: var(--lp-page); color: var(--lp-text); }

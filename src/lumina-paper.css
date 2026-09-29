@@ -1,4 +1,4 @@
-/* Lumina light / dark · Claude Paper × Morandi · v1.2 · 2026-09-29
+/* Lumina light / dark · Claude Paper × Morandi · v1.5 · 2026-09-29
  * Adapted from the user's controller theme. Gold / platinum remain unchanged.
  * Warm paper, muted clay and mist-blue / sage / mauve charts; no layout changes.
  */
@@ -21,9 +21,9 @@
   color: var(--foreground); background: var(--page-bg); color-scheme: light;
 }
 :root.theme-lumina.dark:not(.gold):not(.platinum) {
-  --page-bg: #282a28; --surface: #323531; --foreground: #ecebe5;
-  --muted: #b5b7ad; --border: #4a4e46; --hover-bg: #3b3e38;
-  --primary: #bba393; --paper-tint: #48413a; --paper-on-tint: #dfcbbc;
+  --page-bg: #20221f; --surface: #191b18; --foreground: #f3f3ed;
+  --muted: #c5c9bd; --border: #5c6356; --hover-bg: #2b3027;
+  --primary: #d0b6a4; --paper-tint: #48413a; --paper-on-tint: #f0daca;
   --lumina-card-shadow: 0 1px 3px rgb(0 0 0 / 12%);
   --progress-cpu: #a7bbc4; --progress-memory: #c0b3c5; --progress-swap: #b4b5c8;
   --progress-disk: #cfb5a2; --progress-network: #adc1b2; --progress-load: #d0b4bc;
@@ -76,3 +76,14 @@
 :root.theme-lumina:not(.gold):not(.platinum) .danger { color: var(--status-error) !important; }
 :root.theme-lumina:not(.gold):not(.platinum) .filters button.active.warning { background: color-mix(in srgb,var(--status-warning) 14%,var(--surface)); border-color: var(--status-warning); color: var(--status-warning) !important; }
 :root.theme-lumina:not(.gold):not(.platinum) .filters button.active.danger { background: color-mix(in srgb,var(--status-error) 14%,var(--surface)); border-color: var(--status-error); color: var(--status-error) !important; }
+/* Charcoal readability: visible metadata, distinct panels and clear keyboard focus. */
+:root.theme-lumina.dark:not(.gold):not(.platinum) :is(.lumina-metric-label,.lumina-health-label,.lumina-today-label) { font-size: 12px; font-weight: 500; }
+:root.theme-lumina.dark:not(.gold):not(.platinum) .lumina-quota-reset { opacity: 1; color: var(--muted); }
+:root.theme-lumina.dark:not(.gold):not(.platinum) .server-search input::placeholder { color: var(--muted); opacity: 1; }
+:root.theme-lumina.dark:not(.gold):not(.platinum) :is(button,input,select,a):focus-visible { outline: 2px solid var(--primary); outline-offset: 3px; }
+/* Detail charts: white X/Y labels, including the duplicated fixed Y axis. */
+:root.theme-lumina.dark:not(.gold):not(.platinum) .server-detail .recharts-cartesian-axis-tick-value {
+  fill: #fff !important;
+  color: #fff !important;
+  opacity: 1;
+}
