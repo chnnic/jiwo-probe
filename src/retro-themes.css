@@ -358,8 +358,8 @@ html.theme-winxp .detail-hw { border-top-color: #d4d0c8; }
 html.theme-winxp .detail-loadavg code { border: 1px solid #7f9db9; border-radius: 0; background: #ece9d8; }
 
 /* 参考 finch-xu/CF-Server-Monitor-theme-win2000 的主机表格和性能监视器。 */
-html:is(.theme-winxp, .theme-win2000) .servers-grid { grid-template-columns: repeat(auto-fill, minmax(min(100%, 360px), 1fr)); }
-html:is(.theme-winxp, .theme-win2000) .retro-cpu-model { min-width: 0; max-width: 58%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+html:is(.theme-winxp, .theme-win2000, .theme-macos9) .servers-grid { grid-template-columns: repeat(auto-fill, minmax(min(100%, 360px), 1fr)); }
+html:is(.theme-winxp, .theme-win2000, .theme-macos9) .retro-cpu-model { min-width: 0; max-width: 58%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 html:is(.theme-winxp, .theme-win2000) .retro-route-badges { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; margin-top: 5px; }
 html:is(.theme-winxp, .theme-win2000) .retro-route-medal { --radius: 0px; min-height: 28px; }
 html.theme-winxp .retro-route-medal { --radius: 3px; }
@@ -376,12 +376,12 @@ html:is(.theme-winxp, .theme-win2000) body:not(.light) .retro-route-medal .route
 html:is(.theme-winxp, .theme-win2000) body:not(.light) .retro-route-medal .route-badge-text.silver { border-color: #64748b; color: #f8fafc; background: linear-gradient(#64748b, #334155); }
 html.theme-win2000 .app-body { background: var(--face); }
 html.theme-win2000 .retro-route-badges { gap: 3px; margin-top: 4px; }
-/* 路由信息采用状态栏凹槽，金银等级仅通过小奖牌和文字区分。 */
+/* 路由信息沿用硬件标签的凸起边框，金银等级通过小奖牌和文字区分。 */
 html.theme-win2000 .retro-route-medal {
   min-height: 24px;
   background: var(--face);
   border: 1px solid;
-  border-color: var(--shadow) var(--hilight) var(--hilight) var(--shadow);
+  border-color: var(--hilight) var(--shadow) var(--shadow) var(--hilight);
 }
 html.theme-win2000 .retro-route-medal .route-badge-animation { padding: 1px 2px; }
 html.theme-win2000 .retro-route-medal .route-badge-icon { width: 15px; height: 15px; }
@@ -605,10 +605,16 @@ html.theme-macos9 .retro-detail-macos9 .retro-chart-plot { background: #fff; bor
 html.theme-macos9 .retro-detail-macos9 button:focus-visible { outline: 2px solid #9999fe; outline-offset: 1px; }
 html.theme-macos9 .retro-detail-macos9 .meter { border-radius: 0; background: #ccc; border: 1px solid #999; }
 html.theme-macos9 .retro-detail-macos9 .meter > i { border-radius: 0; background: #333399; }
-html.theme-macos9 .retro-detail-macos9 .retro-route-badges { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; }
-html.theme-macos9 .retro-detail-macos9 .retro-route-medal { border: 1px solid #999; background: #ddd; }
-html.theme-macos9 .retro-detail-macos9 :is(.route-badge-text, .route-badge-animation) { border: 0; border-radius: 0; background: transparent; box-shadow: none; color: #262626; padding: 2px; }
-html.theme-macos9 .retro-detail-macos9 .route-badge-icon { width: 15px; height: 15px; }
+html.theme-macos9 .retro-route-badges { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 3px; margin-top: 4px; }
+html.theme-macos9 .retro-route-medal { min-height: 24px; border: 1px solid #999; background: #ddd; box-shadow: inset 1px 1px #fff, inset -1px -1px #ccc; }
+html.theme-macos9 .retro-route-medal :is(.route-badge-text, .route-badge-animation) { border: 0; border-radius: 0; background: transparent; box-shadow: none; color: #262626; padding: 1px 2px; }
+html.theme-macos9 .retro-route-medal .route-badge-text { margin-left: 0; flex-direction: row; white-space: nowrap; }
+html.theme-macos9 .retro-route-medal .route-badge-text.gold { color: #765500; }
+html.theme-macos9 .retro-route-medal .route-badge-text.silver { color: #4b5260; }
+html.theme-macos9 .retro-route-medal small { font-weight: 400; opacity: 1; }
+html.theme-macos9 .retro-route-medal .route-badge-icon { width: 15px; height: 15px; }
+html:is(.theme-win2000, .theme-macos9) .retro-route-medal { justify-content: center; }
+html:is(.theme-win2000, .theme-macos9) .retro-route-medal .route-badge-text { flex: 0 1 auto; }
 html:is(.theme-winxp, .theme-win2000, .theme-macos9) .retro-history-range,
 html:is(.theme-winxp, .theme-win2000, .theme-macos9) .retro-probe-range { margin: 0; }
 html:is(.theme-winxp, .theme-win2000, .theme-macos9) .retro-history-note { margin-left: auto; color: var(--text-muted); font-size: 11px; }
@@ -619,6 +625,7 @@ html:is(.theme-winxp, .theme-win2000, .theme-macos9) .retro-chart-head { display
 html:is(.theme-winxp, .theme-win2000, .theme-macos9) .retro-chart-readout { display: flex; flex-wrap: wrap; gap: 2px 10px; min-width: 0; max-height: 44px; overflow-y: auto; font-size: 11px; font-variant-numeric: tabular-nums; }
 html:is(.theme-winxp, .theme-win2000, .theme-macos9) .retro-chart-readout > span { overflow-wrap: anywhere; }
 html:is(.theme-winxp, .theme-win2000, .theme-macos9) .retro-chart-expand { position: static; display: grid; place-items: center; flex: 0 0 22px; width: 22px; min-height: 22px; padding: 0; }
+html.theme-macos9 .retro-detail-macos9 button.retro-chart-expand { min-height: 22px; padding: 0; aspect-ratio: 1; }
 html.theme-winxp .retro-chart-expand { border: 1px solid #003c74; border-radius: 3px; color: #000; background: linear-gradient(180deg, #fff, #ecebe5 86%, #d8d0c4); box-shadow: none; }
 html:is(.theme-winxp, .theme-win2000, .theme-macos9) .retro-chart-plot { display: flex; flex-direction: column; margin-top: auto; height: 200px; min-width: 0; padding: 3px; color: var(--graph-axis); background: var(--graph-bg); border: 1px solid; border-color: var(--shadow) var(--hilight) var(--hilight) var(--shadow); }
 html:is(.theme-winxp, .theme-win2000, .theme-macos9) .retro-chart-box.expanded .retro-chart-plot { height: 320px; }
