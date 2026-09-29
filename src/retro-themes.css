@@ -404,6 +404,13 @@ html:is(.theme-winxp, .theme-win2000) body.light .retro-route-medal .route-badge
 html:is(.theme-winxp, .theme-win2000) body.light .retro-route-medal .route-badge-text.silver { border-color: #c4cbd5; color: #475569; background: linear-gradient(#fff, #dbe1e8); }
 html:is(.theme-winxp, .theme-win2000) body:not(.light) .retro-route-medal .route-badge-animation.silver { border-color: #334155; }
 html:is(.theme-winxp, .theme-win2000) body:not(.light) .retro-route-medal .route-badge-text.silver { border-color: #64748b; color: #f8fafc; background: linear-gradient(#64748b, #334155); }
+/* XP 卡片下半区与上方硬件信息保持同一面色；金银等级只保留在文字和图标。 */
+html.theme-winxp .card-data { background: var(--face); }
+html.theme-winxp .retro-route-medal .route-badge-text.gold,
+html.theme-winxp .retro-route-medal .route-badge-text.silver {
+  border-color: transparent;
+  background: transparent;
+}
 html.theme-win2000 .app-body { background: var(--face); }
 html.theme-win2000 .retro-route-badges { gap: 3px; margin-top: 4px; }
 /* 路由信息沿用硬件标签的凸起边框，金银等级通过小奖牌和文字区分。 */
