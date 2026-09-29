@@ -1,9 +1,10 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
+import { fileURLToPath } from 'node:url'
 import { build } from 'esbuild'
 
 // 与 Wrangler 相同地打包 TS，测试公开端点，不需要连接主控或使用密钥。
-const bundle = await build({ entryPoints: [new URL('./index.ts', import.meta.url).pathname], bundle: true, write: false, format: 'esm', platform: 'neutral' })
+const bundle = await build({ entryPoints: [fileURLToPath(new URL('./index.ts', import.meta.url))], bundle: true, write: false, format: 'esm', platform: 'neutral' })
 const { default: worker } = await import(`data:text/javascript;base64,${Buffer.from(bundle.outputFiles[0].text).toString('base64')}`)
 
 test('ping settings are available without a background and do not expose other env vars', async () => {

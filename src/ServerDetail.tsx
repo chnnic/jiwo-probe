@@ -1,6 +1,6 @@
 import { useNetworkSpeed } from './use-network-speed'
 import { ConnectionCounts, UnlockDetails } from './ServerCapabilities'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Activity, ArrowDown, ArrowUp, BadgeDollarSign, CalendarClock, ChevronLeft, Clock, Cpu, Database, HardDrive, MemoryStick, Monitor, MoveHorizontal, PieChart, TrendingUp, Wallet, Wifi, X, ZoomIn, ZoomOut } from 'lucide-react'
 import { Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
@@ -9,6 +9,8 @@ import { Twemoji } from './Twemoji'
 import { Meter, ReturnRouteBadges, SystemIcon, TrafficChart, SystemTrendChart, averagePing, bytes, expiring, expired, formatAxisDateTime, formatLossTick, hasLeadingFlag, HorizontalChart, lossScale, pct, regionFlag, regionLabel, remainingDays } from './App'
 import { serverHealth } from './PremiumProbePage'
 import { computeMonthlyTrafficCost, computeRemainingValue, formatMoney } from './value'
+
+const RetroHistoryCharts = lazy(() => import('./RetroHistoryCharts').then((module) => ({ default: module.RetroHistoryCharts })))
 
 const cycleLabel = {
   month: '月',
@@ -51,6 +53,35 @@ function RemainingValueBlock({ server }: { server: ProbeServer }) {
         <i style={{ width: `${percent}%` }} />
       </div>
     </div>
+  )
+}
+
+function RetroHostInfo({ server, networkSpeed }: { server: ProbeServer; networkSpeed: (value?: number) => string }) {
+  const cumulative = server.traffic_used_total ?? (server.cumulative_up !== undefined && server.cumulative_down !== undefined ? server.cumulative_up + server.cumulative_down : undefined)
+  const today = server.daily_traffic?.at(-1)?.total
+  const items = [
+    ['运行时间', server.uptime !== undefined ? formatUptime(server.uptime) : '—'],
+    ['系统 / 架构', `${server.os || '—'} / ${server.arch || '—'}`],
+    ['内核版本', server.kernel || '—'],
+    ['CPU', `${server.cpu_model || '—'}${server.cpu_cores !== undefined ? ` × ${server.cpu_cores} 核` : ''}`],
+    ['内存 / 硬盘', `${bytes(server.mem_used)} / ${bytes(server.mem_total)} · ${bytes(server.disk_used)} / ${bytes(server.disk_total)}`],
+    ['负载', server.loadavg || '—'],
+    ['累计总流量', cumulative !== undefined ? bytes(cumulative) : '—'],
+    ['实时网速', `${networkSpeed(server.download_speed)} ↓ / ${networkSpeed(server.upload_speed)} ↑`],
+    ...(today !== undefined ? [['今日流量', bytes(today)]] : []),
+  ]
+  return (
+    <fieldset className="retro-host-box">
+      <legend>主机信息</legend>
+      <div className="retro-host-head">
+        <span className={server.online ? 'status online' : 'status'} />
+        <h3><Twemoji>{server.name || '未命名节点'}</Twemoji></h3>
+        <span className="retro-host-status">{server.online ? '在线' : '离线'}</span>
+      </div>
+      <dl className="retro-host-grid">
+        {items.map(([label, value]) => <div className="retro-host-item" key={label}><dt>{label}</dt><dd>{value}</dd></div>)}
+      </dl>
+    </fieldset>
   )
 }
 
@@ -315,7 +346,7 @@ function DetailMetric({ icon, label, value, percent, sub }: { icon: React.ReactN
   )
 }
 
-export function ServerDetail({ server, index, onClose, showHealthScore = false }: { server: ProbeServer; index: number; onClose: () => void; showHealthScore?: boolean }) {
+export function ServerDetail({ server, index, onClose, showHealthScore = false, variant }: { server: ProbeServer; index: number; onClose: () => void; showHealthScore?: boolean; variant?: 'winxp' | 'win2000' | 'macos9' }) {
   const networkSpeed = useNetworkSpeed()
   const [selected, setSelected] = useState('__avg__')
   const [trendMode, setTrendMode] = useState<'latency' | 'loss' | 'traffic' | 'cpu' | 'mem' | 'connections'>(server.ping?.length ? 'latency' : 'connections')
@@ -325,6 +356,7 @@ export function ServerDetail({ server, index, onClose, showHealthScore = false }
   const average = averagePing(ping)
   const lines = [{ ...average, key: '__avg__' }, ...ping]
   const health = useMemo(() => serverHealth(server), [server])
+  const retro = variant !== undefined
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -336,10 +368,10 @@ export function ServerDetail({ server, index, onClose, showHealthScore = false }
 
   return createPortal(
     <div className="server-detail-backdrop" role="presentation" onMouseDown={onClose}>
-      <section className="server-detail" onMouseDown={(event) => event.stopPropagation()} role="dialog" aria-label={name}>
+      <section className={`server-detail${retro ? ` retro-detail retro-detail-${variant}` : ''}`} onMouseDown={(event) => event.stopPropagation()} role="dialog" aria-modal="true" aria-label={name}>
         <header className="server-detail-header">
-          <button aria-label="返回" onClick={onClose}>
-            <ChevronLeft size={18} />
+          <button aria-label={variant === 'macos9' ? '关闭' : '返回'} onClick={onClose}>
+            {variant !== 'macos9' && <ChevronLeft size={18} />}
           </button>
           <div className="server-detail-title">
             <span className={server.online ? 'status online' : 'status'} />
@@ -358,12 +390,13 @@ export function ServerDetail({ server, index, onClose, showHealthScore = false }
             )}
           </div>
           {regionLabel(server) && <div className="detail-region">{regionLabel(server)}</div>}
-          <button aria-label="关闭" onClick={onClose}>
+          {variant !== 'macos9' && <button aria-label="关闭" onClick={onClose}>
             <X size={18} />
-          </button>
+          </button>}
         </header>
 
         <div className="server-detail-body">
+          {retro && <RetroHostInfo server={server} networkSpeed={networkSpeed} />}
           <div className="detail-cols">
             <section className="detail-panel">
               <h3>资源占用</h3>
@@ -407,7 +440,7 @@ export function ServerDetail({ server, index, onClose, showHealthScore = false }
                   </div>
                 )}
               </div>
-              {(server.cpu_model || server.os || server.kernel) && (
+              {!retro && (server.cpu_model || server.os || server.kernel) && (
                 <div className="detail-hw">
                   {server.cpu_model && (
                     <span title="CPU 型号">
@@ -503,7 +536,7 @@ export function ServerDetail({ server, index, onClose, showHealthScore = false }
               {!!server.return_routes?.length && (
                 <section className="detail-panel">
                   <h3>回程路由</h3>
-                  <ReturnRouteBadges routes={server.return_routes} telecomPaidPeer={server.telecom_paid_peer} variant={document.documentElement.classList.contains('theme-lumina') ? 'lumina' : document.documentElement.classList.contains('theme-anime') ? 'anime' : document.documentElement.classList.contains('theme-glassmorphism') ? 'glass' : document.documentElement.classList.contains('theme-emerald') ? 'emerald' : undefined} />
+                  <ReturnRouteBadges routes={server.return_routes} telecomPaidPeer={server.telecom_paid_peer} variant={retro ? 'retro' : document.documentElement.classList.contains('theme-lumina') ? 'lumina' : document.documentElement.classList.contains('theme-anime') ? 'anime' : document.documentElement.classList.contains('theme-glassmorphism') ? 'glass' : document.documentElement.classList.contains('theme-emerald') ? 'emerald' : undefined} />
                 </section>
               )}
             </div>
@@ -513,6 +546,7 @@ export function ServerDetail({ server, index, onClose, showHealthScore = false }
             <UnlockDetails key={index} unlocks={server.unlocks} />
           </section>
 
+          {retro ? <Suspense fallback={<div role="status">正在加载趋势图…</div>}><RetroHistoryCharts key={index} server={server} index={index} /></Suspense> : (
             <section className="detail-panel" aria-label="历史趋势">
               <div className="detail-panel-head">
                 <h3>{trendMode === 'latency' ? '延迟趋势' : trendMode === 'loss' ? '丢包趋势' : trendMode === 'traffic' ? '日流量趋势' : trendMode === 'cpu' ? 'CPU 趋势' : trendMode === 'mem' ? '内存趋势' : 'TCP / UDP 连接数趋势'}</h3>
@@ -558,6 +592,7 @@ export function ServerDetail({ server, index, onClose, showHealthScore = false }
                 </>
               )}
             </section>
+          )}
         </div>
       </section>
     </div>,

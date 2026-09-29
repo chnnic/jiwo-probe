@@ -1,6 +1,6 @@
 {
   "$schema": "./node_modules/wrangler/config-schema.json",
-  "name": "mmwx-probe",
+  "name": "jiwo-probe",
   "main": "worker/index.ts",
   "compatibility_date": "2026-07-31",
   "workers_dev": true,

@@ -170,7 +170,7 @@ function applyPayloadVisibility(payload: ProbePayload): ProbePayload {
 }
 
 function normalizeTheme(value?: string): ThemeName {
-  return value === 'anime' || value === 'flat' || value === 'glass' || value === 'lumina' ? value : 'pixel'
+  return value === 'anime' || value === 'flat' || value === 'glass' || value === 'lumina' || value === 'win2000' || value === 'winxp' || value === 'macos9' ? value : 'pixel'
 }
 
 export function applyAppearance(input?: ProbeAppearance) {
@@ -181,13 +181,15 @@ export function applyAppearance(input?: ProbeAppearance) {
       return null
     }
   })()
-  const appearance = input || cached || { theme: 'pixel', color_mode: 'light' }
+  // 新设备没有主控外观缓存时使用 Luna 作为复古默认主题。
+  const appearance = input || cached || { theme: 'winxp', color_mode: 'light' }
   lastAppliedAppearance = appearance
   const themeOverride = getThemeOverride()
   // 用户手动选择的内置主题优先；否则用主控下发的主题名。
   // 内置主题名大小写不敏感归一化（主控可能下发 Lumina/LUMINA → lumina）；
   // 自定义主题名原样保留挂 theme-{name}（站长 CSS 怎么写就怎么匹配）。
-  const raw = themeOverride || appearance.theme || 'pixel'
+  // 主控的旧默认 pixel 映射到 Luna；访客手动选择 pixel 仍优先。
+  const raw = themeOverride || (appearance.theme === 'pixel' ? 'winxp' : appearance.theme || 'winxp')
   // 组合名解析: "lumina-gold" → lumina 主题 + gold 黑金配色（主控下发可直接指定黑金）
   const parsed = parseThemeName(raw)
   const theme = parsed.theme
@@ -287,7 +289,7 @@ export function setDarkOverride(mode: 'dark' | 'light' | 'gold' | 'platinum' | n
   applyAppearance()
 }
 
-const THEME_CYCLE: ThemeName[] = ['pixel', 'flat', 'anime', 'glass', 'lumina']
+const THEME_CYCLE: ThemeName[] = ['pixel', 'flat', 'anime', 'glass', 'lumina', 'win2000', 'winxp', 'macos9']
 
 export function getThemeOverride(): ThemeName | null {
   return canonicalThemeOverride(localStorage.getItem(THEME_OVERRIDE)) as ThemeName | null
@@ -300,9 +302,10 @@ export function getActiveTheme(): string {
   if (override) return override
   try {
     const cached = JSON.parse(localStorage.getItem(APPEARANCE_CACHE) || 'null') as ProbeAppearance | null
-    return parseThemeName(cached?.theme || 'pixel').theme
+    const cachedTheme = cached?.theme === 'pixel' ? 'winxp' : cached?.theme || 'winxp'
+    return parseThemeName(cachedTheme).theme
   } catch {
-    return 'pixel'
+    return 'winxp'
   }
 }
 

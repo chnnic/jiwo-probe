@@ -2,6 +2,7 @@
 const BUILTIN_THEMES = new Set([
   'pixel', 'flat', 'anime', 'glass', 'lumina', 'luminaplus', 'premium',
   'ran', 'glassmorphism', 'emerald', 'lite', 'mini',
+  'win2000', 'winxp', 'macos9',
   'luminagold', 'luminaplatinum', 'premiumplatinum', 'premiumlight',
   'ran-night', 'ran-mist', 'ran-ember', 'ran-sakura', 'ran-lavender',
   'ran-tomcat', 'ran-teal', 'ran-midnight', 'ran-mint', 'ran-butter', 'ran-ji',

@@ -246,7 +246,7 @@ function RegionSelect({ regions, value, onChange }: { regions: string[]; value: 
   )
 }
 
-const THEME_OPTIONS: { value: ThemeName; label: string }[] = [
+export const THEME_OPTIONS: { value: ThemeName; label: string }[] = [
   { value: 'pixel', label: '像素' },
   { value: 'flat', label: '扁平' },
   { value: 'anime', label: '动漫' },
@@ -258,6 +258,9 @@ const THEME_OPTIONS: { value: ThemeName; label: string }[] = [
   { value: 'glassmorphism', label: 'Glassmorphism' },
   { value: 'emerald', label: 'Emerald' },
   { value: 'lite', label: 'Lite' },
+  { value: 'win2000', label: 'Windows 2000' },
+  { value: 'winxp', label: 'Windows XP' },
+  { value: 'macos9', label: 'Mac OS 9 Platinum' },
 ]
 
 export function ThemeSelect({ value, onChange }: { value: ThemeName | null; onChange: (name: ThemeName | null) => void }) {
@@ -1399,7 +1402,7 @@ function ReturnRouteIcon({ premium }: { premium: boolean }) {
   return <Lottie animationData={premium ? premiumRouteAnimation : commonRouteAnimation} aria-hidden="true" className="route-badge-icon" loop />
 }
 
-export function ReturnRouteBadges({ routes, telecomPaidPeer, variant }: { routes: ProbeReturnRoute[]; telecomPaidPeer?: boolean; variant?: 'lumina' | 'anime' | 'glass' | 'emerald' }) {
+export function ReturnRouteBadges({ routes, telecomPaidPeer, variant }: { routes: ProbeReturnRoute[]; telecomPaidPeer?: boolean; variant?: 'lumina' | 'anime' | 'glass' | 'emerald' | 'retro' }) {
   const byCarrier = new Map(routes.map((route) => [route.carrier, route]))
   const items = (['telecom', 'unicom', 'mobile'] as const).map((carrier) => {
     const route = byCarrier.get(carrier)
@@ -1407,12 +1410,17 @@ export function ReturnRouteBadges({ routes, telecomPaidPeer, variant }: { routes
     const routeType = carrier === 'telecom' && telecomPaidPeer && detectedRouteType === '163' ? '163 PP' : detectedRouteType
     return { carrier, route, routeType, premium: goldRoutes.has(routeType.toUpperCase().replace(/[^A-Z0-9]/g, '')) }
   })
-  if (variant === 'lumina' || variant === 'anime' || variant === 'glass' || variant === 'emerald') {
-    // 主题化勋章：用主题原生 chip 代替通用 Lottie 动画，避免详情页与卡片视觉割裂。
-    const flat = variant === 'lumina' ? 'lumina-route' : variant === 'anime' ? 'anime-route' : variant === 'glass' ? 'glass-route' : 'emerald-detail-route'
+  if (variant === 'lumina' || variant === 'anime' || variant === 'glass' || variant === 'emerald' || variant === 'retro') {
+    // 主题化标签；复古主题保留上游金、银奖牌与配色。
+    const flat = variant === 'retro' ? 'retro-route' : variant === 'lumina' ? 'lumina-route' : variant === 'anime' ? 'anime-route' : variant === 'glass' ? 'glass-route' : 'emerald-detail-route'
     return (
       <div className={`${flat}-badges`}>
-        {items.map(({ carrier, route, routeType, premium }) => (
+        {items.map(({ carrier, route, routeType, premium }) => variant === 'retro' ? (
+          <div className="retro-route-medal route-badge" key={carrier} title={route?.region ? `${route.region} · ${routeType}` : routeType}>
+            <div className={premium ? 'route-badge-animation gold' : 'route-badge-animation silver'}><ReturnRouteIcon premium={premium} /></div>
+            <div className={premium ? 'route-badge-text gold' : 'route-badge-text silver'}><small>{routeCarrierLabels[carrier]}</small><strong>{routeType === 'Unknown' ? '未探测' : routeType}</strong></div>
+          </div>
+        ) : (
           <span className={`${flat}-chip${premium ? ' gold' : ''}`} key={carrier} title={route?.region ? `${route.region} · ${routeType}` : routeType}>
             <small>{routeCarrierLabels[carrier]}</small>
             <strong>{routeType}</strong>
