@@ -411,6 +411,14 @@ html.theme-winxp .retro-route-medal .route-badge-text.silver {
   border-color: transparent;
   background: transparent;
 }
+html.theme-winxp body.light .retro-route-medal .route-badge-text.gold,
+html.theme-winxp body.light .retro-route-medal .route-badge-text.silver,
+html.theme-winxp body:not(.light) .retro-route-medal .route-badge-text.gold,
+html.theme-winxp body:not(.light) .retro-route-medal .route-badge-text.silver {
+  border-color: transparent;
+  background-color: transparent;
+  background-image: none;
+}
 html.theme-win2000 .app-body { background: var(--face); }
 html.theme-win2000 .retro-route-badges { gap: 3px; margin-top: 4px; }
 /* 路由信息沿用硬件标签的凸起边框，金银等级通过小奖牌和文字区分。 */
