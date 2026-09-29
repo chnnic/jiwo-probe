@@ -655,11 +655,14 @@ html.theme-macos9 .retro-detail-macos9 .meter > i { border-radius: 0; background
 html.theme-macos9 .retro-route-badges { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 3px; margin-top: 4px; }
 html.theme-macos9 .retro-route-medal { min-height: 24px; border: 1px solid #999; background: #ddd; box-shadow: inset 1px 1px #fff, inset -1px -1px #ccc; }
 html.theme-macos9 .retro-route-medal :is(.route-badge-text, .route-badge-animation):is(.gold, .silver) { border: 0; border-radius: 0; background: transparent; box-shadow: none; color: #262626; padding: 1px 2px; }
-html.theme-macos9 .retro-route-medal .route-badge-text { margin-left: 0; flex-direction: row; white-space: nowrap; }
+html.theme-macos9 .retro-route-medal .route-badge-text { margin-left: 0; flex: 0 1 auto; flex-direction: row; gap: 2px; white-space: nowrap; padding: 1px 2px; }
+html.theme-macos9 .retro-route-medal .route-badge-icon { width: 20px; height: 20px; }
+html.theme-macos9 .retro-route-medal .route-badge-text small,
+html.theme-macos9 .retro-route-medal .route-badge-text strong { font-size: 12px; line-height: 16px; letter-spacing: 0; }
+html.theme-macos9 .retro-route-medal .route-badge-text strong { flex: 0 1 auto; margin-left: 0; overflow: hidden; text-overflow: ellipsis; }
 html.theme-macos9 .retro-route-medal .route-badge-text.gold { color: #262626; }
-html.theme-macos9 .retro-route-medal .route-badge-text.silver { color: #4b5260; }
+html.theme-macos9 .retro-route-medal .route-badge-text.silver { color: #262626; }
 html.theme-macos9 .retro-route-medal small { font-weight: 400; opacity: 1; }
-html.theme-macos9 .retro-route-medal .route-badge-icon { width: 15px; height: 15px; }
 html:is(.theme-win2000, .theme-macos9) .retro-route-medal { justify-content: center; }
 html:is(.theme-win2000, .theme-macos9) .retro-route-medal .route-badge-text { flex: 0 1 auto; }
 /* 顶级线路用主题专属纯色块区分；普通线路继续使用主题基础面色。 */
@@ -679,8 +682,8 @@ html.theme-win2000 .retro-route-medal:has(.route-badge-text.gold) {
 }
 html.theme-win2000 .retro-route-medal:has(.route-badge-text.gold) .route-badge-text { color: #000; }
 html.theme-macos9 .retro-route-medal:has(.route-badge-text.gold) {
-  background: #dfc16d;
-  border-color: #a88d45;
+  background: #ccf;
+  border-color: #333399;
   box-shadow: none;
 }
 html:is(.theme-winxp, .theme-win2000, .theme-macos9) .retro-history-range,
