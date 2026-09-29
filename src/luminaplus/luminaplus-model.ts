@@ -1,8 +1,10 @@
 import type { ProbeServer } from '../types'
 
-export type LuminaPlusView = 'card' | 'compact' | 'list'
+export const LUMINA_PLUS_VIEWS = ['large', 'compact', 'mini', 'list'] as const
+export type LuminaPlusView = typeof LUMINA_PLUS_VIEWS[number]
 export function parseLuminaPlusView(value: unknown): LuminaPlusView {
-  return value === 'compact' || value === 'list' ? value : 'card'
+  // The original three-mode implementation stored the large layout as "card".
+  return LUMINA_PLUS_VIEWS.find(view => view === value) || 'large'
 }
 
 const nonnegative = (value?: number) => typeof value === 'number' && Number.isFinite(value) && value >= 0 ? value : undefined
@@ -45,4 +47,60 @@ export function speedTone(bytesPerSecond?: number): 'idle' | 'low' | 'high' | 'm
   // Classify API bytes/s, not the displayed bits/bytes label, so changing units
   // never changes the color of the same physical speed.
   return value < 1024 ? 'idle' : value < 1024 ** 2 ? 'low' : value < 1024 ** 3 ? 'high' : 'max'
+}
+
+export const PULSE_POINTS = 18
+export interface SpeedTrail { name?: string; upload: Array<number | undefined>; download: Array<number | undefined> }
+
+/** Compact pulse shows total duplex speed only when both directions were reported. */
+export function combinedSpeedTrail(trail?: SpeedTrail): Array<number | undefined> {
+  if (!trail) return []
+  return Array.from({ length: Math.max(trail.upload.length, trail.download.length) }, (_, index) => {
+    const up = nonnegative(trail.upload[index]), down = nonnegative(trail.download[index])
+    return up === undefined || down === undefined ? undefined : up + down
+  })
+}
+
+/** Only received snapshots enter the trail; unreported/offline slots stay empty. */
+export function nextSpeedTrails(servers: ProbeServer[], previous: SpeedTrail[] = []): SpeedTrail[] {
+  return servers.map((server, index) => {
+    const before = previous[index]?.name === server.name ? previous[index] : undefined
+    const append = (key: 'upload' | 'download') => [...(before?.[key] || []), server.online ? nonnegative(server[`${key}_speed`]) : undefined].slice(-PULSE_POINTS)
+    return { name: server.name, upload: append('upload'), download: append('download') }
+  })
+}
+
+/** Log scale keeps small real activity visible without giving missing samples a value. */
+export function pulseStrength(value?: number): number {
+  const speed = nonnegative(value)
+  return speed === undefined || speed === 0 ? 0 : Math.min(1, .25 + Math.log10(1 + speed / 1024) / 5)
+}
+
+export function regionKey(server: ProbeServer): string {
+  return [server.region_country, server.region, server.region_name].map(value => value?.trim()).find(Boolean)?.toUpperCase() || '未知'
+}
+
+/** Controller-converted CNY takes precedence. Never invent an FX rate or add currencies. */
+export function assetOverview(servers: ProbeServer[], now = Date.now()) {
+  const currencies = new Map<string, { currency: string; monthly: number; remaining: number; priced: number; valued: number }>()
+  let unpriced = 0
+  for (const server of servers) {
+    const converted = nonnegative(server.renewal_price_cny)
+    const price = converted ?? nonnegative(server.renewal_price)
+    const currency = converted !== undefined ? 'CNY' : server.renewal_currency?.trim().toUpperCase() || 'CNY'
+    const months = { month: 1, quarter: 3, half_year: 6, year: 12 }[server.renewal_cycle || 'month']
+    if (price === undefined || !months) { unpriced++; continue }
+    const group = currencies.get(currency) || { currency, monthly: 0, remaining: 0, priced: 0, valued: 0 }
+    group.monthly += price / months
+    group.priced++
+    const date = server.expires_at
+    const end = date ? Date.parse(/^\d{4}-\d{2}-\d{2}$/.test(date) ? `${date}T23:59:59` : date) : NaN
+    if (Number.isFinite(end)) {
+      const days = { month: 30, quarter: 90, half_year: 180, year: 365 }[server.renewal_cycle || 'month']
+      group.remaining += price / days * Math.max(0, Math.ceil((end - now) / 86400000))
+      group.valued++
+    }
+    currencies.set(currency, group)
+  }
+  return { groups: [...currencies.values()].sort((a, b) => a.currency === b.currency ? 0 : a.currency === 'CNY' ? -1 : b.currency === 'CNY' ? 1 : a.currency.localeCompare(b.currency)), unpriced }
 }

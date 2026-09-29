@@ -2233,7 +2233,7 @@ function ServerTable({ servers }: { servers: ProbeServer[] }) {
   )
 }
 
-function ProbeLicenseNameplate({ name, displayName }: { name?: string; displayName?: string }) {
+function ProbeLicenseNameplate({ name, displayName, animated = true }: { name?: string; displayName?: string; animated?: boolean }) {
   const label = [name?.trim(), displayName?.trim()].filter(Boolean).join(' · ')
   const plateRef = useRef<HTMLSpanElement>(null)
   const textRef = useRef<HTMLSpanElement>(null)
@@ -2241,6 +2241,7 @@ function ProbeLicenseNameplate({ name, displayName }: { name?: string; displayNa
   const shineRef = useRef<HTMLSpanElement>(null)
 
   useEffect(() => {
+    if (!animated) return
     const plate = plateRef.current
     const text = textRef.current
     const stars = starsRef.current
@@ -2322,16 +2323,16 @@ function ProbeLicenseNameplate({ name, displayName }: { name?: string; displayNa
       cancelAnimationFrame(frameID)
       window.removeEventListener('resize', updateWidth)
     }
-  }, [])
+  }, [animated])
 
   if (!label) return null
   return (
-    <span ref={plateRef} className="probe-license-nameplate">
-      <strong ref={textRef} className="probe-license-text">{label}</strong>
-      <span className="probe-license-shine-clip" aria-hidden="true">
+    <span ref={plateRef} className="probe-license-nameplate" data-animated={animated} style={animated ? undefined : { opacity: 1, transform: 'none', willChange: 'auto' }}>
+      <strong ref={textRef} className="probe-license-text" style={animated ? undefined : { clipPath: 'none', willChange: 'auto' }}>{label}</strong>
+      {animated && <span className="probe-license-shine-clip" aria-hidden="true">
         <span ref={shineRef} className="probe-license-shine" />
-      </span>
-      <span ref={starsRef} className="probe-license-stars" aria-hidden="true" />
+      </span>}
+      {animated && <span ref={starsRef} className="probe-license-stars" aria-hidden="true" />}
     </span>
   )
 }
@@ -2720,7 +2721,7 @@ export function App() {
 }
 
 // 共用原有名牌与动画，独立主题不再遗漏许可证页尾。
-export function ProbeLicenseFooter({ badges }: { badges: ProbePayload['license_badge'] }) {
+export function ProbeLicenseFooter({ badges, animated = true }: { badges: ProbePayload['license_badge']; animated?: boolean }) {
   if (!badges && EXTRA_LICENSE_BADGES.length === 0) return null
   const live = badges ? (Array.isArray(badges) ? badges : [badges]) : []
   const keyOf = (badge: { name?: string; display_name?: string }) => badge.name || badge.display_name || ''
@@ -2729,6 +2730,6 @@ export function ProbeLicenseFooter({ badges }: { badges: ProbePayload['license_b
   return <div className="probe-license-footer">
     {[...merged, ...extras]
       .filter((badge, index, all) => all.findIndex((item) => keyOf(item) === keyOf(badge)) === index)
-      .map((badge, index) => <ProbeLicenseNameplate key={index} name={badge.name} displayName={badge.display_name} />)}
+      .map((badge, index) => <ProbeLicenseNameplate key={index} name={badge.name} displayName={badge.display_name} animated={animated} />)}
   </div>
 }

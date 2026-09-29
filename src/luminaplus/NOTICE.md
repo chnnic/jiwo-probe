@@ -7,10 +7,13 @@ The card layout, segmented meters and color palette are inspired by
 That project builds on [Komari Theme Lumina](https://github.com/stqfdyr/komari-theme-Lumina).
 No third-party site data, private configuration, logos or credentials are bundled.
 
-The 2026-09-29 paper palette and local serif headings are adapted from the user's
-Claude Paper controller theme (Bettmmwx/themes/claude-paper, v2026.09.29-01).
-They are integrated into LuminaPlus, not registered as a separate theme. This is
-not an official Anthropic product; the site's identity and existing features remain.
+The v0.2 paper treatment referenced the user's Claude Paper controller theme.
+The v0.3 redesign retains opaque surfaces and deep charcoal cards while returning
+to the original LuminaPlus-style overview, typography, segmented meters and
+speed-dot layout. The integration at [mmwx-probe-sd](https://github.com/xiangwan6667/mmwx-probe-sd)
+was studied as a reference. Jiwo's overview, snapshot trails and data logic are
+independently implemented here; no third-party adapter or application is bundled.
+This is not an official Anthropic product; the site's identity and features remain.
 
 The reference project's MIT notice is retained below for the adapted visual design.
 
