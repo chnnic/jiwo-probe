@@ -1,13 +1,16 @@
 import { useNetworkSpeed } from './use-network-speed'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { ConnectionCounts, UnlockDetails } from './ServerCapabilities'
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { Activity, ArrowDown, ArrowUp, BadgeDollarSign, CalendarClock, ChevronLeft, Clock, Cpu, Database, HardDrive, Maximize2, MemoryStick, Minimize2, Monitor, MoveHorizontal, PieChart, TrendingUp, Wallet, Wifi, X, ZoomIn, ZoomOut } from 'lucide-react'
-import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
+import { Activity, ArrowDown, ArrowUp, BadgeDollarSign, CalendarClock, ChevronLeft, Clock, Cpu, Database, HardDrive, MemoryStick, Monitor, MoveHorizontal, PieChart, TrendingUp, Wallet, Wifi, X, ZoomIn, ZoomOut } from 'lucide-react'
+import { Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import type { ProbePingSeries, ProbeServer } from './types'
 import { Twemoji } from './Twemoji'
 import { Meter, ReturnRouteBadges, SystemIcon, TrafficChart, SystemTrendChart, averagePing, bytes, expiring, expired, formatAxisDateTime, formatLossTick, hasLeadingFlag, HorizontalChart, lossScale, pct, regionFlag, regionLabel, remainingDays } from './App'
 import { serverHealth } from './PremiumProbePage'
-import { computeRemainingValue, formatMoney } from './value'
+import { computeMonthlyTrafficCost, computeRemainingValue, formatMoney } from './value'
+
+const RetroHistoryCharts = lazy(() => import('./RetroHistoryCharts').then((module) => ({ default: module.RetroHistoryCharts })))
 
 const cycleLabel = {
   month: '月',
@@ -82,6 +85,21 @@ function RetroHostInfo({ server, networkSpeed }: { server: ProbeServer; networkS
   )
 }
 
+function MonthlyTrafficCostItem({ server }: { server: ProbeServer }) {
+  const cost = computeMonthlyTrafficCost(server)
+  const value = !cost ? '无法计算' : cost.perTB > 0 && cost.perTB < 0.01
+    ? `< ${formatMoney(0.01, cost.currency, cost.isCny, true)} / TB / 月`
+    : `${formatMoney(cost.perTB, cost.currency, cost.isCny, true)} / TB / 月`
+  return (
+    <span className="detail-traffic-cost" title="按配置额度为每月额度估算：续费价格先按 1 / 3 / 6 / 12 个月折算，再除以计费额度（1 TB = 1024 GB）。单向或取最大值计费不自动翻倍。非月度流量套餐不适用；不按实际已用流量计算。">
+      <Database size={13} />
+      每月每 TB 费用
+      <strong>{value}{cost && `（${cost.currency}）`}</strong>
+      {!cost && <small>缺少有效续费价格或流量额度</small>}
+    </span>
+  )
+}
+
 const RANGES = [
   { key: '1h', label: '1 小时', bucketLabel: (index: number, count: number) => `-${(count - index) * 5}m` },
   { key: '6h', label: '6 小时', bucketLabel: (index: number, count: number) => `-${(((count - index) * 10) / 60).toFixed(1)}h` },
@@ -91,10 +109,8 @@ type RangeKey = (typeof RANGES)[number]['key']
 
 const colors = ['#8b5cf6', '#0ea5e9', '#22c55e', '#f59e0b', '#ef4444', '#ec4899']
 
-function PingTrendChart({ serverIndex, initial, targetKey, mode, retro = false, historyRange }: { serverIndex: number; initial: ProbePingSeries[]; targetKey: string; mode: 'latency' | 'loss'; retro?: boolean; historyRange?: RangeKey }) {
-  const [localRange, setRange] = useState<RangeKey>('1h')
-  const range = historyRange ?? localRange
-  const lineColor = (key: string, index: number) => retro ? `var(--graph-line-${index % 8 + 1})` : key === '__avg__' ? 'var(--foreground, #2f2350)' : colors[index % colors.length]
+function PingTrendChart({ serverIndex, initial, targetKey, mode }: { serverIndex: number; initial: ProbePingSeries[]; targetKey: string; mode: 'latency' | 'loss' }) {
+  const [range, setRange] = useState<RangeKey>('1h')
   const [group, setGroup] = useState<'all' | 'cn' | 'idc'>('all')
   const [hidden, setHidden] = useState<Set<string>>(new Set())
   const [series, setSeries] = useState<ProbePingSeries[]>(initial)
@@ -203,7 +219,7 @@ function PingTrendChart({ serverIndex, initial, targetKey, mode, retro = false, 
   return (
     <>
       <div className="ranges">
-        {!historyRange && RANGES.map((item) => (
+        {RANGES.map((item) => (
           <button type="button" className={range === item.key ? 'active' : ''} onClick={() => setRange(item.key)} key={item.key}>
             {item.label}
           </button>
@@ -260,14 +276,13 @@ function PingTrendChart({ serverIndex, initial, targetKey, mode, retro = false, 
             该服务器未配置{group === 'cn' ? '内地' : '海外'}探测点
           </div>
         )}
-        <HorizontalChart width={retro && isFit ? 0 : Math.max(120, rows.length * 82 * zoom)}>
+        <HorizontalChart width={Math.max(120, rows.length * 82 * zoom)}>
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={rows} margin={{ top: 8, right: 12, bottom: 0, left: 0 }}>
-              {retro && <CartesianGrid stroke="var(--graph-grid)" />}
-              <XAxis dataKey="time" tick={{ fontSize: 10, ...(retro ? { style: { fill: 'var(--graph-axis)' } } : {}) }} axisLine={false} tickLine={false} interval="preserveStartEnd" minTickGap={28} />
+              <XAxis dataKey="time" tick={{ fontSize: 10 }} axisLine={false} tickLine={false} interval="preserveStartEnd" minTickGap={28} />
               <YAxis
                 width={52}
-                tick={{ fontSize: 10, ...(retro ? { style: { fill: 'var(--graph-axis)' } } : {}) }}
+                tick={{ fontSize: 10 }}
                 axisLine={false}
                 tickLine={false}
                 unit={mode === 'loss' ? undefined : 'ms'}
@@ -283,7 +298,7 @@ function PingTrendChart({ serverIndex, initial, targetKey, mode, retro = false, 
               {displaySeries.map(({ item, index }) => {
                 const key = item.key || item.label
                 const active = key === targetKey
-                return <Line key={key} type={retro ? 'linear' : 'monotone'} dataKey={key} name={item.label} stroke={lineColor(key, index)} strokeWidth={active ? 2.5 : retro ? 1.5 : 1} strokeOpacity={active || retro ? 1 : 0.45} dot={false} connectNulls={false} isAnimationActive={false} />
+                return <Line key={key} type="monotone" dataKey={key} name={item.label} stroke={key === '__avg__' ? 'var(--foreground, #2f2350)' : colors[index % colors.length]} strokeWidth={active ? 2.5 : 1} strokeOpacity={active ? 1 : 0.45} dot={false} connectNulls={false} isAnimationActive={false} />
               })}
             </LineChart>
           </ResponsiveContainer>
@@ -302,47 +317,13 @@ function PingTrendChart({ serverIndex, initial, targetKey, mode, retro = false, 
                 onClick={() => toggleHidden(key)}
                 title={off ? '点击显示' : '点击隐藏'}
               >
-                <i style={{ background: lineColor(key, index) }} />
+                <i style={{ background: key === '__avg__' ? 'var(--foreground, #2f2350)' : colors[index % colors.length] }} />
                 {item.label}
               </button>
             )
           })}
         </div>
       )}
-    </>
-  )
-}
-
-function RetroHistoryCharts({ server, index, lines }: { server: ProbeServer; index: number; lines: ProbePingSeries[] }) {
-  const [range, setRange] = useState<RangeKey>('1h')
-  const [expanded, setExpanded] = useState<string | null>(null)
-  const panels = [
-    { key: 'cpu', title: 'CPU 使用率', chart: <SystemTrendChart serverIndex={index} metric="cpu" containerClass="detail-chart detail-chart-system" retro historyRange={range} /> },
-    { key: 'mem', title: '内存使用率', chart: <SystemTrendChart serverIndex={index} metric="mem" containerClass="detail-chart detail-chart-system" retro historyRange={range} /> },
-    { key: 'traffic', title: '日流量', chart: <TrafficChart daily={server.daily_traffic || []} containerClass="detail-chart detail-chart-traffic" retro /> },
-    ...(server.ping?.length ? [
-      { key: 'latency', title: '延迟监测', chart: <PingTrendChart serverIndex={index} initial={lines} targetKey="__avg__" mode="latency" retro historyRange={range} /> },
-      { key: 'loss', title: '丢包监测', chart: <PingTrendChart serverIndex={index} initial={lines} targetKey="__avg__" mode="loss" retro historyRange={range} /> },
-    ] : []),
-  ]
-  return (
-    <>
-      <div className="ranges retro-history-range" role="group" aria-label="历史时间范围">
-        <span>历史范围</span>
-        {RANGES.map((item) => <button type="button" key={item.key} className={range === item.key ? 'active' : ''} aria-pressed={range === item.key} onClick={() => setRange(item.key)}>{item.label}</button>)}
-        <span className="retro-history-note">日流量按天独立查看</span>
-      </div>
-      <div className="retro-charts-grid">
-        {panels.map(({ key, title, chart }) => (
-          <fieldset key={key} className={`retro-chart-box${key === 'latency' || key === 'loss' ? ' retro-chart-wide' : ''}${expanded === key ? ' expanded' : ''}`}>
-            <legend>{title}</legend>
-            <button type="button" className="retro-chart-expand" aria-label={`${expanded === key ? '还原' : '展开'}${title}`} aria-expanded={expanded === key} onClick={() => setExpanded(expanded === key ? null : key)}>
-              {expanded === key ? <Minimize2 size={12} /> : <Maximize2 size={12} />}
-            </button>
-            {chart}
-          </fieldset>
-        ))}
-      </div>
     </>
   )
 }
@@ -368,7 +349,7 @@ function DetailMetric({ icon, label, value, percent, sub }: { icon: React.ReactN
 export function ServerDetail({ server, index, onClose, showHealthScore = false, variant }: { server: ProbeServer; index: number; onClose: () => void; showHealthScore?: boolean; variant?: 'winxp' | 'win2000' }) {
   const networkSpeed = useNetworkSpeed()
   const [selected, setSelected] = useState('__avg__')
-  const [trendMode, setTrendMode] = useState<'latency' | 'loss' | 'traffic' | 'cpu' | 'mem'>('latency')
+  const [trendMode, setTrendMode] = useState<'latency' | 'loss' | 'traffic' | 'cpu' | 'mem' | 'connections'>(server.ping?.length ? 'latency' : 'connections')
   const name = server.name || `服务器 ${index + 1}`
   const flag = regionFlag(server.region)
   const ping = server.ping || []
@@ -511,10 +492,11 @@ export function ServerDetail({ server, index, onClose, showHealthScore = false, 
                   })()}
                 </div>
               )}
+              <ConnectionCounts server={server} />
             </section>
 
             <div className="detail-col-stack">
-              {(server.expires_at || server.renewal_price !== undefined) && (
+              {(server.expires_at || server.renewal_price !== undefined || server.renewal_price_cny !== undefined) && (
                 <section className="detail-panel">
                   <h3>到期与续费</h3>
                   <div className="detail-meta">
@@ -539,6 +521,7 @@ export function ServerDetail({ server, index, onClose, showHealthScore = false, 
                         {server.renewal_price_cny !== undefined && server.renewal_currency !== 'CNY' && <small>（{server.renewal_currency} {server.renewal_price}）</small>}
                       </span>
                     )}
+                    <MonthlyTrafficCostItem server={server} />
                     {server.provider_name && (
                       <span>
                         <Wifi size={13} />
@@ -553,16 +536,20 @@ export function ServerDetail({ server, index, onClose, showHealthScore = false, 
               {!!server.return_routes?.length && (
                 <section className="detail-panel">
                   <h3>回程路由</h3>
-                  <ReturnRouteBadges routes={server.return_routes} telecomPaidPeer={server.telecom_paid_peer} variant={document.documentElement.classList.contains('theme-lumina') ? 'lumina' : document.documentElement.classList.contains('theme-anime') ? 'anime' : document.documentElement.classList.contains('theme-glassmorphism') ? 'glass' : document.documentElement.classList.contains('theme-emerald') ? 'emerald' : undefined} />
+                  <ReturnRouteBadges routes={server.return_routes} telecomPaidPeer={server.telecom_paid_peer} variant={retro ? 'retro' : document.documentElement.classList.contains('theme-lumina') ? 'lumina' : document.documentElement.classList.contains('theme-anime') ? 'anime' : document.documentElement.classList.contains('theme-glassmorphism') ? 'glass' : document.documentElement.classList.contains('theme-emerald') ? 'emerald' : undefined} />
                 </section>
               )}
             </div>
           </div>
 
-          {variant === 'win2000' ? <RetroHistoryCharts server={server} index={index} lines={lines} /> : (retro || !!ping.length) && (
-            <section className="detail-panel">
+          <section className="detail-panel">
+            <UnlockDetails key={index} unlocks={server.unlocks} />
+          </section>
+
+          {retro ? <Suspense fallback={<div role="status">正在加载趋势图…</div>}><RetroHistoryCharts key={index} server={server} index={index} /></Suspense> : (
+            <section className="detail-panel" aria-label="历史趋势">
               <div className="detail-panel-head">
-                <h3>{trendMode === 'latency' ? '延迟趋势' : trendMode === 'loss' ? '丢包趋势' : trendMode === 'traffic' ? '日流量趋势' : trendMode === 'cpu' ? 'CPU 趋势' : '内存趋势'}</h3>
+                <h3>{trendMode === 'latency' ? '延迟趋势' : trendMode === 'loss' ? '丢包趋势' : trendMode === 'traffic' ? '日流量趋势' : trendMode === 'cpu' ? 'CPU 趋势' : trendMode === 'mem' ? '内存趋势' : 'TCP / UDP 连接数趋势'}</h3>
                 <div className="trend-mode-switch" role="tablist" aria-label="趋势类型">
                   <button type="button" role="tab" aria-selected={trendMode === 'latency'} className={trendMode === 'latency' ? 'active' : ''} onClick={() => setTrendMode('latency')}>
                     延迟
@@ -579,14 +566,15 @@ export function ServerDetail({ server, index, onClose, showHealthScore = false, 
                   <button type="button" role="tab" aria-selected={trendMode === 'mem'} className={trendMode === 'mem' ? 'active' : ''} onClick={() => setTrendMode('mem')}>
                     内存
                   </button>
+                  <button type="button" role="tab" aria-selected={trendMode === 'connections'} className={trendMode === 'connections' ? 'active' : ''} onClick={() => setTrendMode('connections')}>
+                    TCP/UDP
+                  </button>
                 </div>
               </div>
               {trendMode === 'traffic' ? (
-                <TrafficChart daily={server.daily_traffic || []} containerClass="detail-chart detail-chart-traffic" retro={retro} />
-              ) : trendMode === 'cpu' ? (
-                <SystemTrendChart serverIndex={index} metric="cpu" containerClass="detail-chart detail-chart-system" retro={retro} />
-              ) : trendMode === 'mem' ? (
-                <SystemTrendChart serverIndex={index} metric="mem" containerClass="detail-chart detail-chart-system" retro={retro} />
+                <TrafficChart daily={server.daily_traffic || []} containerClass="detail-chart detail-chart-traffic" />
+              ) : trendMode === 'cpu' || trendMode === 'mem' || trendMode === 'connections' ? (
+                <SystemTrendChart serverIndex={index} metric={trendMode} containerClass="detail-chart detail-chart-system" />
               ) : (
                 <>
                   <div className="detail-ping-picker">
@@ -600,7 +588,7 @@ export function ServerDetail({ server, index, onClose, showHealthScore = false, 
                       ))}
                     </select>
                   </div>
-                  <PingTrendChart serverIndex={index} initial={lines} targetKey={selected} mode={trendMode} retro={retro} />
+                  <PingTrendChart serverIndex={index} initial={lines} targetKey={selected} mode={trendMode} />
                 </>
               )}
             </section>

@@ -1,10 +1,12 @@
 import { useNetworkSpeed } from '../use-network-speed'
+import { UnlockButton } from '../ServerCapabilities'
+import { ConnectionLabel } from '../ConnectionLabel'
+import { connectionCount } from '../unlocks'
 import { useEffect, useMemo, useState } from 'react'
 import {
   Activity,
   ArrowDown,
   ArrowUp,
-  CalendarClock,
   Check,
   ChevronDown,
   Clock3,
@@ -43,7 +45,6 @@ import {
   hasLeadingFlag,
   pct,
   regionFlag,
-  remainingDays,
 } from '../App'
 import type { EnrichedServer } from '../use-probe'
 import { GmEarth, type GmRegion } from './GmEarth'
@@ -54,10 +55,12 @@ const THEME_OPTIONS: { value: ThemeName; label: string }[] = [
   { value: 'anime', label: '动漫' },
   { value: 'glass', label: '玻璃' },
   { value: 'lumina', label: 'Lumina' },
+  { value: 'luminaplus', label: 'LuminaPlus' },
   { value: 'premium', label: 'Premium' },
   { value: 'ran', label: '岚 · Ran' },
   { value: 'glassmorphism', label: 'Glassmorphism' },
   { value: 'emerald', label: 'Emerald' },
+  { value: 'lite', label: 'Lite' },
 ]
 
 function formatUptimeDays(seconds: number): string {
@@ -155,7 +158,7 @@ function GmNodeCard({ server, index }: { server: EnrichedServer; index: number }
         : `${server.renewal_currency || 'CNY'} ${server.renewal_price} / ${CYCLE_LABELS[server.renewal_cycle || 'month'] || '月'}`
       : null
   const loadParts = (server.loadavg || '').split(/\s+/).map(Number).filter((v) => Number.isFinite(v))
-  // 周期流量(物理口径, 与 Lumina 卡同源逻辑)
+  // 周期流量（物理口径）
   let cycleUp = server.traffic_used_up
   let cycleDown = server.traffic_used_down
   if (cycleUp === undefined || cycleDown === undefined) {
@@ -169,9 +172,8 @@ function GmNodeCard({ server, index }: { server: EnrichedServer; index: number }
       cycleDown = base * (1 - ratio)
     }
   }
-  const daysText = server.expires_at ? remainingDays(server.expires_at) : null
-  const remainValue = computeRemainingValue(server)
-  const remainValueText = remainValue ? formatMoney(remainValue.value, 'CNY', true) : null
+  const tcpCount = connectionCount(server.tcp_connections)
+  const udpCount = connectionCount(server.udp_connections)
   // 三网回程文字标签
   const carrierLabels: Record<string, string> = { telecom: '电信', unicom: '联通', mobile: '移动' }
   const displayRoute = (route: string): string => {
@@ -202,6 +204,7 @@ function GmNodeCard({ server, index }: { server: EnrichedServer; index: number }
             <h2 className="gm-node-title" title={name}>{name}</h2>
           </div>
           <div className="gm-node-icons">
+            <UnlockButton server={server} />
             <span className="gm-node-os" title={systemTitle(server)} onClick={(event) => event.stopPropagation()}>
               <SystemIcon server={server} />
             </span>
@@ -268,7 +271,7 @@ function GmNodeCard({ server, index }: { server: EnrichedServer; index: number }
               </button>
             )}
           </div>
-          {/* 速率/周期流量/到期 3 列块 */}
+          {/* 速率/周期流量/连接数 3 列块 */}
           <div className="gm-quick-row">
             <div className="gm-quick-cell">
               <div className="gm-quick-line gm-q-up">
@@ -290,14 +293,14 @@ function GmNodeCard({ server, index }: { server: EnrichedServer; index: number }
                 <span>{cycleDown !== undefined ? bytes(cycleDown) : '—'}</span>
               </div>
             </div>
-            <div className="gm-quick-cell">
-              <div className="gm-quick-line gm-q-days">
-                <CalendarClock size={11} />
-                <span>{daysText ?? '—'}</span>
+            <div className="gm-quick-cell gm-connection-cell" aria-label="整机连接数">
+              <div className="gm-quick-line gm-q-connection" title={`TCP ${tcpCount}：整机已建立连接数，非代理用户数；未上报显示 —。`}>
+                <ConnectionLabel protocol="TCP" size={11} />
+                <strong>{tcpCount}</strong>
               </div>
-              <div className="gm-quick-line gm-q-value">
-                <Wallet size={11} />
-                <span>{remainValueText ?? '—'}</span>
+              <div className="gm-quick-line gm-q-connection" title={`UDP ${udpCount}：整机 socket 数，非代理用户数；未上报显示 —。`}>
+                <ConnectionLabel protocol="UDP" size={11} />
+                <strong>{udpCount}</strong>
               </div>
             </div>
           </div>
@@ -725,6 +728,7 @@ export default function GmApp({
                         <td>
                           <span className={`status ${server.online ? 'online' : ''}`} />
                           <Twemoji>{server.name || `服务器 ${index + 1}`}</Twemoji>
+                          <UnlockButton server={server} />
                         </td>
                         <td>{server.online ? '在线' : '离线'}</td>
                         <td className="tabular">{server.cpu_pct !== undefined ? `${server.cpu_pct.toFixed(1)}%` : '—'}</td>

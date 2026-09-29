@@ -1,3 +1,4 @@
+/* Detail trends v2026.09.25.1 — TCP/UDP 主控历史入口与窄屏布局 */
 * {
   box-sizing: border-box;
 }
@@ -1778,6 +1779,7 @@ footer a:hover {
 .leaderboard-body {
   padding: 0 14px 14px;
 }
+.lb-note { margin: 0 0 10px; color: var(--muted); font-size: 11px; line-height: 1.5; }
 .leaderboard-tabs {
   display: flex;
   gap: 6px;
@@ -2627,6 +2629,7 @@ footer a:hover {
 }
 .detail-panel-head {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
@@ -2638,6 +2641,12 @@ footer a:hover {
 .trend-mode-switch {
   display: inline-flex;
   gap: 4px;
+}
+.detail-connections-note {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.6;
 }
 .trend-mode-switch button {
   min-width: auto;
@@ -2755,6 +2764,21 @@ footer a:hover {
 }
 .detail-meta .warning {
   color: #d97706;
+}
+.detail-meta > .detail-traffic-cost {
+  flex-basis: 100%;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+.detail-traffic-cost > svg {
+  flex-shrink: 0;
+}
+.detail-traffic-cost strong {
+  overflow-wrap: anywhere;
+}
+.detail-traffic-cost small {
+  flex-basis: 100%;
+  margin-left: 19px;
 }
 .detail-hw {
   display: flex;
@@ -4053,38 +4077,9 @@ footer a:hover {
   grid-template-columns: 1fr 1fr;
   gap: 6px 14px;
 }
-.lumina-traffic-stat {
-  display: flex;
-  align-items: baseline;
-  gap: 6px;
-  min-width: 0;
-}
-.lumina-traffic-direction {
-  display: inline-flex;
-  align-items: center;
-  align-self: center;
-  color: var(--muted);
-  font-size: 11px;
-  flex-shrink: 0;
-}
-.lumina-traffic-direction svg {
-  display: block;
-}
-.lumina-traffic-stat strong {
-  font-size: 12.5px;
-  font-weight: 650;
-  white-space: nowrap;
-  flex: 0 0 auto;
-}
-.lumina-traffic-stat small {
-  margin-left: auto;
-  color: var(--muted);
-  font-size: 10.5px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  text-align: right;
-}
+.lumina-network-row { grid-column: 1 / -1; font-variant-numeric: tabular-nums; }
+.lumina-network-row .download { color: var(--traffic-down); }
+.lumina-network-row .upload { color: var(--traffic-up); }
 .lumina-traffic-pulse-wrap {
   grid-column: 1 / -1;
   display: grid;
@@ -4495,7 +4490,7 @@ footer a:hover {
   }
 }
 
-/* 详情页趋势 tab 扩到 6 个(延迟/丢包/流量/负载/CPU/内存): 手机端放不下时横滑而非换行破坏布局 */
+/* 详情页六项趋势：延迟/丢包/流量/CPU/内存/TCPUDP；手机端可横滑。 */
 @media (max-width: 640px) {
   .detail-panel-head {
     gap: 6px;

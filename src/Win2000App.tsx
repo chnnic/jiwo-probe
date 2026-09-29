@@ -8,6 +8,7 @@ import { PING_AVERAGES, pingTargetOptions, resolvePingGroups, type PingGroupConf
 import { PasskeyLogin } from './PasskeyLogin'
 import { Twemoji } from './Twemoji'
 import { ServerDetail } from './ServerDetail'
+import { ReturnRouteBadges } from './App'
 
 type Skin = 'win31' | 'win2000' | 'xp' | 'aqua'
 type View = 'cards' | 'ring' | 'table'
@@ -124,7 +125,7 @@ function ProbeRows({ ping, config }: { ping?: ProbePingSeries[]; config: PingGro
   </div>
 }
 
-function CardData({ server, speed, pingGroups }: { server: ProbeServer; speed: (value?: number) => string; pingGroups: PingGroupConfig }) {
+function CardData({ server, speed, pingGroups, showRoutes }: { server: ProbeServer; speed: (value?: number) => string; pingGroups: PingGroupConfig; showRoutes: boolean }) {
   const up = speed(server.upload_speed).split(' ')
   const down = speed(server.download_speed).split(' ')
   return <div className="card-data">
@@ -143,6 +144,7 @@ function CardData({ server, speed, pingGroups }: { server: ProbeServer; speed: (
       </div>
     </div>
     <ProbeRows ping={server.ping} config={pingGroups} />
+    {showRoutes && !!server.return_routes?.length && <ReturnRouteBadges routes={server.return_routes} telecomPaidPeer={server.telecom_paid_peer} variant="retro" />}
   </div>
 }
 
@@ -157,16 +159,17 @@ function ServerTitle({ server }: { server: ProbeServer }) {
   </div>
 }
 
-function ServerCard({ server, index, speed, pingGroups, ring = false, onOpen }: { server: ProbeServer; index: number; speed: (value?: number) => string; pingGroups: PingGroupConfig; ring?: boolean; onOpen: (index: number) => void }) {
+function ServerCard({ server, index, speed, pingGroups, showRoutes, ring = false, onOpen }: { server: ProbeServer; index: number; speed: (value?: number) => string; pingGroups: PingGroupConfig; showRoutes: boolean; ring?: boolean; onOpen: (index: number) => void }) {
   const trafficUsed = percent(server.traffic_used, server.traffic_limit)
   const memory = percent(server.mem_used, server.mem_total)
   const disk = percent(server.disk_used, server.disk_total)
   const meta = server.online ? formatUptime(server.uptime) : '离线'
+  const hardwareLabel = showRoutes ? server.cpu_model?.trim() : server.arch
   const open = () => onOpen(index)
   return <article className={`win server-card${ring ? ' ring-card' : ''}${server.online ? '' : ' offline'}`} onClick={open} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); open() } }} role="button" tabIndex={0} title="点击查看节点详情">
     <ServerTitle server={server} />
     <div className="card-body">
-      <div className="card-meta"><span className={`card-meta-item${server.online ? '' : ' expired'}`}>{meta}</span><span className="card-meta-spacer" />{server.cpu_cores ? <span className="badge">{server.cpu_cores} 核</span> : null}{server.arch ? <span className="badge">{server.arch}</span> : null}</div>
+      <div className="card-meta"><span className={`card-meta-item${server.online ? '' : ' expired'}`}>{meta}</span><span className="card-meta-spacer" />{server.cpu_cores ? <span className="badge">{server.cpu_cores} 核</span> : null}{hardwareLabel ? <span className={`badge${showRoutes ? ' retro-cpu-model' : ''}`} title={hardwareLabel}>{hardwareLabel}</span> : null}</div>
       {ring ? <div className="pies">
         <div className="pie-item"><DiskPie value={server.cpu_pct || 0} /><b>CPU {Math.round(server.cpu_pct || 0)}%</b><span className="pie-sub">{server.cpu_cores || '—'} 核</span></div>
         <div className="pie-item"><DiskPie value={memory} /><b>内存 {Math.round(memory)}%</b><span className="pie-sub">{formatTraffic(server.mem_used)} / {formatTraffic(server.mem_total)}</span></div>
@@ -177,7 +180,7 @@ function ServerCard({ server, index, speed, pingGroups, ring = false, onOpen }: 
         <span>硬盘</span><Progress value={disk} /><span className="num">{disk.toFixed(2)}%</span>
         <span>用量</span><Progress value={trafficUsed} unlimited={!server.traffic_limit || server.traffic_limit <= 0} /><span className="num">{server.traffic_limit ? `${trafficUsed.toFixed(2)}%` : '∞'}</span>
       </div>}
-      <CardData server={server} speed={speed} pingGroups={pingGroups} />
+      <CardData server={server} speed={speed} pingGroups={pingGroups} showRoutes={showRoutes} />
     </div>
   </article>
 }
@@ -186,7 +189,7 @@ function DiskPie({ value }: { value: number }) {
   return <span className="disk-pie" style={{ '--pie-pct': `${Math.max(0, Math.min(100, value))}%` } as CSSProperties}><span className="disk-pie-side" /><span className="disk-pie-top" /></span>
 }
 
-function SortableTable({ servers, speed, onOpen }: { servers: ProbeServer[]; speed: (value?: number) => string; onOpen: (server: ProbeServer) => void }) {
+function SortableTable({ servers, speed, showRoutes, onOpen }: { servers: ProbeServer[]; speed: (value?: number) => string; showRoutes: boolean; onOpen: (server: ProbeServer) => void }) {
   const [sort, setSort] = useState<keyof ProbeServer | null>(null)
   const [descending, setDescending] = useState(true)
   const sorted = useMemo(() => [...servers].sort((left, right) => {
@@ -196,7 +199,7 @@ function SortableTable({ servers, speed, onOpen }: { servers: ProbeServer[]; spe
     return descending ? b - a : a - b
   }), [servers, sort, descending])
   const header = (label: string, field?: keyof ProbeServer, className?: string) => <th className={className}><button type="button" className="col-head" onClick={() => { if (sort === field) setDescending(value => !value); else { setSort(field || null); setDescending(true) } }}>{label}{field && sort === field ? (descending ? ' ▼' : ' ▲') : ''}</button></th>
-  return <div className="table-scroll sunken"><table className="listview"><thead><tr>{header('', undefined, 'col-status')}{header('名称', 'name')}{header('在线', 'uptime')}{header('到期')}{header('负载', 'cpu_pct')}{header('实时网速 ↓|↑', 'download_speed')}{header('CPU', 'cpu_pct')}{header('内存', 'mem_used')}{header('硬盘', 'disk_used')}{header('流量', 'traffic_used')}</tr></thead><tbody>{sorted.length === 0 ? <tr className="table-empty"><td colSpan={10}>没有匹配的服务器</td></tr> : sorted.map((server, index) => { const memory = percent(server.mem_used, server.mem_total); const disk = percent(server.disk_used, server.disk_total); const open = () => onOpen(server); return <tr className={`${server.online ? '' : 'offline'} table-row-link`} key={`${server.name}-${index}`} onClick={open} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); open() } }} role="button" tabIndex={0}><td className="col-status"><span className={`led${server.online ? ' on' : ''}`} /></td><td><span className="cell-flex"><Flag code={server.region_country} /><span>{server.name || `服务器 ${index + 1}`}</span></span></td><td>{server.online ? formatUptime(server.uptime) : '离线'}</td><td>{formatRemaining(server.expires_at)} 天</td><td>{(server.cpu_pct || 0).toFixed(1)}%</td><td>{speed(server.download_speed)} ↓ / {speed(server.upload_speed)} ↑</td><td><span className="cell-meter"><Progress value={server.cpu_pct || 0} /><span className="num">{(server.cpu_pct || 0).toFixed(1)}%</span></span></td><td><span className="cell-meter"><Progress value={memory} /><span className="num">{memory.toFixed(1)}%</span></span></td><td><span className="cell-meter"><Progress value={disk} /><span className="num">{disk.toFixed(1)}%</span></span></td><td>{formatTraffic(server.traffic_used)}</td></tr> })}</tbody></table></div>
+  return <div className="table-scroll sunken"><table className="listview"><thead><tr>{header('', undefined, 'col-status')}{header('名称', 'name')}{header('在线', 'uptime')}{header('到期')}{header('负载', 'cpu_pct')}{header('实时网速 ↓|↑', 'download_speed')}{header('CPU', 'cpu_pct')}{header('内存', 'mem_used')}{header('硬盘', 'disk_used')}{header('流量', 'traffic_used')}</tr></thead><tbody>{sorted.length === 0 ? <tr className="table-empty"><td colSpan={10}>没有匹配的服务器</td></tr> : sorted.map((server, index) => { const memory = percent(server.mem_used, server.mem_total); const disk = percent(server.disk_used, server.disk_total); const open = () => onOpen(server); return <tr className={`${server.online ? '' : 'offline'} table-row-link`} key={`${server.name}-${index}`} onClick={open} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); open() } }} role="button" tabIndex={0}><td className="col-status"><span className={`led${server.online ? ' on' : ''}`} /></td><td><span className="cell-flex"><Flag code={server.region_country} /><span>{server.name || `服务器 ${index + 1}`}</span></span>{showRoutes && !!server.return_routes?.length && <ReturnRouteBadges routes={server.return_routes} telecomPaidPeer={server.telecom_paid_peer} variant="retro" />}</td><td>{server.online ? formatUptime(server.uptime) : '离线'}</td><td>{formatRemaining(server.expires_at)} 天</td><td>{(server.cpu_pct || 0).toFixed(1)}%</td><td>{speed(server.download_speed)} ↓ / {speed(server.upload_speed)} ↑</td><td><span className="cell-meter"><Progress value={server.cpu_pct || 0} /><span className="num">{(server.cpu_pct || 0).toFixed(1)}%</span></span></td><td><span className="cell-meter"><Progress value={memory} /><span className="num">{memory.toFixed(1)}%</span></span></td><td><span className="cell-meter"><Progress value={disk} /><span className="num">{disk.toFixed(1)}%</span></span></td><td>{formatTraffic(server.traffic_used)}</td></tr> })}</tbody></table></div>
 }
 
 export function RetroDesktopApp({ family }: { family: RetroFamily }) {
@@ -261,7 +264,7 @@ export function RetroDesktopApp({ family }: { family: RetroFamily }) {
         <div className="page-content"><div className="dashboard-panel">
           <div className="stats-grid"><StatBox label="服务器" id="fleet"><span className="stat-figure"><b className="stat-big"><span className="text-online">{online} 在线</span><span className="stat-sep"> | </span><span className="text-offline">{servers.length - online} 离线</span></b><FleetBar servers={servers} /></span></StatBox><StatBox label="实时速度" id="speed"><span className="stat-figure"><b className="stat-big num">{speed(totalDown + totalUp)}</b><span className="stat-sub"><i className="net-up">↑</i> {speed(totalUp)}<span className="stat-sep"> · </span><i className="net-down">↓</i> {speed(totalDown)}</span></span></StatBox><StatBox label="累计流量" id="total"><span className="stat-figure"><b className="stat-big num">{formatTraffic(totalTraffic)}</b><span className="stat-sub"><i className="net-up">↑</i> {formatTraffic(servers.reduce((sum, server) => sum + (server.traffic_used_up || 0), 0))}<span className="stat-sep"> · </span><i className="net-down">↓</i> {formatTraffic(servers.reduce((sum, server) => sum + (server.traffic_used_down || 0), 0))}</span></span></StatBox><StatBox label="最忙节点" id="busy">{busiest ? <div className="stat-busy"><span className="stat-busy-name" title={busiest.name}>{busiest.name || '—'}</span><b className="num">{(busiest.cpu_pct || 0).toFixed(1)}%</b><Progress value={busiest.cpu_pct || 0} /></div> : <span className="text-muted">—</span>}</StatBox></div>
           <div className="tabs filter-tabs"><button type="button" className={`tab${region === '' ? ' active' : ''}`} onClick={() => setRegion('')}><span>ALL</span><span className="tab-count">全部 {servers.length}</span></button>{regions.map(item => <button type="button" className={`tab${region === item ? ' active' : ''}`} key={item} onClick={() => setRegion(item)}><Flag code={item} /><span>{item}</span><span className="tab-count">{servers.filter(server => (server.region_country || server.region) === item).length}</span></button>)}</div>
-          {visible.length === 0 ? <div className="tab-panel"><p className="empty-state">这个地区没有节点</p></div> : view === 'table' ? <SortableTable servers={visible} speed={speed} onOpen={(server) => setSelectedServer(servers.indexOf(server))} /> : <div className={`servers-grid${view === 'ring' ? ' ring-grid' : ''}`}>{visible.map((server, index) => <ServerCard key={`${server.name}-${index}`} server={server} index={servers.indexOf(server)} speed={speed} pingGroups={pingGroups} ring={view === 'ring'} onOpen={setSelectedServer} />)}</div>}
+          {visible.length === 0 ? <div className="tab-panel"><p className="empty-state">这个地区没有节点</p></div> : view === 'table' ? <SortableTable servers={visible} speed={speed} showRoutes={family !== 'macos9'} onOpen={(server) => setSelectedServer(servers.indexOf(server))} /> : <div className={`servers-grid${view === 'ring' ? ' ring-grid' : ''}`}>{visible.map((server, index) => <ServerCard key={`${server.name}-${index}`} server={server} index={servers.indexOf(server)} speed={speed} pingGroups={pingGroups} showRoutes={family !== 'macos9'} ring={view === 'ring'} onOpen={setSelectedServer} />)}</div>}
         </div></div>
       </div></main>
       <footer className="status-bar"><div className="status-field grow">{error ? `连接中断：${error}` : `已连接 · ${online} 在线 / ${servers.length - online} 离线`}</div><div className="status-field status-credit">Powered by&nbsp;<a href={family === 'macos9' ? 'https://github.com/livid/exe' : family === 'winxp' ? 'https://github.com/botoxparty/XP.css' : 'https://github.com/guboysky/win2000'} target="_blank" rel="noreferrer">{family === 'macos9' ? 'Mac OS 9 Platinum' : family === 'winxp' ? 'Windows XP' : 'Win2000 Theme'}</a></div></footer>

@@ -1,3 +1,4 @@
+/* Premium · v2026.09.25.1 · 卡片新增实时上下行速度 */
 @font-face {
   font-family: 'OPlusSans3';
   src: url('/fonts/OPlusSans3-Medium.woff2') format('woff2');
@@ -2860,6 +2861,64 @@
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 0.7rem;
   padding: 1.35rem 0;
+}
+
+.premium-probe-card-network {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.premium-probe-card-speeds {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.premium-probe-card-speeds > div {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 0.2rem;
+}
+
+.premium-probe-card-speeds svg {
+  flex-shrink: 0;
+  width: 0.8rem;
+  height: 0.8rem;
+  color: var(--pp-gold);
+}
+
+.premium-probe-card-speeds strong {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--pp-gold);
+  font-size: 0.7rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.premium-probe-card-network > .probe-connections.probe-connections--card {
+  gap: 0.5rem;
+  margin: 0;
+  font-size: 0.7rem;
+}
+
+.premium-probe-card-network .probe-connections > span {
+  gap: 3px;
+}
+
+.premium-probe-card-network .probe-connection-label {
+  gap: 2px;
+}
+
+.premium-probe-card-network .probe-connection-label svg {
+  width: 11px;
+  height: 11px;
 }
 
 .premium-probe-server-footer {

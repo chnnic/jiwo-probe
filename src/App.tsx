@@ -1,11 +1,12 @@
 import { useNetworkSpeed } from './use-network-speed'
+import { ConnectionCounts, UnlockButton } from './ServerCapabilities'
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import Lottie from 'lottie-react'
-import { Activity, ArrowDown, ArrowDownUp, ArrowUp, BadgeDollarSign, Calendar, CalendarClock, Check, CheckCircle2, ChevronDown, ChevronUp, CircleDollarSign, Clock, Clock3, Cpu, Crown, Database, Gauge, Gem, Globe2, HardDrive, LayoutGrid, List, MapPin, MemoryStick, Monitor, Moon, MoveHorizontal, Palette, PieChart, RefreshCw, Rows3, Rows4, Search, Server, Sun, SunMoon, TrendingUp, Trophy, Unplug, Wallet, Wifi, XCircle, ZoomIn, ZoomOut } from 'lucide-react'
+import { Activity, ArrowDown, ArrowDownUp, ArrowUp, BadgeDollarSign, Cable, Calendar, CalendarClock, Check, CheckCircle2, ChevronDown, ChevronUp, CircleDollarSign, Clock, Clock3, Cpu, Crown, Database, Gauge, Gem, Globe2, HardDrive, LayoutGrid, List, MapPin, MemoryStick, Monitor, Moon, MoveHorizontal, Network, Palette, PieChart, RefreshCw, Rows3, Rows4, Search, Server, Sun, SunMoon, TrendingUp, Trophy, Unplug, Wallet, Wifi, XCircle, ZoomIn, ZoomOut } from 'lucide-react'
 import { siAlmalinux, siAlpinelinux, siApple, siArchlinux, siCentos, siDebian, siFedora, siFreebsd, siGentoo, siKalilinux, siLinux, siLinuxmint, siNixos, siOpensuse, siProxmox, siRedhat, siRockylinux, siUbuntu } from 'simple-icons'
-import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
-import type { ProbeBucket, ProbePingSeries, ProbeReturnRoute, ProbeServer, ThemeName } from './types'
+import { Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
+import type { ProbeBucket, ProbePayload, ProbePingSeries, ProbeReturnRoute, ProbeServer, ThemeName } from './types'
 import { EnrichedServer, getActiveTheme, getDarkOverride, getThemeOverride, setDarkOverride, setTheme, useProbe } from './use-probe'
 import {
   dailyTrafficRows,
@@ -20,6 +21,9 @@ import { CardPingGroups } from './CardPingGroups'
 import { pingTargetOptions, isPingAverage } from './ping-groups'
 import { ServerDetail } from './ServerDetail'
 import { computeRemainingValue, formatMoney } from './value'
+import { LEADERBOARD_ORDER, rankConnectionCounts, type LeaderboardKey } from './leaderboards'
+import { connectionCount } from './unlocks'
+import { MINI_RANGES, connectionTrendRows, formatConnectionAverage, systemTrendRows, type SystemSeries, type TrendRow } from './mini/mini-trends'
 import commonRouteAnimation from './assets/return-route/common.json'
 import premiumRouteAnimation from './assets/return-route/premium.json'
 
@@ -28,6 +32,9 @@ const RegionGlobe = lazy(() => import('./RegionGlobe').then((module) => ({ defau
 const PremiumProbePage = lazy(() => import('./PremiumProbePage').then((module) => ({ default: module.PremiumProbePage })))
 const GmApp = lazy(() => import('./glassmorphism/GmApp').then((module) => ({ default: module.default })))
 const EmeraldApp = lazy(() => import('./emerald/EmeraldApp').then((module) => ({ default: module.default })))
+const MiniApp = lazy(() => import('./mini/MiniApp'))
+const LuminaPlusApp = lazy(() => import('./luminaplus/LuminaPlusApp'))
+const MiniServerDetail = lazy(() => import('./mini/MiniServerDetail'))
 const ranges = [
   {
     key: '1h',
@@ -245,16 +252,18 @@ const THEME_OPTIONS: { value: ThemeName; label: string }[] = [
   { value: 'anime', label: '动漫' },
   { value: 'glass', label: '玻璃' },
   { value: 'lumina', label: 'Lumina' },
+  { value: 'luminaplus', label: 'LuminaPlus' },
   { value: 'premium', label: 'Premium' },
   { value: 'ran', label: '岚 · Ran' },
   { value: 'glassmorphism', label: 'Glassmorphism' },
   { value: 'emerald', label: 'Emerald' },
+  { value: 'lite', label: 'Lite' },
   { value: 'win2000', label: 'Windows 2000' },
   { value: 'winxp', label: 'Windows XP' },
   { value: 'macos9', label: 'Mac OS 9 Platinum' },
 ]
 
-function ThemeSelect({ value, onChange }: { value: ThemeName | null; onChange: (name: ThemeName | null) => void }) {
+export function ThemeSelect({ value, onChange }: { value: ThemeName | null; onChange: (name: ThemeName | null) => void }) {
   const [open, setOpen] = useState(false)
   const [pos, setPos] = useState({ top: 0, right: 0 })
   const wrapRef = useRef<HTMLDivElement>(null)
@@ -282,12 +291,17 @@ function ThemeSelect({ value, onChange }: { value: ThemeName | null; onChange: (
       if (menuRef.current?.contains(event.target as Node)) return
       setOpen(false)
     }
+    const handleScroll = (event: Event) => {
+      // More themes make the menu scrollable; scrolling its own options must not dismiss it.
+      if (event.target instanceof Node && menuRef.current?.contains(event.target)) return
+      close()
+    }
     document.addEventListener('mousedown', handle)
-    window.addEventListener('scroll', close, true)
+    window.addEventListener('scroll', handleScroll, true)
     window.addEventListener('resize', close)
     return () => {
       document.removeEventListener('mousedown', handle)
-      window.removeEventListener('scroll', close, true)
+      window.removeEventListener('scroll', handleScroll, true)
       window.removeEventListener('resize', close)
     }
   }, [open, close])
@@ -456,8 +470,6 @@ export function averagePing(series: ProbePingSeries[]): ProbePingSeries {
   }
 }
 
-type LeaderboardKey = 'cpu' | 'mem' | 'disk' | 'load' | 'traffic' | 'usage' | 'speed' | 'uptime' | 'today' | 'week' | 'loss-cn' | 'loss-idc' | 'cost' | 'expiry' | 'ping-cn' | 'ping-idc'
-
 const isCnLabel = (label: string) => /电信|联通|移动/.test(label)
 
 function groupedPingAvg(ping: ProbePingSeries[], cn: boolean): number {
@@ -513,29 +525,32 @@ function avgLossPct(server: ProbeServer, cn: boolean): number {
   return losses.length ? losses.reduce((a, b) => a + b, 0) / losses.length : -1
 }
 
-const LEADERBOARD_TABS: { key: LeaderboardKey; label: string; icon: React.ReactNode }[] = [
-  { key: 'cpu', label: 'CPU', icon: <Cpu size={13} /> },
-  { key: 'mem', label: '内存', icon: <MemoryStick size={13} /> },
-  { key: 'disk', label: '磁盘', icon: <HardDrive size={13} /> },
-  { key: 'load', label: '负载', icon: <Server size={13} /> },
-  { key: 'traffic', label: '流量', icon: <PieChart size={13} /> },
-  { key: 'usage', label: '流量使用率', icon: <Database size={13} /> },
-  { key: 'speed', label: '实时速度', icon: <ArrowDownUp size={13} /> },
-  { key: 'uptime', label: '在线时长', icon: <Clock size={13} /> },
-  { key: 'today', label: '今日流量', icon: <CalendarClock size={13} /> },
-  { key: 'week', label: '近7日流量', icon: <TrendingUp size={13} /> },
-  { key: 'loss-cn', label: '内地丢包率', icon: <Activity size={13} /> },
-  { key: 'loss-idc', label: '海外丢包率', icon: <Wifi size={13} /> },
-  { key: 'cost', label: '月成本', icon: <Wallet size={13} /> },
-  { key: 'expiry', label: '到期时间', icon: <Calendar size={13} /> },
-  { key: 'ping-cn', label: '内地延迟', icon: <Gauge size={13} /> },
-  { key: 'ping-idc', label: '海外延迟', icon: <Globe2 size={13} /> },
-]
+const LEADERBOARD_META: Record<LeaderboardKey, { label: string; icon: React.ReactNode }> = {
+  cpu: { label: 'CPU', icon: <Cpu size={13} /> },
+  mem: { label: '内存', icon: <MemoryStick size={13} /> },
+  disk: { label: '磁盘', icon: <HardDrive size={13} /> },
+  load: { label: '负载', icon: <Server size={13} /> },
+  traffic: { label: '流量', icon: <PieChart size={13} /> },
+  usage: { label: '流量使用率', icon: <Database size={13} /> },
+  speed: { label: '实时速度', icon: <ArrowDownUp size={13} /> },
+  tcp: { label: 'TCP 连接数', icon: <Cable size={13} /> },
+  udp: { label: 'UDP 连接数', icon: <Network size={13} /> },
+  uptime: { label: '在线时长', icon: <Clock size={13} /> },
+  today: { label: '今日流量', icon: <CalendarClock size={13} /> },
+  week: { label: '近7日流量', icon: <TrendingUp size={13} /> },
+  'loss-cn': { label: '内地丢包率', icon: <Activity size={13} /> },
+  'loss-idc': { label: '海外丢包率', icon: <Wifi size={13} /> },
+  cost: { label: '月成本', icon: <Wallet size={13} /> },
+  expiry: { label: '到期时间', icon: <Calendar size={13} /> },
+  'ping-cn': { label: '内地延迟', icon: <Gauge size={13} /> },
+  'ping-idc': { label: '海外延迟', icon: <Globe2 size={13} /> },
+}
+const LEADERBOARD_TABS = LEADERBOARD_ORDER.map(key => ({ key, ...LEADERBOARD_META[key] }))
 
 function Leaderboard({ servers }: { servers: ProbeServer[] }) {
   const networkSpeed = useNetworkSpeed()
   const [open, setOpen] = useState(false)
-  const [tab, setTab] = useState<LeaderboardKey>('cpu')
+  const [tab, setTab] = useState<LeaderboardKey>(LEADERBOARD_ORDER[0])
   const [desc, setDesc] = useState(true)
   const [expanded, setExpanded] = useState<number | null>(null)
   const selectTab = (key: LeaderboardKey) => {
@@ -549,7 +564,11 @@ function Leaderboard({ servers }: { servers: ProbeServer[] }) {
   }
   const pingTab = tab === 'ping-cn' || tab === 'ping-idc'
   const lossTab = tab === 'loss-cn' || tab === 'loss-idc'
+  const connectionTab = tab === 'tcp' || tab === 'udp'
   const rows = useMemo(() => {
+    if (tab === 'tcp' || tab === 'udp') {
+      return rankConnectionCounts(servers, tab, desc).slice(0, 10).map(row => ({ ...row, lines: [] }))
+    }
     const indexed = servers.map((server, index) => {
       const avg = averagePing(server.ping || [])
       const value =
@@ -581,13 +600,14 @@ function Leaderboard({ servers }: { servers: ProbeServer[] }) {
       .filter((row) => row.value >= 0)
       .sort((a, b) => (desc ? b.value - a.value : a.value - b.value))
       .slice(0, 10)
-  }, [servers, tab, desc, pingTab])
+  }, [servers, tab, desc, pingTab, lossTab])
   const format = (value: number, server: ProbeServer) =>
     tab === 'cpu' || tab === 'mem' || tab === 'disk' ? `${value.toFixed(1)}%`
     : tab === 'load' ? value.toFixed(2)
     : tab === 'traffic' ? bytes(value, false)
     : tab === 'usage' ? `${value.toFixed(1)}%`
     : tab === 'speed' ? `↓${networkSpeed(server.download_speed ?? 0)} ↑${networkSpeed(server.upload_speed ?? 0)}`
+    : connectionTab ? connectionCount(value)
     : tab === 'uptime' ? formatUptime(value)
     : tab === 'today' || tab === 'week' ? bytes(value, false)
     : tab === 'loss-cn' || tab === 'loss-idc' ? `${value.toFixed(2)}%`
@@ -610,13 +630,14 @@ function Leaderboard({ servers }: { servers: ProbeServer[] }) {
         <div className="leaderboard-body">
           <div className="leaderboard-tabs">
             {LEADERBOARD_TABS.map((item) => (
-              <button key={item.key} className={tab === item.key ? 'active' : ''} onClick={() => selectTab(item.key)}>
+              <button key={item.key} type="button" aria-pressed={tab === item.key} className={tab === item.key ? 'active' : ''} onClick={() => selectTab(item.key)}>
                 {item.icon}
                 {item.label}
                 {tab === item.key && <span className="sort-arrow">{desc ? '↓' : '↑'}</span>}
               </button>
             ))}
           </div>
+          {connectionTab && <p className="lb-note">{tab === 'tcp' ? '整机已建立 TCP 连接数' : '整机 UDP socket 数'}，非代理用户数；未上报不参与排名，离线节点显示最近上报值。</p>}
           <ol
             className="leaderboard-list"
             onClick={(event) => {
@@ -690,7 +711,7 @@ function Leaderboard({ servers }: { servers: ProbeServer[] }) {
             ))}
             {!rows.length && (
               <li className="lb-empty">
-                {tab === 'uptime' || tab === 'today' ? '等待探针数据上报' : '暂无数据'}
+                {connectionTab || tab === 'uptime' || tab === 'today' ? '等待探针数据上报' : '暂无数据'}
               </li>
             )}
           </ol>
@@ -742,8 +763,7 @@ const TRAFFIC_LINES = [
   { key: 'downlink', label: '下行流量', stroke: '#22c55e' },
 ] as const
 
-export function TrafficChart({ daily, containerClass = 'detail-chart', showRange = true, retro = false }: { daily: ProbeServer['daily_traffic']; containerClass?: string; showRange?: boolean; retro?: boolean }) {
-  const trafficLines = TRAFFIC_LINES.map((line, index) => ({ ...line, stroke: retro ? `var(--graph-line-${index + 1})` : line.stroke }))
+export function TrafficChart({ daily, containerClass = 'detail-chart', showRange = true }: { daily: ProbeServer['daily_traffic']; containerClass?: string; showRange?: boolean }) {
   const rows = daily || []
   const chartRef = useRef<HTMLDivElement>(null)
   const [trafficRange, setTrafficRange] = useState<'all' | '7d' | '30d'>('7d')
@@ -835,26 +855,25 @@ export function TrafficChart({ daily, containerClass = 'detail-chart', showRange
         </button>
       </div>
       <div className={containerClass} ref={chartRef}>
-        <HorizontalChart width={retro && isFit ? 0 : Math.max(120, shown.length * 82 * zoom)}>
+        <HorizontalChart width={Math.max(120, shown.length * 82 * zoom)}>
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={shown} margin={{ top: 8, right: 12, bottom: 0, left: 8 }}>
-              {retro && <CartesianGrid stroke="var(--graph-grid)" />}
-              <XAxis dataKey="date" tick={{ fontSize: 10, ...(retro ? { style: { fill: 'var(--graph-axis)' } } : {}) }} axisLine={false} tickLine={false} interval="preserveStartEnd" minTickGap={28} />
-              <YAxis width={52} tick={{ fontSize: 10, ...(retro ? { style: { fill: 'var(--graph-axis)' } } : {}) }} axisLine={false} tickLine={false} tickFormatter={(value) => bytes(Number(value), false)} />
+              <XAxis dataKey="date" tick={{ fontSize: 10 }} axisLine={false} tickLine={false} interval="preserveStartEnd" minTickGap={28} />
+              <YAxis width={52} tick={{ fontSize: 10 }} axisLine={false} tickLine={false} tickFormatter={(value) => bytes(Number(value), false)} />
               <Tooltip
                 contentStyle={{ fontSize: 11, borderRadius: 8 }}
                 labelFormatter={(value) => String(value)}
                 formatter={(value, _name, item) => [bytes(Number(value)), (item as { dataKey?: string } | undefined)?.dataKey === 'total' ? '总流量' : (item as { dataKey?: string } | undefined)?.dataKey === 'uplink' ? '上行' : '下行']}
               />
-              {trafficLines.filter((line) => !hidden.has(line.key)).map((line) => (
-                <Line key={line.key} type={retro ? 'linear' : 'monotone'} dataKey={line.key} name={line.label} stroke={line.stroke} strokeWidth={2} dot={false} isAnimationActive={false} />
+              {TRAFFIC_LINES.filter((line) => !hidden.has(line.key)).map((line) => (
+                <Line key={line.key} type="monotone" dataKey={line.key} name={line.label} stroke={line.stroke} strokeWidth={2} dot={false} isAnimationActive={false} />
               ))}
             </LineChart>
           </ResponsiveContainer>
         </HorizontalChart>
       </div>
       <div className="traffic-line-toggle">
-        {trafficLines.map((line) => (
+        {TRAFFIC_LINES.map((line) => (
           <button
             type="button"
             key={line.key}
@@ -1208,7 +1227,7 @@ export function TrendDialog({ serverIndex, initial, targetKey, cardTarget, title
     document.body,
   )
 }
-// 系统指标历史曲线（数据来自 /api/series?metric=system，beta3 上游原生支持）。metric='cpu' 单线 CPU%，'mem' 单线内存占用百分比
+// 系统指标历史曲线；连接数同样直接读取主控桶平均值，不使用当前会话采样。
 const SYSTEM_LINES = {
   cpu: { label: 'CPU 使用率', color: 'var(--progress-cpu, #3b82f6)' },
   mem: { label: '内存使用率', color: 'var(--progress-memory, #8b5cf6)' },
@@ -1221,12 +1240,13 @@ function systemLineColor(metric: 'cpu' | 'mem'): string {
   if (root.classList.contains('gold')) return '#d8b46a'
   return metric === 'cpu' ? 'var(--progress-cpu, #3b82f6)' : 'var(--progress-memory, #8b5cf6)'
 }
-export function SystemTrendChart({ serverIndex, metric, containerClass = 'detail-chart', retro = false, historyRange }: { serverIndex: number; metric: 'cpu' | 'mem'; containerClass?: string; retro?: boolean; historyRange?: RangeKey }) {
-  const [localRange, setRange] = useState<RangeKey>('1h')
-  const range = historyRange ?? localRange
-  const [hidden, setHidden] = useState(false)
-  const [rows, setRows] = useState<{ ts: number; time: string; value: number | null }[]>([])
+export function SystemTrendChart({ serverIndex, metric, containerClass = 'detail-chart' }: { serverIndex: number; metric: 'cpu' | 'mem' | 'connections'; containerClass?: string }) {
+  const [range, setRange] = useState<RangeKey>('1h')
+  const [hidden, setHidden] = useState<Set<string>>(new Set())
+  const [rows, setRows] = useState<TrendRow[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(false)
+  const [bucketSec, setBucketSec] = useState(300)
   const [zoom, setZoom] = useState(1)
   const [isFit, setIsFit] = useState(true)
   const chartRef = useRef<HTMLDivElement>(null)
@@ -1234,35 +1254,33 @@ export function SystemTrendChart({ serverIndex, metric, containerClass = 'detail
   useEffect(() => {
     const controller = new AbortController()
     setLoading(true)
+    setError(false)
+    setRows([])
     void fetch(`/api/series?server=${serverIndex}&range=${range}&metric=system`, {
       cache: 'no-store',
       signal: controller.signal,
     })
       .then((response) => {
         if (!response.ok) throw new Error(`HTTP ${response.status}`)
-        return response.json() as Promise<{ success: boolean; series?: Record<string, { t: number; value: number }[]> }>
+        return response.json() as Promise<{ success: boolean; bucket_sec?: number; series?: SystemSeries }>
       })
       .then((payload) => {
-        if (payload.success && payload.series) {
-          const raw = payload.series
-          const pts =
-            metric === 'cpu'
-              ? raw.cpu_pct || []
-              : (raw.mem_used || []).map((u, i) => {
-                  const t = raw.mem_total?.[i]
-                  return { t: u.t, value: t && t.value > 0 ? (u.value / t.value) * 100 : null }
-                })
-          setRows(pts.map((p) => ({ ts: p.t, time: formatAxisDateTime(p.t, range === '1h'), value: p.value ?? null })))
-        } else {
-          setRows([])
-        }
+        if (controller.signal.aborted) return
+        if (!payload.success) throw new Error('History unavailable')
+        const raw = payload.series || {}
+        const reportedBucket = payload.bucket_sec
+        const step = reportedBucket && Number.isFinite(reportedBucket) && reportedBucket > 0 ? reportedBucket : MINI_RANGES.find(item => item.key === range)!.bucketSec
+        setBucketSec(step)
+        setRows(metric === 'connections' ? connectionTrendRows(raw, step) : systemTrendRows(metric === 'cpu' ? { cpu_pct: raw.cpu_pct } : { mem_used: raw.mem_used, mem_total: raw.mem_total }))
       })
-      .catch(() => setRows([]))
+      .catch(() => { if (!controller.signal.aborted) setError(true) })
       .finally(() => {
         if (!controller.signal.aborted) setLoading(false)
       })
     return () => controller.abort()
   }, [range, serverIndex, metric])
+
+  useEffect(() => setHidden(new Set()), [serverIndex, metric])
 
   const fitZoom = () => {
     const el = chartRef.current
@@ -1280,11 +1298,15 @@ export function SystemTrendChart({ serverIndex, metric, containerClass = 'detail
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [range, loading])
 
-  const line = { ...SYSTEM_LINES[metric], color: retro ? 'var(--graph-line-1)' : systemLineColor(metric) }
+  const isConnections = metric === 'connections'
+  const chartLines = isConnections
+    ? [{ key: 'tcp', label: 'TCP', color: '#10b981' }, { key: 'udp', label: 'UDP', color: '#3b82f6' }]
+    : [{ key: metric, ...SYSTEM_LINES[metric], color: systemLineColor(metric) }]
+  const hasPoints = rows.some(row => chartLines.some(line => row[line.key] != null))
   return (
     <>
       <div className="ranges">
-        {!historyRange && ranges.map((item) => (
+        {ranges.map((item) => (
           <button type="button" className={range === item.key ? 'active' : ''} onClick={() => setRange(item.key)} key={item.key}>
             {item.label}
           </button>
@@ -1320,31 +1342,32 @@ export function SystemTrendChart({ serverIndex, metric, containerClass = 'detail
       </div>
       <div className={containerClass} ref={chartRef}>
         {loading && <div className="loading-overlay">加载中…</div>}
-        {!loading && !rows.length && <div className="chart-empty">暂无{metric === 'cpu' ? 'CPU' : '内存'}历史</div>}
-        <HorizontalChart width={retro && isFit ? 0 : Math.max(120, rows.length * 82 * zoom)}>
+        {!loading && error && <div className="chart-empty" role="status">历史数据加载失败，请切换时间范围重试。</div>}
+        {!loading && !error && !hasPoints && <div className="chart-empty">{isConnections ? '主控暂无 TCP / UDP 历史记录；请确认已开启连接数采集，并等待历史积累。' : `暂无${metric === 'cpu' ? 'CPU' : '内存'}历史`}</div>}
+        {!loading && !error && hasPoints && <HorizontalChart width={isFit ? 120 : Math.max(120, rows.length * 82 * zoom)}>
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={rows} margin={{ top: 8, right: 12, bottom: 0, left: 0 }}>
-              {retro && <CartesianGrid stroke="var(--graph-grid)" />}
-              <XAxis dataKey="time" tick={{ fontSize: 10, ...(retro ? { style: { fill: 'var(--graph-axis)' } } : {}) }} axisLine={false} tickLine={false} interval="preserveStartEnd" minTickGap={28} />
-              <YAxis width={40} tick={{ fontSize: 10, ...(retro ? { style: { fill: 'var(--graph-axis)' } } : {}) }} axisLine={false} tickLine={false} domain={[0, metric === 'mem' ? 100 : 'auto']} />
+              <XAxis dataKey="ts" type="number" domain={['dataMin', 'dataMax']} tickFormatter={value => formatAxisDateTime(Number(value), true)} tick={{ fontSize: 10 }} axisLine={false} tickLine={false} interval="preserveStartEnd" minTickGap={28} />
+              <YAxis width={isConnections ? 56 : 40} tick={{ fontSize: 10 }} axisLine={false} tickLine={false} allowDecimals={!isConnections} domain={[0, metric === 'mem' ? 100 : 'auto']} />
               <Tooltip
                 contentStyle={{ fontSize: 11, borderRadius: 8 }}
-                formatter={(value, _name, item) => [item.dataKey === 'value' ? `${Number(value).toFixed(1)}%` : Number(value).toFixed(1), line.label]}
+                formatter={(value, name) => [isConnections ? formatConnectionAverage(Number(value)) : `${Number(value).toFixed(1)}%`, name]}
                 labelFormatter={(_value, payload) => formatAxisDateTime(Number((payload?.[0]?.payload as { ts?: number } | undefined)?.ts ?? 0), true)}
               />
-              {!hidden && (
-                <Line type={retro ? 'linear' : 'monotone'} dataKey="value" name={line.label} stroke={line.color} strokeWidth={retro ? 1.5 : 2.5} dot={false} connectNulls={false} isAnimationActive={false} />
-              )}
+              {chartLines.filter(line => !hidden.has(line.key)).map(line => (
+                <Line key={line.key} type={isConnections ? 'linear' : 'monotone'} dataKey={line.key} name={line.label} stroke={line.color} strokeWidth={2.5} dot={rows.filter(row => row[line.key] != null).length === 1 ? { r: 3 } : false} connectNulls={false} isAnimationActive={false} />
+              ))}
             </LineChart>
           </ResponsiveContainer>
-        </HorizontalChart>
+        </HorizontalChart>}
       </div>
       <div className="legend">
-        <button type="button" className={hidden ? 'off' : ''} onClick={() => setHidden((v) => !v)} title={hidden ? '点击显示' : '点击隐藏'}>
+        {chartLines.map(line => <button key={line.key} type="button" className={hidden.has(line.key) ? 'off' : ''} aria-pressed={!hidden.has(line.key)} onClick={() => setHidden(previous => { const next = new Set(previous); if (next.has(line.key)) next.delete(line.key); else next.add(line.key); return next })} title={hidden.has(line.key) ? '点击显示' : '点击隐藏'}>
           <i style={{ background: line.color }} />
           {line.label}
-        </button>
+        </button>)}
       </div>
+      {isConnections && !loading && !error && <p className="detail-connections-note">主控历史 · 每 {Math.round(bucketSec / 60)} 分钟平均值 · 最多 24 小时。缺失数据不补零；整机连接数，非代理用户数。</p>}
     </>
   )
 }
@@ -1379,7 +1402,7 @@ function ReturnRouteIcon({ premium }: { premium: boolean }) {
   return <Lottie animationData={premium ? premiumRouteAnimation : commonRouteAnimation} aria-hidden="true" className="route-badge-icon" loop />
 }
 
-export function ReturnRouteBadges({ routes, telecomPaidPeer, variant }: { routes: ProbeReturnRoute[]; telecomPaidPeer?: boolean; variant?: 'lumina' | 'anime' | 'glass' | 'emerald' }) {
+export function ReturnRouteBadges({ routes, telecomPaidPeer, variant }: { routes: ProbeReturnRoute[]; telecomPaidPeer?: boolean; variant?: 'lumina' | 'anime' | 'glass' | 'emerald' | 'retro' }) {
   const byCarrier = new Map(routes.map((route) => [route.carrier, route]))
   const items = (['telecom', 'unicom', 'mobile'] as const).map((carrier) => {
     const route = byCarrier.get(carrier)
@@ -1387,12 +1410,17 @@ export function ReturnRouteBadges({ routes, telecomPaidPeer, variant }: { routes
     const routeType = carrier === 'telecom' && telecomPaidPeer && detectedRouteType === '163' ? '163 PP' : detectedRouteType
     return { carrier, route, routeType, premium: goldRoutes.has(routeType.toUpperCase().replace(/[^A-Z0-9]/g, '')) }
   })
-  if (variant === 'lumina' || variant === 'anime' || variant === 'glass' || variant === 'emerald') {
-    // 主题化勋章：用主题原生 chip 代替通用 Lottie 动画，避免详情页与卡片视觉割裂。
-    const flat = variant === 'lumina' ? 'lumina-route' : variant === 'anime' ? 'anime-route' : variant === 'glass' ? 'glass-route' : 'emerald-detail-route'
+  if (variant === 'lumina' || variant === 'anime' || variant === 'glass' || variant === 'emerald' || variant === 'retro') {
+    // 主题化标签；复古主题保留上游金、银奖牌与配色。
+    const flat = variant === 'retro' ? 'retro-route' : variant === 'lumina' ? 'lumina-route' : variant === 'anime' ? 'anime-route' : variant === 'glass' ? 'glass-route' : 'emerald-detail-route'
     return (
       <div className={`${flat}-badges`}>
-        {items.map(({ carrier, route, routeType, premium }) => (
+        {items.map(({ carrier, route, routeType, premium }) => variant === 'retro' ? (
+          <div className="retro-route-medal route-badge" key={carrier} title={route?.region ? `${route.region} · ${routeType}` : routeType}>
+            <div className={premium ? 'route-badge-animation gold' : 'route-badge-animation silver'}><ReturnRouteIcon premium={premium} /></div>
+            <div className={premium ? 'route-badge-text gold' : 'route-badge-text silver'}><small>{routeCarrierLabels[carrier]}</small><strong>{routeType === 'Unknown' ? '未探测' : routeType}</strong></div>
+          </div>
+        ) : (
           <span className={`${flat}-chip${premium ? ' gold' : ''}`} key={carrier} title={route?.region ? `${route.region} · ${routeType}` : routeType}>
             <small>{routeCarrierLabels[carrier]}</small>
             <strong>{routeType}</strong>
@@ -1638,29 +1666,6 @@ function ServerCardLumina({ server, index }: { server: EnrichedServer; index: nu
   const trafficFraction = server.traffic_limit ? pct(server.traffic_used, server.traffic_limit) / 100 : 0
   const upRate = server.upload_speed
   const downRate = server.download_speed
-  const trafficUp = server.cumulative_up
-  const trafficDown = server.cumulative_down
-  // 当前周期流量(物理口径): 主控 2026-08-10 新增 traffic_used_up/down(40/40 有值, 与Σdaily_traffic 精确一致)，
-  // 优先直读字段; 缺失回退 cycle_daily_traffic 每日上下行 sum 比例估算(物理口径), 再回退 cumulative, 再回退 0.5
-  // 注意: traffic_used(计费口径, oneway 只算单向) ≠ traffic_used_up+down(物理口径), 上下行展示用物理值
-  let cycleUp = server.traffic_used_up
-  let cycleDown = server.traffic_used_down
-  if (cycleUp === undefined || cycleDown === undefined) {
-    const cycleDaily = server.cycle_daily_traffic ?? server.daily_traffic ?? []
-    const dailyUp = cycleDaily.reduce((acc, item) => acc + (item.uplink ?? 0), 0)
-    const dailyDown = cycleDaily.reduce((acc, item) => acc + (item.downlink ?? 0), 0)
-    const cycleRatioUp =
-      dailyUp + dailyDown > 0
-        ? dailyUp / (dailyUp + dailyDown)
-        : trafficUp !== undefined && trafficDown !== undefined && trafficUp + trafficDown > 0
-          ? trafficUp / (trafficUp + trafficDown)
-          : 0.5
-    const base = server.traffic_used !== undefined ? server.traffic_used : server.traffic_used_total
-    if (base !== undefined) {
-      cycleUp = base * cycleRatioUp
-      cycleDown = base * (1 - cycleRatioUp)
-    }
-  }
   const expireValue = server.expires_at ? remainingDays(server.expires_at) : null
   // 今日流量用量(本地时区当天; 当天无记录时回退 daily_traffic 最后一天)
   const dailyRows = server.daily_traffic || []
@@ -1695,6 +1700,7 @@ function ServerCardLumina({ server, index }: { server: EnrichedServer; index: nu
             </h2>
           </div>
           <span className="lumina-card-actions">
+            <UnlockButton server={server} />
             <span title={systemTitle(server)}>
               <SystemIcon server={server} />
             </span>
@@ -1743,26 +1749,23 @@ function ServerCardLumina({ server, index }: { server: EnrichedServer; index: nu
           )}
         </div>
 
-        {(upRate !== undefined || downRate !== undefined) && (
-          <div className="lumina-traffic-section">
-            <div className="lumina-traffic-stat" title="上行速率与当前周期上行流量">
-              <span className="lumina-traffic-direction">
-                <ArrowUp size={15} />
-              </span>
-              <strong className="tabular" style={{ color: 'var(--traffic-up)' }}>
-                {networkSpeed(upRate)}
-              </strong>
-              <small className="tabular">{cycleUp !== undefined ? `周期 ${bytes(cycleUp)}` : ''}</small>
+        <div className="lumina-traffic-section">
+          <div className="lumina-network-row speed--connections">
+            <div className="card-speed-pair">
+              {(upRate !== undefined || downRate !== undefined) && <>
+                <span className="download" title={`下行 ${networkSpeed(downRate)}`}>
+                  <ArrowDown size={13} />
+                  <strong className="card-speed-value">{networkSpeed(downRate)}</strong>
+                </span>
+                <span className="upload" title={`上行 ${networkSpeed(upRate)}`}>
+                  <ArrowUp size={13} />
+                  <strong className="card-speed-value">{networkSpeed(upRate)}</strong>
+                </span>
+              </>}
             </div>
-            <div className="lumina-traffic-stat" title="下行速率与当前周期下行流量">
-              <span className="lumina-traffic-direction">
-                <ArrowDown size={15} />
-              </span>
-              <strong className="tabular" style={{ color: 'var(--traffic-down)' }}>
-                {networkSpeed(downRate)}
-              </strong>
-              <small className="tabular">{cycleDown !== undefined ? `周期 ${bytes(cycleDown)}` : ''}</small>
-            </div>
+            <ConnectionCounts server={server} variant="inline" />
+          </div>
+          {(upRate !== undefined || downRate !== undefined) && (
             <div className="lumina-traffic-pulse-wrap">
               <div className="lumina-today-stat" title="今日流量用量(总/上行/下行)">
                 <span className="lumina-today-head">
@@ -1792,8 +1795,8 @@ function ServerCardLumina({ server, index }: { server: EnrichedServer; index: nu
                 <LuminaTrafficPulse samples={server.daily_traffic} />
               </button>
             </div>
-          </div>
-        )}
+          )}
+        </div>
 
         {server.traffic_used !== undefined && (
           <div className="lumina-quota" title={`流量阈值 · 剩余 ${server.traffic_limit ? bytes(server.traffic_limit - server.traffic_used) : ''}`}>
@@ -1880,6 +1883,7 @@ function ServerCard({ server, index }: { server: ProbeServer; index: number }) {
         <h2>
           <Twemoji>{flag && !hasLeadingFlag(name) ? `${flag} ${name}` : name}</Twemoji>
         </h2>
+        <UnlockButton server={server} />
         <span title={systemTitle(server)} onClick={(event) => event.stopPropagation()}>
           <SystemIcon server={server} />
         </span>
@@ -1917,18 +1921,21 @@ function ServerCard({ server, index }: { server: ProbeServer; index: number }) {
           </button>
         )}
       </div>
-      {(server.upload_speed !== undefined || server.download_speed !== undefined) && (
-        <div className="speed">
-          <span className="download">
-            <ArrowDown size={16} />
-            {networkSpeed(server.download_speed)}
-          </span>
-          <span className="upload">
-            <ArrowUp size={16} />
-            {networkSpeed(server.upload_speed)}
-          </span>
+      <div className="speed speed--connections">
+        <div className="card-speed-pair">
+          {(server.upload_speed !== undefined || server.download_speed !== undefined) && <>
+            <span className="download" title={`下行 ${networkSpeed(server.download_speed)}`}>
+              <ArrowDown size={13} />
+              <span className="card-speed-value">{networkSpeed(server.download_speed)}</span>
+            </span>
+            <span className="upload" title={`上行 ${networkSpeed(server.upload_speed)}`}>
+              <ArrowUp size={13} />
+              <span className="card-speed-value">{networkSpeed(server.upload_speed)}</span>
+            </span>
+          </>}
         </div>
-      )}
+        <ConnectionCounts server={server} variant="inline" />
+      </div>
       <CardPingGroups variant="classic" ping={server.ping} serverIndex={index} serverName={server.name} />
       {!!server.return_routes?.length && <ReturnRouteBadges routes={server.return_routes} telecomPaidPeer={server.telecom_paid_peer} variant={document.documentElement.classList.contains('theme-anime') ? 'anime' : undefined} />}
       {(server.expires_at || server.renewal_price !== undefined) && (
@@ -2040,6 +2047,7 @@ function ServerMiniCard({ server, index, expanded }: { server: ProbeServer; inde
           </span>
         )}
         {dying && <span className="mini-expiry">{remainingDays(server.expires_at)}</span>}
+        <UnlockButton server={server} />
       </div>
       {expanded && (
         <div className="mini-detail mini-resources">
@@ -2109,6 +2117,7 @@ function ServerMiniCard({ server, index, expanded }: { server: ProbeServer; inde
           )}
         </div>
       )}
+      <ConnectionCounts server={server} variant="card" />
     </article>
   )
 }
@@ -2267,7 +2276,7 @@ function ServerTable({ servers }: { servers: ProbeServer[] }) {
               return (
                 <tr key={`${server.name}-${index}`} className="table-row-link" onClick={() => { location.hash = `#/server/${index}` }} role="button" tabIndex={0} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); location.hash = `#/server/${index}` } }}>
                   <td className="table-name">
-                    <Twemoji>{server.name || `服务器 ${index + 1}`}</Twemoji>
+                    <div className="probe-unlock-name-line"><Twemoji>{server.name || `服务器 ${index + 1}`}</Twemoji><UnlockButton server={server} /></div>
                     {server.region && <small>{server.region}</small>}
                     {server.expires_at &&
                       (server.provider_url ? (
@@ -2564,6 +2573,22 @@ export function App() {
       </Suspense>
     )
   }
+  if (activeTheme === 'luminaplus') {
+    return (
+      <Suspense fallback={<main className="center">正在加载 LuminaPlus 主题…</main>}>
+        <LuminaPlusApp data={data} error={error} onThemeChange={(name) => { setTheme(name); setThemeState(name); setActiveTheme(name ?? getActiveTheme()) }} />
+        {detailIndex !== null && servers[detailIndex] && <MiniServerDetail key={detailIndex} server={servers[detailIndex]} index={detailIndex} onClose={closeDetail} showHealthScore={data.show_health_score === true} />}
+      </Suspense>
+    )
+  }
+  if (activeTheme === 'lite') {
+    return (
+      <Suspense fallback={<main className="center">正在加载 Lite 主题…</main>}>
+        <MiniApp data={data} error={error} onThemeChange={(name) => { setTheme(name); setThemeState(name); setActiveTheme(name ?? getActiveTheme()) }} />
+        {detailIndex !== null && servers[detailIndex] && <MiniServerDetail key={detailIndex} server={servers[detailIndex]} index={detailIndex} onClose={closeDetail} showHealthScore={data.show_health_score === true} />}
+      </Suspense>
+    )
+  }
   const title = data.title?.trim() || '服务器状态'
   const onlineCount = servers.filter((server) => server.online).length
   const expiringCount = servers.filter(expiring).length
@@ -2778,21 +2803,7 @@ export function App() {
           MMWX Group
         </a>
       </footer>
-      {(data.license_badge || EXTRA_LICENSE_BADGES.length > 0) && (
-        <div className="probe-license-footer">
-          {(() => {
-            const live = data.license_badge ? (Array.isArray(data.license_badge) ? data.license_badge : [data.license_badge]) : []
-            const keyOf = (badge: { name?: string; display_name?: string }) => badge.name || badge.display_name || ''
-            const merged = EXTRA_LICENSE_BADGES.map((badge) => live.find((item) => keyOf(item) === keyOf(badge)) || badge)
-            const extras = live.filter((badge) => !EXTRA_LICENSE_BADGES.some((item) => keyOf(item) === keyOf(badge)))
-            return [...merged, ...extras]
-              .filter((badge, index, all) => all.findIndex((item) => keyOf(item) === keyOf(badge)) === index)
-              .map((badge, index) => (
-                <ProbeLicenseNameplate key={index} name={badge.name} displayName={badge.display_name} />
-              ))
-          })()}
-        </div>
-      )}
+      <ProbeLicenseFooter badges={data.license_badge} />
       {detailIndex !== null && servers[detailIndex] && (
         <ServerDetail
           server={servers[detailIndex]}
@@ -2803,4 +2814,18 @@ export function App() {
       )}
     </div>
   )
+}
+
+// 共用原有名牌与动画，独立主题不再遗漏许可证页尾。
+export function ProbeLicenseFooter({ badges }: { badges: ProbePayload['license_badge'] }) {
+  if (!badges && EXTRA_LICENSE_BADGES.length === 0) return null
+  const live = badges ? (Array.isArray(badges) ? badges : [badges]) : []
+  const keyOf = (badge: { name?: string; display_name?: string }) => badge.name || badge.display_name || ''
+  const merged = EXTRA_LICENSE_BADGES.map((badge) => live.find((item) => keyOf(item) === keyOf(badge)) || badge)
+  const extras = live.filter((badge) => !EXTRA_LICENSE_BADGES.some((item) => keyOf(item) === keyOf(badge)))
+  return <div className="probe-license-footer">
+    {[...merged, ...extras]
+      .filter((badge, index, all) => all.findIndex((item) => keyOf(item) === keyOf(badge)) === index)
+      .map((badge, index) => <ProbeLicenseNameplate key={index} name={badge.name} displayName={badge.display_name} />)}
+  </div>
 }

@@ -1,3 +1,4 @@
+/* Emerald v1.1 · 2026-09-24 — TCP/UDP labels share protocol icons. */
 .theme-emerald {
   color-scheme: light;
   background: #f7f9fc;
@@ -545,14 +546,15 @@
 
 .emerald-sidebar-title { padding: 14px; }
 .emerald-sidebar-title h2 { margin: 0 0 11px; font-size: 15px; }
-.emerald-sidebar-title > div { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.emerald-sidebar-title > div { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
 .emerald-sidebar-title button { min-width: 0; border: 1px solid var(--em-border); border-radius: 999px; padding: 5px 7px; display: inline-flex; align-items: center; justify-content: center; gap: 4px; color: var(--em-text-2); background: var(--em-surface-muted); cursor: pointer; font-size: 11px; transition: transform 0.16s ease, border-color 0.16s ease, background 0.16s ease; }
 .emerald-sidebar-title button:hover,
 .emerald-sidebar-title button:focus-visible { outline: 0; transform: translateY(-1px); }
-.emerald-sidebar-title button:nth-child(1) { color: #059669; border-color: rgba(16, 185, 129, 0.27); background: rgba(16, 185, 129, 0.08); }
-.emerald-sidebar-title button:nth-child(2) { color: #2563eb; border-color: rgba(59, 130, 246, 0.25); background: rgba(59, 130, 246, 0.08); }
-.emerald-sidebar-title button:nth-child(3) { color: #7c3aed; border-color: rgba(139, 92, 246, 0.25); background: rgba(139, 92, 246, 0.08); }
-.emerald-sidebar-title button:nth-child(4) { color: #0284c7; border-color: rgba(14, 165, 233, 0.25); background: rgba(14, 165, 233, 0.08); }
+.emerald-sidebar-title button svg { width: 12px; height: 12px; flex-shrink: 0; }
+.emerald-sidebar-title button[data-rank="uptime"] { color: #059669; border-color: rgba(16, 185, 129, 0.27); background: rgba(16, 185, 129, 0.08); }
+.emerald-sidebar-title button:is([data-rank="quality"], [data-rank="tcp"]) { color: #2563eb; border-color: rgba(59, 130, 246, 0.25); background: rgba(59, 130, 246, 0.08); }
+.emerald-sidebar-title button[data-rank="traffic"] { color: #7c3aed; border-color: rgba(139, 92, 246, 0.25); background: rgba(139, 92, 246, 0.08); }
+.emerald-sidebar-title button:is([data-rank="speed"], [data-rank="udp"]) { color: #0284c7; border-color: rgba(14, 165, 233, 0.25); background: rgba(14, 165, 233, 0.08); }
 
 .emerald-ranking-panel { overflow: hidden; }
 .emerald-ranking-panel > header { height: 45px; border-bottom: 1px solid var(--em-border); padding: 0 13px; display: flex; align-items: center; gap: 7px; }
@@ -571,6 +573,7 @@
 .emerald-quality-filters span.active { color: #2563eb; border-color: rgba(59, 130, 246, 0.25); background: rgba(59, 130, 246, 0.08); }
 
 .emerald-ranking-panel ol { list-style: none; margin: 0; padding: 8px 12px; }
+.emerald-rank-note { margin: 10px 13px; color: var(--em-text-2); font-size: 10px; line-height: 1.5; }
 .emerald-ranking-panel.is-expanded ol { max-height: 480px; overflow-y: auto; scrollbar-width: thin; }
 .emerald-ranking-panel li { min-width: 0; border-bottom: 1px solid var(--em-border); border-radius: 7px; padding: 10px 4px; display: grid; grid-template-columns: 19px minmax(0, 1fr) max-content; align-items: start; gap: 8px; cursor: pointer; transition: background 0.16s ease, transform 0.16s ease; }
 .emerald-ranking-panel li:hover,
@@ -741,7 +744,9 @@
 .emerald-node-quick span.is-up b,
 .emerald-table-shell .is-up,
 .emerald-status-speed .is-up { color: #2563eb; }
-.emerald-node-quick > div:last-child span { grid-template-columns: 11px minmax(0, 1fr); }
+.emerald-node-quick > .emerald-connection-cell > span { grid-template-columns: auto minmax(0, 1fr); gap: 4px; }
+.emerald-node-quick .emerald-connection-cell .probe-connection-label { display: inline-flex; gap: 3px; }
+.emerald-connection-cell b { text-align: right; }
 
 .emerald-ping-panels {
   margin-top: 10px;
