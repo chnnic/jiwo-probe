@@ -315,7 +315,7 @@ html.theme-winxp .detail-panel {
   padding: 8px 9px;
   border: 1px solid #7f9db9;
   border-radius: 0;
-  background: var(--window);
+  background: var(--face);
   box-shadow: inset 1px 1px #fff, inset -1px -1px #d4d0c8;
 }
 html.theme-winxp .detail-panel h3 { color: #003399; font: 700 12px Tahoma, 'Microsoft YaHei', SimSun, sans-serif; }
@@ -483,6 +483,8 @@ html:is(.theme-winxp, .theme-win2000, .theme-macos9) .retro-chart-box {
   box-shadow: inset 1px 1px var(--hilight), 1px 1px var(--hilight);
   background: var(--face);
 }
+html.theme-winxp .retro-host-status,
+html.theme-winxp .retro-host-grid { background: var(--face); }
 html:is(.theme-winxp, .theme-win2000, .theme-macos9) .retro-detail fieldset > legend { padding: 0 4px; color: var(--text); font-weight: 700; }
 html.theme-winxp body.light .retro-detail fieldset > legend { color: #003399; }
 html.theme-winxp body:not(.light) .retro-detail .detail-panel h3 { color: var(--text); }
@@ -660,6 +662,23 @@ html.theme-macos9 .retro-route-medal small { font-weight: 400; opacity: 1; }
 html.theme-macos9 .retro-route-medal .route-badge-icon { width: 15px; height: 15px; }
 html:is(.theme-win2000, .theme-macos9) .retro-route-medal { justify-content: center; }
 html:is(.theme-win2000, .theme-macos9) .retro-route-medal .route-badge-text { flex: 0 1 auto; }
+/* 顶级线路用主题专属纯色块区分；普通线路继续使用主题基础面色。 */
+html.theme-winxp .retro-route-medal:has(.route-badge-text.gold) {
+  background: #f0a33a;
+  border-color: #fff #a86a18 #a86a18 #fff;
+}
+html.theme-winxp body:not(.light) .retro-route-medal:has(.route-badge-text.gold) {
+  background: #9a6700;
+  border-color: #6a4700 #d7a84a #d7a84a #6a4700;
+}
+html.theme-win2000 .retro-route-medal:has(.route-badge-text.gold) {
+  background: #d6a514;
+  border-color: var(--hilight) var(--shadow) var(--shadow) var(--hilight);
+}
+html.theme-macos9 .retro-route-medal:has(.route-badge-text.gold) {
+  background: #dfc16d;
+  border-color: #fff #777 #777 #fff;
+}
 html:is(.theme-winxp, .theme-win2000, .theme-macos9) .retro-history-range,
 html:is(.theme-winxp, .theme-win2000, .theme-macos9) .retro-probe-range { margin: 0; }
 html:is(.theme-winxp, .theme-win2000, .theme-macos9) .retro-history-note { margin-left: auto; color: var(--text-muted); font-size: 11px; }
