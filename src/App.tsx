@@ -1363,7 +1363,7 @@ function luminaHeatGradient(): string {
   if (document.documentElement.classList.contains('platinum')) {
     return 'linear-gradient(to right, #a8843f 0%, #c9a255 30%, #d8b46a 60%, #f2d28b 100%)'
   }
-  return LUMINA_HEAT_GRADIENT
+  return `var(--lumina-heat, ${LUMINA_HEAT_GRADIENT})`
 }
 
 function luminaQuotaLitCount(fraction: number): number {
@@ -1427,10 +1427,10 @@ function luminaPulseColor(level: number): string {
   }
   // 相对峰值分档: 无流量灰 → 低绿 → 中蓝 → 高琥珀 → 极高暖橙(琥珀+30%红, 避免刺眼红)
   if (level <= 0.01) return 'var(--progress-bg)'
-  if (level < 0.3) return 'var(--status-success)'
-  if (level < 0.6) return 'var(--traffic-up)'
-  if (level < 0.85) return 'var(--status-warning)'
-  return 'color-mix(in srgb, var(--status-warning) 70%, var(--status-error) 30%)'
+  if (level < 0.3) return 'var(--lumina-pulse-low, var(--status-success))'
+  if (level < 0.6) return 'var(--lumina-pulse-mid, var(--traffic-up))'
+  if (level < 0.85) return 'var(--lumina-pulse-high, var(--status-warning))'
+  return 'var(--lumina-pulse-peak, color-mix(in srgb, var(--status-warning) 70%, var(--status-error) 30%))'
 }
 
 function luminaTrafficWindow(samples: ProbeServer['daily_traffic'], dots?: number) {
@@ -1515,17 +1515,17 @@ export function luminaHeatColor(kind: 'latency' | 'loss', value: number): string
   }
   // 与延迟/丢包数值同色系(status tokens, 阈值仿原版 latency/loss bounds)
   if (kind === 'latency') {
-    if (value < 100) return 'var(--status-success)'
-    if (value < 150) return '#a3e635'
-    if (value < 200) return 'var(--status-warning)'
-    if (value < 300) return '#fb923c'
-    return 'var(--status-error)'
+    if (value < 100) return 'var(--lumina-health-good, var(--status-success))'
+    if (value < 150) return 'var(--lumina-health-fair, #a3e635)'
+    if (value < 200) return 'var(--lumina-health-warning, var(--status-warning))'
+    if (value < 300) return 'var(--lumina-health-poor, #fb923c)'
+    return 'var(--lumina-health-bad, var(--status-error))'
   }
-  if (value < 1) return 'var(--status-success)'
-  if (value < 3) return '#a3e635'
-  if (value < 5) return 'var(--status-warning)'
-  if (value < 10) return '#fb923c'
-  return 'var(--status-error)'
+  if (value < 1) return 'var(--lumina-health-good, var(--status-success))'
+  if (value < 3) return 'var(--lumina-health-fair, #a3e635)'
+  if (value < 5) return 'var(--lumina-health-warning, var(--status-warning))'
+  if (value < 10) return 'var(--lumina-health-poor, #fb923c)'
+  return 'var(--lumina-health-bad, var(--status-error))'
 }
 
 export function LuminaHealthBars({ buckets, kind }: { buckets: ProbeBucket[]; kind: 'latency' | 'loss' }) {

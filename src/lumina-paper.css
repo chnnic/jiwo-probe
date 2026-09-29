@@ -1,30 +1,38 @@
-/* Lumina light / dark · Claude Paper · v1.0 · 2026-09-29
+/* Lumina light / dark · Claude Paper × Morandi · v1.2 · 2026-09-29
  * Adapted from the user's controller theme. Gold / platinum remain unchanged.
- * Paper surfaces, terracotta accents, local serif headings; no layout changes.
+ * Warm paper, muted clay and mist-blue / sage / mauve charts; no layout changes.
  */
 :root.theme-lumina:not(.gold):not(.platinum) {
   --paper-heading-font: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, "Songti SC", "Noto Serif CJK SC", serif;
-  --page-bg: #f5f3ed; --surface: #fdfcf8; --foreground: #302e29;
-  --muted: #746f65; --border: #dedad0; --hover-bg: #eeece5;
-  --primary: #b45538; --paper-tint: #f1e3d9; --paper-on-tint: #8f432d;
+  --page-bg: #f1efeb; --surface: #fbfaf7; --foreground: #373935;
+  --muted: #70726b; --border: #deddd5; --hover-bg: #eae8e2;
+  --primary: #947769; --paper-tint: #eae1d9; --paper-on-tint: #705a50;
   --radius: 16px; --lumina-top-glow: none; --lumina-card-shadow: 0 1px 3px rgb(48 46 41 / 4%);
-  --progress-cpu: #8aa7b5; --progress-memory: #a595b4; --progress-swap: #9e94b1;
-  --progress-disk: #cf9879; --progress-network: #88a08d; --progress-load: #c89ca3;
-  --status-success: #527b63; --status-warning: #94691e; --status-error: #b7403d;
-  --traffic-up: #53798d; --traffic-down: #527b63;
-  --lumina-heat: linear-gradient(to right, #88a08d 0%, #88a08d 15%, #a5b18a 40%, #c8ad78 60%, #cf9879 80%, #b7403d 100%);
+  --progress-cpu: #9bafb8; --progress-memory: #b2a4b8; --progress-swap: #a5a6b9;
+  --progress-disk: #c5a591; --progress-network: #98ada0; --progress-load: #c2a3ae;
+  --status-success: #536e60; --status-warning: #886d43; --status-error: #a15f65;
+  --traffic-up: #536d7b; --traffic-down: #536e60;
+  --lumina-pulse-low: #bbc9ce; --lumina-pulse-mid: #a7bac2;
+  --lumina-pulse-high: #94aab5; --lumina-pulse-peak: #8099a6;
+  --lumina-health-good: #98ada0; --lumina-health-fair: #b2b7a0;
+  --lumina-health-warning: #c6b28e; --lumina-health-poor: #c5a591; --lumina-health-bad: #be969c;
+  --lumina-heat: linear-gradient(to right, var(--lumina-health-good) 0%, var(--lumina-health-good) 25%, var(--lumina-health-fair) 45%, var(--lumina-health-warning) 65%, var(--lumina-health-poor) 85%, var(--lumina-health-bad) 100%);
   --bg: var(--page-bg); --card: var(--surface); --text: var(--foreground); --accent: var(--primary);
   color: var(--foreground); background: var(--page-bg); color-scheme: light;
 }
 :root.theme-lumina.dark:not(.gold):not(.platinum) {
-  --page-bg: #242320; --surface: #2d2c28; --foreground: #ece9e1;
-  --muted: #b2ab9e; --border: #48463e; --hover-bg: #35342f;
-  --primary: #df967a; --paper-tint: #49372e; --paper-on-tint: #efb79d;
+  --page-bg: #282a28; --surface: #323531; --foreground: #ecebe5;
+  --muted: #b5b7ad; --border: #4a4e46; --hover-bg: #3b3e38;
+  --primary: #bba393; --paper-tint: #48413a; --paper-on-tint: #dfcbbc;
   --lumina-card-shadow: 0 1px 3px rgb(0 0 0 / 12%);
-  --progress-cpu: #91adbc; --progress-memory: #b6a6c5; --progress-swap: #b2a6c1;
-  --progress-disk: #d6a184; --progress-network: #8faf98; --progress-load: #d3adb2;
-  --status-success: #8faf98; --status-warning: #ccaf76; --status-error: #e68b85;
-  --traffic-up: #8caebe; --traffic-down: #8faf98;
+  --progress-cpu: #a7bbc4; --progress-memory: #c0b3c5; --progress-swap: #b4b5c8;
+  --progress-disk: #cfb5a2; --progress-network: #adc1b2; --progress-load: #d0b4bc;
+  --status-success: #b0c7b6; --status-warning: #d2be98; --status-error: #d6a5ac;
+  --traffic-up: #b0c6d0; --traffic-down: #b0c7b6;
+  --lumina-pulse-low: #7d949e; --lumina-pulse-mid: #90a7b0;
+  --lumina-pulse-high: #a3b8c0; --lumina-pulse-peak: #b7c9d0;
+  --lumina-health-good: #adc1b2; --lumina-health-fair: #bfc7ac;
+  --lumina-health-warning: #d2be98; --lumina-health-poor: #cfb5a2; --lumina-health-bad: #d0aab1;
   color-scheme: dark;
 }
 :root.theme-lumina:not(.gold):not(.platinum) body {
@@ -58,3 +66,13 @@
   --cap-accent: var(--primary);
 }
 :root.theme-lumina:not(.gold):not(.platinum) ::selection { color: var(--foreground); background: var(--paper-tint); }
+/* Traffic volume is magnitude, not a warning: use one blue family, no brown peaks. */
+:root.theme-lumina:not(.gold):not(.platinum) .lumina-traffic-pulse > span[data-active="true"] { opacity: 1 !important; }
+/* Carry the same semantic palette into overview counts and filter controls. */
+:root.theme-lumina:not(.gold):not(.platinum) .status.online { background: var(--status-success); box-shadow: 0 0 0 4px color-mix(in srgb,var(--status-success) 12%,transparent); }
+:root.theme-lumina:not(.gold):not(.platinum) :is(.summary-toggle .summary-toggle-info b.ok,.node-stats .online strong) { color: var(--status-success); }
+:root.theme-lumina:not(.gold):not(.platinum) :is(.summary-toggle .summary-toggle-info b.bad,.node-stats .offline strong) { color: var(--status-error); }
+:root.theme-lumina:not(.gold):not(.platinum) .warning { color: var(--status-warning) !important; }
+:root.theme-lumina:not(.gold):not(.platinum) .danger { color: var(--status-error) !important; }
+:root.theme-lumina:not(.gold):not(.platinum) .filters button.active.warning { background: color-mix(in srgb,var(--status-warning) 14%,var(--surface)); border-color: var(--status-warning); color: var(--status-warning) !important; }
+:root.theme-lumina:not(.gold):not(.platinum) .filters button.active.danger { background: color-mix(in srgb,var(--status-error) 14%,var(--surface)); border-color: var(--status-error); color: var(--status-error) !important; }
