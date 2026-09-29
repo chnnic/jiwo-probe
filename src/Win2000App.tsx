@@ -1,14 +1,14 @@
 import { useEffect, useMemo, useState } from 'react'
 import { ArrowDown, ArrowUp, CalendarDays, Check, LayoutGrid, List, Monitor, Moon, Palette, RefreshCw, Sun } from 'lucide-react'
 import type { CSSProperties, ReactNode } from 'react'
-import type { ProbePingSeries, ProbeServer } from './types'
+import type { ProbePingSeries, ProbeServer, ThemeName } from './types'
 import { getThemeOverride, setDarkOverride, setTheme, useProbe } from './use-probe'
 import { useNetworkSpeed } from './use-network-speed'
 import { PING_AVERAGES, pingTargetOptions, resolvePingGroups, type PingGroupConfig } from './ping-groups'
 import { PasskeyLogin } from './PasskeyLogin'
 import { Twemoji } from './Twemoji'
 import { ServerDetail } from './ServerDetail'
-import { ReturnRouteBadges } from './App'
+import { ReturnRouteBadges, THEME_OPTIONS } from './App'
 
 type Skin = 'win31' | 'win2000' | 'xp' | 'aqua'
 type View = 'cards' | 'ring' | 'table'
@@ -249,7 +249,10 @@ export function RetroDesktopApp({ family }: { family: RetroFamily }) {
   const busiest = [...servers].sort((a, b) => (b.cpu_pct || 0) - (a.cpu_pct || 0))[0]
   const selectDark = () => { const next = !dark; setDark(next); localStorage.setItem(`serverstatus:${family}-theme`, JSON.stringify(next ? 'dark' : 'light')); setDarkOverride(next ? 'dark' : 'light') }
   const title = data?.title?.trim() || '服务器监控'
-  const familyControl = <select className="retro-family-select" aria-label="切换复古主题" value={family} onChange={event => setTheme(event.target.value as RetroFamily)}><option value="win2000">Windows 2000</option><option value="winxp">Windows XP</option><option value="macos9">Mac OS 9 Platinum</option></select>
+  const familyControl = <select className="retro-family-select" aria-label="切换主题" value={themeOverride ?? ''} onChange={event => setTheme(event.target.value ? event.target.value as ThemeName : null)}>
+    <option value="">跟随主控</option>
+    {THEME_OPTIONS.map(option => <option key={option.value} value={option.value}>{option.label}</option>)}
+  </select>
 
   if (!data && !error) return <main className="center">正在连接 Win2000 主题…</main>
   if (error && !data) return <main className="center error">连接中断：{error}</main>

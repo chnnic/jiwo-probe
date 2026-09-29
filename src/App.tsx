@@ -246,7 +246,7 @@ function RegionSelect({ regions, value, onChange }: { regions: string[]; value: 
   )
 }
 
-const THEME_OPTIONS: { value: ThemeName; label: string }[] = [
+export const THEME_OPTIONS: { value: ThemeName; label: string }[] = [
   { value: 'pixel', label: '像素' },
   { value: 'flat', label: '扁平' },
   { value: 'anime', label: '动漫' },

@@ -144,6 +144,8 @@ html.theme-winxp .progress { height: 14px; border: 1px solid #686868; border-rad
 html.theme-winxp .progress-fill { border-radius: 2px; background: repeating-linear-gradient(90deg, #fff 0 2px, transparent 2px 10px), linear-gradient(180deg, #acedad, #7be47d 14%, #4cda50 28%, #2ed330 42%, #42d845 57%, #76e275 71%, #8fe791 85%, #fff); }
 html.theme-winxp .progress-fill.hot { background: repeating-linear-gradient(90deg, #fff 0 2px, transparent 2px 10px), linear-gradient(180deg, #ffcc7a, #f87820 52%, #e94d10); }
 html.theme-winxp .card-data { background: var(--window); }
+html:is(.theme-winxp, .theme-win2000, .theme-macos9) .retro-family-select,
+html:is(.theme-winxp, .theme-win2000, .theme-macos9) .retro-family-select option { color: var(--text); background-color: var(--window); }
 html.theme-winxp .retro-family-select { height: 21px; color: #000; font: 11px Tahoma, sans-serif; }
 html.theme-winxp .server-card .title-bar-icon { width: 14px; height: 14px; }
 html.theme-winxp .os-icon-img { width: 14px; text-align: center; color: #0058ee; font-weight: 700; }
