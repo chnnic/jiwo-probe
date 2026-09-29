@@ -346,7 +346,7 @@ function DetailMetric({ icon, label, value, percent, sub }: { icon: React.ReactN
   )
 }
 
-export function ServerDetail({ server, index, onClose, showHealthScore = false, variant }: { server: ProbeServer; index: number; onClose: () => void; showHealthScore?: boolean; variant?: 'winxp' | 'win2000' }) {
+export function ServerDetail({ server, index, onClose, showHealthScore = false, variant }: { server: ProbeServer; index: number; onClose: () => void; showHealthScore?: boolean; variant?: 'winxp' | 'win2000' | 'macos9' }) {
   const networkSpeed = useNetworkSpeed()
   const [selected, setSelected] = useState('__avg__')
   const [trendMode, setTrendMode] = useState<'latency' | 'loss' | 'traffic' | 'cpu' | 'mem' | 'connections'>(server.ping?.length ? 'latency' : 'connections')
@@ -370,8 +370,8 @@ export function ServerDetail({ server, index, onClose, showHealthScore = false, 
     <div className="server-detail-backdrop" role="presentation" onMouseDown={onClose}>
       <section className={`server-detail${retro ? ` retro-detail retro-detail-${variant}` : ''}`} onMouseDown={(event) => event.stopPropagation()} role="dialog" aria-modal="true" aria-label={name}>
         <header className="server-detail-header">
-          <button aria-label="返回" onClick={onClose}>
-            <ChevronLeft size={18} />
+          <button aria-label={variant === 'macos9' ? '关闭' : '返回'} onClick={onClose}>
+            {variant !== 'macos9' && <ChevronLeft size={18} />}
           </button>
           <div className="server-detail-title">
             <span className={server.online ? 'status online' : 'status'} />
@@ -390,9 +390,9 @@ export function ServerDetail({ server, index, onClose, showHealthScore = false, 
             )}
           </div>
           {regionLabel(server) && <div className="detail-region">{regionLabel(server)}</div>}
-          <button aria-label="关闭" onClick={onClose}>
+          {variant !== 'macos9' && <button aria-label="关闭" onClick={onClose}>
             <X size={18} />
-          </button>
+          </button>}
         </header>
 
         <div className="server-detail-body">

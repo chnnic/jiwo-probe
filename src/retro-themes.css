@@ -182,7 +182,17 @@ html.theme-macos9 .classic-menu-item:hover, html.theme-macos9 .classic-menu-item
 html.theme-macos9 .classic-menu-trailing { margin-left: auto; display: flex; align-items: center; gap: 12px; }
 html.theme-macos9 .classic-clock { min-width: 64px; text-align: center; border-left: 1px solid #999; box-shadow: inset 1px 0 #fff; font-family: Monaco, monospace; font-size: 11px; }
 html.theme-macos9 .app-window { max-width: 1400px; min-height: calc(100vh - 52px); gap: 2px; }
-html.theme-macos9 .win { border: 1px solid #262626; border-radius: 0; padding: 2px; box-shadow: inset 1px 1px #fff, inset -1px -1px #999, 2px 2px #26262655; }
+html.theme-macos9 .win, html.theme-macos9 .server-card:hover { border: 1px solid #262626; border-radius: 0; padding: 2px; box-shadow: inset 1px 1px #fff, inset -1px -1px #999, 2px 2px #26262655; }
+html:is(.theme-win2000, .theme-macos9) .server-card { transform: none; transition: none; }
+html.theme-win2000 .server-card:hover {
+  border-color: var(--light) var(--dkshadow) var(--dkshadow) var(--light);
+  box-shadow: inset 1px 1px var(--hilight), inset -1px -1px var(--shadow);
+}
+html.theme-win2000 :is(.tool-btn, .tab, .title-btn, .retro-detail button) { transition: none; cursor: default; }
+html.theme-win2000 .retro-detail .server-detail-header > button:active {
+  border-color: var(--dkshadow) var(--hilight) var(--hilight) var(--dkshadow);
+  box-shadow: inset 1px 1px var(--shadow);
+}
 html.theme-macos9 .title-bar, html.theme-macos9 .title-bar.inactive {
   height: 22px; padding: 0 3px; color: #262626; text-shadow: none; border-radius: 0;
   background: repeating-linear-gradient(180deg, #eee 0 1px, #ddd 1px 2px);
@@ -215,7 +225,7 @@ html.theme-macos9 .retro-family-select { height: 19px; font: 11px Geneva, Verdan
 @media (max-width: 760px) {
   html.theme-macos9 .desktop { padding: 21px 0 0; }
   html.theme-macos9 .app-window { min-height: calc(100vh - 21px); }
-  html.theme-macos9 .classic-menu-item { padding: 0 6px; }
+  html.theme-macos9 .classic-menu-item { padding: 0 3px; white-space: nowrap; }
   html.theme-macos9 .classic-menu-trailing { gap: 5px; }
   html.theme-macos9 .classic-menu-trailing .retro-family-select { max-width: 132px; }
 }
@@ -385,7 +395,7 @@ html.theme-win2000 body:is(.light, :not(.light)) .retro-route-medal :is(.route-b
 html.theme-win2000 body.light .retro-route-medal .route-badge-text.gold { color: #765500; }
 html.theme-win2000 body:not(.light) .retro-route-medal .route-badge-text.gold { color: #e7c76d; }
 html.theme-win2000 .retro-route-medal small { font-weight: 400; opacity: 1; }
-html:is(.theme-winxp, .theme-win2000) .retro-detail {
+html:is(.theme-winxp, .theme-win2000, .theme-macos9) .retro-detail {
   --graph-bg: #000;
   --graph-grid: #008040;
   --graph-axis: #8fd88f;
@@ -410,17 +420,17 @@ html:is(.theme-winxp, .theme-win2000) .retro-detail {
   font: 12px/1.35 Tahoma, 'Microsoft YaHei', SimSun, sans-serif;
 }
 html.theme-winxp .retro-detail { --graph-axis: #9fd9a8; }
-html:is(.theme-winxp, .theme-win2000) .retro-detail .server-detail-header { flex-shrink: 0; }
-html:is(.theme-winxp, .theme-win2000) .retro-detail .server-detail-header > button > svg { display: block; }
-html:is(.theme-winxp, .theme-win2000) .retro-detail .server-detail-body { min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
-html:is(.theme-winxp, .theme-win2000) .retro-detail .detail-cols { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-html:is(.theme-winxp, .theme-win2000) .retro-detail .detail-panel { min-width: 0; }
-html:is(.theme-winxp, .theme-win2000) .retro-detail .detail-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-html:is(.theme-winxp, .theme-win2000) .retro-detail .detail-metric-head { flex-wrap: wrap; }
-html:is(.theme-winxp, .theme-win2000) .retro-detail .detail-panel-head { flex-wrap: wrap; }
-html:is(.theme-winxp, .theme-win2000) .retro-detail .detail-region { color: var(--title-text); }
-html:is(.theme-winxp, .theme-win2000) .retro-host-box,
-html:is(.theme-winxp, .theme-win2000) .retro-chart-box {
+html:is(.theme-winxp, .theme-win2000, .theme-macos9) .retro-detail .server-detail-header { flex-shrink: 0; }
+html:is(.theme-winxp, .theme-win2000, .theme-macos9) .retro-detail .server-detail-header > button > svg { display: block; }
+html:is(.theme-winxp, .theme-win2000, .theme-macos9) .retro-detail .server-detail-body { min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
+html:is(.theme-winxp, .theme-win2000, .theme-macos9) .retro-detail .detail-cols { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+html:is(.theme-winxp, .theme-win2000, .theme-macos9) .retro-detail .detail-panel { min-width: 0; }
+html:is(.theme-winxp, .theme-win2000, .theme-macos9) .retro-detail .detail-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+html:is(.theme-winxp, .theme-win2000, .theme-macos9) .retro-detail .detail-metric-head { flex-wrap: wrap; }
+html:is(.theme-winxp, .theme-win2000, .theme-macos9) .retro-detail .detail-panel-head { flex-wrap: wrap; }
+html:is(.theme-winxp, .theme-win2000, .theme-macos9) .retro-detail .detail-region { color: var(--title-text); }
+html:is(.theme-winxp, .theme-win2000, .theme-macos9) .retro-host-box,
+html:is(.theme-winxp, .theme-win2000, .theme-macos9) .retro-chart-box {
   min-width: 0;
   margin: 0;
   padding: 8px;
@@ -428,16 +438,16 @@ html:is(.theme-winxp, .theme-win2000) .retro-chart-box {
   box-shadow: inset 1px 1px var(--hilight), 1px 1px var(--hilight);
   background: var(--face);
 }
-html:is(.theme-winxp, .theme-win2000) .retro-detail fieldset > legend { padding: 0 4px; color: var(--text); font-weight: 700; }
+html:is(.theme-winxp, .theme-win2000, .theme-macos9) .retro-detail fieldset > legend { padding: 0 4px; color: var(--text); font-weight: 700; }
 html.theme-winxp body.light .retro-detail fieldset > legend { color: #003399; }
 html.theme-winxp body:not(.light) .retro-detail .detail-panel h3 { color: var(--text); }
-html:is(.theme-winxp, .theme-win2000) .retro-host-head { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
-html:is(.theme-winxp, .theme-win2000) .retro-host-head h3 { margin: 0; flex: 1; min-width: 0; overflow-wrap: anywhere; font-size: 13px; }
-html:is(.theme-winxp, .theme-win2000) .retro-host-status { flex-shrink: 0; padding: 1px 8px; border: 1px solid; border-color: var(--shadow) var(--hilight) var(--hilight) var(--shadow); background: var(--window); }
-html:is(.theme-winxp, .theme-win2000) .retro-host-grid { margin: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); padding: 2px; background: var(--window); border: 1px solid; border-color: var(--shadow) var(--hilight) var(--hilight) var(--shadow); box-shadow: inset 1px 1px var(--dkshadow); }
-html:is(.theme-winxp, .theme-win2000) .retro-host-item { min-width: 0; padding: 4px 8px; border-bottom: 1px solid var(--row-line); }
-html:is(.theme-winxp, .theme-win2000) .retro-host-item dt { color: var(--text-muted); font-size: 11px; }
-html:is(.theme-winxp, .theme-win2000) .retro-host-item dd { margin: 1px 0 0; overflow-wrap: anywhere; }
+html:is(.theme-winxp, .theme-win2000, .theme-macos9) .retro-host-head { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+html:is(.theme-winxp, .theme-win2000, .theme-macos9) .retro-host-head h3 { margin: 0; flex: 1; min-width: 0; overflow-wrap: anywhere; font-size: 13px; }
+html:is(.theme-winxp, .theme-win2000, .theme-macos9) .retro-host-status { flex-shrink: 0; padding: 1px 8px; border: 1px solid; border-color: var(--shadow) var(--hilight) var(--hilight) var(--shadow); background: var(--window); }
+html:is(.theme-winxp, .theme-win2000, .theme-macos9) .retro-host-grid { margin: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); padding: 2px; background: var(--window); border: 1px solid; border-color: var(--shadow) var(--hilight) var(--hilight) var(--shadow); box-shadow: inset 1px 1px var(--dkshadow); }
+html:is(.theme-winxp, .theme-win2000, .theme-macos9) .retro-host-item { min-width: 0; padding: 4px 8px; border-bottom: 1px solid var(--row-line); }
+html:is(.theme-winxp, .theme-win2000, .theme-macos9) .retro-host-item dt { color: var(--text-muted); font-size: 11px; }
+html:is(.theme-winxp, .theme-win2000, .theme-macos9) .retro-host-item dd { margin: 1px 0 0; overflow-wrap: anywhere; }
 html:is(.theme-winxp, .theme-win2000) .retro-detail .detail-chart {
   height: 280px;
   padding: 2px;
@@ -458,12 +468,12 @@ html:is(.theme-winxp, .theme-win2000) .retro-detail :is(.legend, .traffic-line-t
 html:is(.theme-winxp, .theme-win2000) .retro-detail :is(.legend, .traffic-line-toggle) button.active { color: #fff; }
 html:is(.theme-winxp, .theme-win2000) .retro-detail :is(.legend, .traffic-line-toggle) button.off { opacity: .5; text-decoration: line-through; }
 html:is(.theme-winxp, .theme-win2000) .retro-detail :is(.legend i, .traffic-line-toggle .dot) { border-radius: 0; width: 8px; height: 8px; flex-shrink: 0; }
-html:is(.theme-winxp, .theme-win2000) .retro-detail .ranges { flex-wrap: wrap; gap: 3px; }
+html:is(.theme-winxp, .theme-win2000, .theme-macos9) .retro-detail .ranges { flex-wrap: wrap; gap: 3px; }
 html:is(.theme-winxp, .theme-win2000) .retro-detail .detail-chart :is(.chart-empty, .loading-overlay) { color: var(--graph-axis); background: var(--graph-bg); }
-html:is(.theme-winxp, .theme-win2000) .retro-detail button:focus-visible { outline: 1px dotted currentColor; outline-offset: -3px; }
+html:is(.theme-winxp, .theme-win2000, .theme-macos9) .retro-detail button:focus-visible { outline: 1px dotted currentColor; outline-offset: -3px; }
 
 html.theme-win2000 .server-detail-backdrop { background: var(--overlay); backdrop-filter: none; }
-html.theme-win2000 .retro-detail-win2000 { width: min(1400px, 100%); padding: 3px; border: 1px solid; border-color: var(--light) var(--dkshadow) var(--dkshadow) var(--light); border-radius: 0; background: var(--face); box-shadow: inset 1px 1px var(--hilight), inset -1px -1px var(--shadow), 3px 3px 8px #0006; overflow: hidden; }
+html.theme-win2000 .retro-detail-win2000 { width: min(1400px, 100%); padding: 3px; border: 1px solid; border-color: var(--light) var(--dkshadow) var(--dkshadow) var(--light); border-radius: 0; background: var(--face); box-shadow: inset 1px 1px var(--hilight), inset -1px -1px var(--shadow), 3px 3px 0 #0006; overflow: hidden; }
 html.theme-win2000 .retro-detail .server-detail-header { min-height: 24px; padding: 2px 3px; gap: 6px; border: 0; border-radius: 0; background: linear-gradient(90deg, var(--title-a), var(--title-b)); color: var(--title-text); }
 html.theme-win2000 .retro-detail .server-detail-title { gap: 6px; }
 html.theme-win2000 .retro-detail .server-detail-title h2 { color: var(--title-text); font: 700 12px Tahoma, 'Microsoft YaHei', SimSun, sans-serif; }
@@ -478,46 +488,168 @@ html.theme-win2000 .retro-detail .retro-chart-expand { min-width: 22px; min-heig
 html.theme-win2000 .retro-detail .ranges button.active,
 html.theme-win2000 .retro-detail .ranges button:active,
 html.theme-win2000 .retro-detail .retro-chart-expand:active { border-color: var(--dkshadow) var(--hilight) var(--hilight) var(--dkshadow); box-shadow: inset 1px 1px var(--shadow); }
-html:is(.theme-winxp, .theme-win2000) .retro-history-range,
-html:is(.theme-winxp, .theme-win2000) .retro-probe-range { margin: 0; }
-html:is(.theme-winxp, .theme-win2000) .retro-history-note { margin-left: auto; color: var(--text-muted); font-size: 11px; }
-html:is(.theme-winxp, .theme-win2000) .retro-charts-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px 10px; align-items: stretch; }
-html:is(.theme-winxp, .theme-win2000) .retro-chart-box { display: flex; flex-direction: column; gap: 5px; }
-html:is(.theme-winxp, .theme-win2000) .retro-chart-box.expanded { grid-column: 1 / -1; }
-html:is(.theme-winxp, .theme-win2000) .retro-chart-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; min-height: 22px; }
-html:is(.theme-winxp, .theme-win2000) .retro-chart-readout { display: flex; flex-wrap: wrap; gap: 2px 10px; min-width: 0; max-height: 44px; overflow-y: auto; font-size: 11px; font-variant-numeric: tabular-nums; }
-html:is(.theme-winxp, .theme-win2000) .retro-chart-readout > span { overflow-wrap: anywhere; }
-html:is(.theme-winxp, .theme-win2000) .retro-chart-expand { position: static; display: grid; place-items: center; flex: 0 0 22px; width: 22px; min-height: 22px; padding: 0; }
+/* Mac OS 9 Platinum dialog: striped title bar, hard frame and bevelled controls. */
+html.theme-macos9 .server-detail-backdrop { top: 21px; padding: 16px; background: rgba(38, 38, 38, .45); backdrop-filter: none; }
+html.theme-macos9 .retro-detail-macos9 {
+  --surface: #eee;
+  --surface-elevated: #fff;
+  --foreground: #262626;
+  --muted: #555;
+  --border: #999;
+  --primary: #333399;
+  --accent: #333399;
+  --graph-bg: #fff;
+  --graph-grid: #ddd;
+  --graph-axis: #555;
+  --graph-line-1: #333399;
+  --graph-line-2: #0f6b20;
+  --graph-line-3: #008888;
+  --graph-line-4: #663399;
+  --graph-line-5: #cc3333;
+  --graph-line-6: #225599;
+  --graph-line-7: #262626;
+  --graph-line-8: #996600;
+  width: min(1120px, 100%);
+  max-height: calc(100dvh - 53px);
+  padding: 2px;
+  border: 1px solid #262626;
+  border-radius: 0;
+  background: #ccc;
+  box-shadow: inset 1px 1px #fff, inset -1px -1px #999, 2px 2px #262626;
+  overflow: hidden;
+  color: #262626;
+  font: 12px/1.45 var(--font);
+}
+html.theme-macos9 .retro-detail-macos9 .server-detail-header {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  min-height: 22px;
+  padding: 2px 3px;
+  gap: 5px;
+  border: 0;
+  border-radius: 0;
+  background: #ccc;
+  color: #262626;
+  font: 700 12px/18px Geneva, 'Lucida Grande', Verdana, sans-serif;
+  text-shadow: none;
+}
+html.theme-macos9 .retro-detail-macos9 .server-detail-title { gap: 5px; }
+html.theme-macos9 .retro-detail-macos9 .server-detail-title::before,
+html.theme-macos9 .retro-detail-macos9 .server-detail-title::after {
+  content: '';
+  flex: 1;
+  min-width: 8px;
+  height: 12px;
+  background: repeating-linear-gradient(#fff 0 1px, #777 1px 2px);
+}
+html.theme-macos9 .retro-detail-macos9 .server-detail-title h2 { flex: 0 1 auto; max-width: 70%; padding: 0 2px; color: #262626; background: #ccc; font: inherit; text-shadow: none; }
+/* 在线状态已在主机信息中显示，避免在标题横纹上重复叠加。 */
+html.theme-macos9 .retro-detail-macos9 .server-detail-title > :is(.status, .detail-online, .detail-offline) { display: none; }
+html.theme-macos9 .retro-detail-macos9 .detail-region { background: #ccc; color: #555; font: 11px var(--font); }
+html.theme-macos9 .retro-detail-macos9 .detail-health-score { border-radius: 0; background: #ccc; }
+html.theme-macos9 .retro-detail-macos9 .server-detail-header > button {
+  display: grid;
+  place-items: center;
+  width: 13px;
+  min-width: 13px;
+  height: 13px;
+  flex: 0 0 13px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: linear-gradient(135deg, #9a9a9a, #f1f1f1);
+  color: #262626;
+  box-shadow: inset 1px 1px #777, inset -1px -1px #fff, inset 0 0 0 2px #262626, inset 3px 3px #fff, inset -3px -3px #777;
+}
+html.theme-macos9 .retro-detail-macos9 .server-detail-header > button:active {
+  background: #666;
+}
+html.theme-macos9 .retro-detail-macos9 .server-detail-body { margin: 2px; padding: 10px 8px; gap: 10px; background: #eee; border: 1px solid #262626; box-shadow: -1px -1px #999, 1px 1px #fff; }
+html.theme-macos9 .retro-detail-macos9 .detail-panel {
+  padding: 8px 9px;
+  border: 1px solid #999;
+  border-radius: 0;
+  background: #fff;
+  box-shadow: inset 1px 1px #fff, inset -1px -1px #ccc;
+}
+html.theme-macos9 .retro-detail-macos9 .detail-panel h3 { margin-bottom: 8px; color: #333399; font: 700 12px Geneva, Verdana, sans-serif; }
+html.theme-macos9 .retro-detail-macos9 .detail-metric-head span,
+html.theme-macos9 .retro-detail-macos9 .detail-meta > span,
+html.theme-macos9 .retro-detail-macos9 .detail-meta > a,
+html.theme-macos9 .retro-detail-macos9 .detail-hw > span,
+html.theme-macos9 .retro-detail-macos9 .detail-loadavg { color: #555; }
+html.theme-macos9 .retro-detail-macos9 .detail-metric-sub,
+html.theme-macos9 .retro-detail-macos9 .detail-meta small,
+html.theme-macos9 .retro-detail-macos9 .detail-hw small { color: #777; }
+html.theme-macos9 .retro-detail-macos9 button { cursor: default; transition: none; }
+html.theme-macos9 .retro-detail-macos9 :is(.ranges button, .retro-chart-expand) {
+  min-height: 20px;
+  padding: 2px 8px;
+  border: 1px solid #262626;
+  border-radius: 3px;
+  color: #262626;
+  background: #ddd;
+  box-shadow: inset 1px 1px #ddd, inset -1px -1px #777, inset 2px 2px #fff, inset -2px -2px #aaa;
+  font: 11px Geneva, Verdana, sans-serif;
+}
+html.theme-macos9 .retro-detail-macos9 :is(.ranges button:active, .ranges button.active, .retro-chart-expand:active) {
+  border-color: #262626;
+  background: #888;
+  color: #fff;
+  box-shadow: inset 1px 1px #666, inset -1px -1px #aaa, inset 2px 2px #777, inset -2px -2px #999;
+}
+html.theme-macos9 .retro-detail-macos9 .detail-loadavg code { border: 1px solid #999; border-radius: 0; background: #eee; color: #262626; }
+html.theme-macos9 .retro-detail-macos9 :is(.retro-host-box, .retro-chart-box) { border-color: #999; box-shadow: inset 1px 1px #fff, 1px 1px #fff; background: #eee; }
+html.theme-macos9 .retro-detail-macos9 .retro-chart-plot { background: #fff; border: 1px solid #262626; box-shadow: -1px -1px #999, 1px 1px #fff; }
+html.theme-macos9 .retro-detail-macos9 button:focus-visible { outline: 2px solid #9999fe; outline-offset: 1px; }
+html.theme-macos9 .retro-detail-macos9 .meter { border-radius: 0; background: #ccc; border: 1px solid #999; }
+html.theme-macos9 .retro-detail-macos9 .meter > i { border-radius: 0; background: #333399; }
+html.theme-macos9 .retro-detail-macos9 .retro-route-badges { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; }
+html.theme-macos9 .retro-detail-macos9 .retro-route-medal { border: 1px solid #999; background: #ddd; }
+html.theme-macos9 .retro-detail-macos9 :is(.route-badge-text, .route-badge-animation) { border: 0; border-radius: 0; background: transparent; box-shadow: none; color: #262626; padding: 2px; }
+html.theme-macos9 .retro-detail-macos9 .route-badge-icon { width: 15px; height: 15px; }
+html:is(.theme-winxp, .theme-win2000, .theme-macos9) .retro-history-range,
+html:is(.theme-winxp, .theme-win2000, .theme-macos9) .retro-probe-range { margin: 0; }
+html:is(.theme-winxp, .theme-win2000, .theme-macos9) .retro-history-note { margin-left: auto; color: var(--text-muted); font-size: 11px; }
+html:is(.theme-winxp, .theme-win2000, .theme-macos9) .retro-charts-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px 10px; align-items: stretch; }
+html:is(.theme-winxp, .theme-win2000, .theme-macos9) .retro-chart-box { display: flex; flex-direction: column; gap: 5px; }
+html:is(.theme-winxp, .theme-win2000, .theme-macos9) .retro-chart-box.expanded { grid-column: 1 / -1; }
+html:is(.theme-winxp, .theme-win2000, .theme-macos9) .retro-chart-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; min-height: 22px; }
+html:is(.theme-winxp, .theme-win2000, .theme-macos9) .retro-chart-readout { display: flex; flex-wrap: wrap; gap: 2px 10px; min-width: 0; max-height: 44px; overflow-y: auto; font-size: 11px; font-variant-numeric: tabular-nums; }
+html:is(.theme-winxp, .theme-win2000, .theme-macos9) .retro-chart-readout > span { overflow-wrap: anywhere; }
+html:is(.theme-winxp, .theme-win2000, .theme-macos9) .retro-chart-expand { position: static; display: grid; place-items: center; flex: 0 0 22px; width: 22px; min-height: 22px; padding: 0; }
 html.theme-winxp .retro-chart-expand { border: 1px solid #003c74; border-radius: 3px; color: #000; background: linear-gradient(180deg, #fff, #ecebe5 86%, #d8d0c4); box-shadow: none; }
-html:is(.theme-winxp, .theme-win2000) .retro-chart-plot { display: flex; flex-direction: column; margin-top: auto; height: 200px; min-width: 0; padding: 3px; color: var(--graph-axis); background: var(--graph-bg); border: 1px solid; border-color: var(--shadow) var(--hilight) var(--hilight) var(--shadow); }
-html:is(.theme-winxp, .theme-win2000) .retro-chart-box.expanded .retro-chart-plot { height: 320px; }
-html:is(.theme-winxp, .theme-win2000) .retro-chart-canvas { position: relative; min-height: 0; min-width: 0; flex: 1; }
-html:is(.theme-winxp, .theme-win2000) .retro-chart-legend { display: flex; flex-wrap: wrap; justify-content: center; align-content: flex-start; gap: 1px 6px; max-height: 56px; overflow-y: auto; padding: 1px 2px 3px; }
-html:is(.theme-winxp, .theme-win2000) .retro-chart-legend button { display: inline-flex; align-items: center; gap: 4px; min-width: 0; min-height: 20px; padding: 1px 3px; border: 0; border-radius: 0; color: var(--graph-axis); background: transparent; box-shadow: none; font: 10px Tahoma, 'Microsoft YaHei', sans-serif; overflow-wrap: anywhere; }
-html:is(.theme-winxp, .theme-win2000) .retro-chart-legend button.off { opacity: .5; text-decoration: line-through; }
-html:is(.theme-winxp, .theme-win2000) .retro-chart-legend i { display: block; flex: 0 0 9px; height: 9px; border: 1px solid; }
-html:is(.theme-winxp, .theme-win2000) .retro-chart-state { display: flex; flex: 1; gap: 8px; align-items: center; justify-content: center; }
-html:is(.theme-winxp, .theme-win2000) .retro-chart-state button { padding: 2px 6px; border: 1px solid currentColor; color: inherit; background: transparent; font: inherit; }
-html:is(.theme-winxp, .theme-win2000) .retro-detail .retro-traffic-range { margin: 0; min-height: 22px; }
+html:is(.theme-winxp, .theme-win2000, .theme-macos9) .retro-chart-plot { display: flex; flex-direction: column; margin-top: auto; height: 200px; min-width: 0; padding: 3px; color: var(--graph-axis); background: var(--graph-bg); border: 1px solid; border-color: var(--shadow) var(--hilight) var(--hilight) var(--shadow); }
+html:is(.theme-winxp, .theme-win2000, .theme-macos9) .retro-chart-box.expanded .retro-chart-plot { height: 320px; }
+html:is(.theme-winxp, .theme-win2000, .theme-macos9) .retro-chart-canvas { position: relative; min-height: 0; min-width: 0; flex: 1; }
+html:is(.theme-winxp, .theme-win2000, .theme-macos9) .retro-chart-legend { display: flex; flex-wrap: wrap; justify-content: center; align-content: flex-start; gap: 1px 6px; max-height: 56px; overflow-y: auto; padding: 1px 2px 3px; }
+html:is(.theme-winxp, .theme-win2000, .theme-macos9) .retro-chart-legend button { display: inline-flex; align-items: center; gap: 4px; min-width: 0; min-height: 20px; padding: 1px 3px; border: 0; border-radius: 0; color: var(--graph-axis); background: transparent; box-shadow: none; font: 10px Tahoma, 'Microsoft YaHei', sans-serif; overflow-wrap: anywhere; }
+html:is(.theme-winxp, .theme-win2000, .theme-macos9) .retro-chart-legend button.off { opacity: .5; text-decoration: line-through; }
+html:is(.theme-winxp, .theme-win2000, .theme-macos9) .retro-chart-legend i { display: block; flex: 0 0 9px; height: 9px; border: 1px solid; }
+html:is(.theme-winxp, .theme-win2000, .theme-macos9) .retro-chart-state { display: flex; flex: 1; gap: 8px; align-items: center; justify-content: center; }
+html:is(.theme-winxp, .theme-win2000, .theme-macos9) .retro-chart-state button { padding: 2px 6px; border: 1px solid currentColor; color: inherit; background: transparent; font: inherit; }
+html:is(.theme-winxp, .theme-win2000, .theme-macos9) .retro-detail .retro-traffic-range { margin: 0; min-height: 22px; }
 @media (max-width: 1100px) {
-  html:is(.theme-winxp, .theme-win2000) .retro-charts-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  html:is(.theme-winxp, .theme-win2000, .theme-macos9) .retro-charts-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (max-width: 640px) {
-  html:is(.theme-winxp, .theme-win2000) .server-detail-backdrop { padding: 4px; }
-  html:is(.theme-winxp, .theme-win2000) .retro-detail { max-height: calc(100dvh - 8px); }
-  html:is(.theme-winxp, .theme-win2000) .retro-detail .detail-cols { grid-template-columns: minmax(0, 1fr); }
-  html:is(.theme-winxp, .theme-win2000) .retro-host-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  html:is(.theme-winxp, .theme-win2000) .retro-detail .detail-region { display: none; }
+  html:is(.theme-winxp, .theme-win2000, .theme-macos9) .server-detail-backdrop { padding: 4px; }
+  html:is(.theme-winxp, .theme-win2000, .theme-macos9) .retro-detail { max-height: calc(100dvh - 8px); }
+  html.theme-macos9 .retro-detail { max-height: calc(100dvh - 29px); }
+  html:is(.theme-winxp, .theme-win2000, .theme-macos9) .retro-detail .detail-cols { grid-template-columns: minmax(0, 1fr); }
+  html:is(.theme-winxp, .theme-win2000, .theme-macos9) .retro-host-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  html:is(.theme-winxp, .theme-win2000, .theme-macos9) .retro-detail .detail-region { display: none; }
   html:is(.theme-winxp, .theme-win2000) .retro-detail .detail-chart { height: 220px; }
-  html:is(.theme-winxp, .theme-win2000) .retro-charts-grid { grid-template-columns: minmax(0, 1fr); }
-  html:is(.theme-winxp, .theme-win2000) .retro-history-note { width: 100%; margin-left: 0; }
-  html:is(.theme-winxp, .theme-win2000) .retro-chart-expand { flex-basis: 28px; width: 28px; min-height: 28px; }
-  html:is(.theme-winxp, .theme-win2000) .retro-chart-legend button { min-height: 28px; }
+  html:is(.theme-winxp, .theme-win2000, .theme-macos9) .retro-charts-grid { grid-template-columns: minmax(0, 1fr); }
+  html:is(.theme-winxp, .theme-win2000, .theme-macos9) .retro-history-note { width: 100%; margin-left: 0; }
+  html:is(.theme-winxp, .theme-win2000, .theme-macos9) .retro-chart-expand { flex-basis: 28px; width: 28px; min-height: 28px; }
+  html:is(.theme-winxp, .theme-win2000, .theme-macos9) .retro-chart-legend button { min-height: 28px; }
   html.theme-winxp .server-detail-body { padding: 6px 4px 7px; }
   html.theme-winxp .server-detail-header { gap: 5px; }
   html.theme-winxp .server-detail-title { gap: 4px; }
 }
 @media (max-width: 360px) {
-  html:is(.theme-winxp, .theme-win2000) .retro-host-grid,
-  html:is(.theme-winxp, .theme-win2000) .retro-detail .detail-grid { grid-template-columns: minmax(0, 1fr); }
+  html:is(.theme-winxp, .theme-win2000, .theme-macos9) .retro-host-grid,
+  html:is(.theme-winxp, .theme-win2000, .theme-macos9) .retro-detail .detail-grid { grid-template-columns: minmax(0, 1fr); }
 }
