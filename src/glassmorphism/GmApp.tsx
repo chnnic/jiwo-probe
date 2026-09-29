@@ -1,3 +1,5 @@
+import { THEME_OPTIONS } from '../theme-picker-model'
+import { ThemeSelect } from '../ThemePicker'
 import { useNetworkSpeed } from '../use-network-speed'
 import { UnlockButton } from '../ServerCapabilities'
 import { ConnectionLabel } from '../ConnectionLabel'
@@ -7,7 +9,6 @@ import {
   Activity,
   ArrowDown,
   ArrowUp,
-  Check,
   ChevronDown,
   Clock3,
   Cpu,
@@ -17,7 +18,6 @@ import {
   LayoutGrid,
   MemoryStick,
   Moon,
-  Palette,
   PieChart,
   Search,
   Sun,
@@ -49,19 +49,6 @@ import {
 import type { EnrichedServer } from '../use-probe'
 import { GmEarth, type GmRegion } from './GmEarth'
 
-const THEME_OPTIONS: { value: ThemeName; label: string }[] = [
-  { value: 'pixel', label: '像素' },
-  { value: 'flat', label: '扁平' },
-  { value: 'anime', label: '动漫' },
-  { value: 'glass', label: '玻璃' },
-  { value: 'lumina', label: 'Lumina' },
-  { value: 'luminaplus', label: 'LuminaPlus' },
-  { value: 'premium', label: 'Premium' },
-  { value: 'ran', label: '岚 · Ran' },
-  { value: 'glassmorphism', label: 'Glassmorphism' },
-  { value: 'emerald', label: 'Emerald' },
-  { value: 'lite', label: 'Lite' },
-]
 
 function formatUptimeDays(seconds: number): string {
   return `${Math.floor(seconds / 86400)} 天`
@@ -479,46 +466,7 @@ function GmVisitorBar() {
 
 /* ================= 主题菜单 ================= */
 function GmThemeMenu({ current, onChange }: { current: ThemeName | null; onChange: (name: ThemeName | null) => void }) {
-  const [open, setOpen] = useState(false)
-  useEffect(() => {
-    if (!open) return
-    const handle = (event: MouseEvent) => {
-      if (!(event.target as HTMLElement).closest('.gm-theme-menu')) setOpen(false)
-    }
-    document.addEventListener('click', handle)
-    return () => document.removeEventListener('click', handle)
-  }, [open])
-  const label = current ? THEME_OPTIONS.find((opt) => opt.value === current)?.label || current : '跟随主控'
-  return (
-    <div className="gm-theme-menu">
-      <button
-        type="button"
-        className="gm-header-btn"
-        aria-label={`主题: ${label}`}
-        aria-haspopup="listbox"
-        aria-expanded={open}
-        title={`主题: ${label}`}
-        onClick={() => setOpen((v) => !v)}
-      >
-        <Palette size={18} />
-        <ChevronDown size={14} className={open ? 'rotated' : ''} />
-      </button>
-      {open && (
-        <div className="gm-theme-dropdown" role="listbox" aria-label="主题选择">
-          <button type="button" role="option" aria-selected={current === null} onClick={() => { onChange(null); setOpen(false) }}>
-            <span>跟随主控</span>
-            {current === null && <Check size={14} />}
-          </button>
-          {THEME_OPTIONS.map((opt) => (
-            <button key={opt.value} type="button" role="option" aria-selected={current === opt.value} onClick={() => { onChange(opt.value); setOpen(false) }}>
-              <span>{opt.label}</span>
-              {current === opt.value && <Check size={14} />}
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
-  )
+  return <ThemeSelect value={current} onChange={onChange} buttonClassName="gm-header-btn" />
 }
 
 /* ================= 主页面 ================= */

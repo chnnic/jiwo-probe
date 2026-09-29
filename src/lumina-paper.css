@@ -1,0 +1,60 @@
+/* Lumina light / dark · Claude Paper · v1.0 · 2026-09-29
+ * Adapted from the user's controller theme. Gold / platinum remain unchanged.
+ * Paper surfaces, terracotta accents, local serif headings; no layout changes.
+ */
+:root.theme-lumina:not(.gold):not(.platinum) {
+  --paper-heading-font: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, "Songti SC", "Noto Serif CJK SC", serif;
+  --page-bg: #f5f3ed; --surface: #fdfcf8; --foreground: #302e29;
+  --muted: #746f65; --border: #dedad0; --hover-bg: #eeece5;
+  --primary: #b45538; --paper-tint: #f1e3d9; --paper-on-tint: #8f432d;
+  --radius: 16px; --lumina-top-glow: none; --lumina-card-shadow: 0 1px 3px rgb(48 46 41 / 4%);
+  --progress-cpu: #8aa7b5; --progress-memory: #a595b4; --progress-swap: #9e94b1;
+  --progress-disk: #cf9879; --progress-network: #88a08d; --progress-load: #c89ca3;
+  --status-success: #527b63; --status-warning: #94691e; --status-error: #b7403d;
+  --traffic-up: #53798d; --traffic-down: #527b63;
+  --lumina-heat: linear-gradient(to right, #88a08d 0%, #88a08d 15%, #a5b18a 40%, #c8ad78 60%, #cf9879 80%, #b7403d 100%);
+  --bg: var(--page-bg); --card: var(--surface); --text: var(--foreground); --accent: var(--primary);
+  color: var(--foreground); background: var(--page-bg); color-scheme: light;
+}
+:root.theme-lumina.dark:not(.gold):not(.platinum) {
+  --page-bg: #242320; --surface: #2d2c28; --foreground: #ece9e1;
+  --muted: #b2ab9e; --border: #48463e; --hover-bg: #35342f;
+  --primary: #df967a; --paper-tint: #49372e; --paper-on-tint: #efb79d;
+  --lumina-card-shadow: 0 1px 3px rgb(0 0 0 / 12%);
+  --progress-cpu: #91adbc; --progress-memory: #b6a6c5; --progress-swap: #b2a6c1;
+  --progress-disk: #d6a184; --progress-network: #8faf98; --progress-load: #d3adb2;
+  --status-success: #8faf98; --status-warning: #ccaf76; --status-error: #e68b85;
+  --traffic-up: #8caebe; --traffic-down: #8faf98;
+  color-scheme: dark;
+}
+:root.theme-lumina:not(.gold):not(.platinum) body {
+  color: var(--foreground); background-color: var(--page-bg);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+}
+:root.theme-lumina:not(.gold):not(.platinum) :is(.topbar h1,.lumina-title,.summary-card h2,.globe-card h2,.leaderboard-card h2,.server-detail-header h2,.probe-unlock-dialog-head h2) {
+  font-family: var(--paper-heading-font);
+}
+/* Replace the former borderless heavy shadows without touching gold variants. */
+:root.theme-lumina:not(.gold):not(.platinum) :is(.server-card,.lumina-card,.summary-card,.probe-toolbar,.globe-card,.leaderboard-card,.server-mini-card) {
+  border: 1px solid var(--border) !important;
+  box-shadow: var(--lumina-card-shadow) !important;
+}
+:root.theme-lumina:not(.gold):not(.platinum) :is(.server-card,.lumina-card,.summary-card,.probe-toolbar,.globe-card,.leaderboard-card,.server-mini-card):hover {
+  border-color: var(--border) !important; transform: none;
+}
+:root.theme-lumina:not(.gold):not(.platinum) .lumina-card.is-offline {
+  border-color: color-mix(in srgb,var(--status-error) 40%,var(--border)) !important;
+}
+:root.theme-lumina:not(.gold):not(.platinum) .topbar { border-bottom: 1px solid var(--border); }
+:root.theme-lumina:not(.gold):not(.platinum) :is(.topbar button,.region-trigger,.filters button,.ranges button,.trend-mode-switch button) { border-radius: 9px; }
+:root.theme-lumina:not(.gold):not(.platinum) :is(.topbar button.active,.filters button.active:not(.warning):not(.danger),.ranges button.active,.trend-mode-switch button.active,.leaderboard-tabs button.active) {
+  color: var(--paper-on-tint); background: var(--paper-tint); border-color: var(--primary); box-shadow: none;
+}
+:root.theme-lumina:not(.gold):not(.platinum) :is(.server-detail,.modal,.detail-panel,.region-menu) {
+  border-color: var(--border); background: var(--surface);
+}
+:root.theme-lumina:not(.gold):not(.platinum) :is(.probe-unlock-dialog,.probe-unlock-panel,.probe-unlock-button,.probe-connections) {
+  --cap-bg: var(--surface); --cap-fg: var(--foreground); --cap-muted: var(--muted); --cap-line: var(--border);
+  --cap-accent: var(--primary);
+}
+:root.theme-lumina:not(.gold):not(.platinum) ::selection { color: var(--foreground); background: var(--paper-tint); }

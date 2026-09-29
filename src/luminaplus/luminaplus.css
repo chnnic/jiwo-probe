@@ -1,12 +1,15 @@
-/* LuminaPlus · v0.1.7 · 2026-09-24 — Lite-style compact single-row header.
+/* LuminaPlus · v0.2.0 · 2026-09-29 — Claude Paper palette and typography.
  * Independent, opaque Jiwo skin. Visual reference attribution: NOTICE.md.
  * No animated backgrounds, nested blur, or continuously animating meters.
  */
 :root.theme-luminaplus {
-  --lp-page: #f4f4f5; --lp-surface: #fff; --lp-soft: #f4f4f5; --lp-text: #18181b;
-  --lp-secondary: #52525b; --lp-muted: #71717a; --lp-border: #e4e4e7; --lp-track: #ededf0;
-  --lp-cpu: #80aafa; --lp-memory: #9262f3; --lp-disk: #ed8844; --lp-load: #ed9bc5;
-  --lp-blue: #397cf6; --lp-green: #299c65; --lp-accent: #8055dd; --lp-warn: #ae6e10; --lp-red: #d4404b;
+  /* 可调外观：融入主控 Claude Paper，保留 LuminaPlus 布局与功能。 */
+  --lp-heading-font: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, "Songti SC", "Noto Serif CJK SC", serif;
+  --lp-page: #f5f3ed; --lp-surface: #fdfcf8; --lp-soft: #eeece5; --lp-text: #302e29;
+  --lp-secondary: #625b51; --lp-muted: #746f65; --lp-border: #dedad0; --lp-track: #eae6de;
+  --lp-cpu: #8aa7b5; --lp-memory: #a595b4; --lp-disk: #cf9879; --lp-load: #c89ca3;
+  --lp-blue: #53798d; --lp-green: #527b63; --lp-accent: #b45538; --lp-warn: #94691e; --lp-red: #b7403d;
+  --lp-tint: #f1e3d9; --lp-on-tint: #8f432d; --lp-ping-good: #88a08d;
   --lp-speed-low: #d99a2b;
   --bg: var(--lp-page); --panel: var(--lp-surface); --surface: var(--lp-surface); --card: var(--lp-surface); --text: var(--lp-text); --muted: var(--lp-muted);
   --border: var(--lp-border); --accent: var(--lp-accent); --foreground: var(--lp-text); --primary: var(--lp-accent); --radius: 16px;
@@ -16,18 +19,25 @@
   color-scheme: light; background: var(--lp-page); color: var(--lp-text);
 }
 :root.theme-luminaplus:is(.dark, .gold) {
-  --lp-page: #20262f; --lp-surface: #272e38; --lp-soft: #303743; --lp-text: #e2e6ed;
-  --lp-secondary: #bec5d0; --lp-muted: #a0a9b8; --lp-border: #3c4552; --lp-track: #3b4350;
-  --lp-cpu: #6a9ff7; --lp-memory: #b18aef; --lp-disk: #e49660; --lp-load: #e88aba;
-  --lp-blue: #75a7ff; --lp-green: #63c08e; --lp-accent: #b79aef; --lp-warn: #e4af52; --lp-red: #fa8992;
+  --lp-page: #242320; --lp-surface: #2d2c28; --lp-soft: #35342f; --lp-text: #ece9e1;
+  --lp-secondary: #cec6b8; --lp-muted: #b2ab9e; --lp-border: #48463e; --lp-track: #424038;
+  --lp-cpu: #91adbc; --lp-memory: #b6a6c5; --lp-disk: #d6a184; --lp-load: #d3adb2;
+  --lp-blue: #8caebe; --lp-green: #8faf98; --lp-accent: #df967a; --lp-warn: #ccaf76; --lp-red: #e68b85;
+  --lp-tint: #49372e; --lp-on-tint: #efb79d; --lp-ping-good: #8faf98;
   --lp-speed-low: #f2c66d;
   color-scheme: dark;
 }
-:root.theme-luminaplus body { margin: 0; background: var(--lp-page); color: var(--lp-text); font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+:root.theme-luminaplus body { margin: 0; background: var(--lp-page); color: var(--lp-text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; }
 :root.theme-luminaplus body::before, :root.theme-luminaplus body::after { display: none; }
 :root.theme-luminaplus .lp-app { min-height: 100vh; background: var(--lp-page); color: var(--lp-text); }
 .lp-app *, :root.theme-luminaplus .mini-detail-dialog * { box-sizing: border-box; }
 .lp-app :is(h1,h2,h3,p) { margin: 0; }
+.lp-app :is(.lp-brand h1,.lp-section-title h2,.lp-name h2),
+:root.theme-luminaplus :is(.mini-detail-heading h2,.probe-unlock-dialog-head h2) { font-family: var(--lp-heading-font); }
+:root.theme-luminaplus .theme-menu { color: var(--lp-text); background: var(--lp-surface); border: 1px solid var(--lp-border); border-radius: 9px; box-shadow: 0 12px 30px -18px #302e294d; backdrop-filter: none; -webkit-backdrop-filter: none; }
+:root.theme-luminaplus .theme-menu button { color: var(--lp-muted); }
+:root.theme-luminaplus .theme-menu button:is(:hover,[aria-selected="true"]) { color: var(--lp-on-tint); background: var(--lp-tint); }
+:root.theme-luminaplus ::selection { color: var(--lp-text); background: var(--lp-tint); }
 .lp-app :is(button, input, select) { font: inherit; }
 .lp-app :is(button, select) { cursor: pointer; }
 .lp-app :is(button, a, input, select):focus-visible, :root.theme-luminaplus .mini-detail-dialog :is(button, a, select, [tabindex]):focus-visible { outline: 2px solid var(--lp-accent); outline-offset: 3px; }
@@ -35,7 +45,7 @@
 .lp-header { background: var(--lp-surface); border-bottom: 1px solid var(--lp-border); }
 .lp-header-inner { max-width: 1520px; margin: auto; padding: 16px 28px; display: flex; flex-wrap: nowrap; align-items: center; justify-content: space-between; gap: 16px; }
 .lp-brand { display: flex; flex: 1; align-items: center; gap: 12px; min-width: 0; }
-.lp-brand-mark { display: grid; place-items: center; flex: 0 0 42px; height: 42px; border-radius: 13px; background: var(--lp-soft); color: var(--lp-accent); }
+.lp-brand-mark { display: grid; place-items: center; flex: 0 0 42px; height: 42px; border-radius: 9px; background: var(--lp-tint); color: var(--lp-accent); }
 .lp-brand-mark img { width: 32px; height: 32px; object-fit: contain; }
 .lp-brand > span:last-child { min-width: 0; }
 .lp-brand h1 { font-size: 18px; font-weight: 720; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -66,10 +76,10 @@
 .lp-search input::placeholder { color: var(--lp-muted); }
 .lp-filter { display: flex; gap: 3px; padding: 3px; background: var(--lp-soft); border-radius: 9px; }
 .lp-filter button { display: inline-flex; gap: 6px; align-items: center; padding: 6px 10px; border: 0; border-radius: 6px; background: transparent; color: var(--lp-muted); font-size: 12px; white-space: nowrap; }
-.lp-filter button[aria-pressed="true"] { background: var(--lp-surface); color: var(--lp-text); box-shadow: 0 1px 4px #0000000a; }
+.lp-filter button[aria-pressed="true"] { background: var(--lp-tint); color: var(--lp-on-tint); box-shadow: none; }
 .lp-filter small { font-size: 10px; color: var(--lp-muted); }
 .lp-nodes { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 18px; align-items: start; }
-.lp-card { min-width: 0; padding: 22px; background: var(--lp-surface); border: 1px solid var(--lp-border); border-radius: 20px; font-variant-numeric: tabular-nums; }
+.lp-card { min-width: 0; padding: 22px; background: var(--lp-surface); border: 1px solid var(--lp-border); border-radius: 16px; font-variant-numeric: tabular-nums; }
 .lp-card-head { display: flex; align-items: center; gap: 6px; }
 .lp-name { display: flex; align-items: center; gap: 8px; min-width: 0; flex: 1; }
 .lp-name h2 { min-width: 0; font-size: 17px; font-weight: 730; letter-spacing: -.35px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -134,7 +144,7 @@
 .lp-card .card-ping-trend { height: 13px; margin-top: 5px; }
 .lp-card .card-ping-bars { height: 6px; gap: 2px; }
 .lp-card .card-ping-bars i { border-radius: 2px; }
-.lp-card .card-ping-bars i.is-good { background: #73c5a3; }
+.lp-card .card-ping-bars i.is-good { background: var(--lp-ping-good); }
 .lp-card .card-ping-bars i.is-warn { background: #e3b76a; }
 .lp-card .card-ping-bars i.is-bad { background: #eb8d94; }
 .lp-card .card-ping-bars i:is(.is-empty,.is-none) { background: var(--lp-track); }
@@ -194,7 +204,7 @@
 .lp-list-connections > small strong { color: var(--lp-secondary); }
 .lp-list-row.is-offline .lp-status { background: var(--lp-muted); box-shadow: none; }
 :root.theme-luminaplus :is(.probe-unlock-dialog,.probe-unlock-panel,.probe-unlock-button,.probe-connections) { --cap-bg: var(--lp-surface); --cap-fg: var(--lp-text); --cap-muted: var(--lp-muted); --cap-line: var(--lp-border); --cap-accent: var(--lp-accent); }
-:root.theme-luminaplus .server-detail-backdrop { background: #10141d88; backdrop-filter: none; -webkit-backdrop-filter: none; }
+:root.theme-luminaplus .server-detail-backdrop { background: #19181588; backdrop-filter: none; -webkit-backdrop-filter: none; }
 :root.theme-luminaplus .server-detail { background: var(--lp-surface); color: var(--lp-text); border: 1px solid var(--lp-border); border-radius: 20px; box-shadow: none; }
 /* Equal natural-height panels; the outer overlay, not the card, scrolls. */
 :root.theme-luminaplus .mini-detail-backdrop { align-items: flex-start; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: none; padding: 26px 20px; }
@@ -210,7 +220,7 @@
 :root.theme-luminaplus .mini-detail-subtitle > span:first-child { color: var(--lp-accent); }
 :root.theme-luminaplus .mini-detail-tablist { display: grid; grid-template-columns: repeat(6,minmax(0,1fr)); gap: 4px; padding: 4px; margin: 0 26px 20px; border-radius: 11px; border: 1px solid var(--lp-border); background: var(--lp-soft); }
 :root.theme-luminaplus .mini-detail-tablist button { padding: 10px 4px; min-width: 0; font-size: 13px; border: 1px solid transparent; border-radius: 7px; background: transparent; color: var(--lp-muted); cursor: pointer; }
-:root.theme-luminaplus .mini-detail-tablist button[aria-selected="true"] { border-color: var(--lp-border); background: var(--lp-surface); color: var(--lp-text); font-weight: 650; }
+:root.theme-luminaplus .mini-detail-tablist button[aria-selected="true"] { border-color: var(--lp-border); background: var(--lp-tint); color: var(--lp-on-tint); font-weight: 650; }
 :root.theme-luminaplus .mini-detail-content { display: grid; grid-template-columns: minmax(0,1fr); align-items: start; flex: none; min-height: 0; overflow: visible; padding: 0 26px 26px; color: var(--lp-text); }
 :root.theme-luminaplus .mini-detail-panel { grid-area: 1/1; min-width: 0; align-self: start; }
 :root.theme-luminaplus .mini-detail-panel[aria-hidden="true"] { visibility: hidden; pointer-events: none; }

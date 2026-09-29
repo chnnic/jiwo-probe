@@ -1,3 +1,5 @@
+import { THEME_OPTIONS } from '../theme-picker-model'
+import { ThemeSelect } from '../ThemePicker'
 import { useNetworkSpeed } from '../use-network-speed'
 import { UnlockButton } from '../ServerCapabilities'
 import { ConnectionLabel } from '../ConnectionLabel'
@@ -15,7 +17,6 @@ import {
   ArrowDownUp,
   ArrowUp,
   Cable,
-  Check,
   ChevronDown,
   Clock3,
   Coins,
@@ -29,7 +30,6 @@ import {
   Monitor,
   Moon,
   Network,
-  Palette,
   Search,
   Server,
   Sun,
@@ -53,19 +53,6 @@ import { EMERALD_LEADERBOARD_ORDER, rankConnectionCounts, type EmeraldRankingTyp
 import { connectionCount } from '../unlocks'
 import './emerald.css'
 
-const THEME_OPTIONS: { value: ThemeName; label: string }[] = [
-  { value: 'pixel', label: '像素' },
-  { value: 'flat', label: '扁平' },
-  { value: 'anime', label: '动漫' },
-  { value: 'glass', label: '玻璃' },
-  { value: 'lumina', label: 'Lumina' },
-  { value: 'luminaplus', label: 'LuminaPlus' },
-  { value: 'premium', label: 'Premium' },
-  { value: 'ran', label: '岚 · Ran' },
-  { value: 'glassmorphism', label: 'Glassmorphism' },
-  { value: 'emerald', label: 'Emerald' },
-  { value: 'lite', label: 'Lite' },
-]
 
 type ViewMode = 'card' | 'table' | 'status'
 type ColorMode = 'auto' | 'light' | 'dark'
@@ -148,56 +135,7 @@ function MetricValue({ value, className = '' }: { value: string; className?: str
 }
 
 function ThemeMenu({ current, onChange }: { current: ThemeName | null; onChange: (name: ThemeName | null) => void }) {
-  const [open, setOpen] = useState(false)
-  const wrapRef = useRef<HTMLDivElement>(null)
-  const label = current ? THEME_OPTIONS.find((option) => option.value === current)?.label || current : '跟随主控'
-
-  useEffect(() => {
-    if (!open) return
-    const close = (event: MouseEvent) => {
-      if (!wrapRef.current?.contains(event.target as Node)) setOpen(false)
-    }
-    const key = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setOpen(false)
-    }
-    document.addEventListener('mousedown', close)
-    document.addEventListener('keydown', key)
-    return () => {
-      document.removeEventListener('mousedown', close)
-      document.removeEventListener('keydown', key)
-    }
-  }, [open])
-
-  return (
-    <div className="emerald-theme-menu" ref={wrapRef}>
-      <button
-        type="button"
-        className="emerald-icon-button emerald-theme-trigger"
-        aria-label={`主题: ${label}`}
-        title={`主题: ${label}`}
-        aria-haspopup="listbox"
-        aria-expanded={open}
-        onClick={() => setOpen((value) => !value)}
-      >
-        <Palette size={17} />
-        <ChevronDown size={12} className={open ? 'is-open' : ''} />
-      </button>
-      {open && (
-        <div className="emerald-theme-dropdown" role="listbox" aria-label="主题选择">
-          <button type="button" role="option" aria-selected={current === null} onClick={() => { onChange(null); setOpen(false) }}>
-            <span>跟随主控</span>
-            {current === null && <Check size={14} />}
-          </button>
-          {THEME_OPTIONS.map((option) => (
-            <button key={option.value} type="button" role="option" aria-selected={current === option.value} onClick={() => { onChange(option.value); setOpen(false) }}>
-              <span>{option.label}</span>
-              {current === option.value && <Check size={14} />}
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
-  )
+  return <ThemeSelect value={current} onChange={onChange} buttonClassName="emerald-icon-button" />
 }
 
 interface OverviewMetric {

@@ -1,3 +1,4 @@
+import { ThemeSelect } from './ThemePicker'
 import { useNetworkSpeed } from './use-network-speed'
 import { ConnectionCounts, UnlockButton, UnlockDetails } from './ServerCapabilities'
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
@@ -15,7 +16,6 @@ import {
   Gauge,
   Layers,
   Moon,
-  Palette,
   Radio,
   Server,
   ShieldCheck,
@@ -36,7 +36,7 @@ import type {
 } from './types'
 import { Twemoji } from './Twemoji'
 import { PasskeyLogin } from './PasskeyLogin'
-import { parseThemeName } from './use-probe'
+import { getThemeOverride, parseThemeName } from './use-probe'
 import { EXTRA_LICENSE_BADGES, HEADER_LICENSE_BADGES } from './license-badges'
 import { FLAG_OPTIONS } from './country-flag'
 import { displayServerName } from './server-name'
@@ -202,72 +202,8 @@ type PremiumProbePageProps = {
 type StatusFilter = 'all' | 'online' | 'offline'
 type PremiumProbeView = 'card' | 'network' | 'resource'
 
-const PREMIUM_THEME_OPTIONS: { value: 'pixel' | 'flat' | 'anime' | 'glass' | 'lumina' | 'premium' | 'ran' | 'glassmorphism' | 'emerald' | 'lite' | 'luminaplus'; label: string }[] = [
-  { value: 'pixel', label: '像素' },
-  { value: 'flat', label: '扁平' },
-  { value: 'anime', label: '动漫' },
-  { value: 'glass', label: '玻璃' },
-  { value: 'lumina', label: 'Lumina' },
-  { value: 'luminaplus', label: 'LuminaPlus' },
-  { value: 'premium', label: 'Premium' },
-  { value: 'ran', label: '岚 · Ran' },
-  { value: 'glassmorphism', label: 'Glassmorphism' },
-  { value: 'emerald', label: 'Emerald' },
-  { value: 'lite', label: 'Lite' },
-]
-
-// 主题切换下拉（黑金风）。当前必然是 premium（本页就是），选择其他主题或"跟随主控"时回调上层切换。
 function PremiumThemeSelect({ onThemeChange }: { onThemeChange?: PremiumProbePageProps['onThemeChange'] }) {
-  const [open, setOpen] = useState(false)
-  const wrapRef = useRef<HTMLDivElement>(null)
-  const menuRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    if (!open) return
-    const handle = (event: MouseEvent) => {
-      if (wrapRef.current?.contains(event.target as Node)) return
-      if (menuRef.current?.contains(event.target as Node)) return
-      setOpen(false)
-    }
-    document.addEventListener('mousedown', handle)
-    return () => document.removeEventListener('mousedown', handle)
-  }, [open])
-
-  const pick = (name: 'pixel' | 'flat' | 'anime' | 'glass' | 'lumina' | 'premium' | 'ran' | 'glassmorphism' | 'emerald' | 'lite' | 'luminaplus' | null) => {
-    setOpen(false)
-    if (name === 'premium') return // 已在 Premium，无需切换
-    onThemeChange?.(name)
-  }
-
-  return (
-    <div className='premium-probe-theme-select' ref={wrapRef}>
-      <button
-        type='button'
-        className='premium-probe-login premium-probe-theme-trigger'
-        aria-haspopup='listbox'
-        aria-expanded={open}
-        aria-label='切换主题'
-        title='切换主题'
-        onClick={() => setOpen((v) => !v)}
-      >
-        <Palette />
-        <ChevronDown size={13} className={open ? 'rotated' : undefined} />
-      </button>
-      {open && (
-        <div className='premium-probe-theme-menu' ref={menuRef} role='listbox'>
-          <button type='button' role='option' aria-selected={false} onClick={() => pick(null)}>
-            <span>跟随主控</span>
-          </button>
-          {PREMIUM_THEME_OPTIONS.map((opt) => (
-            <button type='button' role='option' aria-selected={opt.value === 'premium'} key={opt.value} onClick={() => pick(opt.value)}>
-              <span>{opt.label}</span>
-              {opt.value === 'premium' && <CheckCircle2 size={13} className='premium-probe-theme-check' />}
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
-  )
+  return <ThemeSelect value={getThemeOverride()} onChange={name => onThemeChange?.(name)} buttonClassName="premium-probe-login" />
 }
 
 type TrendSample = {

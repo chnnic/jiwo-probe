@@ -1,0 +1,50 @@
+/* Shared theme picker · v1.0 · 2026-09-29. Ran keeps its own controls. */
+:root:not(.theme-ran) .probe-theme-picker { display: inline-flex; flex: 0 0 auto; }
+/* Fixed icon slots override theme-specific flex gaps and mobile svg hiding. */
+:root:not(.theme-ran) .probe-theme-picker > .probe-theme-trigger {
+  position: relative; box-sizing: border-box; width: 46px; min-width: 46px; height: 36px;
+  padding: 0; display: inline-flex; flex: 0 0 46px; align-items: center; justify-content: center; gap: 0;
+}
+:root:not(.theme-ran) .probe-theme-trigger > .probe-theme-palette {
+  display: block; position: absolute; width: 18px; height: 18px; left: 8px; top: calc(50% - 9px); margin: 0;
+}
+:root:not(.theme-ran) .probe-theme-trigger > .probe-theme-chevron {
+  display: block; position: absolute; width: 12px; height: 12px; right: 6px; top: calc(50% - 6px); margin: 0;
+  transform: none; transition: transform 140ms ease;
+}
+:root:not(.theme-ran) .probe-theme-trigger[aria-expanded="true"] > .probe-theme-chevron { transform: rotate(180deg); }
+.probe-theme-panel {
+  --picker-bg: var(--card, #fff); --picker-fg: var(--text, #24272f);
+  --picker-muted: var(--muted, #737780); --picker-border: var(--border, #dedfe5); --picker-accent: var(--primary, #7c6bb5);
+  position: fixed; z-index: 10000; box-sizing: border-box; overflow-y: auto; overscroll-behavior: contain;
+  padding: 12px; border: 1px solid var(--picker-border); border-radius: 14px;
+  background: var(--picker-bg); color: var(--picker-fg); box-shadow: 0 10px 30px #00000020;
+  font: 12px/1.4 -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", sans-serif;
+  scrollbar-width: thin;
+}
+:root.theme-luminaplus .probe-theme-panel { --picker-bg: var(--lp-surface); --picker-fg: var(--lp-text); --picker-muted: var(--lp-muted); --picker-border: var(--lp-border); --picker-accent: var(--lp-accent); }
+:root.theme-lite .probe-theme-panel { --picker-bg: var(--mini-surface); --picker-fg: var(--mini-text); --picker-muted: var(--mini-muted); --picker-border: var(--mini-border); --picker-accent: var(--mini-accent); }
+:root.theme-emerald .probe-theme-panel { --picker-bg: var(--em-surface-solid); --picker-fg: var(--em-text); --picker-muted: var(--em-text-2); --picker-border: var(--em-border-strong); --picker-accent: var(--em-accent); }
+:root.theme-glassmorphism .probe-theme-panel { --picker-bg: #181c26; --picker-fg: #f1f5f9; --picker-muted: #a1aaba; --picker-border: #394352; --picker-accent: #2eb58a; }
+:root.theme-glassmorphism .gm-light-body .probe-theme-panel { --picker-bg: #f8fafc; --picker-fg: #19212f; --picker-muted: #627086; --picker-border: #dce2e8; --picker-accent: #168464; }
+:root.theme-premium .probe-theme-panel { --picker-bg: #121311; --picker-fg: #f3ecdc; --picker-muted: #b9ac91; --picker-border: #655639; --picker-accent: #dbb967; }
+:root.theme-premium.platinum .probe-theme-panel { --picker-bg: #fffdf7; --picker-fg: #302b22; --picker-muted: #7d715b; --picker-border: #d7c8a7; --picker-accent: #977024; }
+.probe-theme-panel-heading { display: flex; align-items: center; justify-content: space-between; padding: 2px 4px 12px; font-weight: 650; }
+.probe-theme-panel-heading small { font-size: 10px; font-weight: 400; color: var(--picker-muted); }
+.probe-theme-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 6px; }
+.probe-theme-panel .probe-theme-grid > button {
+  display: grid; grid-template-columns: 8px minmax(0,1fr) 12px; gap: 5px; align-items: center;
+  width: 100%; min-width: 0; min-height: 40px; margin: 0; padding: 8px; border: 1px solid var(--picker-border);
+  border-radius: 8px; box-shadow: none; background: transparent; color: var(--picker-fg); font: inherit; text-align: left; cursor: pointer;
+}
+.probe-theme-swatch { width: 8px; height: 8px; border-radius: 50%; }
+.probe-theme-panel .probe-theme-grid > button > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.probe-theme-panel .probe-theme-grid > button[aria-checked="true"] {
+  border-color: var(--picker-accent); color: var(--picker-accent); background: color-mix(in srgb,var(--picker-accent) 12%,var(--picker-bg)); font-weight: 650;
+}
+.probe-theme-panel .probe-theme-check { visibility: hidden; width: 12px; height: 12px; }
+.probe-theme-panel [aria-checked="true"] .probe-theme-check { visibility: visible; }
+.probe-theme-panel .probe-theme-grid > button:hover { background: color-mix(in srgb,var(--picker-accent) 7%,var(--picker-bg)); }
+.probe-theme-panel .probe-theme-grid > button:focus-visible { outline: 2px solid var(--picker-accent); outline-offset: -3px; }
+@media (max-width: 360px) { .probe-theme-panel { padding: 8px; font-size: 11px; } .probe-theme-grid { gap: 5px; } }
+@media (prefers-reduced-motion: reduce) { :root:not(.theme-ran) .probe-theme-trigger > .probe-theme-chevron { transition: none; } }

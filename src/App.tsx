@@ -1,3 +1,4 @@
+import { ThemeSelect } from './ThemePicker'
 import { useNetworkSpeed } from './use-network-speed'
 import { ConnectionCounts, UnlockButton } from './ServerCapabilities'
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
@@ -246,97 +247,7 @@ function RegionSelect({ regions, value, onChange }: { regions: string[]; value: 
   )
 }
 
-const THEME_OPTIONS: { value: ThemeName; label: string }[] = [
-  { value: 'pixel', label: '像素' },
-  { value: 'flat', label: '扁平' },
-  { value: 'anime', label: '动漫' },
-  { value: 'glass', label: '玻璃' },
-  { value: 'lumina', label: 'Lumina' },
-  { value: 'luminaplus', label: 'LuminaPlus' },
-  { value: 'premium', label: 'Premium' },
-  { value: 'ran', label: '岚 · Ran' },
-  { value: 'glassmorphism', label: 'Glassmorphism' },
-  { value: 'emerald', label: 'Emerald' },
-  { value: 'lite', label: 'Lite' },
-]
-
-export function ThemeSelect({ value, onChange }: { value: ThemeName | null; onChange: (name: ThemeName | null) => void }) {
-  const [open, setOpen] = useState(false)
-  const [pos, setPos] = useState({ top: 0, right: 0 })
-  const wrapRef = useRef<HTMLDivElement>(null)
-  const menuRef = useRef<HTMLDivElement>(null)
-
-  const close = useCallback(() => setOpen(false), [])
-  const toggle = useCallback(() => {
-    if (!open && wrapRef.current) {
-      const rect = wrapRef.current.getBoundingClientRect()
-      const estHeight = Math.min(320, (THEME_OPTIONS.length + 1) * 29 + 10)
-      let top = rect.bottom + 5
-      if (top + estHeight > window.innerHeight - 8 && rect.top - estHeight - 5 > 0) {
-        top = rect.top - estHeight - 5
-      }
-      // 右缘与按钮右缘对齐(fixed right 定位), 精确不漂移
-      setPos({ top, right: window.innerWidth - rect.right })
-    }
-    setOpen((v) => !v)
-  }, [open])
-
-  useEffect(() => {
-    if (!open) return
-    const handle = (event: MouseEvent) => {
-      if (wrapRef.current?.contains(event.target as Node)) return
-      if (menuRef.current?.contains(event.target as Node)) return
-      setOpen(false)
-    }
-    const handleScroll = (event: Event) => {
-      // More themes make the menu scrollable; scrolling its own options must not dismiss it.
-      if (event.target instanceof Node && menuRef.current?.contains(event.target)) return
-      close()
-    }
-    document.addEventListener('mousedown', handle)
-    window.addEventListener('scroll', handleScroll, true)
-    window.addEventListener('resize', close)
-    return () => {
-      document.removeEventListener('mousedown', handle)
-      window.removeEventListener('scroll', handleScroll, true)
-      window.removeEventListener('resize', close)
-    }
-  }, [open, close])
-
-  const selectedLabel = value ? THEME_OPTIONS.find((opt) => opt.value === value)?.label || value : '跟随主控'
-  return (
-    <div className="theme-select" ref={wrapRef}>
-      <button
-        type="button"
-        className="theme-trigger"
-        aria-haspopup="listbox"
-        aria-expanded={open}
-        aria-label="切换主题"
-        title={`主题: ${selectedLabel}`}
-        onClick={toggle}
-      >
-        <Palette size={18} />
-        <ChevronDown size={13} className={open ? 'rotated' : ''} />
-      </button>
-      {open &&
-        createPortal(
-          <div className="region-menu theme-menu" ref={menuRef} style={{ top: pos.top, right: pos.right }} role="listbox">
-            <button type="button" role="option" aria-selected={value === null} onClick={() => { onChange(null); setOpen(false) }}>
-              <span>跟随主控</span>
-              {value === null && <Check size={14} className="theme-menu-check" />}
-            </button>
-            {THEME_OPTIONS.map((opt) => (
-              <button type="button" role="option" aria-selected={value === opt.value} key={opt.value} onClick={() => { onChange(opt.value); setOpen(false) }}>
-                <span>{opt.label}</span>
-                {value === opt.value && <Check size={14} className="theme-menu-check" />}
-              </button>
-            ))}
-          </div>,
-          document.body,
-        )}
-    </div>
-  )
-}
+export { ThemeSelect } from './ThemePicker'
 
 function SpeedSummary({ label, value, direction }: { label: string; value: number; direction: 'up' | 'down' }) {
   const networkSpeed = useNetworkSpeed()
