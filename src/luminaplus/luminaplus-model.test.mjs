@@ -1,6 +1,36 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { trafficWeek, trafficPopoverPosition } from './luminaplus-traffic.ts'
+import { rankLiveSpeeds } from './luminaplus-model.ts'
+
+test('speed ranking sorts actual duplex bytes/s and retains original server route indices', () => {
+  const servers = [
+    { name: 'A', online: true, upload_speed: 500, download_speed: 100 },
+    { name: 'B', online: true, upload_speed: 200, download_speed: 900 },
+    { name: 'C', online: true, upload_speed: 800, download_speed: 300 },
+  ]
+  assert.deepEqual(rankLiveSpeeds(servers).map(row => [row.index, row.value]), [[1, 1100], [2, 1100], [0, 600]])
+  assert.deepEqual(rankLiveSpeeds(servers, 'upload').map(row => row.index), [2, 0, 1])
+  assert.deepEqual(rankLiveSpeeds(servers, 'download').map(row => row.index), [1, 2, 0])
+  assert.equal(rankLiveSpeeds(servers)[0].server.name, 'B')
+  assert.equal(servers[0].name, 'A')
+})
+
+test('speed ranking excludes offline stale counters and unknown values, but preserves real zero', () => {
+  const servers = [
+    { online: false, upload_speed: 100000, download_speed: 100000 },
+    { online: true, upload_speed: 0, download_speed: 0 },
+    { online: true, upload_speed: 500 },
+    { online: true, upload_speed: -1, download_speed: 10 },
+    { online: true, upload_speed: NaN, download_speed: Infinity },
+    { online: true, upload_speed: '100', download_speed: null },
+  ]
+  assert.deepEqual(rankLiveSpeeds(servers).map(row => [row.index, row.value]), [[1, 0]])
+  assert.deepEqual(rankLiveSpeeds(servers, 'upload').map(row => row.index), [2, 1])
+  assert.deepEqual(rankLiveSpeeds(servers, 'download').map(row => row.index), [3, 1])
+  assert.equal(rankLiveSpeeds(servers, 'upload')[0].download, undefined)
+  assert.deepEqual(rankLiveSpeeds([]), [])
+})
 
 test('traffic popover shows seven calendar days ending today, never seven old records', () => {
   const result = trafficWeek({ daily_traffic: [

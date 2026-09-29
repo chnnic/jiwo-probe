@@ -9,6 +9,19 @@ export function parseLuminaPlusView(value: unknown): LuminaPlusView {
 
 const nonnegative = (value?: number) => typeof value === 'number' && Number.isFinite(value) && value >= 0 ? value : undefined
 
+export type LiveSpeedSort = 'total' | 'upload' | 'download'
+
+/** Keep original snapshot indices: a rank/filter position is not a server route. */
+export function rankLiveSpeeds(servers: ProbeServer[], sort: LiveSpeedSort = 'total') {
+  return servers.flatMap((server, index) => {
+    if (!server.online) return []
+    const upload = nonnegative(server.upload_speed), download = nonnegative(server.download_speed)
+    const total = upload === undefined || download === undefined ? undefined : nonnegative(upload + download)
+    const value = sort === 'upload' ? upload : sort === 'download' ? download : total
+    return value === undefined ? [] : [{ server, index, upload, download, total, value }]
+  }).sort((a, b) => b.value - a.value || a.index - b.index)
+}
+
 /** Small positive values retain one segment; unknown values never look like usage. */
 export function filledSegments(percent?: number, count = 20): number {
   const value = nonnegative(percent)

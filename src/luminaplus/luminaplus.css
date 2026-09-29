@@ -1,4 +1,4 @@
-/* LuminaPlus · v0.3.4 · 2026-09-29 — Page-end license footer with a persistent animation switch.
+/* LuminaPlus · v0.3.5 · 2026-09-30 — Live speed ranking popover with direct server links.
  * Independent, opaque Jiwo skin. Visual reference attribution: NOTICE.md.
  * No animated backgrounds, nested blur, or continuously animating meters.
  */
@@ -112,6 +112,34 @@
 .lp-overview-directions { display: flex; align-items: center; flex-wrap: wrap; gap: 5px 12px; color: var(--lp-secondary); font-size: 11px; font-variant-numeric: tabular-nums; }
 .lp-overview-directions > span { display: inline-flex; align-items: center; gap: 3px; }
 .lp-overview-foot { display: flex; align-items: center; justify-content: space-between; gap: 5px; margin-top: auto; font-size: 10px; color: var(--lp-muted); }
+.lp-app .lp-speed-ranking-trigger { position: absolute; inset: 0; z-index: 1; width: 100%; border: 0; padding: 0; border-radius: inherit; background: transparent; box-shadow: none; }
+.lp-overview-bandwidth:hover { border-color: var(--lp-accent); }
+.lp-ranking-hint { color: var(--lp-accent); }
+:root.theme-luminaplus .lp-speed-ranking { display: flex; flex-direction: column; width: min(420px,calc(100vw - 24px)); overflow: hidden; }
+.lp-speed-ranking .lp-traffic-heading h2 { display: flex; align-items: center; gap: 7px; }
+.lp-speed-ranking .lp-traffic-heading h2 svg { color: var(--lp-accent); }
+.lp-ranking-sort { display: flex; flex: 0 0 auto; gap: 3px; margin: 14px 0 9px; padding: 3px; border-radius: 9px; background: var(--lp-soft); }
+.lp-ranking-sort button { flex: 1; padding: 5px 8px; border-radius: 6px; font-size: 12px; color: var(--lp-muted); }
+.lp-ranking-sort button[aria-pressed="true"] { background: var(--lp-tint); color: var(--lp-on-tint); font-weight: 650; }
+.lp-ranking-list { list-style: none; min-height: 0; height: min(350px,calc(100dvh - 225px)); flex-shrink: 1; overflow: auto; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: var(--lp-border) transparent; margin: 0 -7px; padding: 3px 4px; }
+.lp-ranking-list li { margin: 0; padding: 0; }
+.lp-ranking-list a { display: flex; align-items: center; gap: 9px; padding: 10px 7px; color: var(--lp-text); text-decoration: none; border-radius: 9px; }
+.lp-ranking-list a:hover { background: var(--lp-soft); }
+.lp-ranking-list a:focus-visible { outline: 2px solid var(--lp-accent); outline-offset: -2px; background: var(--lp-soft); }
+.lp-ranking-number { flex: 0 0 23px; width: 23px; height: 23px; display: grid; place-items: center; color: var(--lp-muted); font-size: 11px; border-radius: 7px; }
+.lp-ranking-number[data-top="true"] { color: var(--lp-on-tint); background: var(--lp-tint); font-weight: 700; }
+.lp-ranking-node { flex: 1; min-width: 0; }
+.lp-ranking-node > div:first-child { display: flex; align-items: baseline; gap: 8px; }
+.lp-ranking-node strong { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; font-weight: 600; }
+.lp-ranking-node b { flex-shrink: 0; font-size: 12px; font-weight: 650; white-space: nowrap; }
+.lp-ranking-directions { display: flex; flex-wrap: wrap; gap: 3px 13px; margin: 5px 0 7px; color: var(--lp-secondary); font-size: 10px; }
+.lp-ranking-directions > span { display: inline-flex; align-items: center; gap: 3px; }
+.lp-ranking-directions > span:first-child svg { color: var(--lp-blue); }
+.lp-ranking-directions > span:last-child svg { color: var(--lp-green); }
+.lp-ranking-meter { height: 3px; overflow: hidden; border-radius: 4px; background: var(--lp-track); }
+.lp-ranking-meter i { display: block; height: 100%; border-radius: inherit; background: var(--lp-ping-good); }
+.lp-ranking-list a > svg { flex-shrink: 0; color: var(--lp-muted); }
+.lp-ranking-list .lp-ranking-empty { display: grid; place-items: center; height: 100%; padding: 25px; text-align: center; color: var(--lp-muted); }
 .lp-online-meter { height: 5px; border-radius: 10px; background: var(--lp-track); overflow: hidden; }
 .lp-online-meter i { display: block; height: 100%; border-radius: inherit; background: var(--lp-ping-good); }
 .lp-asset-breakdown { margin-top: auto; color: var(--lp-muted); font-size: 10px; }
