@@ -1,4 +1,4 @@
-/* LuminaPlus · v0.3.5 · 2026-09-30 — Live speed ranking popover with direct server links.
+/* LuminaPlus · v0.3.6 · 2026-09-30 — Period traffic ranking using controller billing counters.
  * Independent, opaque Jiwo skin. Visual reference attribution: NOTICE.md.
  * No animated backgrounds, nested blur, or continuously animating meters.
  */
@@ -136,6 +136,9 @@
 .lp-ranking-directions > span { display: inline-flex; align-items: center; gap: 3px; }
 .lp-ranking-directions > span:first-child svg { color: var(--lp-blue); }
 .lp-ranking-directions > span:last-child svg { color: var(--lp-green); }
+.lp-period-ranking-value { color: var(--lp-accent); }
+.lp-ranking-node .lp-ranking-period { margin: -2px 0 7px; color: var(--lp-muted); font-size: 10px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lp-ranking-period > span { color: var(--lp-warn); }
 .lp-ranking-meter { height: 3px; overflow: hidden; border-radius: 4px; background: var(--lp-track); }
 .lp-ranking-meter i { display: block; height: 100%; border-radius: inherit; background: var(--lp-ping-good); }
 .lp-ranking-list a > svg { flex-shrink: 0; color: var(--lp-muted); }

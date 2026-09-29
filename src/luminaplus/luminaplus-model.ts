@@ -22,6 +22,16 @@ export function rankLiveSpeeds(servers: ProbeServer[], sort: LiveSpeedSort = 'to
   }).sort((a, b) => b.value - a.value || a.index - b.index)
 }
 
+/** Period counters include offline nodes; billed usage is authoritative, never up + down or lifetime counters. */
+export function rankPeriodTraffic(servers: ProbeServer[], sort: LiveSpeedSort = 'total') {
+  return servers.flatMap((server, index) => {
+    const upload = nonnegative(server.traffic_used_up), download = nonnegative(server.traffic_used_down)
+    const total = nonnegative(server.traffic_used ?? server.traffic_used_total)
+    const value = sort === 'upload' ? upload : sort === 'download' ? download : total
+    return value === undefined ? [] : [{ server, index, upload, download, total, value }]
+  }).sort((a, b) => b.value - a.value || a.index - b.index)
+}
+
 /** Small positive values retain one segment; unknown values never look like usage. */
 export function filledSegments(percent?: number, count = 20): number {
   const value = nonnegative(percent)
