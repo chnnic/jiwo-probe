@@ -664,20 +664,23 @@ html:is(.theme-win2000, .theme-macos9) .retro-route-medal { justify-content: cen
 html:is(.theme-win2000, .theme-macos9) .retro-route-medal .route-badge-text { flex: 0 1 auto; }
 /* 顶级线路用主题专属纯色块区分；普通线路继续使用主题基础面色。 */
 html.theme-winxp .retro-route-medal:has(.route-badge-text.gold) {
-  background: #f0a33a;
-  border-color: #fff #a86a18 #a86a18 #fff;
+  background: #fdd889;
+  border-color: #e5a01a;
 }
 html.theme-winxp body:not(.light) .retro-route-medal:has(.route-badge-text.gold) {
   background: #9a6700;
-  border-color: #6a4700 #d7a84a #d7a84a #6a4700;
+  border-color: #f5c542;
 }
+html.theme-winxp .retro-route-medal:has(.route-badge-text.gold) .route-badge-text { color: #5f4300; }
+html.theme-winxp body:not(.light) .retro-route-medal:has(.route-badge-text.gold) .route-badge-text { color: #fff7d1; }
 html.theme-win2000 .retro-route-medal:has(.route-badge-text.gold) {
-  background: #d6a514;
-  border-color: var(--hilight) var(--shadow) var(--shadow) var(--hilight);
+  background: #ffffe1;
+  border-color: var(--shadow);
 }
+html.theme-win2000 .retro-route-medal:has(.route-badge-text.gold) .route-badge-text { color: #000; }
 html.theme-macos9 .retro-route-medal:has(.route-badge-text.gold) {
   background: #dfc16d;
-  border-color: #fff #777 #777 #fff;
+  border-color: #a88d45;
 }
 html:is(.theme-winxp, .theme-win2000, .theme-macos9) .retro-history-range,
 html:is(.theme-winxp, .theme-win2000, .theme-macos9) .retro-probe-range { margin: 0; }
