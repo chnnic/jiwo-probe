@@ -366,6 +366,36 @@ html.theme-winxp .retro-route-medal { --radius: 3px; }
 html:is(.theme-winxp, .theme-win2000) .retro-route-medal .route-badge-animation { padding: 2px; }
 html:is(.theme-winxp, .theme-win2000) .retro-route-medal .route-badge-text { flex-direction: row; gap: 0; padding: 3px 2px; white-space: nowrap; }
 html:is(.theme-winxp, .theme-win2000) .retro-route-medal strong { margin-left: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+html.theme-winxp .retro-route-badges { gap: 3px; margin-top: 4px; }
+html.theme-winxp .retro-route-medal {
+  justify-content: center;
+  min-height: 24px;
+  border: 1px solid;
+  border-color: var(--hilight) var(--shadow) var(--shadow) var(--hilight);
+  border-radius: 3px;
+  background: var(--face);
+  box-shadow: none;
+}
+html.theme-winxp .retro-route-medal .route-badge-animation { padding: 1px 2px; }
+html.theme-winxp .retro-route-medal .route-badge-icon { width: 15px; height: 15px; }
+html.theme-winxp .retro-route-medal .route-badge-text {
+  flex: 0 1 auto;
+  margin-left: 0;
+  border: 0;
+  border-radius: 0;
+  padding: 1px 2px;
+  background: transparent;
+  box-shadow: none;
+}
+html.theme-winxp body .retro-route-medal :is(.route-badge-animation, .route-badge-text) {
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+html.theme-winxp .retro-route-medal .route-badge-text strong { margin-left: 2px; }
+html.theme-winxp .retro-route-medal .route-badge-text.gold { color: #765500; }
+html.theme-winxp .retro-route-medal .route-badge-text.silver { color: #475569; }
+html.theme-winxp .retro-route-medal small { font-weight: 400; opacity: 1; }
 html:is(.theme-winxp, .theme-win2000) body.light .retro-route-medal .route-badge-animation.gold { border-color: #e8bd42; }
 html:is(.theme-winxp, .theme-win2000) body.light .retro-route-medal .route-badge-text.gold { border-color: #d6a514; color: #5f4300; background: linear-gradient(#fff2b5, #e8bd42); }
 html:is(.theme-winxp, .theme-win2000) body:not(.light) .retro-route-medal .route-badge-animation.gold { border-color: #5f4300; }
