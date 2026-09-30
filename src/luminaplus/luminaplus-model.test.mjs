@@ -2,6 +2,35 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import { trafficWeek, trafficPopoverPosition } from './luminaplus-traffic.ts'
 import { rankLiveSpeeds, rankPeriodTraffic } from './luminaplus-model.ts'
+import { nextLuminaPlusColor, resolveLuminaPlusColor } from './luminaplus-color.ts'
+
+test('LuminaPlus cycles exactly three palettes and manual selection takes priority', () => {
+  assert.equal(nextLuminaPlusColor('light'), 'dark')
+  assert.equal(nextLuminaPlusColor('dark'), 'paper')
+  assert.equal(nextLuminaPlusColor('paper'), 'light')
+  for (const saved of ['light', 'dark', 'paper']) {
+    assert.equal(resolveLuminaPlusColor({ saved, paper: true, legacy: 'gold', hour: 23 }), saved)
+  }
+})
+
+test('Paper stays warm throughout the day and explicit follow-controller ignores legacy choices', () => {
+  for (const hour of [0, 6, 12, 18, 23]) {
+    assert.equal(resolveLuminaPlusColor({ paper: true, legacy: 'dark', hour }), 'paper')
+    assert.equal(resolveLuminaPlusColor({ saved: 'auto', paper: true, hour }), 'paper')
+    assert.equal(resolveLuminaPlusColor({ saved: 'auto', light: true, legacy: 'dark', hour }), 'light')
+    assert.equal(resolveLuminaPlusColor({ saved: 'auto', light: false, legacy: 'light', hour }), 'dark')
+  }
+})
+
+test('LuminaPlus retains legacy modes and normal automatic light/dark boundaries', () => {
+  for (const legacy of ['dark', 'gold']) assert.equal(resolveLuminaPlusColor({ legacy, hour: 12 }), 'dark')
+  for (const legacy of ['light', 'platinum']) assert.equal(resolveLuminaPlusColor({ legacy, hour: 23 }), 'light')
+  for (const saved of [undefined, null, 'invalid', 'auto']) {
+    for (const [hour, expected] of [[0, 'dark'], [5, 'dark'], [6, 'light'], [17, 'light'], [18, 'dark'], [23, 'dark']]) {
+      assert.equal(resolveLuminaPlusColor({ saved, hour }), expected)
+    }
+  }
+})
 
 test('period ranking uses billed usage without re-adding directions or doubling one-way traffic', () => {
   const servers = [

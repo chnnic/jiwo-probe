@@ -1,4 +1,4 @@
-/* LuminaPlus · v0.3.6 · 2026-09-30 — Period traffic ranking using controller billing counters.
+/* LuminaPlus · v0.3.7 · 2026-09-30 — Three palettes: Light, Carbon and Paper.
  * Independent, opaque Jiwo skin. Visual reference attribution: NOTICE.md.
  * No animated backgrounds, nested blur, or continuously animating meters.
  */
@@ -17,6 +17,16 @@
   --mini-text: var(--lp-text); --mini-muted: var(--lp-muted); --mini-border: var(--lp-border); --mini-surface: var(--lp-surface);
   --mini-soft: var(--lp-soft); --mini-accent: var(--lp-accent); --mini-green: var(--lp-green); --mini-blue: var(--lp-blue);
   color-scheme: light; background: var(--lp-page); color: var(--lp-text);
+}
+/* Paper is an explicit third palette, not a replacement for Light or Carbon. */
+:root.theme-luminaplus.lp-paper:not(.dark):not(.gold) {
+  --lp-page: #f5f3ed; --lp-surface: #fdfcf8; --lp-soft: #efede6; --lp-text: #302e29;
+  --lp-secondary: #625d52; --lp-muted: #746f65; --lp-border: #dedad0; --lp-track: #ede9df;
+  --lp-cpu: #8da5b5; --lp-memory: #a797b5; --lp-disk: #c48f72; --lp-load: #bf98a3;
+  --lp-blue: #54758b; --lp-green: #547660; --lp-accent: #b45538; --lp-warn: #926724; --lp-red: #ad5155;
+  --lp-tint: #f1e3d9; --lp-on-tint: #8f432d; --lp-ping-good: #8ba994;
+  --lp-speed-low: #9b6a26; --lp-speed-high: #a65d3e;
+  --lp-traffic-end: #b4ad80; --lp-ping-warn: #c3a36f; --lp-ping-bad: #c78e87;
 }
 :root.theme-luminaplus:is(.dark, .gold) {
   --lp-page: #202021; --lp-surface: #161617; --lp-soft: #242426; --lp-text: #f3f3f5;
@@ -203,7 +213,7 @@
 .lp-meter i[data-filled="true"] { background: var(--lp-fill); }
 .lp-tone-cpu { --lp-fill: var(--lp-cpu); } .lp-tone-memory { --lp-fill: var(--lp-memory); } .lp-tone-disk { --lp-fill: var(--lp-disk); } .lp-tone-load { --lp-fill: var(--lp-load); }
 .lp-tone-traffic { --lp-fill: var(--lp-green); }
-.lp-tone-traffic i[data-filled="true"] { background: color-mix(in srgb,var(--lp-green),#adc94f calc(var(--lp-segment) * 4%)); }
+.lp-tone-traffic i[data-filled="true"] { background: color-mix(in srgb,var(--lp-green),var(--lp-traffic-end,#adc94f) calc(var(--lp-segment) * 4%)); }
 .lp-tone-danger { --lp-fill: var(--lp-red); }
 .lp-network { border-top: 1px solid var(--lp-border); border-bottom: 1px solid var(--lp-border); margin-top: 22px; padding: 17px 0 14px; }
 .lp-speed-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 22px; }
@@ -215,7 +225,7 @@
 .lp-speed-value small { margin-left: 3px; font-size: 11px; font-weight: 550; letter-spacing: 0; color: var(--lp-muted); }
 .lp-speed-tone[data-tone="idle"] { color: var(--lp-green); }
 .lp-speed-tone[data-tone="low"] { color: var(--lp-speed-low); }
-.lp-speed-tone[data-tone="high"] { color: var(--lp-disk); }
+.lp-speed-tone[data-tone="high"] { color: var(--lp-speed-high,var(--lp-disk)); }
 .lp-speed-tone[data-tone="max"] { color: var(--lp-red); }
 .lp-speed-tone[data-tone="unknown"] { color: var(--lp-muted); }
 .lp-pulse { display: flex; align-items: center; gap: 9px; min-width: 0; margin: 10px 0 12px; height: 10px; }
@@ -223,7 +233,7 @@
 .lp-pulse-trail i { display: block; justify-self: center; width: 5px; height: 5px; border-radius: 50%; background: var(--lp-track); transform: scale(.5); }
 .lp-pulse [data-tone="idle"] { --pulse-color: var(--lp-green); }
 .lp-pulse [data-tone="low"] { --pulse-color: var(--lp-speed-low); }
-.lp-pulse [data-tone="high"] { --pulse-color: var(--lp-disk); }
+.lp-pulse [data-tone="high"] { --pulse-color: var(--lp-speed-high,var(--lp-disk)); }
 .lp-pulse [data-tone="max"] { --pulse-color: var(--lp-red); }
 .lp-pulse-trail i[data-active="true"] { background: var(--pulse-color); opacity: calc(.35 + var(--pulse-strength) * .65); transform: scale(calc(.55 + var(--pulse-strength) * .65)); }
 .lp-pulse-live { display: inline-flex; flex-shrink: 0; align-items: center; gap: 4px; color: var(--lp-muted); font-size: 9px; font-weight: 550; white-space: nowrap; }
@@ -251,8 +261,8 @@
 .lp-card .card-ping-bars { height: 6px; gap: 2px; }
 .lp-card .card-ping-bars i { border-radius: 2px; }
 .lp-card .card-ping-bars i.is-good { background: var(--lp-ping-good); }
-.lp-card .card-ping-bars i.is-warn { background: #e3b76a; }
-.lp-card .card-ping-bars i.is-bad { background: #eb8d94; }
+.lp-card .card-ping-bars i.is-warn { background: var(--lp-ping-warn,#e3b76a); }
+.lp-card .card-ping-bars i.is-bad { background: var(--lp-ping-bad,#eb8d94); }
 .lp-card .card-ping-bars i:is(.is-empty,.is-none) { background: var(--lp-track); }
 .lp-routes { margin-top: 16px; }
 .lp-routes .lumina-route-badges { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 6px; }

@@ -7,11 +7,12 @@ const BUILTIN_THEMES = new Set([
   'ran-tomcat', 'ran-teal', 'ran-midnight', 'ran-mint', 'ran-butter', 'ran-ji',
 ])
 
-export function parseThemeName(raw: string): { theme: string; gold: boolean; platinum: boolean; light?: boolean } {
+export function parseThemeName(raw: string): { theme: string; gold: boolean; platinum: boolean; light?: boolean; paper?: boolean } {
   const lower = raw.toLowerCase().replace(/[\s_-]/g, '')
   if (lower === 'luminaplus') return { theme: 'luminaplus', gold: false, platinum: false }
   if (lower === 'luminapluslight') return { theme: 'luminaplus', gold: false, platinum: false, light: true }
   if (lower === 'luminaplusdark') return { theme: 'luminaplus', gold: false, platinum: false, light: false }
+  if (lower === 'luminapluspaper') return { theme: 'luminaplus', gold: false, platinum: false, light: true, paper: true }
   if (lower === 'luminagold') return { theme: 'lumina', gold: true, platinum: false }
   if (lower === 'luminaplatinum') return { theme: 'lumina', gold: false, platinum: true }
   if (lower === 'premiumplatinum' || lower === 'premiumlight') return { theme: 'premium', gold: false, platinum: true }
@@ -25,11 +26,12 @@ export function parseThemeName(raw: string): { theme: string; gold: boolean; pla
 }
 
 export function isBuiltinTheme(value?: string): boolean {
-  return typeof value === 'string' && BUILTIN_THEMES.has(value.trim().toLowerCase())
+  return typeof value === 'string' && (value.toLowerCase().replace(/[\s_-]/g, '') === 'luminapluspaper' || BUILTIN_THEMES.has(value.trim().toLowerCase()))
 }
 
 export function canonicalThemeOverride(value: string | null): string | null {
   if (value === null) return null
   const name = value.trim().toLowerCase()
+  if (name.replace(/[\s_-]/g, '') === 'luminapluspaper') return 'luminaplus-paper'
   return name === 'mini' ? 'lite' : isBuiltinTheme(name) ? name : value
 }

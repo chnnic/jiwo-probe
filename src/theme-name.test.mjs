@@ -47,6 +47,17 @@ test('LuminaPlus is independent from Lumina and supports explicit light/dark', (
   assert.equal(parseThemeName('lumina-gold').gold, true)
 })
 
+test('luminaplus-paper is a palette of LuminaPlus, with case-insensitive controller and saved names', () => {
+  const expected = { theme: 'luminaplus', gold: false, platinum: false, light: true, paper: true }
+  for (const input of ['luminaplus-paper', 'LUMINAPLUS-PAPER', 'LuminaPlus_Paper', ' Lumina Plus Paper ']) {
+    assert.deepEqual(parseThemeName(input), expected)
+    assert.equal(isBuiltinTheme(input), true)
+    assert.equal(canonicalThemeOverride(input), 'luminaplus-paper')
+  }
+  assert.equal(parseThemeName('lumina-paper').paper, undefined)
+  assert.equal(parseThemeName('luminaplus').paper, undefined)
+})
+
 test('Lite supports automatic, light and dark master names', () => {
   for (const name of ['lite', 'Lite', ' LITE ']) assert.deepEqual(parseThemeName(name), { theme: 'lite', gold: false, platinum: false })
   for (const name of ['lite-light', 'Lite Light', 'LITE_LIGHT']) assert.equal(parseThemeName(name).light, true)

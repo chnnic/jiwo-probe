@@ -4,6 +4,7 @@ import type { ProbeAppearance, ProbeBackgroundAppearance, ProbePayload, ProbeSer
 import { DEFAULT_PING_GROUP_CONFIG, parsePingGroupConfig, type PingGroupConfig } from './ping-groups'
 import { DEFAULT_NETWORK_SPEED_UNIT, parseNetworkSpeedUnit, type NetworkSpeedUnit } from './network-speed'
 import { canonicalThemeOverride, parseThemeName } from './theme-name'
+import { LUMINAPLUS_COLOR_KEY, resolveLuminaPlusColor, type LuminaPlusColor } from './luminaplus/luminaplus-color'
 export { isBuiltinTheme, parseThemeName } from './theme-name'
 
 const APPEARANCE_CACHE = 'mmwx-probe-appearance'
@@ -209,10 +210,18 @@ export function applyAppearance(input?: ProbeAppearance) {
   let dark = false
   let gold = false
   let platinum = false
+  let paper = false
   // premium 配色三态(auto/白金/黑金, 由 PremiumProbePage 控制 localStorage premium-probe-color-mode):
   // applyAppearance 在 WS/轮询每帧(5s)都会跑, 必须尊重三态, 否则 remove('platinum') 会冲掉
   // auto/手动白金类造成白金黑金横跳(2026-08-17 用户实测)
-  if (theme === 'premium') {
+  if (theme === 'luminaplus') {
+    const mode = resolveLuminaPlusColor({
+      saved: localStorage.getItem(LUMINAPLUS_COLOR_KEY), paper: parsed.paper, light: parsed.light,
+      legacy: darkOverride, hour: (new Date().getUTCHours() + 8) % 24,
+    })
+    dark = mode === 'dark'
+    paper = mode === 'paper'
+  } else if (theme === 'premium') {
     const premiumMode = localStorage.getItem('premium-probe-color-mode')
     if (premiumMode === 'platinum') {
       platinum = true
@@ -264,6 +273,7 @@ export function applyAppearance(input?: ProbeAppearance) {
   root.classList.toggle('dark', dark)
   root.classList.toggle('gold', gold)
   root.classList.toggle('platinum', platinum)
+  root.classList.toggle('lp-paper', paper)
   // Glassmorphism 明暗下发: 写 master 缓存, GmApp 初始化/轮询时读取(用户手动切换优先)
   // 无后缀 glassmorphism = auto 模式(北京时间白天浅色/夜间深色); light/dark 后缀固定对应模式
   if (theme === 'glassmorphism') {
@@ -276,6 +286,11 @@ export function applyAppearance(input?: ProbeAppearance) {
 
 export function getDarkOverride(): string | null {
   return localStorage.getItem(DARK_OVERRIDE)
+}
+
+export function setLuminaPlusColorMode(mode: LuminaPlusColor | 'auto') {
+  localStorage.setItem(LUMINAPLUS_COLOR_KEY, mode)
+  applyAppearance()
 }
 
 export function setDarkOverride(mode: 'dark' | 'light' | 'gold' | 'platinum' | null) {
@@ -297,7 +312,7 @@ export function getThemeOverride(): ThemeName | null {
 // 视图分支（如 theme==='lumina' 渲染 ServerCardLumina）应读这个，而不是只看 override。
 export function getActiveTheme(): string {
   const override = getThemeOverride()
-  if (override) return override
+  if (override) return parseThemeName(override).theme
   try {
     const cached = JSON.parse(localStorage.getItem(APPEARANCE_CACHE) || 'null') as ProbeAppearance | null
     return parseThemeName(cached?.theme || 'pixel').theme
