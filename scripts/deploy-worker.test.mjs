@@ -7,18 +7,20 @@ const defaults = {
   PROBE_PING_DEFAULT_TARGETS: '平均延迟，内地延迟，海外延迟',
   PROBE_PING_INTL_TARGETS: 'intl-web-cloudflare,intl-web-google,intl-tg-dc5',
   PROBE_NETWORK_SPEED_UNIT: 'bits',
+  PROBE_SHOW_CONNECTION_CHART: 'true',
 }
 const current = bindings => args => args[0] === 'deployments'
   ? { versions: [{ version_id: 'active' }] }
   : { resources: { bindings } }
 
-test('installer reads shared ping and speed defaults and creates actual Text bindings', async () => {
+test('installer reads shared ping, speed and connection chart defaults and creates actual Text bindings', async () => {
   assert.deepEqual(await readScriptDefaults(), defaults)
   assert.deepEqual(deployArgs(defaults), ['deploy', '--keep-vars',
     '--var', 'PROBE_PING_GROUP_COUNT:3',
     '--var', 'PROBE_PING_DEFAULT_TARGETS:平均延迟，内地延迟，海外延迟',
     '--var', 'PROBE_PING_INTL_TARGETS:intl-web-cloudflare,intl-web-google,intl-tg-dc5',
     '--var', 'PROBE_NETWORK_SPEED_UNIT:bits',
+    '--var', 'PROBE_SHOW_CONNECTION_CHART:true',
   ])
 })
 
@@ -37,10 +39,11 @@ test('custom count, Chinese target values, empty values and secret-typed overrid
     { name: 'PROBE_PING_DEFAULT_TARGETS', type: 'plain_text', text: '上海电信，海外延迟' },
     { name: 'PROBE_PING_INTL_TARGETS', type: 'secret_text' },
     { name: 'PROBE_NETWORK_SPEED_UNIT', type: 'plain_text', text: 'bytes' },
+    { name: 'PROBE_SHOW_CONNECTION_CHART', type: 'plain_text', text: 'false' },
   ]))
   assert.deepEqual(deployArgs(missingPingVars(defaults, bindings)), ['deploy', '--keep-vars'])
   const partial = missingPingVars(defaults, [{ name: 'PROBE_PING_GROUP_COUNT', type: 'plain_text', text: '' }])
-  assert.deepEqual(Object.keys(partial), ['PROBE_PING_DEFAULT_TARGETS', 'PROBE_PING_INTL_TARGETS', 'PROBE_NETWORK_SPEED_UNIT'])
+  assert.deepEqual(Object.keys(partial), ['PROBE_PING_DEFAULT_TARGETS', 'PROBE_PING_INTL_TARGETS', 'PROBE_NETWORK_SPEED_UNIT', 'PROBE_SHOW_CONNECTION_CHART'])
 })
 
 test('only a confirmed nonexistent Worker can use first-install defaults', () => {
@@ -70,7 +73,16 @@ test('gradual deployments preserve names present in either active version', () =
     if (args[0] === 'deployments') return { versions: [{ version_id: 'a' }, { version_id: 'b' }] }
     return { resources: { bindings: [{ name: args[2] === 'a' ? 'PROBE_PING_GROUP_COUNT' : 'PROBE_PING_DEFAULT_TARGETS' }] } }
   })
-  assert.deepEqual(missingPingVars(defaults, bindings), { PROBE_PING_INTL_TARGETS: defaults.PROBE_PING_INTL_TARGETS, PROBE_NETWORK_SPEED_UNIT: 'bits' })
+  assert.deepEqual(missingPingVars(defaults, bindings), { PROBE_PING_INTL_TARGETS: defaults.PROBE_PING_INTL_TARGETS, PROBE_NETWORK_SPEED_UNIT: 'bits', PROBE_SHOW_CONNECTION_CHART: 'true' })
+})
+
+test('existing CF connection chart settings are preserved, missing switch is created on deploy', () => {
+  for (const value of ['false', 'true', '', '关闭']) {
+    const existing = Object.keys(defaults).map(name => ({ name, type: 'plain_text', text: name === 'PROBE_SHOW_CONNECTION_CHART' ? value : defaults[name] }))
+    assert.deepEqual(missingPingVars(defaults, existing), {})
+    const missing = existing.filter(item => item.name !== 'PROBE_SHOW_CONNECTION_CHART')
+    assert.deepEqual(missingPingVars(defaults, missing), { PROBE_SHOW_CONNECTION_CHART: 'true' })
+  }
 })
 
 test('malformed deployment or binding data aborts instead of restoring defaults', () => {

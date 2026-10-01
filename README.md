@@ -10,6 +10,7 @@
 
 - 主控「连接数折线图（TCP / UDP 近 1 小时）」开启后，首页卡片读取快照中的 `conn_history`，显示 TCP / UDP 同轴小折线。12 个五分钟均值从旧到新排列，悬停或键盘左右键可查看整数显示的均值；缺失桶断开，不补零。字段未下发时不显示小折线；空历史显示等待采样，不伪造数据。
 - 点击小折线打开主控连接数历史，支持主控开放的 1 小时至多天范围。首页不新增逐卡轮询，也不再进行当前会话采样。Ran 保持原样；列表和普通极简行保持紧凑布局。
+- **CF 独立显示开关**：Worker → 设置 → 变量和机密（运行时）中的文本变量 `PROBE_SHOW_CONNECTION_CHART`，`true` 开启（默认）、`false` 关闭。关闭只隐藏所有已支持主题的首页 TCP/UDP 小折线及其点击入口，TCP/UDP 数字、二级详情历史、转发链和主控采集不变。开启仍须主控下发 `conn_history`，不会伪造曲线。保存并部署后刷新页面生效；也支持 `1` / `0`、`on` / `off`、`开启` / `关闭`，英文忽略大小写，未设置或非法值回退开启。`npm run deploy` 会自动创建缺失的 CF 设置项，后续部署保留已设置的值（包括 `false`）。
 - 「转发链拓扑与延迟」跟随 `show_forward`，读取快照的 `forward` 数据。经典主题、Lumina、LuminaPlus、Lite、Glassmorphism、Emerald 在节点列表下方提供可折叠区域，支持选择链路、查看入口／中转／出口拓扑、节点健康状态、组间与端到端延迟、丢包及趋势。Premium 保留网络视图内的转发链页面；Ran 不变。
 
 ### 视图模式（三套，一键切换）
@@ -314,6 +315,7 @@ ProbeHub 连接或快照异常时会自动回退到原来的主控直连，不�
    | `PROBE_TOKEN` | Secret | 主控"系统设置 → 探针"生成的访问密钥 |
    | `PROBE_POLL_INTERVAL_SECONDS` | Text（可选） | 实时快照间隔，默认 `3`；降载时可设为 `5` |
    | `PROBE_NETWORK_SPEED_UNIT` | Text（可选） | 全局网速单位，默认 `bits`，可改 `bytes`；Ran 和累计流量不受影响 |
+   | `PROBE_SHOW_CONNECTION_CHART` | Text（可选） | 首页 TCP/UDP 小折线，默认 `true`，`false` 关闭；连接数数字与详情页历史不受影响 |
    | `PROBE_BACKGROUND_URL` | Text（可选） | 自定义背景图片 HTTPS 地址 |
    | `PROBE_BACKGROUND_OVERLAY` | Text（可选） | 背景遮罩强度，默认 `0.32` |
    | `PROBE_BACKGROUND_POSITION` | Text（可选） | 背景位置，默认 `center` |

@@ -1,5 +1,6 @@
 import { parsePingGroupConfig } from '../src/ping-groups'
 import { parseNetworkSpeedUnit } from '../src/network-speed'
+import { parseShowConnectionChart } from '../src/connection-chart'
 
 interface Env {
   ASSETS: Fetcher
@@ -8,6 +9,7 @@ interface Env {
   PROBE_HUB: DurableObjectNamespace
   PROBE_POLL_INTERVAL_SECONDS?: string
   PROBE_NETWORK_SPEED_UNIT?: string
+  PROBE_SHOW_CONNECTION_CHART?: string
   PROBE_BACKGROUND_URL?: string
   PROBE_BACKGROUND_OVERLAY?: string
   PROBE_BACKGROUND_POSITION?: string
@@ -35,6 +37,7 @@ function runtimeThemeConfig(env: Env): Record<string, unknown> {
   return {
     ...runtimeBackgroundConfig(env),
     networkSpeedUnit: parseNetworkSpeedUnit(env.PROBE_NETWORK_SPEED_UNIT),
+    showConnectionChart: parseShowConnectionChart(env.PROBE_SHOW_CONNECTION_CHART),
     pingGroups: parsePingGroupConfig({
       count: env.PROBE_PING_GROUP_COUNT,
       defaultTargets: env.PROBE_PING_DEFAULT_TARGETS,

@@ -17,6 +17,9 @@
       "PROBE_NETWORK_SPEED_UNIT": {
         "description": "全局网速单位，默认 bits（Kbps/Mbps/Gbps）；可改为 bytes（KB/s、MB/s、GB/s）。卡片、榜单、详情页与网速概览统一生效；Ran 保持原样，累计流量不受影响。"
       },
+      "PROBE_SHOW_CONNECTION_CHART": {
+        "description": "首页 TCP/UDP 近 1 小时折线开关，默认 true（开启），设 false 关闭。主控仍须下发 conn_history；不影响连接数数字、详情页历史或主控采集，Ran 不变。部署时自动补齐缺失变量并保留已有设置。"
+      },
       "PROBE_PING_GROUP_COUNT": {
         "description": "可选覆盖项，无需填写。脚本已内置三组延迟/丢包，安装即启用；需要时可设为 1、2 或 3。Premium、Ran 不受影响。"
       },

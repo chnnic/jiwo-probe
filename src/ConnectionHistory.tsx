@@ -4,6 +4,7 @@ import { X } from 'lucide-react'
 import type { ProbeServer } from './types'
 import { connectionCount } from './unlocks'
 import { SystemTrendChart } from './App'
+import { useProbe } from './use-probe'
 import { connBucketLabel, connHoverIndex, connSparklineMax, connSparklinePath, normalizeConnHistory } from './conn-sparkline'
 import './probe-history.css'
 
@@ -35,8 +36,10 @@ function ConnectionHistoryDialog({ serverIndex, name, close }: { serverIndex: nu
 
 /** 卡片共用主控快照，不启动请求/采样；只有打开历史弹窗才按需读取 /api/series。 */
 export function ConnectionHistory({ server, serverIndex }: { server: ProbeServer; serverIndex: number }) {
+  const { connectionChartEnabled } = useProbe()
   const [open, setOpen] = useState(false)
   const [hover, setHover] = useState<number | null>(null)
+  if (connectionChartEnabled !== true) return null
   const history = normalizeConnHistory(server.conn_history)
   if (!history) return null
   const length = history.tcp.length

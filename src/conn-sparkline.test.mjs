@@ -1,6 +1,16 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { normalizeConnHistory, connSparklineMax, connSparklinePath, connHoverIndex, connBucketLabel } from './conn-sparkline.ts'
+import { parseShowConnectionChart } from './connection-chart.ts'
+
+test('CF 连接数折线默认开启，兼容布尔、开关文本、大小写与留空', () => {
+  for (const value of [undefined, null, '', 'invalid', true, 1, 'true', ' TRUE ', '1', 'on', 'yes', '开启']) {
+    assert.equal(parseShowConnectionChart(value), true, String(value))
+  }
+  for (const value of [false, 0, 'false', ' FALSE ', '0', 'OFF', 'no', '关闭']) {
+    assert.equal(parseShowConnectionChart(value), false, String(value))
+  }
+})
 
 test('主控未下发连接历史时不创建图表；空数组不是假零', () => {
   assert.equal(normalizeConnHistory(), undefined)

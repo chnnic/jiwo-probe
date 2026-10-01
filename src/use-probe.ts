@@ -5,6 +5,7 @@ import { DEFAULT_PING_GROUP_CONFIG, parsePingGroupConfig, type PingGroupConfig }
 import { DEFAULT_NETWORK_SPEED_UNIT, parseNetworkSpeedUnit, type NetworkSpeedUnit } from './network-speed'
 import { canonicalThemeOverride, parseThemeName } from './theme-name'
 import { LUMINAPLUS_COLOR_KEY, resolveLuminaPlusColor, type LuminaPlusColor } from './luminaplus/luminaplus-color'
+import { DEFAULT_SHOW_CONNECTION_CHART, parseShowConnectionChart } from './connection-chart'
 export { isBuiltinTheme, parseThemeName } from './theme-name'
 
 const APPEARANCE_CACHE = 'mmwx-probe-appearance'
@@ -13,6 +14,8 @@ const THEME_OVERRIDE = 'mmwx-probe-theme-override'
 let runtimeBackground: ProbeBackgroundAppearance | undefined
 let runtimePingGroups = DEFAULT_PING_GROUP_CONFIG
 let runtimeNetworkSpeedUnit = DEFAULT_NETWORK_SPEED_UNIT
+// 配置返回前先不挂载小折线，避免 CF 已关闭时首屏闪现。
+let runtimeConnectionChartEnabled: boolean | undefined
 let runtimeThemeConfigPromise: Promise<void> | undefined
 let lastAppliedAppearance: ProbeAppearance | undefined
 
@@ -66,15 +69,17 @@ function loadRuntimeThemeConfig(): Promise<void> {
   runtimeThemeConfigPromise = fetch('/api/theme-config', { cache: 'no-store' })
     .then(async (response) => {
       if (!response.ok) return
-      const config = await response.json() as { background?: ProbeBackgroundAppearance; pingGroups?: PingGroupConfig; networkSpeedUnit?: unknown }
+      const config = await response.json() as { background?: ProbeBackgroundAppearance; pingGroups?: PingGroupConfig; networkSpeedUnit?: unknown; showConnectionChart?: unknown }
       if (config.background?.url) runtimeBackground = config.background
       runtimePingGroups = parsePingGroupConfig(config.pingGroups)
       runtimeNetworkSpeedUnit = parseNetworkSpeedUnit(config.networkSpeedUnit)
+      runtimeConnectionChartEnabled = parseShowConnectionChart(config.showConnectionChart)
       if (lastAppliedAppearance) applyAppearance(lastAppliedAppearance)
     })
     .catch(() => {
       // 旧版 Worker 没有该接口时继续使用主控下发或主题默认背景。
     })
+    .finally(() => { runtimeConnectionChartEnabled ??= DEFAULT_SHOW_CONNECTION_CHART })
   return runtimeThemeConfigPromise
 }
 
@@ -371,6 +376,7 @@ export interface ProbeState {
   error?: string
   pingGroups: PingGroupConfig
   networkSpeedUnit: NetworkSpeedUnit
+  connectionChartEnabled: boolean | undefined
 }
 
 const ProbeContext = createContext<ProbeState | null>(null)
@@ -380,6 +386,7 @@ function useProbeConnection(): ProbeState {
   const [error, setError] = useState<string>()
   const [pingGroups, setPingGroups] = useState(runtimePingGroups)
   const [networkSpeedUnit, setNetworkSpeedUnit] = useState(runtimeNetworkSpeedUnit)
+  const [connectionChartEnabled, setConnectionChartEnabled] = useState(runtimeConnectionChartEnabled)
   const timer = useRef<number | undefined>(undefined)
   const watchdogTimer = useRef<number | undefined>(undefined)
   const lastFrameAt = useRef(0)
@@ -424,6 +431,7 @@ function useProbeConnection(): ProbeState {
       if (!stopped) {
         setPingGroups(runtimePingGroups)
         setNetworkSpeedUnit(runtimeNetworkSpeedUnit)
+        setConnectionChartEnabled(runtimeConnectionChartEnabled)
       }
     })
     // 先轮询一次拿首帧数据, 同时连 WS; 之后由 watchdog 统一裁决:
@@ -469,7 +477,7 @@ function useProbeConnection(): ProbeState {
     }
   }, [])
 
-  return { data, error, pingGroups, networkSpeedUnit }
+  return { data, error, pingGroups, networkSpeedUnit, connectionChartEnabled }
 }
 
 // 全站只在 Provider 内建立一套 HTTP/WS 连接。各主题调用 useProbe() 时只读取
