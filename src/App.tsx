@@ -2648,7 +2648,7 @@ function ProbeApp({ data, error }: ReturnType<typeof useProbe>) {
             </button>
             {globeOpen && (
               <Suspense fallback={<div className="globe-loading">正在加载国界数据…</div>}>
-                <RegionGlobe regions={servers.map((server) => server.region || '').filter(Boolean)} />
+                <RegionGlobe regions={servers.map((server) => server.region_country || server.region || '').filter(Boolean)} />
               </Suspense>
             )}
           </section>
