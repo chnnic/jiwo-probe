@@ -6,8 +6,11 @@ import { getThemeOverride, setDarkOverride } from '../use-probe'
 import { useNetworkSpeed } from '../use-network-speed'
 import { ConnectionCounts, UnlockButton } from '../ServerCapabilities'
 import { CardPingGroups } from '../CardPingGroups'
+import { ConnectionHistory } from '../ConnectionHistory'
+import { ForwardOverview } from '../ForwardOverview'
 import { PasskeyLogin } from '../PasskeyLogin'
 import { Twemoji } from '../Twemoji'
+import { CYCLE_LABELS, isPermanent } from '../renewal'
 import { expiryTime, isExpiring, miniSummary, providerName, ratio, selectServers, validNumber, type MiniSort, type MiniStatus, type MiniView } from './mini-model'
 import './mini.css'
 
@@ -25,6 +28,7 @@ function remainingDays(server: ProbeServer) {
   return time === undefined ? undefined : Math.ceil((time - Date.now()) / 86400000)
 }
 function expiry(server: ProbeServer) {
+  if (isPermanent(server)) return '永久买断'
   const days = remainingDays(server)
   if (days === undefined) return '未设置到期日'
   return days < 0 ? `已过期 ${Math.abs(days)} 天` : days === 0 ? '今天到期' : `剩余 ${days} 天`
@@ -32,7 +36,7 @@ function expiry(server: ProbeServer) {
 function price(server: ProbeServer) {
   if (validNumber(server.renewal_price) === undefined) return undefined
   const currency = server.renewal_currency || 'CNY'
-  const cycle = { month: '月', quarter: '季', half_year: '半年', year: '年' }[server.renewal_cycle || 'month']
+  const cycle = CYCLE_LABELS[server.renewal_cycle || 'month']
   return { amount: server.renewal_price!.toLocaleString('zh-CN', { maximumFractionDigits: 2 }), unit: `${currency} / ${cycle}` }
 }
 
@@ -93,7 +97,7 @@ function NodeCard({ server, index, view }: { server: ProbeServer; index: number;
       </div>
       <div className={`mini-extra-item mini-extra-expiry${isExpiring(server) ? ' is-expiring' : ''}`}>
         <span className="mini-extra-label"><CalendarClock size={12} aria-hidden="true" />{days !== undefined && days < 0 ? '已过期' : '剩余天数'}</span>
-        <div className="mini-extra-content"><strong className="mini-extra-primary">{days === undefined ? '—' : days === 0 ? '今天到期' : `${Math.abs(days)} 天`}</strong><small>{expiresAt === undefined ? '未设置到期日' : new Date(expiresAt).toLocaleDateString('zh-CN')}</small></div>
+        <div className="mini-extra-content"><strong className="mini-extra-primary">{isPermanent(server) ? '永久' : days === undefined ? '—' : days === 0 ? '今天到期' : `${Math.abs(days)} 天`}</strong><small>{isPermanent(server) ? '一次性买断' : expiresAt === undefined ? '未设置到期日' : new Date(expiresAt).toLocaleDateString('zh-CN')}</small></div>
       </div>
       <div className="mini-extra-item mini-extra-price">
         <span className="mini-extra-label"><Wallet size={12} aria-hidden="true" />续费价格</span>
@@ -101,6 +105,7 @@ function NodeCard({ server, index, view }: { server: ProbeServer; index: number;
       </div>
     </div>}
     {view !== 'list' && <>
+      <ConnectionHistory server={server} serverIndex={index} />
       {detailed && !!server.return_routes?.length && <div className="mini-route-strip"><ReturnRouteBadges routes={server.return_routes} telecomPaidPeer={server.telecom_paid_peer} variant="lumina" /></div>}
       <CardPingGroups ping={server.ping} serverIndex={index} serverName={server.name} variant="classic" averageOnly={!detailed} />
     </>}
@@ -153,6 +158,7 @@ export default function MiniApp({ data, error, onThemeChange }: { data: ProbePay
         {visible.map(({ server, index }) => <NodeCard key={index} server={server} index={index} view={view} />)}
         {!visible.length && <div className="mini-empty"><Search size={27} /><h3>{servers.length ? '没有匹配的节点' : '暂无服务器'}</h3><p>{servers.length ? '试试其他关键词，或清除筛选条件。' : '等待主控上报服务器数据。'}</p>{servers.length > 0 && <button type="button" onClick={() => { setQuery(''); setStatus('all'); setProvider('') }}>清除筛选</button>}</div>}
       </section>
+      <ForwardOverview data={data} />
       <footer className="mini-footer">Powered by <a href="https://github.com/chnnic/jiwo-probe" target="_blank" rel="noreferrer">Jiwo Probe</a><span>Lite</span></footer>
     </main>
   </div>

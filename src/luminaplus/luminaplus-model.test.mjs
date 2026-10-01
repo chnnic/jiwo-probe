@@ -233,6 +233,19 @@ test('asset summary separates currencies, uses controller FX, and excludes inval
   assert.deepEqual(result.groups[1], { currency: 'USD', monthly: 10, remaining: 120 / 365, priced: 1, valued: 1 })
 })
 
+test('multi-year renewals and permanent purchases do not inflate the asset budget', () => {
+  const result = assetOverview([
+    { renewal_price: 240, renewal_cycle: 'two_year', renewal_currency: 'USD' },
+    { renewal_price: 360, renewal_cycle: 'three_year', renewal_currency: 'USD' },
+    { renewal_price: 5000, renewal_cycle: 'permanent', renewal_currency: 'USD', expires_at: '2099-01-01' },
+  ])
+  assert.equal(result.groups[0].monthly, 20)
+  assert.equal(result.groups[0].priced, 3)
+  assert.equal(result.groups[0].valued, 0)
+  assert.equal(result.groups[0].remaining, 0)
+  assert.equal(result.unpriced, 0)
+})
+
 test('unknown expiry does not become a zero-value asset, but an expired real asset does', () => {
   const now = Date.parse('2026-09-29T00:00:00Z')
   assert.equal(assetOverview([], now).groups.length, 0)

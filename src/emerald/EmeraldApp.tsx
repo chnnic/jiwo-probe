@@ -42,6 +42,8 @@ import { RegionGlobe } from '../RegionGlobe'
 import { ServerDetail } from '../ServerDetail'
 import { TrafficDialog } from '../App'
 import { CardPingGroups } from '../CardPingGroups'
+import { ConnectionHistory } from '../ConnectionHistory'
+import { ForwardOverview } from '../ForwardOverview'
 import { Twemoji } from '../Twemoji'
 import { PasskeyLogin } from '../PasskeyLogin'
 import { flagToCountryCode } from '../country-flag'
@@ -436,6 +438,7 @@ function NodeCard({ server, index, open }: { server: EnrichedServer; index: numb
           <span title={`UDP ${udpCount}：整机 socket 数，非代理用户数；未上报显示 —。`}><ConnectionLabel protocol="UDP" size={11} /><b>{udpCount}</b></span>
         </div>
       </div>
+      <ConnectionHistory server={server} serverIndex={index} />
       <CardPingGroups variant="emerald" ping={server.ping} serverIndex={index} serverName={server.name} />
       <div className="emerald-route-badges" aria-label={`${name} 三网回程`}>
         {routeCarriers.map(({ key, label }) => {
@@ -656,6 +659,7 @@ export default function EmeraldApp({ data, onThemeChange }: { data: ProbePayload
             {EMERALD_LEADERBOARD_ORDER.map(type => <RankingPanel key={type} servers={servers} type={type} openServer={openDetail} />)}
           </aside>
         </div>
+        <ForwardOverview data={data} />
       </main>
 
       <footer className="emerald-footer">

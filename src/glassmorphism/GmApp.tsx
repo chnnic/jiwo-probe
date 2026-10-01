@@ -28,10 +28,13 @@ import {
 } from 'lucide-react'
 import type { ProbePayload, ProbeServer, ThemeName } from '../types'
 import { computeRemainingValue, formatMoney } from '../value'
+import { CYCLE_LABELS, isPermanent } from '../renewal'
 import { flagToCountryCode } from '../country-flag'
 import { Twemoji } from '../Twemoji'
 import { PasskeyLogin } from '../PasskeyLogin'
 import { CardPingGroups } from '../CardPingGroups'
+import { ConnectionHistory } from '../ConnectionHistory'
+import { ForwardOverview } from '../ForwardOverview'
 import './gm.css'
 import { ServerDetail } from '../ServerDetail'
 import { useVisitorInfo } from '../ran/hooks/useVisitorInfo'
@@ -53,8 +56,6 @@ import { GmEarth, type GmRegion } from './GmEarth'
 function formatUptimeDays(seconds: number): string {
   return `${Math.floor(seconds / 86400)} 天`
 }
-
-const CYCLE_LABELS: Record<string, string> = { month: '月', quarter: '季', half_year: '半年', year: '年' }
 
 function systemTitle(server: ProbeServer): string {
   const parts = [server.os, server.cpu_model, server.arch].filter(Boolean)
@@ -143,7 +144,7 @@ function GmNodeCard({ server, index }: { server: EnrichedServer; index: number }
               : ''
           }`
         : `${server.renewal_currency || 'CNY'} ${server.renewal_price} / ${CYCLE_LABELS[server.renewal_cycle || 'month'] || '月'}`
-      : null
+      : isPermanent(server) ? '永久' : null
   const loadParts = (server.loadavg || '').split(/\s+/).map(Number).filter((v) => Number.isFinite(v))
   // 周期流量（物理口径）
   let cycleUp = server.traffic_used_up
@@ -291,6 +292,7 @@ function GmNodeCard({ server, index }: { server: EnrichedServer; index: number }
               </div>
             </div>
           </div>
+          <ConnectionHistory server={server} serverIndex={index} />
           <CardPingGroups variant="gm" ping={server.ping} serverIndex={index} serverName={server.name} />
           {/* 三网回程文字标签 */}
           {routeLines.length > 0 ? (
@@ -698,6 +700,7 @@ export default function GmApp({
         ) : (
           <div className="gm-empty">暂无符合条件的服务器</div>
         )}
+        <ForwardOverview data={data} />
       </main>
 
       <footer className="gm-footer">

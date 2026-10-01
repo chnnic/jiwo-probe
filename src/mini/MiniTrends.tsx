@@ -4,12 +4,14 @@ import type { ProbePingSeries, ProbeServer } from '../types'
 import { useNetworkSpeed } from '../use-network-speed'
 import { ConnectionLabel } from '../ConnectionLabel'
 import { connectionCount } from '../unlocks'
-import { MINI_RANGES, connectionTrendRows, formatConnectionAverage, pingTrendRows, systemTrendRows, trendValue, type MiniRange, type SystemSeries, type TrendRow } from './mini-trends'
+import { connectionTrendRows, formatConnectionAverage, pingTrendRows, systemTrendRows, trendValue, type SystemSeries, type TrendRow } from './mini-trends'
+import { useProbeRange } from '../use-probe-range'
+import { probeBucketLabel, probeRangeBucketSec, type ProbeRange, type ProbeRangeOption } from '../probe-ranges'
 
 const colors = ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444', '#06b6d4', '#ec4899', '#84cc16', '#f97316']
 type SeriesPayload = { success: boolean; generated_at?: number; bucket_sec?: number; series?: ProbePingSeries; all_series?: ProbePingSeries[] }
 type History<T> = { data?: T; loading: boolean; error: boolean }
-function useHistory<T extends { success: boolean }>(serverIndex: number, range: MiniRange, metric: 'ping' | 'system'): History<T> {
+function useHistory<T extends { success: boolean }>(serverIndex: number, range: ProbeRange, metric: 'ping' | 'system'): History<T> {
   const [state, setState] = useState<History<T>>({ loading: true, error: false })
   useEffect(() => {
     const controller = new AbortController()
@@ -26,12 +28,12 @@ function useHistory<T extends { success: boolean }>(serverIndex: number, range: 
   }, [serverIndex, range, metric])
   return state
 }
-function RangePicker({ value, onChange }: { value: MiniRange; onChange: (value: MiniRange) => void }) {
-  return <div className="mini-trend-ranges" role="group" aria-label="历史时间范围">{MINI_RANGES.map(item => <button key={item.key} type="button" aria-pressed={item.key === value} onClick={() => onChange(item.key)}>{item.label}</button>)}</div>
+function RangePicker({ value, onChange, options }: { value: ProbeRange; onChange: (value: ProbeRange) => void; options: ProbeRangeOption[] }) {
+  return <div className="mini-trend-ranges" role="group" aria-label="历史时间范围">{options.map(item => <button key={item.key} type="button" aria-pressed={item.key === value} onClick={() => onChange(item.key)}>{item.label}</button>)}</div>
 }
 type TrendLine = { key: string; label: string; color: string }
-const clock = (time: number) => new Date(time * 1000).toLocaleTimeString('zh-CN', { hour12: false, hour: '2-digit', minute: '2-digit' })
-function TrendPlot({ rows, lines, format, loading, error, empty, percent = false, integer = false }: { rows: TrendRow[]; lines: TrendLine[]; format: (value: number) => string; loading: boolean; error: boolean; empty?: string; percent?: boolean; integer?: boolean }) {
+function TrendPlot({ rows, lines, format, loading, error, empty, percent = false, integer = false, multiDay = false }: { rows: TrendRow[]; lines: TrendLine[]; format: (value: number) => string; loading: boolean; error: boolean; empty?: string; percent?: boolean; integer?: boolean; multiDay?: boolean }) {
+  const clock = (time: number) => new Date(time * 1000).toLocaleString('zh-CN', { ...(multiDay ? { month: '2-digit', day: '2-digit' } as const : {}), hour12: false, hour: '2-digit', minute: '2-digit' })
   const hasPoints = rows.some(row => lines.some(line => row[line.key] != null))
   const values = rows.flatMap(row => lines.map(line => row[line.key]).filter((value): value is number => value != null))
   const low = values.length ? Math.min(...values) : 0, high = values.length ? Math.max(...values) : 1
@@ -54,7 +56,7 @@ function ChartCard({ title, value, children, className = '' }: { title: string; 
   return <section className={`mini-trend-card ${className}`} aria-label={title}><header><h3>{title}</h3>{value && <span>{value}</span>}</header>{children}</section>
 }
 export function MiniLatencyTrends({ server, index }: { server: ProbeServer; index: number }) {
-  const [range, setRange] = useState<MiniRange>('1h')
+  const { range, setRange, options } = useProbeRange()
   const [mode, setMode] = useState<'latency' | 'loss'>('latency')
   const [hidden, setHidden] = useState<Set<string>>(new Set())
   const history = useHistory<SeriesPayload>(index, range, 'ping')
@@ -64,16 +66,16 @@ export function MiniLatencyTrends({ server, index }: { server: ProbeServer; inde
   ] : server.ping || [], [history.data, server.ping])
   const targets = series.map((line, slot) => ({ key: `line${slot}`, id: line.key || line.label, label: line.label, color: line.key === '__avg__' ? 'var(--mini-text)' : colors[slot % colors.length], series: line }))
   const visible = targets.filter(line => !hidden.has(line.id))
-  const bucketSec = history.data?.bucket_sec || MINI_RANGES.find(item => item.key === range)!.bucketSec
+  const bucketSec = history.data?.bucket_sec || probeRangeBucketSec(range)
   const rows = useMemo(() => history.data ? pingTrendRows(series, history.data.generated_at ?? Math.floor(Date.now() / 1000), bucketSec, mode) : [], [history.data, series, bucketSec, mode])
   const format = (value: number) => `${Number(value.toFixed(mode === 'loss' ? 1 : 0))}${mode === 'loss' ? '%' : 'ms'}`
   return <div className="mini-trends mini-latency-trends">
-    <div className="mini-trend-toolbar"><RangePicker value={range} onChange={setRange} /><div className="mini-trend-selection"><button type="button" onClick={() => setHidden(new Set())}>全选</button><button type="button" onClick={() => setHidden(new Set(targets.map(line => line.id)))}>全不选</button></div></div>
+    <div className="mini-trend-toolbar"><RangePicker value={range} onChange={setRange} options={options} /><div className="mini-trend-selection"><button type="button" onClick={() => setHidden(new Set())}>全选</button><button type="button" onClick={() => setHidden(new Set(targets.map(line => line.id)))}>全不选</button></div></div>
     <section className="mini-trend-card mini-latency-card" aria-label="延迟与丢包趋势">
       <div className="mini-trend-targets" role="group" aria-label="显示的测试目标">{targets.map(line => <button type="button" key={line.id} title={line.label} aria-pressed={!hidden.has(line.id)} onClick={() => setHidden(previous => { const next = new Set(previous); if (next.has(line.id)) next.delete(line.id); else next.add(line.id); return next })}><i style={{ background: line.color }} />{line.label}</button>)}</div>
-      <header><h3>{mode === 'loss' ? '丢包走势（%）' : '延迟走势（ms）'}</h3><span>粒度 {Math.round(bucketSec / 60)} 分钟</span></header>
+      <header><h3>{mode === 'loss' ? '丢包走势（%）' : '延迟走势（ms）'}</h3><span>粒度 {probeBucketLabel(bucketSec)}</span></header>
       <div className="mini-trend-mode mini-segment" role="group" aria-label="延迟图表类型"><button type="button" aria-pressed={mode === 'latency'} onClick={() => setMode('latency')}>延迟</button><button type="button" aria-pressed={mode === 'loss'} onClick={() => setMode('loss')}>丢包</button></div>
-      <TrendPlot rows={rows} lines={visible} format={format} loading={history.loading} error={history.error} empty={!visible.length && targets.length ? '请选择上方测试目标以显示曲线。' : undefined} />
+      <TrendPlot rows={rows} lines={visible} format={format} loading={history.loading} error={history.error} multiDay={range.endsWith('d')} empty={!visible.length && targets.length ? '请选择上方测试目标以显示曲线。' : undefined} />
       <div className="mini-trend-values" aria-label="测试目标当前数值">{visible.map(line => {
         const value = trendValue(mode === 'loss' ? line.series.loss_pct : line.series.current_ms)
         return <span key={line.id}><i style={{ background: line.color }} />{line.label}<strong>{value === null ? '—' : format(value)}</strong></span>
@@ -82,11 +84,11 @@ export function MiniLatencyTrends({ server, index }: { server: ProbeServer; inde
   </div>
 }
 export function MiniSystemTrends({ server, index }: { server: ProbeServer; index: number }) {
-  const [range, setRange] = useState<MiniRange>('1h')
+  const { range, setRange, options, historyDays } = useProbeRange()
   const history = useHistory<{ success: boolean; bucket_sec?: number; series?: SystemSeries }>(index, range, 'system')
   const rows = useMemo(() => systemTrendRows(history.data?.series || {}), [history.data])
   const reportedBucketSec = history.data?.bucket_sec
-  const bucketSec = reportedBucketSec && Number.isFinite(reportedBucketSec) && reportedBucketSec > 0 ? reportedBucketSec : MINI_RANGES.find(item => item.key === range)!.bucketSec
+  const bucketSec = reportedBucketSec && Number.isFinite(reportedBucketSec) && reportedBucketSec > 0 ? reportedBucketSec : probeRangeBucketSec(range)
   const connections = useMemo(() => connectionTrendRows(history.data?.series || {}, bucketSec), [history.data, bucketSec])
   const speed = useNetworkSpeed()
   const formatPercent = (value: number) => `${Number(value.toFixed(1))}%`
@@ -95,13 +97,13 @@ export function MiniSystemTrends({ server, index }: { server: ProbeServer; index
   const memory = mem !== null && total !== null && total > 0 ? mem / total * 100 : null
   const currentSpeed = (value?: number) => trendValue(value) === null ? '—' : speed(value!)
   return <div className="mini-trends mini-system-trends">
-    <div className="mini-trend-toolbar"><RangePicker value={range} onChange={setRange} /></div>
-    <ChartCard title="CPU 使用率" value={cpu === null ? '—' : formatPercent(cpu)}><TrendPlot rows={rows} lines={[{ key: 'cpu', label: 'CPU 使用率', color: 'var(--mini-accent)' }]} format={formatPercent} loading={history.loading} error={history.error} /></ChartCard>
-    <ChartCard title="内存使用率" value={memory === null ? '—' : formatPercent(memory)}><TrendPlot rows={rows} lines={[{ key: 'mem', label: '内存使用率', color: 'var(--mini-green)' }]} format={formatPercent} loading={history.loading} error={history.error} percent /></ChartCard>
-    <ChartCard title="网络速度" value={<><span className="mini-trend-down">↓ {currentSpeed(server.download_speed)}</span><span className="mini-trend-up">↑ {currentSpeed(server.upload_speed)}</span></>}><TrendPlot rows={rows} lines={[{ key: 'download', label: '下行', color: 'var(--mini-blue)' }, { key: 'upload', label: '上行', color: 'var(--mini-green)' }]} format={speed} loading={history.loading} error={history.error} /></ChartCard>
+    <div className="mini-trend-toolbar"><RangePicker value={range} onChange={setRange} options={options} /></div>
+    <ChartCard title="CPU 使用率" value={cpu === null ? '—' : formatPercent(cpu)}><TrendPlot rows={rows} lines={[{ key: 'cpu', label: 'CPU 使用率', color: 'var(--mini-accent)' }]} format={formatPercent} loading={history.loading} error={history.error} multiDay={range.endsWith('d')} /></ChartCard>
+    <ChartCard title="内存使用率" value={memory === null ? '—' : formatPercent(memory)}><TrendPlot rows={rows} lines={[{ key: 'mem', label: '内存使用率', color: 'var(--mini-green)' }]} format={formatPercent} loading={history.loading} error={history.error} multiDay={range.endsWith('d')} percent /></ChartCard>
+    <ChartCard title="网络速度" value={<><span className="mini-trend-down">↓ {currentSpeed(server.download_speed)}</span><span className="mini-trend-up">↑ {currentSpeed(server.upload_speed)}</span></>}><TrendPlot rows={rows} lines={[{ key: 'download', label: '下行', color: 'var(--mini-blue)' }, { key: 'upload', label: '上行', color: 'var(--mini-green)' }]} format={speed} loading={history.loading} error={history.error} multiDay={range.endsWith('d')} /></ChartCard>
     <ChartCard title="TCP / UDP 连接数" className="mini-connections-chart" value={<><span className="mini-trend-up"><ConnectionLabel protocol="TCP" />{connectionCount(server.tcp_connections)}</span><span className="mini-trend-down"><ConnectionLabel protocol="UDP" />{connectionCount(server.udp_connections)}</span></>}>
-      <TrendPlot rows={connections} lines={[{ key: 'tcp', label: 'TCP', color: 'var(--mini-green)' }, { key: 'udp', label: 'UDP', color: 'var(--mini-blue)' }]} format={formatConnectionAverage} loading={history.loading} error={history.error} integer empty="主控暂无 TCP / UDP 历史记录；请确认已开启连接数采集，并等待历史积累。" />
-      <p className="mini-connections-note">主控历史 · 每 {Math.round(bucketSec / 60)} 分钟平均值 · 最多 24 小时。刷新后重新读取主控记录；缺失数据保留空档，不补零。整机连接数，非代理用户数。</p>
+      <TrendPlot rows={connections} lines={[{ key: 'tcp', label: 'TCP', color: 'var(--mini-green)' }, { key: 'udp', label: 'UDP', color: 'var(--mini-blue)' }]} format={formatConnectionAverage} loading={history.loading} error={history.error} multiDay={range.endsWith('d')} integer empty="主控暂无 TCP / UDP 历史记录；请确认已开启连接数采集，并等待历史积累。" />
+      <p className="mini-connections-note">主控历史 · 每 {probeBucketLabel(bucketSec)}平均值 · 最多 {historyDays > 1 ? `${historyDays} 天` : '24 小时'}。刷新后重新读取主控记录；缺失数据保留空档，不补零。整机连接数，非代理用户数。</p>
     </ChartCard>
   </div>
 }

@@ -1,13 +1,6 @@
 import type { ProbeServer } from './types'
-
-export const CYCLE_DAYS = {
-  month: 30,
-  quarter: 90,
-  half_year: 180,
-  year: 365,
-} as const
-
-const CYCLE_MONTHS = { month: 1, quarter: 3, half_year: 6, year: 12 } as const
+import { CYCLE_DAYS, CYCLE_MONTHS, expiryTimestamp, isPermanent } from './renewal.ts'
+export { CYCLE_DAYS } from './renewal.ts'
 const BYTES_PER_TB = 1024 ** 4
 
 export interface MonthlyTrafficCost {
@@ -20,6 +13,8 @@ export interface MonthlyTrafficCost {
 
 /** 套餐单价估算：将配置的流量额度视为每月额度，不使用实际已用流量。 */
 export function computeMonthlyTrafficCost(server: ProbeServer): MonthlyTrafficCost | null {
+  // There is no finite renewal period over which to amortize a buyout.
+  if (isPermanent(server)) return null
   const validPrice = (value: unknown): value is number => typeof value === 'number' && Number.isFinite(value) && value >= 0
   const price = validPrice(server.renewal_price_cny) ? server.renewal_price_cny : server.renewal_price
   const quota = server.traffic_limit
@@ -43,13 +38,14 @@ export interface RemainingValue {
 }
 
 export function computeRemainingValue(server: ProbeServer): RemainingValue | null {
-  if (!server.expires_at || server.renewal_price === undefined) return null
-  const expires = new Date(`${server.expires_at}T23:59:59`).getTime()
+  const expires = expiryTimestamp(server)
+  if (expires === undefined || server.renewal_price === undefined) return null
   const days = Math.ceil((expires - Date.now()) / 86400000)
   if (days <= 0) return null // 已过期，无剩余价值
   const cycleDays = CYCLE_DAYS[server.renewal_cycle || 'month']
   const isCny = server.renewal_price_cny !== undefined
   const price = isCny ? server.renewal_price_cny! : server.renewal_price
+  if (!cycleDays || !Number.isFinite(price) || price < 0) return null
   const daily = price / cycleDays
   return {
     days,

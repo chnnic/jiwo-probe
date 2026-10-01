@@ -1,6 +1,7 @@
 import { ThemeSelect } from './ThemePicker'
 import { useNetworkSpeed } from './use-network-speed'
 import { ConnectionCounts, UnlockButton, UnlockDetails } from './ServerCapabilities'
+import { ConnectionHistory } from './ConnectionHistory'
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
 import {
   Activity,
@@ -47,6 +48,9 @@ import {
   type TrafficRange,
 } from './traffic-display'
 import { BlackGoldGlobe, type PremiumProbeRegion } from './BlackGoldGlobe'
+import { useProbeRange } from './use-probe-range'
+import { probeBucketLabel } from './probe-ranges'
+import { CYCLE_LABELS, CYCLE_MONTHS, expiryTimestamp, isPermanent } from './renewal'
 import './premium-probe.css'
 
 type ProbeData = ProbePayload
@@ -419,7 +423,7 @@ export function serverHealth(server: ProbeServer): HealthResult {
       issues.push('流量额度偏高')
     }
   }
-  if (server.expires_at) {
+  if (server.expires_at && !isPermanent(server)) {
     const days = Math.ceil(
       (new Date(`${server.expires_at}T00:00:00`).getTime() - Date.now()) /
         86400000
@@ -504,18 +508,13 @@ function renewalTimelineRows(servers: ProbeServer[]) {
   now.setHours(0, 0, 0, 0)
   return servers
     .map((server, index) => {
-      if (!server.expires_at) return undefined
+      if (!server.expires_at || expiryTimestamp(server) === undefined) return undefined
       const expiresAt = new Date(`${server.expires_at}T00:00:00`)
       const days = Math.ceil((expiresAt.getTime() - now.getTime()) / 86400000)
       const price =
         server.renewal_price_cny ??
         (server.renewal_currency === 'CNY' ? server.renewal_price : undefined)
-      const cycleMonths = {
-        month: 1,
-        quarter: 3,
-        half_year: 6,
-        year: 12,
-      }[server.renewal_cycle || 'month']
+      const cycleMonths = CYCLE_MONTHS[server.renewal_cycle || 'month']
       return {
         index,
         name: server.name || `#${index + 1}`,
@@ -662,30 +661,19 @@ function RenewalTimeline({
 }
 
 function BillingOverview({ servers }: { servers: ProbeServer[] }) {
-  const cycleMonths = {
-    month: 1,
-    quarter: 3,
-    half_year: 6,
-    year: 12,
-  } as const
-  const cycleLabels = {
-    month: '月付',
-    quarter: '季付',
-    half_year: '半年付',
-    year: '年付',
-  } as const
   const rows = servers
     .map((server, index) => {
       const price =
         server.renewal_price_cny ??
         (server.renewal_currency === 'CNY' ? server.renewal_price : undefined)
-      if (price === undefined) return undefined
+      if (price === undefined || !Number.isFinite(price) || price < 0) return undefined
       const cycle = server.renewal_cycle || 'month'
+      if (!CYCLE_MONTHS[cycle]) return undefined
       return {
         index,
         name: server.name || `#${index + 1}`,
-        cycle: cycleLabels[cycle],
-        monthly: price / cycleMonths[cycle],
+        cycle: isPermanent(server) ? '永久买断' : `${CYCLE_LABELS[cycle]}付`,
+        monthly: price / CYCLE_MONTHS[cycle],
       }
     })
     .filter((item): item is NonNullable<typeof item> => !!item)
@@ -1947,7 +1935,7 @@ function PremiumNetworkView({
   const [serverIndex, setServerIndex] = useState(0)
   const [target, setTarget] = useState('__all__')
   const [visibleTargets, setVisibleTargets] = useState<string[]>([])
-  const [range, setRange] = useState<'1h' | '6h' | '24h'>('1h')
+  const { range, setRange, options: rangeOptions } = useProbeRange()
   useEffect(() => {
     if (!showForward && netMode === 'forward') setNetMode('server')
   }, [netMode, showForward])
@@ -1956,6 +1944,7 @@ function PremiumNetworkView({
     Math.max(0, servers.length - 1)
   )
   const selectedServer = servers[selectedServerIndex]
+  const hasSelectedServer = !!selectedServer
   const targets = useMemo(() => {
     const result = new Map<
       string,
@@ -1987,8 +1976,8 @@ function PremiumNetworkView({
     generated_at: number
   }>()
   useEffect(() => {
-    if (!selectedServer) {
-      setDetail(undefined)
+    setDetail(undefined)
+    if (!hasSelectedServer) {
       return
     }
     const controller = new AbortController()
@@ -2005,9 +1994,10 @@ function PremiumNetworkView({
           signal: controller.signal,
         })
         if (!response.ok) throw new Error(`HTTP ${response.status}`)
-        setDetail(await response.json())
-      } catch (error) {
-        if (!(error instanceof DOMException && error.name === 'AbortError')) {
+        const payload = await response.json() as NonNullable<typeof detail>
+        if (!controller.signal.aborted) setDetail(payload.success ? payload : undefined)
+      } catch {
+        if (!controller.signal.aborted) {
           setDetail(undefined)
         }
       }
@@ -2018,7 +2008,7 @@ function PremiumNetworkView({
       controller.abort()
       window.clearInterval(timer)
     }
-  }, [range, selectedServer, selectedServerIndex])
+  }, [range, hasSelectedServer, selectedServerIndex])
   const rows = selectedServer
     ? [selectedServer].map((server) => {
         const series = server.ping || []
@@ -2178,10 +2168,9 @@ function PremiumNetworkView({
           },
           {
             label: '时间范围',
-            value:
-              range === '1h' ? '1 小时' : range === '6h' ? '6 小时' : '24 小时',
+            value: rangeOptions.find(item => item.key === range)?.label || '',
             hint: detail?.bucket_sec
-              ? `${detail.bucket_sec / 60} 分钟一个数据桶`
+              ? `${probeBucketLabel(detail.bucket_sec)}一个数据桶`
               : '等待详细数据',
           },
           {
@@ -2205,18 +2194,14 @@ function PremiumNetworkView({
             <h3>服务器探测详情</h3>
           </div>
           <div className='premium-probe-network-ranges'>
-            {(['1h', '6h', '24h'] as const).map((item) => (
+            {rangeOptions.map((item) => (
               <button
                 type='button'
-                key={item}
-                className={range === item ? 'is-active' : undefined}
-                onClick={() => setRange(item)}
+                key={item.key}
+                className={range === item.key ? 'is-active' : undefined}
+                onClick={() => setRange(item.key)}
               >
-                {item === '1h'
-                  ? '1 小时'
-                  : item === '6h'
-                    ? '6 小时'
-                    : '24 小时'}
+                {item.label}
               </button>
             ))}
           </div>
@@ -2401,7 +2386,7 @@ function PremiumNetworkView({
             detailBuckets.map((bucket) => (
               <div key={bucket.timestamp}>
                 <time>{formatAxisDateTime(bucket.timestamp)}</time>
-                <strong>{bucket.ms < 0 ? '不可达' : `${bucket.ms} ms`}</strong>
+                <strong>{bucket.ms < 0 ? (bucket.loss < 0 ? '暂无数据' : '不可达') : `${bucket.ms} ms`}</strong>
                 <span>
                   {bucket.loss < 0
                     ? '无数据'
@@ -2578,6 +2563,7 @@ function PremiumServerCard({
         </div>
         <ConnectionCounts server={server} variant="card" />
       </div>
+      <ConnectionHistory server={server} serverIndex={index} />
       <div className='premium-probe-server-footer'>
         <div className='premium-probe-card-traffic'>
           <span>周期流量</span>
@@ -2921,14 +2907,14 @@ function ServerDetailDrawer({
           </div>
           <div>
             <span>到期时间</span>
-            <strong>{server.expires_at || '—'}</strong>
+            <strong>{isPermanent(server) ? '永久' : server.expires_at || '—'}</strong>
           </div>
           <div>
             <span>续费价格</span>
             <strong>
-              {server.renewal_price_cny === undefined
-                ? '—'
-                : `¥${server.renewal_price_cny.toFixed(2)}`}
+              {server.renewal_price_cny !== undefined
+                ? `¥${server.renewal_price_cny.toFixed(2)} / ${CYCLE_LABELS[server.renewal_cycle || 'month']}`
+                : server.renewal_price !== undefined ? `${server.renewal_currency || 'CNY'} ${server.renewal_price} / ${CYCLE_LABELS[server.renewal_cycle || 'month']}` : '—'}
             </strong>
           </div>
         </section>

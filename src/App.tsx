@@ -1,6 +1,8 @@
 import { ThemeSelect } from './ThemePicker'
 import { useNetworkSpeed } from './use-network-speed'
 import { ConnectionCounts, UnlockButton } from './ServerCapabilities'
+import { ConnectionHistory } from './ConnectionHistory'
+import { ForwardOverview } from './ForwardOverview'
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import Lottie from 'lottie-react'
@@ -24,7 +26,10 @@ import { ServerDetail } from './ServerDetail'
 import { computeRemainingValue, formatMoney } from './value'
 import { LEADERBOARD_ORDER, rankConnectionCounts, type LeaderboardKey } from './leaderboards'
 import { connectionCount } from './unlocks'
-import { MINI_RANGES, connectionTrendRows, formatConnectionAverage, systemTrendRows, type SystemSeries, type TrendRow } from './mini/mini-trends'
+import { connectionTrendRows, formatConnectionAverage, systemTrendRows, type SystemSeries, type TrendRow } from './mini/mini-trends'
+import { ProbeHistoryDaysContext, useProbeRange } from './use-probe-range'
+import { probeBucketLabel, probeRangeBucketSec } from './probe-ranges'
+import { CYCLE_LABELS as cycleLabel, CYCLE_MONTHS, expiryTimestamp, isPermanent } from './renewal'
 import commonRouteAnimation from './assets/return-route/common.json'
 import premiumRouteAnimation from './assets/return-route/premium.json'
 
@@ -36,24 +41,6 @@ const EmeraldApp = lazy(() => import('./emerald/EmeraldApp').then((module) => ({
 const MiniApp = lazy(() => import('./mini/MiniApp'))
 const LuminaPlusApp = lazy(() => import('./luminaplus/LuminaPlusApp'))
 const MiniServerDetail = lazy(() => import('./mini/MiniServerDetail'))
-const ranges = [
-  {
-    key: '1h',
-    label: '1 小时',
-    bucketLabel: (index: number, count: number) => `-${(count - index) * 5}m`,
-  },
-  {
-    key: '6h',
-    label: '6 小时',
-    bucketLabel: (index: number, count: number) => `-${(((count - index) * 10) / 60).toFixed(1)}h`,
-  },
-  {
-    key: '24h',
-    label: '24 小时',
-    bucketLabel: (index: number, count: number) => `-${(((count - index) * 30) / 60).toFixed(0)}h`,
-  },
-] as const
-type RangeKey = (typeof ranges)[number]['key']
 
 export function formatAxisDateTime(unixSeconds: number, showMinutes = true): string {
   return new Intl.DateTimeFormat('zh-CN', {
@@ -65,16 +52,16 @@ export function formatAxisDateTime(unixSeconds: number, showMinutes = true): str
   }).format(new Date(unixSeconds * 1000))
 }
 
-export function HorizontalChart({ children, width }: { children: React.ReactNode; width: number }) {
+export function HorizontalChart({ children, width, fixedAxis = true }: { children: React.ReactNode; width: number; fixedAxis?: boolean }) {
   const ref = useRef<HTMLDivElement>(null)
   const drag = useRef<{ x: number; left: number } | null>(null)
   return (
     <div className="chart-scroll-frame">
-      <div className="chart-fixed-y-axis" aria-hidden="true">
+      {fixedAxis && <div className="chart-fixed-y-axis" aria-hidden="true">
         <div className="chart-scroll-inner" style={{ width, minWidth: '100%' }}>
           {children}
         </div>
-      </div>
+      </div>}
       <div
         ref={ref}
         className="chart-scroll"
@@ -133,19 +120,15 @@ function speedScale(bytesPerSecond: number, networkSpeed: (value: number) => str
     label: networkSpeed(ceiling / 8),
   }
 }
-const cycleLabel = {
-  month: '月',
-  quarter: '季',
-  half_year: '半年',
-  year: '年',
-} as const
 export function expiring(server: ProbeServer): boolean {
-  if (!server.expires_at) return false
-  const days = (new Date(`${server.expires_at}T23:59:59`).getTime() - Date.now()) / 86400000
+  const expiry = expiryTimestamp(server)
+  if (expiry === undefined) return false
+  const days = (expiry - Date.now()) / 86400000
   return days >= 0 && days <= 30
 }
 export function expired(server: ProbeServer): boolean {
-  return !!server.expires_at && new Date(`${server.expires_at}T23:59:59`).getTime() < Date.now()
+  const expiry = expiryTimestamp(server)
+  return expiry !== undefined && expiry < Date.now()
 }
 export function remainingDays(value?: string): string {
   if (!value) return ''
@@ -386,7 +369,6 @@ function groupedPingAvg(ping: ProbePingSeries[], cn: boolean): number {
   return current.length ? current.reduce((a, b) => a + b, 0) / current.length : -1
 }
 
-const CYCLE_MONTHS: Record<string, number> = { month: 1, quarter: 3, half_year: 6, year: 12 }
 
 function formatUptime(seconds: number): string {
   const d = Math.floor(seconds / 86400)
@@ -400,8 +382,8 @@ function formatUptime(seconds: number): string {
 function monthlyCost(server: ProbeServer): number {
   const price = server.renewal_price_cny ?? server.renewal_price
   if (price === undefined || price === null) return -1
-  const months = CYCLE_MONTHS[server.renewal_cycle || 'month'] || 1
-  return price / months
+  const months = CYCLE_MONTHS[server.renewal_cycle || 'month']
+  return months ? price / months : -1
 }
 
 function todayTraffic(server: ProbeServer): number {
@@ -421,8 +403,8 @@ function load1m(server: ProbeServer): number {
 }
 
 function daysLeft(server: ProbeServer): number {
-  if (!server.expires_at) return -1
-  return Math.ceil((new Date(`${server.expires_at}T23:59:59`).getTime() - Date.now()) / 86400000)
+  const expiry = expiryTimestamp(server)
+  return expiry === undefined ? -1 : Math.ceil((expiry - Date.now()) / 86400000)
 }
 
 function avgLossPct(server: ProbeServer, cn: boolean): number {
@@ -896,7 +878,7 @@ export function SystemIcon({ server }: { server: ProbeServer }) {
 }
 
 export function TrendDialog({ serverIndex, initial, targetKey, cardTarget, title, mode, close }: { serverIndex: number; initial: ProbePingSeries[]; targetKey: string; cardTarget?: string; title: string; mode: 'latency' | 'loss'; close: () => void }) {
-  const [range, setRange] = useState<RangeKey>('1h')
+  const { range, setRange, options: ranges } = useProbeRange()
   const [group, setGroup] = useState<'all' | 'cn' | 'idc'>(cardTarget === '__avg_cn__' ? 'cn' : cardTarget === '__avg_intl__' ? 'idc' : 'all')
   const [hidden, setHidden] = useState<Set<string>>(new Set())
   const [series, setSeries] = useState<ProbePingSeries[]>(initial)
@@ -939,6 +921,7 @@ export function TrendDialog({ serverIndex, initial, targetKey, cardTarget, title
   useEffect(() => {
     const controller = new AbortController()
     setLoading(true)
+    setSeries([])
     void fetch(`/api/series?server=${serverIndex}&range=${range}&all=1`, {
       cache: 'no-store',
       signal: controller.signal,
@@ -954,11 +937,12 @@ export function TrendDialog({ serverIndex, initial, targetKey, cardTarget, title
         }>
       })
       .then((payload) => {
+        if (controller.signal.aborted) return
         if (payload.success) {
           setSeries([...(payload.series ? [{ ...payload.series, key: '__avg__', label: '平均' }] : []), ...(payload.all_series || [])])
           setTimeMeta({
             generatedAt: payload.generated_at ?? Math.floor(Date.now() / 1000),
-            bucketSec: payload.bucket_sec ?? (range === '1h' ? 300 : range === '6h' ? 600 : 1800),
+            bucketSec: payload.bucket_sec ?? probeRangeBucketSec(range),
           })
         }
       })
@@ -1148,8 +1132,8 @@ function systemLineColor(metric: 'cpu' | 'mem'): string {
   if (root.classList.contains('gold')) return '#d8b46a'
   return metric === 'cpu' ? 'var(--progress-cpu, #3b82f6)' : 'var(--progress-memory, #8b5cf6)'
 }
-export function SystemTrendChart({ serverIndex, metric, containerClass = 'detail-chart' }: { serverIndex: number; metric: 'cpu' | 'mem' | 'connections'; containerClass?: string }) {
-  const [range, setRange] = useState<RangeKey>('1h')
+export function SystemTrendChart({ serverIndex, metric, containerClass = 'detail-chart', fixedAxis = true }: { serverIndex: number; metric: 'cpu' | 'mem' | 'connections'; containerClass?: string; fixedAxis?: boolean }) {
+  const { range, setRange, options: ranges, historyDays } = useProbeRange()
   const [hidden, setHidden] = useState<Set<string>>(new Set())
   const [rows, setRows] = useState<TrendRow[]>([])
   const [loading, setLoading] = useState(true)
@@ -1177,7 +1161,7 @@ export function SystemTrendChart({ serverIndex, metric, containerClass = 'detail
         if (!payload.success) throw new Error('History unavailable')
         const raw = payload.series || {}
         const reportedBucket = payload.bucket_sec
-        const step = reportedBucket && Number.isFinite(reportedBucket) && reportedBucket > 0 ? reportedBucket : MINI_RANGES.find(item => item.key === range)!.bucketSec
+        const step = reportedBucket && Number.isFinite(reportedBucket) && reportedBucket > 0 ? reportedBucket : probeRangeBucketSec(range)
         setBucketSec(step)
         setRows(metric === 'connections' ? connectionTrendRows(raw, step) : systemTrendRows(metric === 'cpu' ? { cpu_pct: raw.cpu_pct } : { mem_used: raw.mem_used, mem_total: raw.mem_total }))
       })
@@ -1252,7 +1236,7 @@ export function SystemTrendChart({ serverIndex, metric, containerClass = 'detail
         {loading && <div className="loading-overlay">加载中…</div>}
         {!loading && error && <div className="chart-empty" role="status">历史数据加载失败，请切换时间范围重试。</div>}
         {!loading && !error && !hasPoints && <div className="chart-empty">{isConnections ? '主控暂无 TCP / UDP 历史记录；请确认已开启连接数采集，并等待历史积累。' : `暂无${metric === 'cpu' ? 'CPU' : '内存'}历史`}</div>}
-        {!loading && !error && hasPoints && <HorizontalChart width={isFit ? 120 : Math.max(120, rows.length * 82 * zoom)}>
+        {!loading && !error && hasPoints && <HorizontalChart width={isFit ? 120 : Math.max(120, rows.length * 82 * zoom)} fixedAxis={fixedAxis}>
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={rows} margin={{ top: 8, right: 12, bottom: 0, left: 0 }}>
               <XAxis dataKey="ts" type="number" domain={['dataMin', 'dataMax']} tickFormatter={value => formatAxisDateTime(Number(value), true)} tick={{ fontSize: 10 }} axisLine={false} tickLine={false} interval="preserveStartEnd" minTickGap={28} />
@@ -1275,7 +1259,7 @@ export function SystemTrendChart({ serverIndex, metric, containerClass = 'detail
           {line.label}
         </button>)}
       </div>
-      {isConnections && !loading && !error && <p className="detail-connections-note">主控历史 · 每 {Math.round(bucketSec / 60)} 分钟平均值 · 最多 24 小时。缺失数据不补零；整机连接数，非代理用户数。</p>}
+      {isConnections && !loading && !error && <p className="detail-connections-note">主控历史 · 每 {probeBucketLabel(bucketSec)}平均值 · 最多 {historyDays > 1 ? `${historyDays} 天` : '24 小时'}。缺失数据不补零；整机连接数，非代理用户数。</p>}
     </>
   )
 }
@@ -1569,7 +1553,7 @@ function ServerCardLumina({ server, index }: { server: EnrichedServer; index: nu
   const trafficFraction = server.traffic_limit ? pct(server.traffic_used, server.traffic_limit) / 100 : 0
   const upRate = server.upload_speed
   const downRate = server.download_speed
-  const expireValue = server.expires_at ? remainingDays(server.expires_at) : null
+  const expireValue = isPermanent(server) ? '永久' : server.expires_at ? remainingDays(server.expires_at) : null
   // 今日流量用量(本地时区当天; 当天无记录时回退 daily_traffic 最后一天)
   const dailyRows = server.daily_traffic || []
   const nowDate = new Date()
@@ -1741,6 +1725,7 @@ function ServerCardLumina({ server, index }: { server: EnrichedServer; index: nu
           </div>
         )}
 
+        <ConnectionHistory server={server} serverIndex={index} />
         <CardPingGroups variant="lumina" ping={server.ping} serverIndex={index} serverName={server.name} />
 
         {!!server.return_routes?.length && (
@@ -1839,11 +1824,13 @@ function ServerCard({ server, index }: { server: ProbeServer; index: number }) {
         </div>
         <ConnectionCounts server={server} variant="inline" />
       </div>
+      <ConnectionHistory server={server} serverIndex={index} />
       <CardPingGroups variant="classic" ping={server.ping} serverIndex={index} serverName={server.name} />
       {!!server.return_routes?.length && <ReturnRouteBadges routes={server.return_routes} telecomPaidPeer={server.telecom_paid_peer} variant={document.documentElement.classList.contains('theme-anime') ? 'anime' : undefined} />}
-      {(server.expires_at || server.renewal_price !== undefined) && (
+      {(server.expires_at || server.renewal_price !== undefined || isPermanent(server)) && (
         <div className="server-meta" onClick={(event) => event.stopPropagation()}>
-          {server.expires_at &&
+          {isPermanent(server) && <span><CalendarClock size={13} />永久</span>}
+          {!isPermanent(server) && server.expires_at &&
             (server.provider_url ? (
               <a href={server.provider_url} target="_blank" rel="noopener noreferrer" className={expiring(server) || expired(server) ? 'warning' : ''} title={server.provider_name ? `前往 ${server.provider_name} 续费` : '前往服务商续费'}>
                 <CalendarClock size={13} />
@@ -1984,7 +1971,8 @@ function ServerMiniCard({ server, index, expanded }: { server: ProbeServer; inde
               {server.renewal_price_cny !== undefined ? `¥${server.renewal_price_cny.toFixed(0)}` : `${server.renewal_currency || 'CNY'} ${server.renewal_price}`}
             </span>
           )}
-          {server.expires_at && (
+          {isPermanent(server) && <span><CalendarClock size={13} />永久</span>}
+          {!isPermanent(server) && server.expires_at && (
             <span className={expiring(server) || expired(server) ? 'mini-due' : ''} title={`到期 ${server.expires_at}`}>
               <CalendarClock size={12} />
               {server.expires_at}
@@ -2021,6 +2009,7 @@ function ServerMiniCard({ server, index, expanded }: { server: ProbeServer; inde
         </div>
       )}
       <ConnectionCounts server={server} variant="card" />
+      {expanded && <ConnectionHistory server={server} serverIndex={index} />}
     </article>
   )
 }
@@ -2181,7 +2170,8 @@ function ServerTable({ servers }: { servers: ProbeServer[] }) {
                   <td className="table-name">
                     <div className="probe-unlock-name-line"><Twemoji>{server.name || `服务器 ${index + 1}`}</Twemoji><UnlockButton server={server} /></div>
                     {server.region && <small>{server.region}</small>}
-                    {server.expires_at &&
+                    {isPermanent(server) && <small>永久</small>}
+                    {!isPermanent(server) && server.expires_at &&
                       (server.provider_url ? (
                         <a href={server.provider_url} target="_blank" rel="noopener noreferrer" className={expiring(server) ? 'warning' : ''} title={server.provider_name ? `前往 ${server.provider_name} 续费` : '前往服务商续费'} onClick={(event) => event.stopPropagation()}>
                           {server.expires_at}
@@ -2343,8 +2333,12 @@ function ProbeLicenseNameplate({ name, displayName, animated = true }: { name?: 
 import { EXTRA_LICENSE_BADGES } from './license-badges'
 
 export function App() {
+  const probe = useProbe()
+  return <ProbeHistoryDaysContext.Provider value={probe.data?.history_days}><ProbeApp {...probe} /></ProbeHistoryDaysContext.Provider>
+}
+
+function ProbeApp({ data, error }: ReturnType<typeof useProbe>) {
   const networkSpeed = useNetworkSpeed()
-  const { data, error } = useProbe()
   const servers = data?.servers || []
   const [view, setView] = useState<'card' | 'list' | 'mini'>(() => (localStorage.getItem('probe-view') as 'card' | 'list' | 'mini') || 'card')
   const [miniExpanded, setMiniExpanded] = useState<boolean>(() => localStorage.getItem('probe-mini-expanded') === '1')
@@ -2701,6 +2695,7 @@ export function App() {
         </div>
       </section>
       <main className={`servers ${view}`}>{visible.length ? view === 'card' ? visible.map((server) => activeTheme === 'lumina' ? <ServerCardLumina key={server.name} server={server} index={servers.indexOf(server)} /> : <ServerCard key={server.name} server={server} index={servers.indexOf(server)} />) : view === 'mini' ? visible.map((server) => <ServerMiniCard key={server.name} server={server} index={servers.indexOf(server)} expanded={miniExpanded} />) : <ServerTable servers={visible} /> : <div className="empty">暂无符合条件的服务器</div>}</main>
+      <ForwardOverview data={data} />
       <footer>
         Powered by{' '}
         <a href="https://github.com/mmwx-group" target="_blank" rel="noreferrer">

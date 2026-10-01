@@ -3,6 +3,7 @@ import { memo, type CSSProperties } from 'react'
 import type { ProbeServer } from '../types'
 import { bytes, hasLeadingFlag, regionCountryLabel, regionFlag, SystemIcon, ReturnRouteBadges } from '../App'
 import { CardPingGroups } from '../CardPingGroups'
+import { ConnectionHistory } from '../ConnectionHistory'
 import { UnlockButton } from '../ServerCapabilities'
 import { ConnectionLabel } from '../ConnectionLabel'
 import { connectionCount } from '../unlocks'
@@ -13,6 +14,7 @@ import { trafficRuleLabel, trafficUsageLabel } from '../traffic-display'
 import { filledSegments, loadMetric, quotaMetric, resetDays, speedTone, combinedSpeedTrail, type LuminaPlusView, type SpeedTrail } from './luminaplus-model'
 import { SpeedPulse } from './SpeedPulse'
 import { LuminaPlusTrafficPopover } from './LuminaPlusTrafficPopover'
+import { CYCLE_LABELS, isPermanent } from '../renewal'
 
 export const size = (value?: number) => validNumber(value) === undefined ? '—' : bytes(value)
 const percent = (value?: number) => validNumber(value) === undefined ? '—' : `${value!.toFixed(1)}%`
@@ -43,11 +45,12 @@ function LuminaPlusCard({ server, index, view, trail }: { server: ProbeServer; i
   const expiryDate = expiresAt === undefined ? undefined : new Date(expiresAt).toLocaleDateString('sv-SE')
   const days = expiresAt === undefined ? undefined : Math.ceil((expiresAt - Date.now()) / 86400000)
   const age = validNumber(server.uptime) === undefined ? '—' : server.uptime! >= 86400 ? `${Math.floor(server.uptime! / 86400)} 天` : `${Math.floor(server.uptime! / 3600)} 时`
-  const cycle = { month: '月', quarter: '季', half_year: '半年', year: '年' }[server.renewal_cycle || 'month']
+  const permanent = isPermanent(server)
+  const cycle = CYCLE_LABELS[server.renewal_cycle || 'month']
   const currency = server.renewal_currency || 'CNY'
   const price = validNumber(server.renewal_price) === undefined ? undefined : `${currency} ${server.renewal_price!.toLocaleString('zh-CN', { maximumFractionDigits: 2 })} / ${cycle}`
   const compactPrice = validNumber(server.renewal_price) === undefined ? '—' : `${currency}${server.renewal_price!.toLocaleString('en-US', { useGrouping: false, maximumFractionDigits: 2 })}/${cycle}`
-  const remainingDays = days === undefined ? '—' : days < 0 ? `已过期 ${Math.abs(days)} 天` : days === 0 ? '今天到期' : `${days} 天`
+  const remainingDays = permanent ? '永久' : days === undefined ? '—' : days < 0 ? `已过期 ${Math.abs(days)} 天` : days === 0 ? '今天到期' : `${days} 天`
   const directions = (['upload', 'download'] as const).map(direction => ({
     direction, Icon: direction === 'upload' ? ArrowUp : ArrowDown,
     label: direction === 'upload' ? '上行' : '下行',
@@ -97,7 +100,7 @@ function LuminaPlusCard({ server, index, view, trail }: { server: ProbeServer; i
         return <span key={direction} className={`lp-info-speed lp-${direction}`} title={`${label}实时速度`}><Icon size={11} /><strong className="lp-speed-tone" data-tone={speedTone(value)}>{amount}<small>{unit}</small></strong></span>
       })}<SpeedPulse samples={combinedSpeedTrail(trail)} value={validNumber(server.upload_speed) !== undefined && validNumber(server.download_speed) !== undefined ? server.upload_speed! + server.download_speed! : undefined} online={server.online} /></div>
       <div className="lp-info-tile lp-info-totals" role="group" aria-label="周期流量">{directions.map(({ direction, Icon, label, total }) => <span key={direction} title={`本周期${label}流量`}><Icon size={11} /><strong>{size(total)}</strong></span>)}</div>
-      <div className="lp-info-tile lp-info-billing" role="group" aria-label="剩余天数与续费费用"><span className="lp-info-expiry" title={`到期日期：${expiryDate || '未设置'} · ${remainingDays}`}><CalendarDays size={11} /><strong>{days === undefined ? '—' : days > 0 ? `余 ${days}天` : remainingDays}</strong></span><span className="lp-info-price" title={price || '续费价格未设置'}><Wallet size={11} /><strong>{compactPrice}</strong></span></div>
+      <div className="lp-info-tile lp-info-billing" role="group" aria-label="剩余天数与续费费用"><span className="lp-info-expiry" title={permanent ? '永久买断，无到期日' : `到期日期：${expiryDate || '未设置'} · ${remainingDays}`}><CalendarDays size={11} /><strong>{permanent ? '永久' : days === undefined ? '—' : days > 0 ? `余 ${days}天` : remainingDays}</strong></span><span className="lp-info-price" title={price || '续费价格未设置'}><Wallet size={11} /><strong>{compactPrice}</strong></span></div>
       <div className="lp-info-tile" role="group" aria-label="连接数"><LuminaPlusConnections server={server} /></div>
     </section> : <section className="lp-mini-network" aria-label="实时速度、周期流量与连接数">
       {directions.map(({ direction, Icon, label, value, total }) => <div className="lp-mini-flow" key={direction}>
@@ -110,11 +113,12 @@ function LuminaPlusCard({ server, index, view, trail }: { server: ProbeServer; i
       <div className="lp-quota-heading"><span><Database size={14} />{quota.unlimited ? '不限流量' : quota.exceeded ? '额度已超出' : `剩余 ${size(quota.remaining)}`}{reset !== undefined && <small>· {reset === 0 ? '今天重置' : `${reset}天后重置`}</small>}</span>{view === 'compact' ? <span className="lp-quota-age" title="运行时间">{server.online ? '在线' : '离线'}：{age}</span> : <span>{size(quota.used)} / {quota.unlimited ? '不限' : size(quota.limit)}</span>}</div>
       <div className="lp-quota-meter"><SegmentMeter value={quota.percent} tone={quota.exceeded ? 'danger' : 'traffic'} label="已用计费额度" />{view === 'compact' && <span>{size(quota.used)} / {quota.unlimited ? '不限' : size(quota.limit)}</span>}</div>
     </div>}
+    <ConnectionHistory server={server} serverIndex={index} />
     <CardPingGroups ping={server.ping} serverIndex={index} serverName={server.name} variant="classic" averageOnly={view === 'mini'} />
     <div className="lp-routes" role="group" aria-label="电信、联通、移动回程"><ReturnRouteBadges routes={server.return_routes || []} telecomPaidPeer={server.telecom_paid_peer} variant="lumina" /></div>
-    {view === 'mini' ? <footer className="lp-mini-footer"><span title="到期日期"><CalendarDays size={12} /><time dateTime={expiryDate}>{expiryDate || '未设置到期'}</time></span><strong title={`剩余天数 · 已运行 ${age}`} className={days !== undefined && days <= 30 ? 'is-warm' : ''}>{remainingDays}</strong></footer> : view === 'large' && <div className="lp-lifetime" role="group" aria-label="运行时间与到期信息">
+    {view === 'mini' ? <footer className="lp-mini-footer"><span title="到期日期"><CalendarDays size={12} /><time dateTime={expiryDate}>{permanent ? '永久' : expiryDate || '未设置到期'}</time></span><strong title={`剩余天数 · 已运行 ${age}`} className={days !== undefined && days <= 30 ? 'is-warm' : ''}>{remainingDays}</strong></footer> : view === 'large' && <div className="lp-lifetime" role="group" aria-label="运行时间与到期信息">
       <div><span><RefreshCw size={15} />运行时间</span><strong className="lp-age">{age}</strong></div>
-      <div><span><CalendarDays size={15} />到期日期</span><time dateTime={expiryDate}>{expiryDate || '未设置'}</time></div>
+      <div><span><CalendarDays size={15} />到期日期</span><time dateTime={expiryDate}>{permanent ? '永久' : expiryDate || '未设置'}</time></div>
       <div><span><Hourglass size={15} />剩余天数</span><strong className={days !== undefined && days <= 30 ? 'is-warm' : ''}>{remainingDays}</strong></div>
     </div>}
   </article>

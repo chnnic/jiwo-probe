@@ -1,15 +1,40 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { computeMonthlyTrafficCost } from './value.ts'
+import { computeMonthlyTrafficCost, computeRemainingValue } from './value.ts'
+import { CYCLE_MONTHS, expiryTimestamp } from './renewal.ts'
 
 const base = { online: true, renewal_currency: 'CNY', traffic_limit: 2 * 1024 ** 4 }
 
 test('monthly traffic cost normalizes monthly, quarterly, half-year and yearly renewal prices', () => {
-  for (const [renewal_cycle, renewal_price] of [['month', 10], ['quarter', 30], ['half_year', 60], ['year', 120]]) {
+  for (const [renewal_cycle, renewal_price] of [['month', 10], ['quarter', 30], ['half_year', 60], ['year', 120], ['two_year', 240], ['three_year', 360]]) {
     assert.deepEqual(computeMonthlyTrafficCost({ ...base, renewal_cycle, renewal_price }), {
       monthlyPrice: 10, quotaTB: 2, perTB: 5, currency: 'CNY', isCny: true,
     })
   }
+})
+
+test('multi-year remaining value uses the full paid term', t => {
+  t.mock.method(Date, 'now', () => Date.parse('2026-10-01T00:00:00'))
+  for (const [renewal_cycle, renewal_price] of [['two_year', 730], ['three_year', 1095]]) {
+    const result = computeRemainingValue({ ...base, renewal_cycle, renewal_price, expires_at: '2026-10-30' })
+    assert.equal(result.days, 30)
+    assert.equal(result.daily, 1)
+    assert.equal(result.value, 30)
+  }
+})
+
+test('permanent purchase never becomes monthly spend, expiry, or an invented residual valuation', () => {
+  const server = { ...base, renewal_cycle: 'permanent', renewal_price: 500, expires_at: '2020-01-01' }
+  assert.equal(500 / CYCLE_MONTHS.permanent, 0)
+  assert.equal(expiryTimestamp(server), undefined)
+  assert.equal(computeMonthlyTrafficCost(server), null)
+  assert.equal(computeRemainingValue(server), null)
+  assert.equal(computeRemainingValue({ ...server, expires_at: '2099-01-01' }), null)
+})
+
+test('unknown renewal terms and invalid dates cannot produce NaN remaining values', () => {
+  assert.equal(computeRemainingValue({ ...base, renewal_cycle: 'unknown', renewal_price: 500, expires_at: '2099-01-01' }), null)
+  assert.equal(computeRemainingValue({ ...base, renewal_price: 500, expires_at: 'invalid' }), null)
 })
 
 test('prefers upstream converted CNY; otherwise preserves original currency without inventing exchange rates', () => {

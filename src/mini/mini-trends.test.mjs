@@ -1,6 +1,7 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { MINI_RANGES, connectionTrendRows, formatConnectionAverage, pingTrendRows, systemTrendRows, trendValue } from './mini-trends.ts'
+import { connectionTrendRows, formatConnectionAverage, pingTrendRows, systemTrendRows, trendValue } from './mini-trends.ts'
+import { probeRangeOptions, probeRangeBucketSec } from '../probe-ranges.ts'
 
 test('Mini 趋势保留零值，缺失和无效值不变成零', () => {
   assert.equal(trendValue(0), 0)
@@ -54,8 +55,9 @@ test('连接数历史的缺失值和异常值为空，非法时间点不参与�
   assert.ok(connectionTrendRows(series, 300).every(row => row.tcp === null && row.udp === null))
   assert.equal(connectionTrendRows(series, 300).length, 6)
 })
-test('1/6/24 小时使用对应桶粒度，主控缺桶只插入空档而非零点', () => {
-  for (const { bucketSec } of MINI_RANGES) {
+test('小时与多天范围使用对应桶粒度，主控缺桶只插入空档而非零点', () => {
+  for (const { key } of probeRangeOptions(7)) {
+    const bucketSec = probeRangeBucketSec(key)
     const series = { tcp_connections: [{ t: bucketSec, value: 81.2 }, { t: bucketSec * 3, value: 91.8 }] }
     assert.deepEqual(connectionTrendRows(series, bucketSec), [
       { ts: bucketSec, tcp: 81.2, udp: null },

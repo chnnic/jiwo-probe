@@ -1,0 +1,79 @@
+/* Probe history v1.0 · 2026-10-01 — 主控连接数小折线与转发链拓扑。 */
+:is(.probe-conn-history, .probe-history-dialog, .probe-forward) {
+  --ph-bg: var(--surface, #fff); --ph-text: var(--text, #172033); --ph-muted: var(--muted, #64748b);
+  --ph-line: var(--border, #e2e8f0); --ph-tcp: #169b78; --ph-udp: #4385d5;
+  color: var(--ph-text); box-sizing: border-box; font-family: inherit;
+}
+:root:is(.dark, .gold) :is(.probe-conn-history, .probe-history-dialog, .probe-forward) { --ph-tcp: #63cdb1; --ph-udp: #82b3f1; }
+:root.theme-luminaplus :is(.probe-conn-history, .probe-history-dialog, .probe-forward) { --ph-bg: var(--lp-surface); --ph-text: var(--lp-text); --ph-muted: var(--lp-muted); --ph-line: var(--lp-border); --ph-tcp: var(--lp-green); --ph-udp: var(--lp-blue); }
+:root.theme-lite :is(.probe-conn-history, .probe-history-dialog, .probe-forward) { --ph-bg: var(--mini-surface); --ph-text: var(--mini-text); --ph-muted: var(--mini-muted); --ph-line: var(--mini-border); --ph-tcp: var(--mini-green); --ph-udp: var(--mini-blue); }
+:root.theme-emerald :is(.probe-conn-history, .probe-history-dialog, .probe-forward) { --ph-bg: var(--em-surface-solid); --ph-text: var(--em-text); --ph-muted: var(--em-text-2); --ph-line: var(--em-border); }
+body.gm-body :is(.probe-conn-history, .probe-history-dialog, .probe-forward) { --ph-bg: #171e2a; --ph-text: #f1f5f9; --ph-muted: #b0bbcd; --ph-line: #354255; --ph-tcp: #63cdb1; --ph-udp: #82b3f1; }
+body.gm-light-body :is(.probe-conn-history, .probe-history-dialog, .probe-forward) { --ph-bg: #f8fafc; --ph-text: #172033; --ph-muted: #526078; --ph-line: #dce1e8; --ph-tcp: #169b78; --ph-udp: #4385d5; }
+:root.theme-premium :is(.probe-conn-history, .probe-history-dialog) { --ph-bg: #151612; --ph-text: #f3ecdc; --ph-muted: #bbb09b; --ph-line: #4b4331; }
+:root.theme-premium.platinum :is(.probe-conn-history, .probe-history-dialog) { --ph-bg: #fffdf8; --ph-text: #302919; --ph-muted: #75674e; --ph-line: #e1d7c0; }
+button.probe-conn-history { display: block; width: 100%; min-width: 0; margin: 8px 0; padding: 4px 0; border: 0; border-radius: 5px; background: transparent; box-shadow: none; text-align: left; font: inherit; cursor: pointer; }
+.probe-conn-history:focus-visible { outline: 2px solid var(--ph-tcp); outline-offset: 3px; }
+.probe-conn-heading { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 10px; line-height: 16px; color: var(--ph-muted); }
+.probe-conn-heading > span { display: inline-flex; align-items: center; gap: 5px; }
+.probe-conn-heading i { width: 6px; height: 6px; border-radius: 50%; display: inline-block; }
+.probe-conn-tcp-dot { background: var(--ph-tcp); }
+.probe-conn-udp-dot { background: var(--ph-udp); margin-left: 5px; }
+.probe-conn-plot { display: block; position: relative; height: 34px; margin-top: 3px; }
+.probe-conn-plot svg { width: 100%; height: 100%; display: block; overflow: visible; }
+.probe-conn-plot path { fill: none; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.probe-conn-tcp { stroke: var(--ph-tcp); }
+.probe-conn-udp { stroke: var(--ph-udp); }
+.probe-conn-base { stroke: var(--ph-line); stroke-width: 1; }
+.probe-conn-guide { stroke: var(--ph-muted); stroke-dasharray: 3 3; stroke-width: 1; }
+.probe-conn-tip { position: absolute; z-index: 5; right: 0; bottom: calc(100% + 5px); padding: 6px 9px; border: 1px solid var(--ph-line); border-radius: 7px; background: var(--ph-bg); color: var(--ph-text); box-shadow: 0 4px 12px #0002; font-size: 11px; line-height: 1.5; pointer-events: none; white-space: nowrap; }
+.probe-conn-tip small { display: block; color: var(--ph-muted); }
+.probe-conn-empty { position: absolute; inset: 0; display: grid; place-items: center; color: var(--ph-muted); font-size: 11px; }
+dialog.probe-history-dialog { width: min(860px, calc(100vw - 24px)); max-height: calc(100dvh - 32px); margin: auto; padding: 22px; overflow: auto; border: 1px solid var(--ph-line); border-radius: 18px; background: var(--ph-bg); color: var(--ph-text); box-shadow: 0 20px 70px #0005; }
+.probe-history-dialog::backdrop { background: #0007; }
+.probe-history-dialog > header { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 20px; }
+.probe-history-dialog h2 { margin: 0; font-size: 18px; }
+.probe-history-dialog header p { margin: 5px 0 0; font-size: 12px; color: var(--ph-muted); overflow-wrap: anywhere; }
+.probe-history-dialog header button { display: grid; place-items: center; flex-shrink: 0; width: 32px; height: 32px; padding: 0; border: 1px solid var(--ph-line); border-radius: 8px; background: transparent; color: inherit; box-shadow: none; }
+.probe-history-dialog .ranges { display: flex; flex-wrap: wrap; gap: 5px; }
+.probe-history-dialog :is(.ranges, .legend) button { color: var(--ph-muted); background: var(--ph-bg); border: 1px solid var(--ph-line); box-shadow: none; }
+.probe-history-dialog .ranges button.active { color: var(--ph-text); border-color: var(--ph-tcp); background: color-mix(in srgb, var(--ph-tcp) 13%, var(--ph-bg)); }
+.probe-history-dialog .detail-chart { height: 300px; min-height: 240px; margin-top: 16px; }
+.probe-history-dialog .detail-connections-note { color: var(--ph-muted); font-size: 11px; line-height: 1.6; }
+:is(.probe-history-dialog, .probe-forward) .recharts-cartesian-axis-tick-value { fill: var(--ph-muted); }
+:is(.probe-history-dialog, .probe-forward) .recharts-default-tooltip { background: var(--ph-bg) !important; color: var(--ph-text); border: 1px solid var(--ph-line) !important; border-radius: 8px; font-size: 12px; }
+.probe-forward { margin: 20px 0; padding: 18px; border: 1px solid var(--ph-line); border-radius: var(--radius, 14px); background: var(--ph-bg); }
+.probe-forward > summary { display: flex; align-items: center; gap: 10px; list-style: none; cursor: pointer; }
+.probe-forward > summary::-webkit-details-marker { display: none; }
+.probe-forward > summary h2 { margin: 0; font-size: 15px; }
+.probe-forward > summary > span { margin-left: auto; font-size: 12px; color: var(--ph-muted); }
+.probe-forward[open] > summary > svg:last-child { transform: rotate(180deg); }
+.probe-forward-toolbar { display: flex; flex-wrap: wrap; gap: 12px 24px; align-items: center; margin: 18px 0; font-size: 12px; color: var(--ph-muted); }
+.probe-forward-toolbar label { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.probe-forward-toolbar select { max-width: min(280px, 60vw); padding: 7px 10px; color: var(--ph-text); background: var(--ph-bg); border: 1px solid var(--ph-line); border-radius: 8px; font: inherit; }
+.probe-forward-toolbar strong { color: var(--ph-text); margin-left: 6px; }
+.probe-forward-topology { display: flex; align-items: stretch; gap: 12px; overflow-x: auto; padding-bottom: 10px; }
+.probe-forward-group { flex: 1 0 190px; min-width: 0; padding: 12px; border: 1px solid var(--ph-line); border-radius: 10px; }
+.probe-forward-group h3 { display: flex; align-items: center; gap: 7px; margin: 0 0 12px; font-size: 13px; }
+.probe-forward-group h3 small { padding: 2px 5px; border-radius: 4px; color: var(--ph-tcp); background: color-mix(in srgb, var(--ph-tcp) 10%, var(--ph-bg)); font-size: 11px; }
+.probe-forward-group ul { display: grid; gap: 9px; list-style: none; margin: 0; padding: 0; }
+.probe-forward-group li { display: flex; align-items: center; gap: 7px; font-size: 12px; }
+.probe-forward-group li i { flex: 0 0 6px; height: 6px; border-radius: 50%; background: #d76c74; }
+.probe-forward-group li i[data-healthy="true"] { background: var(--ph-tcp); }
+.probe-forward-group li span { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.probe-forward-group li strong { margin-left: auto; flex-shrink: 0; font-size: 11px; color: var(--ph-muted); }
+.probe-forward-hop { display: flex; flex: 0 0 auto; flex-direction: column; justify-content: center; align-items: center; gap: 3px; font-size: 12px; color: var(--ph-tcp); }
+.probe-forward-hop small { font-size: 10px; color: var(--ph-muted); }
+.probe-forward-trend { height: 170px; margin-top: 16px; }
+.probe-forward-empty { color: var(--ph-muted); font-size: 12px; padding-top: 16px; }
+@media (max-width: 600px) {
+  dialog.probe-history-dialog { padding: 16px; }
+  .probe-history-dialog .detail-chart { height: 260px; }
+  .probe-forward { padding: 14px; }
+  .probe-forward > summary { gap: 6px; }
+  .probe-forward > summary h2 { font-size: 13px; }
+  .probe-forward-topology { flex-direction: column; overflow: visible; }
+  .probe-forward-group { flex-basis: auto; }
+  .probe-forward-hop { flex-direction: row; gap: 8px; }
+  .probe-forward-hop svg { transform: rotate(90deg); }
+}

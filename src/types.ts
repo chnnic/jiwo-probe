@@ -31,6 +31,12 @@ export interface ProbePingSeries {
   buckets: ProbeBucket[]
 }
 
+/** 主控连接数近 1 小时：12 个 5 分钟均值，旧到新；null 为缺样。 */
+export interface ProbeConnHistory {
+  tcp: (number | null)[]
+  udp: (number | null)[]
+}
+
 export interface ProbeServer {
   name?: string
   region?: string
@@ -88,12 +94,14 @@ export interface ProbeServer {
   tcp_connections?: number
   /** 整机 UDP socket 数。 */
   udp_connections?: number
+  /** 主控关闭连接数折线图时不下发此字段。 */
+  conn_history?: ProbeConnHistory
   unlocks?: ProbeUnlock[]
   ping?: ProbePingSeries[]
   expires_at?: string
   renewal_price?: number
   renewal_price_cny?: number
-  renewal_cycle?: 'month' | 'quarter' | 'half_year' | 'year'
+  renewal_cycle?: 'month' | 'quarter' | 'half_year' | 'year' | 'two_year' | 'three_year' | 'permanent'
   renewal_currency?: string
   provider_name?: string
   provider_url?: string
@@ -128,6 +136,8 @@ export interface ProbePayload {
   show_traffic_quota?: boolean
   show_renewal_timeline?: boolean
   show_health_score?: boolean
+  /** Controller history retention in days (1–7); absent on older controllers. */
+  history_days?: number
   title?: string
   logo?: string
   icon?: string

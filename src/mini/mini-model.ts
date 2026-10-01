@@ -1,4 +1,5 @@
 import type { ProbeServer } from '../types'
+import { expiryTimestamp } from '../renewal.ts'
 
 export type MiniStatus = 'all' | 'online' | 'offline' | 'expiring'
 export type MiniSort = 'default' | 'name' | 'cpu' | 'memory' | 'traffic' | 'latency' | 'expiry'
@@ -21,9 +22,7 @@ export function averageLatency(server: ProbeServer): number | undefined {
 }
 
 export function expiryTime(server: ProbeServer): number | undefined {
-  if (!server.expires_at) return undefined
-  const time = Date.parse(/^\d{4}-\d{2}-\d{2}$/.test(server.expires_at) ? `${server.expires_at}T23:59:59` : server.expires_at)
-  return Number.isFinite(time) ? time : undefined
+  return expiryTimestamp(server)
 }
 
 export function isExpiring(server: ProbeServer, now = Date.now()): boolean {

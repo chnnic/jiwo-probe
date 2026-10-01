@@ -1,11 +1,5 @@
 import type { ProbePingSeries } from '../types'
 
-export const MINI_RANGES = [
-  { key: '1h', label: '1小时', bucketSec: 300 },
-  { key: '6h', label: '6小时', bucketSec: 600 },
-  { key: '24h', label: '24小时', bucketSec: 1800 },
-] as const
-export type MiniRange = typeof MINI_RANGES[number]['key']
 export type MetricPoint = { t: number; value: number | null }
 export type SystemSeries = Partial<Record<'cpu_pct' | 'mem_used' | 'mem_total' | 'upload_speed' | 'download_speed' | 'tcp_connections' | 'udp_connections', MetricPoint[]>>
 export type TrendRow = { ts: number; [key: string]: number | null }

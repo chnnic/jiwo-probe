@@ -1,4 +1,5 @@
 import type { ProbeServer } from '../types'
+import { CYCLE_DAYS, CYCLE_MONTHS, expiryTimestamp, isPermanent } from '../renewal.ts'
 
 export const LUMINA_PLUS_VIEWS = ['large', 'compact', 'mini', 'list'] as const
 export type LuminaPlusView = typeof LUMINA_PLUS_VIEWS[number]
@@ -111,15 +112,14 @@ export function assetOverview(servers: ProbeServer[], now = Date.now()) {
     const converted = nonnegative(server.renewal_price_cny)
     const price = converted ?? nonnegative(server.renewal_price)
     const currency = converted !== undefined ? 'CNY' : server.renewal_currency?.trim().toUpperCase() || 'CNY'
-    const months = { month: 1, quarter: 3, half_year: 6, year: 12 }[server.renewal_cycle || 'month']
+    const months = CYCLE_MONTHS[server.renewal_cycle || 'month']
     if (price === undefined || !months) { unpriced++; continue }
     const group = currencies.get(currency) || { currency, monthly: 0, remaining: 0, priced: 0, valued: 0 }
     group.monthly += price / months
     group.priced++
-    const date = server.expires_at
-    const end = date ? Date.parse(/^\d{4}-\d{2}-\d{2}$/.test(date) ? `${date}T23:59:59` : date) : NaN
-    if (Number.isFinite(end)) {
-      const days = { month: 30, quarter: 90, half_year: 180, year: 365 }[server.renewal_cycle || 'month']
+    const end = expiryTimestamp(server)
+    if (!isPermanent(server) && end !== undefined) {
+      const days = CYCLE_DAYS[server.renewal_cycle || 'month']
       group.remaining += price / days * Math.max(0, Math.ceil((end - now) / 86400000))
       group.valued++
     }

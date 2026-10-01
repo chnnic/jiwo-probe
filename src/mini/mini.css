@@ -1,4 +1,4 @@
-/* Lite v0.10 · 2026-09-24 — 详情概览四项指标改为单行四列，压缩高度；窄屏同步紧凑显示。 */
+/* Lite v0.11 · 2026-10-01 — 多天历史时间范围与窄屏布局。 */
 :root.theme-lite {
   color-scheme: light;
   --mini-page: #f5f7fb;
@@ -216,7 +216,7 @@
 .mini-system-trends .mini-trend-card { display: flex; flex-direction: column; }
 .mini-system-trends .mini-trend-plot { flex: none; height: 140px; }
 .mini-trend-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
-.mini-trend-ranges { display: inline-flex; border: 1px solid var(--mini-border); border-radius: 18px; overflow: hidden; }
+.mini-trend-ranges { display: inline-flex; max-width: 100%; flex-wrap: wrap; border: 1px solid var(--mini-border); border-radius: 18px; overflow: hidden; }
 .mini-trend-ranges button, .mini-trend-selection button { border: 0; background: transparent; color: var(--mini-muted); font: inherit; font-size: 11px; padding: 6px 12px; cursor: pointer; white-space: nowrap; }
 .mini-trend-ranges button[aria-pressed="true"] { color: var(--mini-text); background: var(--mini-soft); font-weight: 650; }
 .mini-trend-selection { display: flex; gap: 6px; }

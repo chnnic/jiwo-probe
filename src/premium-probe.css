@@ -1,4 +1,4 @@
-/* Premium · v2026.09.25.1 · 卡片新增实时上下行速度 */
+/* Premium · v2026.10.01.1 · 筛选栏布局与白金详情可读性 */
 @font-face {
   font-family: 'OPlusSans3';
   src: url('/fonts/OPlusSans3-Medium.woff2') format('woff2');
@@ -2717,9 +2717,10 @@
   gap: 0.5rem;
   align-items: center;
   justify-content: flex-start;
-  padding: 0;
-  border: 0;
-  background: transparent;
+  padding: 0.55rem;
+  border: 1px solid rgba(216, 180, 106, 0.24);
+  border-radius: 0.6rem;
+  background: rgba(14, 15, 14, 0.96);
   box-shadow: none;
 }
 
@@ -2743,6 +2744,8 @@
 
 .premium-probe-filters label {
   display: flex;
+  min-width: 132px;
+  max-width: 100%;
   align-items: center;
   gap: 0.4rem;
   margin-left: auto;
@@ -5028,4 +5031,63 @@
 }
 :root.theme-premium.platinum .premium-probe-heatmap b {
   border-color: rgba(168, 124, 34, 0.22);
+}
+
+/* 上游 7d8d8ef / e7168e3 按 Jiwo 的 platinum 与实际抽屉类名适配。 */
+:root.theme-premium.platinum .premium-probe-filters {
+  border-color: rgba(168, 124, 34, 0.24);
+  background: #fffdf8;
+}
+:root.theme-premium.platinum .premium-probe-filters label {
+  color: #5f5244;
+  border-color: rgba(168, 124, 34, 0.34);
+  background: #fffdf8;
+}
+:root.theme-premium.platinum .premium-probe-filters label:hover,
+:root.theme-premium.platinum .premium-probe-filters label:focus-within {
+  border-color: #a87c22;
+  background: #f6edda;
+}
+:root.theme-premium.platinum .premium-probe-drawer > header span,
+:root.theme-premium.platinum .premium-probe-drawer-health p,
+:root.theme-premium.platinum .premium-probe-drawer-metrics span,
+:root.theme-premium.platinum .premium-probe-drawer-info span,
+:root.theme-premium.platinum .premium-probe-drawer-pings small,
+:root.theme-premium.platinum .premium-probe-drawer-traffic span,
+:root.theme-premium.platinum .premium-probe-drawer-accounting span,
+:root.theme-premium.platinum .premium-probe-drawer-accounting p,
+:root.theme-premium.platinum .premium-probe-traffic-note {
+  color: #6b6152;
+}
+:root.theme-premium.platinum .premium-probe-drawer-health > strong:not([data-tone='warning']):not([data-tone='critical']) {
+  color: #287d38;
+}
+:root.theme-premium.platinum .premium-probe-drawer-health > strong[data-tone='critical'] {
+  color: #b8322b;
+}
+:root.theme-premium.platinum .premium-probe-drawer-health span,
+:root.theme-premium.platinum .premium-probe-drawer-pings span,
+:root.theme-premium.platinum .premium-probe-drawer-info strong {
+  color: #3a3226;
+}
+:root.theme-premium.platinum .premium-probe-drawer-metrics strong,
+:root.theme-premium.platinum .premium-probe-drawer-pings strong,
+:root.theme-premium.platinum .premium-probe-drawer-traffic strong,
+:root.theme-premium.platinum .premium-probe-drawer-accounting strong,
+:root.theme-premium.platinum .premium-probe-drawer-routes b {
+  color: #8a6210;
+}
+:root.theme-premium.platinum .premium-probe-drawer-routes small {
+  color: #6f6552;
+  background: rgba(168, 124, 34, 0.08);
+}
+:root.theme-premium.platinum .premium-probe-filters button:not(.is-active):not(:hover),
+:root.theme-premium.platinum .premium-probe-view-toggle button:not(.is-active),
+:root.theme-premium.platinum .premium-probe-traffic-heading button:not(.is-active) {
+  color: #5c5343;
+}
+:root.theme-premium.platinum .premium-probe-filters button.is-active,
+:root.theme-premium.platinum .premium-probe-traffic-heading button.is-active {
+  color: #33250d;
+  background: linear-gradient(90deg, #e4c67f, #f2dfac);
 }
