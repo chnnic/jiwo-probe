@@ -4,6 +4,7 @@ import { App } from './App'
 import { applyAppearance, getActiveTheme, ProbeProvider, useProbe } from './use-probe'
 import './styles.css'
 import './server-capabilities.css'
+import './connection-colors.css'
 import './lumina-paper.css'
 
 // Ran 主题界面（复刻 Komari-Ran-Theme · 精密金工质感），懒加载保持首屏体积。

@@ -1,7 +1,30 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
+import { readFileSync } from 'node:fs'
 import { normalizeConnHistory, connSparklineMax, connSparklinePath, connHoverIndex, connBucketLabel } from './conn-sparkline.ts'
 import { parseShowConnectionChart } from './connection-chart.ts'
+
+test('首页、历史弹窗、Lite/LP 系统图共用主题 TCP/UDP 配色，Ran 不覆盖', () => {
+  const read = path => readFileSync(new URL(path, import.meta.url), 'utf8')
+  const palette = read('./connection-colors.css')
+  for (const theme of ['pixel', 'anime', 'glass', 'lumina', 'luminaplus', 'lite', 'emerald', 'premium']) {
+    assert.ok(palette.includes(`:root.theme-${theme}`), theme)
+  }
+  assert.match(palette, /body\.gm-body/)
+  assert.match(palette, /body\.gm-light-body/)
+  assert.doesNotMatch(palette, /\.theme-ran/)
+  for (const path of ['./App.tsx', './mini/MiniTrends.tsx']) {
+    const source = read(path)
+    assert.match(source, /key: 'tcp', label: 'TCP', color: 'var\(--connection-tcp\)'/)
+    assert.match(source, /key: 'udp', label: 'UDP', color: 'var\(--connection-udp\)'/)
+  }
+  const styles = read('./probe-history.css')
+  assert.match(styles, /\.probe-conn-tcp \{ stroke: var\(--connection-tcp\)/)
+  assert.match(styles, /\.probe-conn-udp \{ stroke: var\(--connection-udp\)/)
+  assert.match(styles, /\.probe-conn-tcp-dot \{ background: var\(--connection-tcp\)/)
+  assert.match(styles, /\.probe-conn-udp-dot \{ background: var\(--connection-udp\)/)
+  assert.match(read('./main.tsx'), /import '\.\/connection-colors.css'/)
+})
 
 test('CF 连接数折线默认开启，兼容布尔、开关文本、大小写与留空', () => {
   for (const value of [undefined, null, '', 'invalid', true, 1, 'true', ' TRUE ', '1', 'on', 'yes', '开启']) {

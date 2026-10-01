@@ -1192,7 +1192,7 @@ export function SystemTrendChart({ serverIndex, metric, containerClass = 'detail
 
   const isConnections = metric === 'connections'
   const chartLines = isConnections
-    ? [{ key: 'tcp', label: 'TCP', color: '#10b981' }, { key: 'udp', label: 'UDP', color: '#3b82f6' }]
+    ? [{ key: 'tcp', label: 'TCP', color: 'var(--connection-tcp)' }, { key: 'udp', label: 'UDP', color: 'var(--connection-udp)' }]
     : [{ key: metric, ...SYSTEM_LINES[metric], color: systemLineColor(metric) }]
   const hasPoints = rows.some(row => chartLines.some(line => row[line.key] != null))
   return (

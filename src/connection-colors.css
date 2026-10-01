@@ -1,0 +1,23 @@
+/* Connection chart palette · v1.0 · 2026-10-02
+ * Root/body tokens keep card SVGs, portal dialogs and detail charts in sync.
+ * Ran uses its own charts and is intentionally not changed.
+ */
+:root {
+  --connection-tcp: #2563eb;
+  --connection-udp: #0d9488;
+}
+:root:is(.dark, .gold) { --connection-tcp: #7cb2f5; --connection-udp: #62cbb7; }
+:root.theme-pixel { --connection-tcp: #c56516; --connection-udp: #9b7438; }
+:root.theme-pixel:is(.dark, .gold) { --connection-tcp: #ffb36b; --connection-udp: #d9bf86; }
+:root.theme-anime { --connection-tcp: #8b5cf6; --connection-udp: #d15b9b; }
+:root.theme-anime:is(.dark, .gold) { --connection-tcp: #b8a0fa; --connection-udp: #ee9fcb; }
+:root.theme-glass { --connection-tcp: #087f9f; --connection-udp: #5984b6; }
+:root.theme-glass:is(.dark, .gold) { --connection-tcp: #4bd4f2; --connection-udp: #a7baf3; }
+:root.theme-lumina { --connection-tcp: var(--traffic-up); --connection-udp: var(--traffic-down); }
+:root.theme-luminaplus { --connection-tcp: var(--lp-green); --connection-udp: var(--lp-blue); }
+:root.theme-lite { --connection-tcp: var(--mini-green); --connection-udp: var(--mini-blue); }
+:root.theme-emerald { --connection-tcp: var(--em-accent); --connection-udp: var(--em-accent-2); }
+:root.theme-premium { --connection-tcp: #f2d28b; --connection-udp: #b99a76; }
+:root.theme-premium.platinum { --connection-tcp: #a87c22; --connection-udp: #796a55; }
+body.gm-body { --connection-tcp: #2fd4a1; --connection-udp: #38bdf8; }
+body.gm-light-body { --connection-tcp: #0d946e; --connection-udp: #2984b2; }

@@ -1,4 +1,4 @@
-/* Probe history v1.0 · 2026-10-01 — 主控连接数小折线与转发链拓扑。 */
+/* Probe history v1.1 · 2026-10-02 — TCP/UDP 曲线与图例跟随主题配色。 */
 :is(.probe-conn-history, .probe-history-dialog, .probe-forward) {
   --ph-bg: var(--surface, #fff); --ph-text: var(--text, #172033); --ph-muted: var(--muted, #64748b);
   --ph-line: var(--border, #e2e8f0); --ph-tcp: #169b78; --ph-udp: #4385d5;
@@ -13,17 +13,17 @@ body.gm-light-body :is(.probe-conn-history, .probe-history-dialog, .probe-forwar
 :root.theme-premium :is(.probe-conn-history, .probe-history-dialog) { --ph-bg: #151612; --ph-text: #f3ecdc; --ph-muted: #bbb09b; --ph-line: #4b4331; }
 :root.theme-premium.platinum :is(.probe-conn-history, .probe-history-dialog) { --ph-bg: #fffdf8; --ph-text: #302919; --ph-muted: #75674e; --ph-line: #e1d7c0; }
 button.probe-conn-history { display: block; width: 100%; min-width: 0; margin: 8px 0; padding: 4px 0; border: 0; border-radius: 5px; background: transparent; box-shadow: none; text-align: left; font: inherit; cursor: pointer; }
-.probe-conn-history:focus-visible { outline: 2px solid var(--ph-tcp); outline-offset: 3px; }
+.probe-conn-history:focus-visible { outline: 2px solid var(--connection-tcp); outline-offset: 3px; }
 .probe-conn-heading { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 10px; line-height: 16px; color: var(--ph-muted); }
 .probe-conn-heading > span { display: inline-flex; align-items: center; gap: 5px; }
 .probe-conn-heading i { width: 6px; height: 6px; border-radius: 50%; display: inline-block; }
-.probe-conn-tcp-dot { background: var(--ph-tcp); }
-.probe-conn-udp-dot { background: var(--ph-udp); margin-left: 5px; }
+.probe-conn-tcp-dot { background: var(--connection-tcp); }
+.probe-conn-udp-dot { background: var(--connection-udp); margin-left: 5px; }
 .probe-conn-plot { display: block; position: relative; height: 34px; margin-top: 3px; }
 .probe-conn-plot svg { width: 100%; height: 100%; display: block; overflow: visible; }
 .probe-conn-plot path { fill: none; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
-.probe-conn-tcp { stroke: var(--ph-tcp); }
-.probe-conn-udp { stroke: var(--ph-udp); }
+.probe-conn-tcp { stroke: var(--connection-tcp); }
+.probe-conn-udp { stroke: var(--connection-udp); }
 .probe-conn-base { stroke: var(--ph-line); stroke-width: 1; }
 .probe-conn-guide { stroke: var(--ph-muted); stroke-dasharray: 3 3; stroke-width: 1; }
 .probe-conn-tip { position: absolute; z-index: 5; right: 0; bottom: calc(100% + 5px); padding: 6px 9px; border: 1px solid var(--ph-line); border-radius: 7px; background: var(--ph-bg); color: var(--ph-text); box-shadow: 0 4px 12px #0002; font-size: 11px; line-height: 1.5; pointer-events: none; white-space: nowrap; }
@@ -37,7 +37,7 @@ dialog.probe-history-dialog { width: min(860px, calc(100vw - 24px)); max-height:
 .probe-history-dialog header button { display: grid; place-items: center; flex-shrink: 0; width: 32px; height: 32px; padding: 0; border: 1px solid var(--ph-line); border-radius: 8px; background: transparent; color: inherit; box-shadow: none; }
 .probe-history-dialog .ranges { display: flex; flex-wrap: wrap; gap: 5px; }
 .probe-history-dialog :is(.ranges, .legend) button { color: var(--ph-muted); background: var(--ph-bg); border: 1px solid var(--ph-line); box-shadow: none; }
-.probe-history-dialog .ranges button.active { color: var(--ph-text); border-color: var(--ph-tcp); background: color-mix(in srgb, var(--ph-tcp) 13%, var(--ph-bg)); }
+.probe-history-dialog .ranges button.active { color: var(--ph-text); border-color: var(--connection-tcp); background: color-mix(in srgb, var(--connection-tcp) 13%, var(--ph-bg)); }
 .probe-history-dialog .detail-chart { height: 300px; min-height: 240px; margin-top: 16px; }
 .probe-history-dialog .detail-connections-note { color: var(--ph-muted); font-size: 11px; line-height: 1.6; }
 :is(.probe-history-dialog, .probe-forward) .recharts-cartesian-axis-tick-value { fill: var(--ph-muted); }
