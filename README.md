@@ -409,11 +409,22 @@ npm run dev
 
 访问 `http://localhost:5173`。Vite 会把 `/api/*` 转发到本地 Worker 的 `8787` 端口。
 
+### 公共模块与主题边界
+
+- `src/server-format.ts`：共用流量格式、地区显示、到期判断及图表格式化。
+- `src/server-health.ts`：健康评分与相关资源/延迟计算，不依赖 Premium 页面。
+- `src/charts/`：共用流量、延迟、系统历史图及横轴交互容器。
+- `src/components/`：共用系统图标、回程标签、Lumina 状态条与许可证页尾；许可证内容仍只从原配置读取。
+- 主题和详情页直接引用公共模块，不从 `App.tsx` 或 `PremiumProbePage.tsx` 导入工具或组件。Premium 保持动态加载，样式随主题加载。
+
+`npm test` 包含公共计算边界与静态依赖检查，防止重新引入页面反向引用和循环依赖。调整模块后还需执行 `npm run build`，并检查桌面/手机下的主题切换、详情弹窗与图表。此阶段仅整理依赖，不改变主控数据、计费口径、许可证内容或 Ran。
+
 ## 常用命令
 
 ```bash
 npm run dev        # 启动 Vite 开发服务器
 npm run typecheck  # TypeScript 类型检查
+npm test           # 业务逻辑与模块依赖回归测试
 npm run build      # 生成 dist 生产文件
 npm run preview    # 本地预览生产构建
 npm run deploy     # 构建并部署到 Cloudflare Workers

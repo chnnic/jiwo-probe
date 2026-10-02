@@ -38,17 +38,9 @@ import { ForwardOverview } from '../ForwardOverview'
 import './gm.css'
 import { ServerDetail } from '../ServerDetail'
 import { useVisitorInfo } from '../ran/hooks/useVisitorInfo'
-import {
-  ReturnRouteBadges,
-  SystemIcon,
-  TrafficDialog,
-  bytes,
-  expiring,
-  expired,
-  hasLeadingFlag,
-  pct,
-  regionFlag,
-} from '../App'
+import { ReturnRouteBadges, SystemIcon } from '../components/ServerVisuals'
+import { TrafficDialog } from '../charts/TrafficChart'
+import { bytes, expiring, expired, hasLeadingFlag, pct, regionFlag } from '../server-format'
 import type { EnrichedServer } from '../use-probe'
 import { GmEarth, type GmRegion } from './GmEarth'
 

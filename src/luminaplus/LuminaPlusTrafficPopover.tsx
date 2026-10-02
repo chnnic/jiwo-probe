@@ -2,7 +2,7 @@ import { ArrowDown, ArrowUp, ChartNoAxesCombined, X } from 'lucide-react'
 import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import type { ProbeServer } from '../types'
-import { bytes } from '../App'
+import { bytes } from '../server-format'
 import { trafficPopoverPosition, trafficWeek } from './luminaplus-traffic'
 
 const size = (value?: number) => value === undefined ? '—' : bytes(value)

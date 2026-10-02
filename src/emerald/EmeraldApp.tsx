@@ -40,7 +40,7 @@ import {
 } from 'lucide-react'
 import { RegionGlobe } from '../RegionGlobe'
 import { ServerDetail } from '../ServerDetail'
-import { TrafficDialog } from '../App'
+import { TrafficDialog } from '../charts/TrafficChart'
 import { CardPingGroups } from '../CardPingGroups'
 import { ConnectionHistory } from '../ConnectionHistory'
 import { ForwardOverview } from '../ForwardOverview'

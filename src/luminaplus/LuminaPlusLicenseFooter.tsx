@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Sparkles } from 'lucide-react'
 import type { ProbePayload } from '../types'
-import { ProbeLicenseFooter } from '../App'
+import { ProbeLicenseFooter } from '../components/ProbeLicenseFooter'
 import { EXTRA_LICENSE_BADGES } from '../license-badges'
 
 const storageKey = 'jiwo-luminaplus-license-anim'

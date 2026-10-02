@@ -13,7 +13,7 @@ test('首页、历史弹窗、Lite/LP 系统图共用主题 TCP/UDP 配色，Ran
   assert.match(palette, /body\.gm-body/)
   assert.match(palette, /body\.gm-light-body/)
   assert.doesNotMatch(palette, /\.theme-ran/)
-  for (const path of ['./App.tsx', './mini/MiniTrends.tsx']) {
+  for (const path of ['./charts/SystemTrendChart.tsx', './mini/MiniTrends.tsx']) {
     const source = read(path)
     assert.match(source, /key: 'tcp', label: 'TCP', color: 'var\(--connection-tcp\)'/)
     assert.match(source, /key: 'udp', label: 'UDP', color: 'var\(--connection-udp\)'/)

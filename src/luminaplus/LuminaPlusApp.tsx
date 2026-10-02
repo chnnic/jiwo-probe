@@ -1,7 +1,7 @@
 import { memo, useMemo, useState } from 'react'
 import { Globe2, Grid3X3, LayoutGrid, List, Moon, Network, Rows3, ScrollText, Search, Sun } from 'lucide-react'
 import type { ProbePayload, ThemeName } from '../types'
-import { ThemeSelect } from '../App'
+import { ThemeSelect } from '../ThemePicker'
 import { PasskeyLogin } from '../PasskeyLogin'
 import { getThemeOverride, setLuminaPlusColorMode } from '../use-probe'
 import { LUMINAPLUS_COLOR_NAMES, nextLuminaPlusColor, type LuminaPlusColor } from './luminaplus-color'

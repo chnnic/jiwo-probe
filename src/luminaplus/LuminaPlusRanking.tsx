@@ -3,7 +3,7 @@ import { useEffect, useId, useLayoutEffect, useRef, useState, type ReactNode } f
 import { createPortal } from 'react-dom'
 import type { ProbeServer } from '../types'
 import { useNetworkSpeed } from '../use-network-speed'
-import { bytes } from '../App'
+import { bytes } from '../server-format'
 import { trafficRuleLabel, trafficUsageLabel } from '../traffic-display'
 import { rankLiveSpeeds, rankPeriodTraffic, speedTone, type LiveSpeedSort } from './luminaplus-model'
 import { trafficPopoverPosition } from './luminaplus-traffic'
