@@ -4,6 +4,24 @@
 
 [![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/chnnic/jiwo-probe)
 
+## 界面预览
+
+> 截图全部使用**虚拟演示数据**（服务器名、服务商、价格均为虚构），由 `npm run screenshots` 生成，不连接任何主控。点击图片查看原图。
+
+| LuminaPlus · 浅色 | LuminaPlus · 炭黑 |
+|---|---|
+| [<img src="docs/screenshots/luminaplus-light.png" alt="LuminaPlus 浅色" width="100%">](docs/screenshots/luminaplus-light.png) | [<img src="docs/screenshots/luminaplus-dark.png" alt="LuminaPlus 炭黑" width="100%">](docs/screenshots/luminaplus-dark.png) |
+| **LuminaPlus · Paper** | **Lite · 浅色** |
+| [<img src="docs/screenshots/luminaplus-paper.png" alt="LuminaPlus Paper" width="100%">](docs/screenshots/luminaplus-paper.png) | [<img src="docs/screenshots/lite.png" alt="Lite 浅色" width="100%">](docs/screenshots/lite.png) |
+| **Premium · 黑金** | **Premium · 白金** |
+| [<img src="docs/screenshots/premium.png" alt="Premium 黑金" width="100%">](docs/screenshots/premium.png) | [<img src="docs/screenshots/premium-platinum.png" alt="Premium 白金" width="100%">](docs/screenshots/premium-platinum.png) |
+| **Lumina** | **Glassmorphism** |
+| [<img src="docs/screenshots/lumina.png" alt="Lumina" width="100%">](docs/screenshots/lumina.png) | [<img src="docs/screenshots/glassmorphism.png" alt="Glassmorphism" width="100%">](docs/screenshots/glassmorphism.png) |
+| **Emerald** | **岚 · Ran** |
+| [<img src="docs/screenshots/emerald.png" alt="Emerald" width="100%">](docs/screenshots/emerald.png) | [<img src="docs/screenshots/ran.png" alt="Ran" width="100%">](docs/screenshots/ran.png) |
+| **经典 · 扁平（浅色）** | **手机端 · LuminaPlus Paper** |
+| [<img src="docs/screenshots/flat.png" alt="经典扁平主题" width="100%">](docs/screenshots/flat.png) | <p align="center"><a href="docs/screenshots/mobile-luminaplus.png"><img src="docs/screenshots/mobile-luminaplus.png" alt="手机端 LuminaPlus Paper" width="220"></a></p> |
+
 与原版的差异（定制增强）：
 
 ### 统一新版 Premium 地球仪（2026-10-02）
@@ -428,6 +446,7 @@ npm test           # 业务逻辑与模块依赖回归测试
 npm run build      # 生成 dist 生产文件
 npm run preview    # 本地预览生产构建
 npm run deploy     # 构建并部署到 Cloudflare Workers
+npm run screenshots # 用虚拟数据重新生成 README 截图（需本机安装 Chrome，可用 CHROME_PATH 指定）
 ```
 
 ## 更新与密钥轮换
