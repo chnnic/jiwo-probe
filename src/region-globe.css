@@ -85,7 +85,13 @@
 .premium-probe-globe-stage
   svg.is-dragging
   [data-premium-probe-country].is-active,
-.premium-probe-globe-stage svg.is-dragging .premium-probe-globe-outline {
+.premium-probe-globe-stage svg.is-dragging .premium-probe-globe-outline,
+.premium-probe-globe-stage svg.is-dragging .premium-probe-orbit-labels circle,
+.premium-probe-globe-stage
+  svg.is-dragging
+  .premium-probe-node-connections
+  circle {
+  /* 拖动时去掉滤镜:每帧给十几个光点算 drop-shadow 会明显掉帧(上游 d26cf7b) */
   filter: none;
 }
 
@@ -117,7 +123,8 @@
   filter: drop-shadow(0 0 5px #f0bd4e);
 }
 
-.premium-probe-orbit-labels line {
+.premium-probe-orbit-labels polyline {
+  fill: none;
   stroke: rgba(216, 180, 106, 0.78);
   stroke-width: 1;
 }
@@ -138,7 +145,7 @@
 /* 转到地球背面的地区:标签留在原地(不然一拖就少一半),但压暗,
    跟正面的区分开 —— 地平线那头的东西不该和眼前的一样亮。 */
 .premium-probe-orbit-labels .is-behind {
-  opacity: 0.42;
+  opacity: 0.55;
 }
 
 .premium-probe-orbit-labels .is-behind circle {
@@ -238,7 +245,7 @@
 }
 .shared-region-globe .premium-probe-globe-outline,
 .shared-region-globe .premium-probe-orbits ellipse,
-.shared-region-globe .premium-probe-orbit-labels line,
+.shared-region-globe .premium-probe-orbit-labels polyline,
 .shared-region-globe .premium-probe-node-connections path { stroke: color-mix(in srgb, var(--globe-accent) 65%, transparent); }
 .shared-region-globe .premium-probe-globe-outline { filter: none; }
 .shared-region-globe .premium-probe-node-connections circle,

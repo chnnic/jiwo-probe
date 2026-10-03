@@ -8,6 +8,8 @@ export const GLOBE_RADIUS = 112
 // 标签之间的最小角间隔(弧度)。地区一旦扎堆(港澳台新经常如此),按真实方位摆会叠在一起,
 // 排完序按这个下限推开。
 export const LABEL_MIN_GAP = 0.42
+// 一圈最多能按 LABEL_MIN_GAP 排开的标签数;再多就推不开了。
+export const MAX_ORBIT_LABELS = Math.floor((Math.PI * 2) / LABEL_MIN_GAP)
 
 // 110m 世界地图里没有独立面的城市地区 —— 它们并进了所属国家,直接取质心会把
 // 香港的标签指到内蒙古去。这三个单独给坐标(与 probe-region-globe 那边同一份口径)。

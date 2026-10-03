@@ -69,6 +69,14 @@ export function ConnectionHistory({ server, serverIndex }: { server: ProbeServer
           <path className="probe-conn-udp" d={connSparklinePath(history.udp, max)} vectorEffect="non-scaling-stroke" />
           {hasSamples && selected !== null && <line className="probe-conn-guide" x1={length <= 1 ? 60 : selected / (length - 1) * 120} x2={length <= 1 ? 60 : selected / (length - 1) * 120} y1="0" y2="40" vectorEffect="non-scaling-stroke" />}
         </svg>
+        {hasSamples && selected !== null && (['tcp', 'udp'] as const).map(kind => {
+          const value = history[kind][selected]
+          // 圆点按百分比定位，与拉伸后的折线（viewBox 0 0 120 40，上下留 3）对齐（上游 a677a42）
+          return typeof value === 'number' && <i key={kind} className={`probe-conn-dot ${kind}`} style={{
+            left: `${length <= 1 ? 50 : selected / (length - 1) * 100}%`,
+            top: `${(3 + 34 * (1 - value / (max > 0 ? max : 1))) / 40 * 100}%`,
+          }} />
+        })}
         {!hasSamples && <span className="probe-conn-empty">暂无连接数采样</span>}
         {hasSamples && selected !== null && <span className="probe-conn-tip"><small>{connBucketLabel(selected, length)} · 均值</small>TCP {connectionCount(history.tcp[selected] ?? undefined)} · UDP {connectionCount(history.udp[selected] ?? undefined)}</span>}
       </span>

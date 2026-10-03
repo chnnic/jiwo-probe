@@ -2,6 +2,7 @@ import {
   useEffect,
   useId,
   useImperativeHandle,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -19,6 +20,7 @@ import {
   GLOBE_CENTER,
   GLOBE_RADIUS,
   layoutOrbit,
+  MAX_ORBIT_LABELS,
 } from './orbit-layout'
 
 export type PremiumProbeRegion = {
@@ -42,11 +44,9 @@ export function BlackGoldGlobe({ regions, themed = false }: { regions: PremiumPr
   const drag = useRef<
     { x: number; y: number; rotation: [number, number] } | undefined
   >(undefined)
-  const oceanPath = useRef<SVGPathElement>(null)
   const graticulePath = useRef<SVGPathElement>(null)
   const inactiveCountriesPath = useRef<SVGPathElement>(null)
   const activeCountryPaths = useRef<Array<SVGPathElement | null>>([])
-  const outlinePath = useRef<SVGPathElement>(null)
   const orbitLabels = useRef<OrbitLabelsHandle>(null)
   const id = useId().replace(/:/g, '')
   const oceanID = `premium-probe-ocean-${id}`
@@ -101,7 +101,12 @@ export function BlackGoldGlobe({ regions, themed = false }: { regions: PremiumPr
       },
     }
   }, [activeCodes, collection])
-  const visibleRegions = useMemo(() => regions.slice(0, 7), [regions])
+  // 环上的标签数以布局算法能保证的间隔为限(一圈放得下 2π / LABEL_MIN_GAP 个)。
+  // 从前写死 7 个,第 8 个起的地区既没有标签、右边的「地区状态」里也没有(冰岛实报)。
+  const visibleRegions = useMemo(
+    () => regions.slice(0, MAX_ORBIT_LABELS),
+    [regions]
+  )
   const orbitRadius = radius + 33
   // 地区 → 真实经纬度。标签按这个方位摆,拖动地球时跟着转(工单 #566:
   // 原来角度只按数组下标平分,标签钉死在环上,转地球也纹丝不动)。
@@ -136,9 +141,8 @@ export function BlackGoldGlobe({ regions, themed = false }: { regions: PremiumPr
       if (!next) return
       projection.rotate(next)
       rotation.current = next
-      const sphere = path({ type: 'Sphere' }) || ''
-      oceanPath.current?.setAttribute('d', sphere)
-      outlinePath.current?.setAttribute('d', sphere)
+      // 海洋和外圈不用动:正射投影下球的轮廓怎么转都是同一个圆,重设 d 只会让带阴影的
+      // 海洋每帧整块重绘(拖动卡顿的来源之一,与许可证站服务商榜的地球同样处理)。
       graticulePath.current?.setAttribute('d', path(graticule) || '')
       inactiveCountriesPath.current?.setAttribute(
         'd',
@@ -247,7 +251,6 @@ export function BlackGoldGlobe({ regions, themed = false }: { regions: PremiumPr
           filter={`url(#${glowID})`}
         />
         <path
-          ref={oceanPath}
           className='premium-probe-ocean'
           fill={`url(#${oceanID})`}
           d={path({ type: 'Sphere' }) || ''}
@@ -276,7 +279,6 @@ export function BlackGoldGlobe({ regions, themed = false }: { regions: PremiumPr
           </path>
         ))}
         <path
-          ref={outlinePath}
           className='premium-probe-globe-outline'
           d={path({ type: 'Sphere' }) || ''}
         />
@@ -315,10 +317,61 @@ function OrbitLabels({
   const [rotation, setRotation] = useState<[number, number]>(INITIAL_ROTATION)
   useImperativeHandle(ref, () => ({ update: setRotation }), [])
 
-  const orbitPoints = useMemo(
+  const targets = useMemo(
     () => layoutOrbit(regions, coordinates, rotation, orbitRadius),
     [regions, coordinates, rotation, orbitRadius]
   )
+  // 标签实际显示的角度。扎堆的地区方位一交错,layoutOrbit 的推开顺序就会互换,标签会整格
+  // 跳到另一边(拖动时「卡顿、闪到别的位置」);这里每帧只朝目标角度走 20%(且不超过
+  // 0.15 弧度),正常拖动时跟随几乎无延迟。引线在球面上的那一端仍是实时的。
+  // 与许可证站服务商榜的地球(vps-globe.tsx)同一套做法。
+  const [shown, setShown] = useState<Map<string, number>>(() => new Map())
+  const shownRef = useRef(shown)
+  const latest = useRef(targets)
+  const frame = useRef<number | undefined>(undefined)
+  useLayoutEffect(() => {
+    latest.current = targets
+    const step = () => {
+      frame.current = undefined
+      let moving = false
+      const next = new Map<string, number>()
+      for (const { region, radians } of latest.current) {
+        const last = shownRef.current.get(region.code)
+        const delta =
+          last === undefined
+            ? 0
+            : Math.atan2(Math.sin(radians - last), Math.cos(radians - last))
+        const settled = Math.abs(delta) < 0.002
+        if (!settled) moving = true
+        next.set(
+          region.code,
+          last === undefined || settled
+            ? radians
+            : last + Math.max(-0.15, Math.min(0.15, delta * 0.2))
+        )
+      }
+      shownRef.current = next
+      setShown(next)
+      if (moving) frame.current = requestAnimationFrame(step)
+    }
+    // 每帧最多挪一步:拖动时 targets 每帧都在变,这里要是再立刻挪一步,一帧就会走两步
+    if (frame.current === undefined) frame.current = requestAnimationFrame(step)
+  }, [targets])
+  useEffect(
+    () => () => {
+      if (frame.current !== undefined) cancelAnimationFrame(frame.current)
+    },
+    []
+  )
+  const orbitPoints = targets.map((point) => {
+    const radians = shown.get(point.region.code) ?? point.radians
+    return {
+      ...point,
+      radians,
+      x: GLOBE_CENTER.x + Math.cos(radians) * orbitRadius,
+      y: GLOBE_CENTER.y + Math.sin(radians) * orbitRadius,
+    }
+  })
 
   return (
     <>
@@ -353,21 +406,18 @@ function OrbitLabels({
             GLOBE_CENTER.x + Math.cos(radians) * (GLOBE_RADIUS + 46)
           const labelY =
             GLOBE_CENTER.y + Math.sin(radians) * (GLOBE_RADIUS + 46)
-          const cosine = Math.cos(radians)
           const labelWidth = Math.min(
             152,
             Math.max(72, Array.from(region.label).length * 7.5 + 38)
           )
-          const preferredBoxX =
-            cosine < -0.2
-              ? labelX - labelWidth
-              : cosine > 0.2
-                ? labelX
-                : labelX - labelWidth / 2
+          // 框相对 labelX 的位置随方位连续过渡:右侧框贴在它右边、左侧贴左边、正上下居中。
+          // 原来按 cos 阈值三档切换,拖动经过阈值时标签会一下子横跳半个框宽。
+          const shift =
+            0.5 - 0.5 * Math.max(-1, Math.min(1, Math.cos(radians) / 0.4))
           const boxX = Math.max(
             GLOBE_LABEL_MARGIN,
             Math.min(
-              preferredBoxX,
+              labelX - labelWidth * shift,
               GLOBE_VIEWBOX_WIDTH - labelWidth - GLOBE_LABEL_MARGIN
             )
           )
@@ -383,13 +433,21 @@ function OrbitLabels({
               GLOBE_VIEWBOX_HEIGHT - GLOBE_LABEL_HEIGHT - GLOBE_LABEL_MARGIN
             )
           )
+          // 引线:球面上的点 → 轨道锚点 → 框上离锚点最近的一点。原来只画到锚点,和框之间空着一截。
+          const endX = Math.max(boxX, Math.min(anchorX, boxX + labelWidth))
+          const endY = Math.max(
+            boxY,
+            Math.min(anchorY, boxY + GLOBE_LABEL_HEIGHT)
+          )
           return (
             <g
               key={region.code}
               className={front ? undefined : 'is-behind'}
               data-front={front ? 'true' : 'false'}
             >
-              <line x1={rimX} y1={rimY} x2={anchorX} y2={anchorY} />
+              <polyline
+                points={`${rimX},${rimY} ${anchorX},${anchorY} ${endX},${endY}`}
+              />
               <circle cx={rimX} cy={rimY} r='3.5' />
               <rect
                 x={boxX}

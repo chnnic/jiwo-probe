@@ -26,6 +26,9 @@ button.probe-conn-history { display: block; width: 100%; min-width: 0; margin: 8
 .probe-conn-udp { stroke: var(--connection-udp); }
 .probe-conn-base { stroke: var(--ph-line); stroke-width: 1; }
 .probe-conn-guide { stroke: var(--ph-muted); stroke-dasharray: 3 3; stroke-width: 1; }
+.probe-conn-dot { position: absolute; width: 6px; height: 6px; margin: -3px 0 0 -3px; border: 1.5px solid var(--ph-bg); border-radius: 50%; box-sizing: content-box; pointer-events: none; }
+.probe-conn-dot.tcp { background: var(--connection-tcp); }
+.probe-conn-dot.udp { background: var(--connection-udp); }
 .probe-conn-tip { position: absolute; z-index: 5; right: 0; bottom: calc(100% + 5px); padding: 6px 9px; border: 1px solid var(--ph-line); border-radius: 7px; background: var(--ph-bg); color: var(--ph-text); box-shadow: 0 4px 12px #0002; font-size: 11px; line-height: 1.5; pointer-events: none; white-space: nowrap; }
 .probe-conn-tip small { display: block; color: var(--ph-muted); }
 .probe-conn-empty { position: absolute; inset: 0; display: grid; place-items: center; color: var(--ph-muted); font-size: 11px; }

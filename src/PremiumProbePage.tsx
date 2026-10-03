@@ -3197,7 +3197,7 @@ export function PremiumProbePage({
                     <BlackGoldGlobe regions={regions} />
                     <aside>
                       <h3>地区状态</h3>
-                      {regions.slice(0, 7).map((item) => (
+                      {regions.map((item) => (
                         <button
                           type='button'
                           key={item.code}
