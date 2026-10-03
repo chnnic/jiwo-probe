@@ -39,11 +39,9 @@ import {
   X,
 } from 'lucide-react'
 import { RegionGlobe } from '../RegionGlobe'
-import { ServerDetail } from '../ServerDetail'
-import { TrafficDialog } from '../charts/TrafficChart'
 import { CardPingGroups } from '../CardPingGroups'
 import { ConnectionHistory } from '../ConnectionHistory'
-import { ForwardOverview } from '../ForwardOverview'
+import { ForwardOverview, ServerDetail, TrafficDialog } from '../deferred'
 import { Twemoji } from '../Twemoji'
 import { PasskeyLogin } from '../PasskeyLogin'
 import { flagToCountryCode } from '../country-flag'

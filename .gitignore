@@ -11,3 +11,4 @@ wrangler.local.jsonc
 .env.kv
 .wrangler-deploy.jsonc
 HANDOVER.md
+.DS_Store

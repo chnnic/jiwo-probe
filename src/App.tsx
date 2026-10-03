@@ -2,7 +2,6 @@ import { ThemeSelect } from './ThemePicker'
 import { useNetworkSpeed } from './use-network-speed'
 import { ConnectionCounts, UnlockButton } from './ServerCapabilities'
 import { ConnectionHistory } from './ConnectionHistory'
-import { ForwardOverview } from './ForwardOverview'
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Activity, ArrowDown, ArrowDownUp, ArrowUp, BadgeDollarSign, Cable, Calendar, CalendarClock, CheckCircle2, ChevronDown, CircleDollarSign, Clock, Cpu, Crown, Database, Gauge, Gem, Globe2, HardDrive, LayoutGrid, List, MapPin, MemoryStick, Moon, Network, PieChart, RefreshCw, Rows3, Rows4, Search, Server, Sun, SunMoon, TrendingUp, Trophy, Wallet, Wifi, XCircle } from 'lucide-react'
@@ -11,16 +10,13 @@ import { EnrichedServer, getActiveTheme, getDarkOverride, getThemeOverride, setD
 import { Twemoji } from './Twemoji'
 import { PasskeyLogin } from './PasskeyLogin'
 import { CardPingGroups } from './CardPingGroups'
-import { ServerDetail } from './ServerDetail'
 import { computeRemainingValue, formatMoney } from './value'
 import { LEADERBOARD_ORDER, rankConnectionCounts, type LeaderboardKey } from './leaderboards'
 import { connectionCount } from './unlocks'
 import { ProbeHistoryDaysContext } from './use-probe-range'
 import { CYCLE_LABELS as cycleLabel, CYCLE_MONTHS, expiryTimestamp, isPermanent } from './renewal'
 import { bytes, expiring, expired, remainingDays, regionFlag, hasLeadingFlag, pct, averagePing } from './server-format'
-import { TrafficDialog } from './charts/TrafficChart'
-import { TrendDialog } from './charts/PingTrendDialog'
-import { SystemTrendChart } from './charts/SystemTrendChart'
+import { ForwardOverview, prefetchDeferred, ServerDetail, SystemTrendChart, TrafficDialog, TrendDialog } from './deferred'
 import { Meter, systemTitle, SystemIcon, routeCarrierLabels, goldRoutes, displayReturnRoute, ReturnRouteBadges } from './components/ServerVisuals'
 import { LUMINA_QUOTA_SEGMENTS } from './components/LuminaHealthBars'
 import { ProbeLicenseFooter } from './components/ProbeLicenseFooter'
@@ -1295,6 +1291,9 @@ function ServerTable({ servers }: { servers: ProbeServer[] }) {
 
 export function App() {
   const probe = useProbe()
+  const hasData = !!probe.data
+  // 首帧数据渲染完再在空闲时预取图表模块，不和主题包、首帧数据抢带宽
+  useEffect(() => { if (hasData) prefetchDeferred() }, [hasData])
   return <ProbeHistoryDaysContext.Provider value={probe.data?.history_days}><ProbeApp {...probe} /></ProbeHistoryDaysContext.Provider>
 }
 

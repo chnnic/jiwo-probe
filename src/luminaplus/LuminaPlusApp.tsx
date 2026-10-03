@@ -11,7 +11,7 @@ import { parseLuminaPlusView, regionKey, type LuminaPlusView, type SpeedTrail } 
 import LuminaPlusOverview from './LuminaPlusOverview'
 import { useLuminaPlusSnapshot } from './use-luminaplus-snapshot'
 import { LuminaPlusLicenseFooter } from './LuminaPlusLicenseFooter'
-import { ForwardOverview } from '../ForwardOverview'
+import { ForwardOverview } from '../deferred'
 import './luminaplus.css'
 
 const sorts: Record<MiniSort, string> = { default: '默认排序', name: '名称 A–Z', cpu: 'CPU 占用 ↓', memory: '内存占用 ↓', traffic: '已用流量 ↓', latency: '延迟最低', expiry: '到期最近' }

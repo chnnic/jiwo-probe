@@ -1,9 +1,7 @@
-import Lottie from 'lottie-react'
+import { lazy, Suspense } from 'react'
 import { Monitor } from 'lucide-react'
 import { siAlmalinux, siAlpinelinux, siApple, siArchlinux, siCentos, siDebian, siFedora, siFreebsd, siGentoo, siKalilinux, siLinux, siLinuxmint, siNixos, siOpensuse, siProxmox, siRedhat, siRockylinux, siUbuntu } from 'simple-icons'
 import type { ProbeReturnRoute, ProbeServer } from '../types'
-import commonRouteAnimation from '../assets/return-route/common.json'
-import premiumRouteAnimation from '../assets/return-route/premium.json'
 
 export function Meter({ icon, label, value, percent }: { icon: React.ReactNode; label: string; value: string; percent: number }) {
   return (
@@ -83,8 +81,11 @@ export function displayReturnRoute(route: string): string {
 }
 
 
+const RouteAnimation = lazy(() => import('./RouteAnimation'))
+
 function ReturnRouteIcon({ premium }: { premium: boolean }) {
-  return <Lottie animationData={premium ? premiumRouteAnimation : commonRouteAnimation} aria-hidden="true" className="route-badge-icon" loop />
+  // 加载动画前先占同样大小的位置，勋章不会跳动
+  return <Suspense fallback={<span className="route-badge-icon" aria-hidden="true" />}><RouteAnimation premium={premium} /></Suspense>
 }
 
 

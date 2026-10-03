@@ -379,6 +379,8 @@ export interface ProbeState {
   connectionChartEnabled: boolean | undefined
 }
 
+const HIDDEN_PAUSE_MS = 60_000
+
 const ProbeContext = createContext<ProbeState | null>(null)
 
 function useProbeConnection(): ProbeState {
@@ -394,7 +396,10 @@ function useProbeConnection(): ProbeState {
 
   useEffect(() => {
     let stopped = false
-    let ws: WebSocket | undefined
+    // 页面在后台超过 HIDDEN_PAUSE_MS 就断开实时连接：否则一个忘了关的标签页会让
+    // ProbeHub 一直每 3 秒拉主控，浏览器也每 3 秒解析一次完整快照。回到前台立即补帧并重连。
+    let paused = false
+    let hiddenTimer: number | undefined
 
     const accept = (payload: ProbePayload) => {
       if (stopped) return
@@ -421,7 +426,7 @@ function useProbeConnection(): ProbeState {
       }
     }
     const startPolling = () => {
-      if (stopped || timer.current) return
+      if (stopped || paused || timer.current) return
       void poll()
       timer.current = window.setInterval(poll, 5000)
     }
@@ -437,29 +442,63 @@ function useProbeConnection(): ProbeState {
     // 先轮询一次拿首帧数据, 同时连 WS; 之后由 watchdog 统一裁决:
     // WS 有帧 → 暂停轮询(帧即数据, 免每 5s 打主控一次);
     // WS 无帧 15s / 关闭 / 出错 → 恢复轮询兜底。
-    startPolling()
-    try {
-      const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:'
-      ws = new WebSocket(`${protocol}//${location.host}/api/stream`)
-      wsRef.current = ws
-      ws.onmessage = (event) => {
-        try {
-          accept(JSON.parse(event.data) as ProbePayload)
-          lastFrameAt.current = Date.now()
-        } catch { /* wait for next frame */ }
+    const connect = () => {
+      if (stopped || paused || wsRef.current) return
+      try {
+        const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:'
+        const ws = new WebSocket(`${protocol}//${location.host}/api/stream`)
+        wsRef.current = ws
+        ws.onmessage = (event) => {
+          try {
+            accept(JSON.parse(event.data) as ProbePayload)
+            lastFrameAt.current = Date.now()
+          } catch { /* wait for next frame */ }
+        }
+        ws.onerror = () => startPolling()
+        ws.onclose = () => {
+          if (wsRef.current === ws) wsRef.current = undefined
+          startPolling()
+        }
+      } catch {
+        startPolling()
       }
-      ws.onerror = () => startPolling()
-      ws.onclose = () => startPolling()
-    } catch {
-      startPolling()
     }
+    const disconnect = () => {
+      const ws = wsRef.current
+      wsRef.current = undefined
+      ws?.close()
+    }
+    const pause = () => {
+      hiddenTimer = undefined
+      if (paused || stopped) return
+      paused = true
+      stopPolling()
+      disconnect()
+    }
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') {
+        if (!paused && hiddenTimer === undefined) hiddenTimer = window.setTimeout(pause, HIDDEN_PAUSE_MS)
+        return
+      }
+      if (hiddenTimer !== undefined) window.clearTimeout(hiddenTimer)
+      hiddenTimer = undefined
+      if (!paused) return
+      paused = false
+      lastFrameAt.current = 0
+      startPolling()
+      connect()
+    }
+    startPolling()
+    connect()
+    document.addEventListener('visibilitychange', onVisibilityChange)
+    if (document.visibilityState === 'hidden') onVisibilityChange()
 
     // 看门狗(2s 一跳): WS 打开且 15s 内有帧 → 停轮询; 否则恢复轮询。
     // 覆盖两类场景: WS 假死(代理保持连接但不推帧, 原代码因此无条件轮询,
     // 导致主控每 5s 一次 key exchange + information_schema 无缓存查询 → CPU 高)
     // 与 WS 未连上(回调兜底之外的双保险)。
     watchdogTimer.current = window.setInterval(() => {
-      if (stopped) return
+      if (stopped || paused) return
       const current = wsRef.current
       const alive = !!current && current.readyState === WebSocket.OPEN && Date.now() - lastFrameAt.current < 15000
       if (alive) stopPolling()
@@ -468,8 +507,9 @@ function useProbeConnection(): ProbeState {
 
     return () => {
       stopped = true
-      ws?.close()
-      wsRef.current = undefined
+      document.removeEventListener('visibilitychange', onVisibilityChange)
+      if (hiddenTimer !== undefined) window.clearTimeout(hiddenTimer)
+      disconnect()
       if (timer.current) window.clearInterval(timer.current)
       timer.current = undefined
       if (watchdogTimer.current) window.clearInterval(watchdogTimer.current)

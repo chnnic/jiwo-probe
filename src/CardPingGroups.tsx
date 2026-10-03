@@ -4,7 +4,7 @@ import type { ProbeBucket, ProbePingSeries } from './types'
 import { useProbe } from './use-probe'
 import { pingTargetOptions, resolvePingGroups } from './ping-groups'
 import { LuminaHealthBars, luminaHeatColor } from './components/LuminaHealthBars'
-import { TrendDialog } from './charts/PingTrendDialog'
+import { TrendDialog } from './deferred'
 import './card-ping-groups.css'
 
 type Variant = 'classic' | 'lumina' | 'gm' | 'emerald'

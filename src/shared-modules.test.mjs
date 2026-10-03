@@ -101,3 +101,35 @@ test('公共模块和主题不反向导入 App/Premium，静态依赖无环', ()
   const done = new Set()
   for (const file of graph.keys()) visit(file)
 })
+
+test('首屏静态依赖不含 recharts / lottie，图表与勋章动画按需加载', () => {
+  const root = path.dirname(fileURLToPath(import.meta.url))
+  const heavy = new Set(['recharts', 'lottie-react', 'lottie-web'])
+  const seen = new Set()
+  const offenders = []
+  const visit = file => {
+    if (seen.has(file)) return
+    seen.add(file)
+    const source = ts.createSourceFile(file, readFileSync(file, 'utf8'), ts.ScriptTarget.Latest, true)
+    for (const node of source.statements) {
+      if (!ts.isImportDeclaration(node) || node.importClause?.isTypeOnly) continue
+      const spec = node.moduleSpecifier.text
+      if (heavy.has(spec)) offenders.push(`${path.relative(root, file)} → ${spec}`)
+      if (!spec.startsWith('.')) continue
+      const stem = path.resolve(path.dirname(file), spec)
+      const target = [stem + '.ts', stem + '.tsx', stem].find(candidate => /\.tsx?$/.test(candidate) && readdirSync(path.dirname(candidate)).includes(path.basename(candidate)))
+      if (target) visit(target)
+    }
+  }
+  visit(path.join(root, 'main.tsx'))
+  assert.deepEqual(offenders, [])
+  assert.ok(seen.has(path.join(root, 'deferred.tsx')), '首屏应通过 deferred.tsx 引用图表')
+})
+
+test('后台超过 1 分钟断开实时连接，回到前台补帧并重连', () => {
+  const source = readFileSync(new URL('./use-probe.ts', import.meta.url), 'utf8')
+  assert.match(source, /const HIDDEN_PAUSE_MS = 60_000/)
+  assert.match(source, /addEventListener\('visibilitychange', onVisibilityChange\)/)
+  assert.match(source, /removeEventListener\('visibilitychange', onVisibilityChange\)/)
+  assert.match(source, /if \(stopped \|\| paused \|\| timer\.current\) return/)
+})
