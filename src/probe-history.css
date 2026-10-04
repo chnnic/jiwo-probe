@@ -1,6 +1,6 @@
-/* Probe history v1.1 · 2026-10-02 — TCP/UDP 曲线与图例跟随主题配色。 */
+/* Probe history v1.2 · 2026-10-04 — TCP/UDP 曲线与图例跟随主题配色；经典主题文字色读 --foreground（含 Lumina 黑金/深色）。 */
 :is(.probe-conn-history, .probe-history-dialog, .probe-forward) {
-  --ph-bg: var(--surface, #fff); --ph-text: var(--text, #172033); --ph-muted: var(--muted, #64748b);
+  --ph-bg: var(--surface, #fff); --ph-text: var(--text, var(--foreground, #172033)); --ph-muted: var(--muted, #64748b);
   --ph-line: var(--border, #e2e8f0); --ph-tcp: #169b78; --ph-udp: #4385d5;
   color: var(--ph-text); box-sizing: border-box; font-family: inherit;
 }

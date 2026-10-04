@@ -1081,8 +1081,10 @@
   .emerald-overview { order: 1; }
   .emerald-sidebar { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .emerald-sidebar { order: 2; margin-top: 16px; }
-  .emerald-region-bar { order: 3; }
-  .emerald-node-section { order: 4; }
+  /* 转发链在多维榜单之后、地区筛选之前（宽屏时在左列概览下方） */
+  .emerald-primary-column > .probe-forward { order: 3; }
+  .emerald-region-bar { order: 4; }
+  .emerald-node-section { order: 5; }
   .emerald-sidebar-title { grid-column: 1 / -1; }
   .emerald-sidebar-title { display: flex; align-items: center; gap: 15px; }
   .emerald-sidebar-title h2 { flex: 1; margin: 0; }

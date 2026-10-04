@@ -1616,6 +1616,7 @@ function ProbeApp({ data, error }: ReturnType<typeof useProbe>) {
         )}
         <Leaderboard servers={servers} />
       </div>
+      <ForwardOverview data={data} />
       <section className="probe-toolbar">
         <div className="filters">
           <button className={filter === 'all' ? 'active' : ''} onClick={() => setFilter('all')}>
@@ -1656,7 +1657,6 @@ function ProbeApp({ data, error }: ReturnType<typeof useProbe>) {
         </div>
       </section>
       <main className={`servers ${view}`}>{visible.length ? view === 'card' ? visible.map((server) => activeTheme === 'lumina' ? <ServerCardLumina key={server.name} server={server} index={servers.indexOf(server)} /> : <ServerCard key={server.name} server={server} index={servers.indexOf(server)} />) : view === 'mini' ? visible.map((server) => <ServerMiniCard key={server.name} server={server} index={servers.indexOf(server)} expanded={miniExpanded} />) : <ServerTable servers={visible} /> : <div className="empty">暂无符合条件的服务器</div>}</main>
-      <ForwardOverview data={data} />
       <footer>
         Powered by{' '}
         <a href="https://github.com/mmwx-group" target="_blank" rel="noreferrer">

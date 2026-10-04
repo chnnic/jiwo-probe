@@ -148,6 +148,7 @@ export default function MiniApp({ data, error, onThemeChange }: { data: ProbePay
         <div className="mini-summary-tile"><span><ArrowDown size={15} className="mini-download" />实时下行</span><strong>{speed(summary.download)}</strong><p>周期下行 {size(summary.inbound)}</p></div>
         <div className="mini-summary-tile"><span><ArrowUp size={15} className="mini-upload" />实时上行</span><strong>{speed(summary.upload)}</strong><p>周期上行 {size(summary.outbound)}</p></div>
       </section>
+      <ForwardOverview data={data} />
       <div className="mini-section-title"><div><h2>节点总览</h2><p>共 {servers.length} 台节点，当前显示 {visible.length} 台</p></div><span className={`mini-sync${error ? ' has-error' : ''}`} role="status"><i />{error ? '连接暂时中断' : '数据已同步'}</span></div>
       <section className="mini-toolbar" aria-label="筛选与视图">
         <label className="mini-search"><Search size={16} /><input type="search" placeholder="搜索名称、地区、服务商…" aria-label="搜索节点" value={query} onChange={event => setQuery(event.target.value)} /></label>
@@ -160,7 +161,6 @@ export default function MiniApp({ data, error, onThemeChange }: { data: ProbePay
         {visible.map(({ server, index }) => <NodeCard key={index} server={server} index={index} view={view} />)}
         {!visible.length && <div className="mini-empty"><Search size={27} /><h3>{servers.length ? '没有匹配的节点' : '暂无服务器'}</h3><p>{servers.length ? '试试其他关键词，或清除筛选条件。' : '等待主控上报服务器数据。'}</p>{servers.length > 0 && <button type="button" onClick={() => { setQuery(''); setStatus('all'); setProvider('') }}>清除筛选</button>}</div>}
       </section>
-      <ForwardOverview data={data} />
       <footer className="mini-footer">Powered by <a href="https://github.com/chnnic/jiwo-probe" target="_blank" rel="noreferrer">Jiwo Probe</a><span>Lite</span></footer>
     </main>
   </div>

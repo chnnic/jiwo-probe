@@ -11,6 +11,9 @@ const latency = (value?: number) => typeof value === 'number' && Number.isFinite
 const loss = (value?: number) => typeof value === 'number' && Number.isFinite(value) && value >= 0 ? `${value.toFixed(1)}%` : '—'
 const time = (value: number) => new Date(value * 1000).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', hour12: false })
 const day = (value: string) => value.slice(5).replace('-', '/')
+// 放在页首后默认折叠；访客展开或折叠后记在本浏览器
+const OPEN_KEY = 'probe-forward-open'
+const readOpen = () => { try { return localStorage.getItem(OPEN_KEY) === '1' } catch { return false } }
 
 /**
  * 转发链总览（各主题共用，Premium 有自己的转发页）。沿用主控快照/展示开关，不另开轮询。
@@ -19,6 +22,7 @@ const day = (value: string) => value.slice(5).replace('-', '/')
  */
 export function ForwardOverview({ data }: { data: ProbePayload }) {
   const [selected, setSelected] = useState('')
+  const [open, setOpen] = useState(readOpen)
   if (data.show_forward === false || (!data.show_forward && !data.forward?.length)) return null
   const chains = sortChains(data.forward || [])
   const summary = forwardSummary(data.forward || [])
@@ -26,7 +30,11 @@ export function ForwardOverview({ data }: { data: ProbePayload }) {
   const chain = current?.chain
   const traffic = chain ? chainTraffic(chain) : null
   const peak = traffic ? Math.max(...traffic.daily.map((item) => item.gb), 0) : 0
-  return <details className="probe-forward" open>
+  return <details className="probe-forward" open={open} onToggle={(event) => {
+    const next = event.currentTarget.open
+    setOpen(next)
+    try { localStorage.setItem(OPEN_KEY, next ? '1' : '0') } catch { /* 隐私模式下不记忆 */ }
+  }}>
     <summary><Network size={17} /><h2>转发链拓扑与延迟</h2>
       <span className="probe-forward-summary">共 {summary.total} 条<b data-status="ok">正常 {summary.ok}</b><b data-status="warn">偏慢 {summary.warn}</b><b data-status="down">异常 {summary.down}</b></span>
       <ChevronDown size={16} /></summary>

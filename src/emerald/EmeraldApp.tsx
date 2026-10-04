@@ -634,6 +634,7 @@ export default function EmeraldApp({ data, onThemeChange }: { data: ProbePayload
         <div className="emerald-dashboard">
           <div className="emerald-primary-column">
             <Overview servers={servers} />
+            <ForwardOverview data={data} />
 
             <div className="emerald-region-bar" aria-label="地区筛选">
               <button type="button" className={region === 'all' ? 'active' : ''} onClick={() => setRegion('all')}><Globe2 size={14} />全部 <b>{servers.length}</b></button>
@@ -657,7 +658,6 @@ export default function EmeraldApp({ data, onThemeChange }: { data: ProbePayload
             {EMERALD_LEADERBOARD_ORDER.map(type => <RankingPanel key={type} servers={servers} type={type} openServer={openDetail} />)}
           </aside>
         </div>
-        <ForwardOverview data={data} />
       </main>
 
       <footer className="emerald-footer">
