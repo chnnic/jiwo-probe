@@ -178,7 +178,7 @@ export function ThemePicker({ value, onChange }: Props) {
             flexShrink: 0,
           }}
         />
-        <span>{current.name}</span>
+        <span>{current.zh}</span>
         <span
           aria-hidden="true"
           style={{
