@@ -1,0 +1,28 @@
+/* 断联提示条：固定在顶部居中，不占文档流，深色半透明底在所有主题上都清楚可读 */
+.stale-data-banner {
+  position: fixed;
+  top: 12px;
+  left: 50%;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: calc(100% - 32px);
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: rgba(24, 24, 27, 0.92);
+  color: #fafafa;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+  font-size: 13px;
+  line-height: 1.4;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+.stale-data-banner i {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #f59e0b;
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.25);
+}

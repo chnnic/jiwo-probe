@@ -16,6 +16,7 @@ import { connectionCount } from './unlocks'
 import { ProbeHistoryDaysContext } from './use-probe-range'
 import { CYCLE_LABELS as cycleLabel, CYCLE_MONTHS, expiryTimestamp, isPermanent } from './renewal'
 import { bytes, expiring, expired, remainingDays, regionFlag, hasLeadingFlag, pct, averagePing } from './server-format'
+import { StaleDataBanner } from './StaleDataBanner'
 import { ForwardOverview, prefetchDeferred, ServerDetail, SystemTrendChart, TrafficDialog, TrendDialog } from './deferred'
 import { Meter, systemTitle, SystemIcon, routeCarrierLabels, goldRoutes, displayReturnRoute, ReturnRouteBadges } from './components/ServerVisuals'
 import { LUMINA_QUOTA_SEGMENTS } from './components/LuminaHealthBars'
@@ -1294,7 +1295,7 @@ export function App() {
   const hasData = !!probe.data
   // 首帧数据渲染完再在空闲时预取图表模块，不和主题包、首帧数据抢带宽
   useEffect(() => { if (hasData) prefetchDeferred() }, [hasData])
-  return <ProbeHistoryDaysContext.Provider value={probe.data?.history_days}><ProbeApp {...probe} /></ProbeHistoryDaysContext.Provider>
+  return <ProbeHistoryDaysContext.Provider value={probe.data?.history_days}><StaleDataBanner error={probe.error} updatedAt={probe.updatedAt} /><ProbeApp {...probe} /></ProbeHistoryDaysContext.Provider>
 }
 
 function ProbeApp({ data, error }: ReturnType<typeof useProbe>) {

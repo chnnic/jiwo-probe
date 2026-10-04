@@ -375,6 +375,8 @@ function applyFavicon(icon?: string) {
 export interface ProbeState {
   data?: ProbePayload
   error?: string
+  /** 最近一次收到数据的时间（毫秒时间戳），用于提示主控断联时页面数据有多旧 */
+  updatedAt?: number
   pingGroups: PingGroupConfig
   networkSpeedUnit: NetworkSpeedUnit
   connectionChartEnabled: boolean | undefined
@@ -388,6 +390,7 @@ const ProbeContext = createContext<ProbeState | null>(null)
 function useProbeConnection(): ProbeState {
   const [data, setData] = useState<ProbePayload>()
   const [error, setError] = useState<string>()
+  const [updatedAt, setUpdatedAt] = useState<number>()
   const [pingGroups, setPingGroups] = useState(runtimePingGroups)
   const [networkSpeedUnit, setNetworkSpeedUnit] = useState(runtimeNetworkSpeedUnit)
   const [connectionChartEnabled, setConnectionChartEnabled] = useState(runtimeConnectionChartEnabled)
@@ -413,6 +416,7 @@ function useProbeConnection(): ProbeState {
       const visiblePayload = applyPayloadVisibility(enrichPayload(payload))
       setData(visiblePayload)
       setError(undefined)
+      setUpdatedAt(Date.now())
       if (payload.title) document.title = payload.title
     }
     const poll = async () => {
@@ -552,7 +556,7 @@ function useProbeConnection(): ProbeState {
     }
   }, [])
 
-  return { data, error, pingGroups, networkSpeedUnit, connectionChartEnabled }
+  return { data, error, updatedAt, pingGroups, networkSpeedUnit, connectionChartEnabled }
 }
 
 // 全站只在 Provider 内建立一套 HTTP/WS 连接。各主题调用 useProbe() 时只读取
