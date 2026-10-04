@@ -64,6 +64,8 @@ const server = http.createServer((req, res) => {
   // 在应用脚本之前写入访客设置：明暗（与页面里手动切换写同一个键），并跳过 Ran 每会话一次的访客信息浮卡
   const preset = [
     colorMode ? `localStorage.setItem('mmwx-probe-dark-override', ${JSON.stringify(colorMode)})` : '',
+    // Premium 有自己的三态配色（auto 跟随北京时间），需单独固定
+    colorMode && theme.startsWith('premium') ? `localStorage.setItem('premium-probe-color-mode', ${JSON.stringify(colorMode)})` : '',
     "sessionStorage.setItem('ran.visitor_alert_shown', '1')",
   ].filter(Boolean).join(';')
   res.end(readFileSync(file, 'utf8').replace('<head>', `<head><script>${preset}</script>`))
@@ -87,6 +89,8 @@ try {
       // 必须异步：同步等待会卡住同进程里的本地服务器，Chrome 永远拿不到页面
       await run(chrome, [
         '--headless=new', '--disable-gpu', '--hide-scrollbars', '--no-first-run', '--no-default-browser-check',
+        // 减少动态效果：许可证铭牌等动画显示静态终态，截图不会截在动画中间
+        '--force-prefers-reduced-motion',
         `--user-data-dir=${profile}`, `--window-size=${Math.max(width, MIN_WINDOW_WIDTH)},${height}`, '--force-device-scale-factor=1',
         '--virtual-time-budget=12000', `--screenshot=${target}`, page,
       ], { timeout: 90_000 })

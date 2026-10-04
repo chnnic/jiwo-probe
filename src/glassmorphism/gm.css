@@ -37,7 +37,8 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 8px 20px;
+  /* 背景保持通栏；左右内容与下方 .gm-main（最宽 1588px、内边距 16px）对齐，宽屏时不贴屏幕边 */
+  padding: 8px max(20px, calc((100% - 1588px) / 2 + 16px));
   background: rgba(11, 16, 25, 0.55);
   backdrop-filter: blur(12px) saturate(150%);
   -webkit-backdrop-filter: blur(12px) saturate(150%);

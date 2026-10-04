@@ -114,9 +114,11 @@ export function ProbeLicenseFooter({ badges, animated = true }: { badges: ProbeP
   const keyOf = (badge: { name?: string; display_name?: string }) => badge.name || badge.display_name || ''
   const merged = EXTRA_LICENSE_BADGES.map((badge) => live.find((item) => keyOf(item) === keyOf(badge)) || badge)
   const extras = live.filter((badge) => !EXTRA_LICENSE_BADGES.some((item) => keyOf(item) === keyOf(badge)))
+  // 系统开启「减少动态效果」时直接显示静态铭牌（无障碍；README 截图也依赖这一点）
+  const motion = animated && !(typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches)
   return <div className="probe-license-footer">
     {[...merged, ...extras]
       .filter((badge, index, all) => all.findIndex((item) => keyOf(item) === keyOf(badge)) === index)
-      .map((badge, index) => <ProbeLicenseNameplate key={index} name={badge.name} displayName={badge.display_name} animated={animated} />)}
+      .map((badge, index) => <ProbeLicenseNameplate key={index} name={badge.name} displayName={badge.display_name} animated={motion} />)}
   </div>
 }
