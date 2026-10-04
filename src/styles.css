@@ -133,6 +133,12 @@ button {
   margin-left: auto;
   flex-shrink: 0;
 }
+/* 经典界面的转发链区块与卡片区同宽居中（各主题自带容器的转发链不受影响） */
+.app-shell > .probe-forward {
+  box-sizing: border-box;
+  width: min(1600px, calc(100% - 48px));
+  margin: 20px auto;
+}
 .servers {
   width: min(1600px, calc(100% - 48px));
   margin: 0 auto;
@@ -2304,7 +2310,8 @@ footer a:hover {
   .servers,
   .dashboard-summary,
   .probe-toolbar,
-  .globe-row {
+  .globe-row,
+  .app-shell > .probe-forward {
     width: min(100% - 20px, 1600px);
   }
   .servers {
