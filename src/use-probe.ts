@@ -6,6 +6,7 @@ import { DEFAULT_NETWORK_SPEED_UNIT, parseNetworkSpeedUnit, type NetworkSpeedUni
 import { canonicalThemeOverride, parseThemeName } from './theme-name'
 import { LUMINAPLUS_COLOR_KEY, resolveLuminaPlusColor, type LuminaPlusColor } from './luminaplus/luminaplus-color'
 import { DEFAULT_SHOW_CONNECTION_CHART, parseShowConnectionChart } from './connection-chart'
+import { applyProbeDelta, isProbeDeltaFrame } from './probe-delta'
 export { isBuiltinTheme, parseThemeName } from './theme-name'
 
 const APPEARANCE_CACHE = 'mmwx-probe-appearance'
@@ -380,6 +381,7 @@ export interface ProbeState {
 }
 
 const HIDDEN_PAUSE_MS = 60_000
+const RECONNECT_DELAYS_MS = [2_000, 5_000, 15_000, 30_000]
 
 const ProbeContext = createContext<ProbeState | null>(null)
 
@@ -400,6 +402,9 @@ function useProbeConnection(): ProbeState {
     // ProbeHub 一直每 3 秒拉主控，浏览器也每 3 秒解析一次完整快照。回到前台立即补帧并重连。
     let paused = false
     let hiddenTimer: number | undefined
+    // 断线后按退避间隔自动重连（此前一断就只剩 HTTP 轮询，直到页面切回前台才重连）
+    let reconnectTimer: number | undefined
+    let reconnectAttempt = 0
 
     const accept = (payload: ProbePayload) => {
       if (stopped) return
@@ -442,28 +447,57 @@ function useProbeConnection(): ProbeState {
     // 先轮询一次拿首帧数据, 同时连 WS; 之后由 watchdog 统一裁决:
     // WS 有帧 → 暂停轮询(帧即数据, 免每 5s 打主控一次);
     // WS 无帧 15s / 关闭 / 出错 → 恢复轮询兜底。
+    const scheduleReconnect = () => {
+      if (stopped || paused || reconnectTimer !== undefined) return
+      const delay = RECONNECT_DELAYS_MS[Math.min(reconnectAttempt, RECONNECT_DELAYS_MS.length - 1)]
+      reconnectAttempt++
+      reconnectTimer = window.setTimeout(() => {
+        reconnectTimer = undefined
+        connect()
+      }, delay)
+    }
     const connect = () => {
       if (stopped || paused || wsRef.current) return
       try {
         const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:'
-        const ws = new WebSocket(`${protocol}//${location.host}/api/stream`)
+        // delta=1：声明支持增量帧（见 probe-delta.ts），基准是这条连接上一帧还原出的完整数据
+        const ws = new WebSocket(`${protocol}//${location.host}/api/stream?delta=1`)
+        let base: ProbePayload | undefined
         wsRef.current = ws
         ws.onmessage = (event) => {
+          let frame: unknown
           try {
-            accept(JSON.parse(event.data) as ProbePayload)
-            lastFrameAt.current = Date.now()
-          } catch { /* wait for next frame */ }
+            frame = JSON.parse(event.data)
+          } catch {
+            return // wait for next frame
+          }
+          const payload = isProbeDeltaFrame(frame) ? applyProbeDelta(frame, base) : frame as ProbePayload
+          if (!payload) {
+            // 基准对不上：断开重连，ProbeHub 会先发完整帧
+            base = undefined
+            ws.close()
+            return
+          }
+          base = payload
+          reconnectAttempt = 0
+          accept(payload)
+          lastFrameAt.current = Date.now()
         }
         ws.onerror = () => startPolling()
         ws.onclose = () => {
-          if (wsRef.current === ws) wsRef.current = undefined
+          if (wsRef.current !== ws) return // 主动断开（后台暂停 / 卸载）不重连
+          wsRef.current = undefined
           startPolling()
+          scheduleReconnect()
         }
       } catch {
         startPolling()
+        scheduleReconnect()
       }
     }
     const disconnect = () => {
+      if (reconnectTimer !== undefined) window.clearTimeout(reconnectTimer)
+      reconnectTimer = undefined
       const ws = wsRef.current
       wsRef.current = undefined
       ws?.close()
@@ -485,6 +519,7 @@ function useProbeConnection(): ProbeState {
       if (!paused) return
       paused = false
       lastFrameAt.current = 0
+      reconnectAttempt = 0
       startPolling()
       connect()
     }
