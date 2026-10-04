@@ -44,9 +44,25 @@ test('共享排序不截断数量，由通用榜单 Top 10 和 Emerald 自行控
 })
 
 test('榜单维度完整不重复，网络与连接数在资源和资产前面', () => {
-  assert.equal(LEADERBOARD_ORDER.length, 18)
-  assert.equal(new Set(LEADERBOARD_ORDER).size, 18)
-  assert.deepEqual(LEADERBOARD_ORDER.slice(0, 7), ['speed', 'today', 'traffic', 'usage', 'week', 'tcp', 'udp'])
-  assert.deepEqual(LEADERBOARD_ORDER.slice(7), ['loss-cn', 'loss-idc', 'ping-cn', 'ping-idc', 'cpu', 'mem', 'load', 'disk', 'uptime', 'expiry', 'cost'])
-  assert.deepEqual(EMERALD_LEADERBOARD_ORDER, ['speed', 'traffic', 'tcp', 'udp', 'quality', 'uptime'])
+  assert.equal(LEADERBOARD_ORDER.length, 19)
+  assert.equal(new Set(LEADERBOARD_ORDER).size, 19)
+  assert.deepEqual(LEADERBOARD_ORDER.slice(0, 8), ['speed', 'today', 'traffic', 'usage', 'week', 'tcp', 'udp', 'unlock'])
+  assert.deepEqual(LEADERBOARD_ORDER.slice(8), ['loss-cn', 'loss-idc', 'ping-cn', 'ping-idc', 'cpu', 'mem', 'load', 'disk', 'uptime', 'expiry', 'cost'])
+  assert.deepEqual(EMERALD_LEADERBOARD_ORDER, ['speed', 'traffic', 'tcp', 'udp', 'quality', 'unlock', 'uptime'])
+})
+
+test('解锁排行：已解锁数优先、解锁率其次，失败不进分母，无数据不参与', async () => {
+  const { rankUnlocks } = await import('./leaderboards.ts')
+  const u = (...statuses) => statuses.map((status, i) => ({ service: ['netflix', 'disneyplus', 'openai', 'claude', 'bybit'][i], status }))
+  const servers = [
+    { name: 'a', unlocks: u('yes', 'yes', 'no', 'no') },          // 2/4
+    { name: 'b', unlocks: u('yes', 'originals_only', 'failed') },  // 2/2：失败不进分母，仅自制剧算解锁
+    { name: 'c', unlocks: u('yes', 'yes', 'yes', 'banned') },      // 3/4
+    { name: 'd', unlocks: [] },                                    // 无数据
+    { name: 'e', unlocks: u('failed') },                           // 只有失败：不参与
+  ]
+  const rows = rankUnlocks(servers)
+  assert.deepEqual(rows.map(row => `${row.server.name} ${row.unlocked}/${row.total}`), ['c 3/4', 'b 2/2', 'a 2/4'])
+  assert.deepEqual(rankUnlocks(servers, false).map(row => row.server.name), ['a', 'b', 'c'])
+  assert.deepEqual(rows[0].categories.map(c => `${c.label} ${c.unlocked}/${c.total}`), ['流媒体 2/2', 'AI 1/2'])
 })

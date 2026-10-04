@@ -4,14 +4,14 @@ import { ConnectionCounts, UnlockButton } from './ServerCapabilities'
 import { ConnectionHistory } from './ConnectionHistory'
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { Activity, ArrowDown, ArrowDownUp, ArrowUp, BadgeDollarSign, Cable, Calendar, CalendarClock, CheckCircle2, ChevronDown, CircleDollarSign, Clock, Cpu, Crown, Database, Gauge, Gem, Globe2, HardDrive, LayoutGrid, List, MapPin, MemoryStick, Moon, Network, PieChart, RefreshCw, Rows3, Rows4, Search, Server, Sun, SunMoon, TrendingUp, Trophy, Wallet, Wifi, XCircle } from 'lucide-react'
+import { Activity, LockOpen, ArrowDown, ArrowDownUp, ArrowUp, BadgeDollarSign, Cable, Calendar, CalendarClock, CheckCircle2, ChevronDown, CircleDollarSign, Clock, Cpu, Crown, Database, Gauge, Gem, Globe2, HardDrive, LayoutGrid, List, MapPin, MemoryStick, Moon, Network, PieChart, RefreshCw, Rows3, Rows4, Search, Server, Sun, SunMoon, TrendingUp, Trophy, Wallet, Wifi, XCircle } from 'lucide-react'
 import type { ProbePingSeries, ProbeServer, ThemeName } from './types'
 import { EnrichedServer, getActiveTheme, getDarkOverride, getThemeOverride, setDarkOverride, setTheme, useProbe } from './use-probe'
 import { Twemoji } from './Twemoji'
 import { PasskeyLogin } from './PasskeyLogin'
 import { CardPingGroups } from './CardPingGroups'
 import { computeRemainingValue, formatMoney } from './value'
-import { LEADERBOARD_ORDER, rankConnectionCounts, type LeaderboardKey } from './leaderboards'
+import { LEADERBOARD_ORDER, rankConnectionCounts, rankUnlocks, type LeaderboardKey } from './leaderboards'
 import { connectionCount } from './unlocks'
 import { ProbeHistoryDaysContext } from './use-probe-range'
 import { CYCLE_LABELS as cycleLabel, CYCLE_MONTHS, expiryTimestamp, isPermanent } from './renewal'
@@ -264,6 +264,7 @@ const LEADERBOARD_META: Record<LeaderboardKey, { label: string; icon: React.Reac
   speed: { label: '实时速度', icon: <ArrowDownUp size={13} /> },
   tcp: { label: 'TCP 连接数', icon: <Cable size={13} /> },
   udp: { label: 'UDP 连接数', icon: <Network size={13} /> },
+  unlock: { label: '解锁', icon: <LockOpen size={13} /> },
   uptime: { label: '在线时长', icon: <Clock size={13} /> },
   today: { label: '今日流量', icon: <CalendarClock size={13} /> },
   week: { label: '近7日流量', icon: <TrendingUp size={13} /> },
@@ -294,9 +295,15 @@ function Leaderboard({ servers }: { servers: ProbeServer[] }) {
   const pingTab = tab === 'ping-cn' || tab === 'ping-idc'
   const lossTab = tab === 'loss-cn' || tab === 'loss-idc'
   const connectionTab = tab === 'tcp' || tab === 'udp'
+  const unlockTab = tab === 'unlock'
+  // 解锁榜：已解锁数 / 有效检测数与分类明细，按服务器对象查找
+  const unlockRows = useMemo(() => unlockTab ? new Map(rankUnlocks(servers).map(row => [row.server, row])) : null, [servers, unlockTab])
   const rows = useMemo(() => {
     if (tab === 'tcp' || tab === 'udp') {
       return rankConnectionCounts(servers, tab, desc).slice(0, 10).map(row => ({ ...row, lines: [] }))
+    }
+    if (tab === 'unlock') {
+      return rankUnlocks(servers, desc).slice(0, 10).map(({ server, index, unlocked }) => ({ server, index, value: unlocked, lines: [] }))
     }
     const indexed = servers.map((server, index) => {
       const avg = averagePing(server.ping || [])
@@ -337,6 +344,7 @@ function Leaderboard({ servers }: { servers: ProbeServer[] }) {
     : tab === 'usage' ? `${value.toFixed(1)}%`
     : tab === 'speed' ? `↓${networkSpeed(server.download_speed ?? 0)} ↑${networkSpeed(server.upload_speed ?? 0)}`
     : connectionTab ? connectionCount(value)
+    : unlockTab ? (() => { const row = unlockRows?.get(server); return row ? `${row.unlocked}/${row.total} · ${Math.round(row.ratio * 100)}%` : String(value) })()
     : tab === 'uptime' ? formatUptime(value)
     : tab === 'today' || tab === 'week' ? bytes(value, false)
     : tab === 'loss-cn' || tab === 'loss-idc' ? `${value.toFixed(2)}%`
@@ -366,6 +374,7 @@ function Leaderboard({ servers }: { servers: ProbeServer[] }) {
               </button>
             ))}
           </div>
+          {unlockTab && <p className="lb-note">按已解锁项数排名，同数量时比解锁率；与主控解锁徽标同一口径：仅自制剧算解锁，检测失败不计入。无检测数据的节点不参与排名，展开可看各分类。</p>}
           {connectionTab && <p className="lb-note">{tab === 'tcp' ? '整机已建立 TCP 连接数' : '整机 UDP socket 数'}，非代理用户数；未上报不参与排名，离线节点显示最近上报值。</p>}
           <ol
             className="leaderboard-list"
@@ -404,17 +413,27 @@ function Leaderboard({ servers }: { servers: ProbeServer[] }) {
                       {(pingTab || lossTab) && lines.length > 0 && <em className="lb-lines-count">{lines.filter((l) => l.ms >= 0).length}线</em>}
                     </span>
                   </button>
-                  {(pingTab || lossTab) && lines.length > 0 && (
+                  {((pingTab || lossTab) && lines.length > 0 || unlockTab) && (
                     <button
                       type="button"
                       className={`lb-expand${expanded === index ? ' open' : ''}`}
-                      aria-label={expanded === index ? '收起线路明细' : '展开线路明细'}
+                      aria-label={expanded === index ? (unlockTab ? '收起解锁分类' : '收起线路明细') : (unlockTab ? '展开解锁分类' : '展开线路明细')}
                       data-idx={index}
                     >
                       <ChevronDown size={13} />
                     </button>
                   )}
                 </div>
+                {unlockTab && expanded === index && (
+                  <div className="lb-lines">
+                    {(unlockRows?.get(server)?.categories ?? []).map((category) => (
+                      <span key={category.key} className={category.unlocked === 0 ? 'timeout' : ''}>
+                        {category.label}
+                        <b>{category.unlocked}/{category.total}</b>
+                      </span>
+                    ))}
+                  </div>
+                )}
                 {(pingTab || lossTab) && expanded === index && (
                   <div className="lb-lines">
                     {lines.map((line) => (

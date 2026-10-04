@@ -546,7 +546,7 @@
 
 .emerald-sidebar-title { padding: 14px; }
 .emerald-sidebar-title h2 { margin: 0 0 11px; font-size: 15px; }
-.emerald-sidebar-title > div { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.emerald-sidebar-title > div { display: grid; grid-template-columns: repeat(4, 1fr); /* 7 个榜单：4 + 3 */ gap: 6px; }
 .emerald-sidebar-title button { min-width: 0; border: 1px solid var(--em-border); border-radius: 999px; padding: 5px 7px; display: inline-flex; align-items: center; justify-content: center; gap: 4px; color: var(--em-text-2); background: var(--em-surface-muted); cursor: pointer; font-size: 11px; transition: transform 0.16s ease, border-color 0.16s ease, background 0.16s ease; }
 .emerald-sidebar-title button:hover,
 .emerald-sidebar-title button:focus-visible { outline: 0; transform: translateY(-1px); }
