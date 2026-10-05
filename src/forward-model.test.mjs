@@ -1,6 +1,27 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { chainStatus, chainTraffic, chainTrafficDay, formatGb, forwardSummary, hopTone, latencyTone, sortChains } from './forward-model.ts'
+import { chainStatus, chainTraffic, chainTrafficDay, flowDuration, flowLevel, formatGb, forwardSummary, hopTone, latencyTone, mayHaveRouteSelection, sortChains, trendCells } from './forward-model.ts'
+
+test('状态条每段按链路口径着色，无数据为 idle', () => {
+  const c = { name: 't', end_to_end_ms: 20, loss_pct: 0, bucket_sec: 300, groups: [], trend: [
+    { ts: 1, e2e_ms: 20, loss: 0 }, { ts: 2, e2e_ms: 200, loss: 0 }, { ts: 3, e2e_ms: 20, loss: 25 },
+    { ts: 4, e2e_ms: 20, loss: 60 }, { ts: 5, e2e_ms: 0, loss: 0 },
+  ] }
+  assert.deepEqual(trendCells(c).map(cell => cell.tone), ['ok', 'warn', 'warn', 'down', 'idle'])
+  assert.match(trendCells(c)[2].label, /20 ms · 丢包 25\.0%$/)
+})
+
+test('连续两个以上中转组提示可能是选路段；单个中转不提示', () => {
+  const groups = roles => ({ name: 'r', groups: roles.map((role, i) => ({ name: `g${i}`, role, to_next_ms: 5, servers: [] })) })
+  assert.equal(mayHaveRouteSelection(groups(['entry', 'mid', 'mid', 'exit'])), true)
+  assert.equal(mayHaveRouteSelection(groups(['entry', 'mid', 'exit'])), false)
+  assert.equal(mayHaveRouteSelection(groups(['entry', 'exit'])), false)
+})
+
+test('流动档位按实时 bit/s 划分（主控为 byte/s），流动速度按延迟换算', () => {
+  assert.deepEqual([0, 5_000, 20_000, 1_000_000, 5_000_000].map(flowLevel), [0, 0, 1, 2, 3])
+  assert.deepEqual([1, 14, 120, 500, 0, undefined].map(flowDuration), [0.8, 1, 2.8, 3.2, 2.4, 2.4])
+})
 
 const server = (name, healthy, to_next_ms = 5) => ({ name, healthy, to_next_ms })
 const chain = (name, { e2e = 20, loss = 0, entry = [true, true], mid, exitHealthy = false, trend = [{ ts: 1, e2e_ms: 20, loss: 0 }], traffic = null } = {}) => ({

@@ -153,7 +153,71 @@ export function buildDemoPayload({ theme = 'luminaplus', now = Date.now() } = {}
     }
   })
 
-  const trendStart = Math.floor(now / 1000 / 300) * 300 - 287 * 300
+  // 转发链：与主控接口一致，近一小时 13 个 5 分钟段 + 7 天逐节点流量
+  const bucket = 300
+  const trendStart = Math.floor(now / 1000 / bucket) * bucket - 12 * bucket
+  const trend = (ms, at = () => [ms, 0]) => Array.from({ length: 13 }, (_, i) => {
+    const [e2e, loss] = at(i)
+    return { ts: trendStart + i * bucket, e2e_ms: Math.round(e2e + rand() * 2), loss }
+  })
+  const days = Array.from({ length: 7 }, (_, d) => isoDay(now - (6 - d) * DAY))
+  const traffic = (rows) => {
+    const list = rows.map(([name, group, role, scale]) => {
+      const daily_gb = days.map((_, d) => Math.round(scale * between(0.4, 1.6) * (d >= 2 ? 1 : 0) * 100) / 100)
+      return { name, group, role, daily_gb, total_gb: Math.round(daily_gb.reduce((a, b) => a + b, 0) * 100) / 100 }
+    })
+    return { days, servers: list, total_gb: Math.round(list.reduce((a, s) => a + s.total_gb, 0) * 100) / 100 }
+  }
+  const node = (name, to_next_ms, healthy = true) => ({ name, to_next_ms, healthy })
+  const forward = [
+    {
+      name: 'HKG → TYO 主线',
+      end_to_end_ms: 46, loss_pct: 0, bucket_sec: bucket,
+      groups: [
+        { name: '入口组', role: 'entry', to_next_ms: 3, servers: [node('HKG-Edge-01', 3), node('TPE-Line-08', 18)] },
+        { name: '中转组', role: 'mid', to_next_ms: 41, servers: [node('SEL-Game-07', 41), node('SIN-Relay-03', 44)] },
+        { name: '出口组', role: 'exit', to_next_ms: 0, servers: [node('TYO-Core-02', 0, false)] },
+      ],
+      trend: trend(46),
+      traffic: traffic([['HKG-Edge-01', '入口组', 'entry', 18], ['TPE-Line-08', '入口组', 'entry', 7], ['SEL-Game-07', '中转组', 'mid', 15], ['SIN-Relay-03', '中转组', 'mid', 6], ['TYO-Core-02', '出口组', 'exit', 0]]),
+    },
+    {
+      // 选路段：入口直连 / 经组 3 / 经组 4 按最低延迟择一，主控接口扁平成两个连续中转组
+      name: 'HKG → LAX 选路',
+      end_to_end_ms: 172, loss_pct: 0, bucket_sec: bucket,
+      groups: [
+        { name: '入口', role: 'entry', to_next_ms: 6, servers: [node('HKG-Edge-01', 5), node('TPE-Line-08', 7)] },
+        { name: '组 3', role: 'mid', to_next_ms: 83, servers: [node('TYO-Core-02', 83)] },
+        { name: '组 4', role: 'mid', to_next_ms: 83, servers: [node('SEL-Game-07', 83)] },
+        { name: '组 2', role: 'exit', to_next_ms: 0, servers: [node('LAX-Main-04', 0, false)] },
+      ],
+      trend: trend(172, (i) => [i === 7 ? 283 : 172, 0]),
+      traffic: traffic([['HKG-Edge-01', '入口', 'entry', 3], ['TYO-Core-02', '组 3', 'mid', 1], ['SEL-Game-07', '组 4', 'mid', 0.4], ['LAX-Main-04', '组 2', 'exit', 0]]),
+    },
+    {
+      // 偏慢：入口组 1/3 台探测异常，近半小时出现丢包
+      name: 'SIN → FRA 备线',
+      end_to_end_ms: 168, loss_pct: 8.3, bucket_sec: bucket,
+      groups: [
+        { name: '入口组', role: 'entry', to_next_ms: 6, servers: [node('SIN-Relay-03', 6), node('HKG-Edge-01', 38), node('SYD-Edge-11', 0, false)] },
+        { name: '出口组', role: 'exit', to_next_ms: 0, servers: [node('FRA-Store-05', 0, false)] },
+      ],
+      trend: trend(162, (i) => [i >= 7 ? 168 : 158, i >= 7 ? 8.3 : 0]),
+      traffic: traffic([['SIN-Relay-03', '入口组', 'entry', 4], ['HKG-Edge-01', '入口组', 'entry', 2], ['FRA-Store-05', '出口组', 'exit', 0]]),
+    },
+    {
+      // 异常：中转组唯一一台离线（PAR-Test-10 在演示数据里就是离线机）
+      name: 'AMS → PAR 测试',
+      end_to_end_ms: 0, loss_pct: 100, bucket_sec: bucket,
+      groups: [
+        { name: '入口组', role: 'entry', to_next_ms: 9, servers: [node('AMS-Back-09', 9)] },
+        { name: '中转组', role: 'mid', to_next_ms: 0, servers: [node('PAR-Test-10', 0, false)] },
+        { name: '出口组', role: 'exit', to_next_ms: 0, servers: [node('LON-Edge-06', 0, false)] },
+      ],
+      trend: trend(0, (i) => (i < 5 ? [24, 0] : [0, 100])),
+      traffic: traffic([['AMS-Back-09', '入口组', 'entry', 0.2], ['PAR-Test-10', '中转组', 'mid', 0], ['LON-Edge-06', '出口组', 'exit', 0]]),
+    },
+  ]
   return {
     enabled: true,
     title: 'Jiwo Probe Demo',
@@ -170,18 +234,7 @@ export function buildDemoPayload({ theme = 'luminaplus', now = Date.now() } = {}
     history_days: 7,
     appearance: { theme, revision: `demo-${theme}` },
     license_badge: { name: 'demo', display_name: '演示数据' },
-    forward: [{
-      name: 'HKG → TYO 示例链路',
-      end_to_end_ms: 46,
-      loss_pct: 0,
-      bucket_sec: 300,
-      groups: [
-        { name: '入口组', role: 'entry', to_next_ms: 3, servers: [{ name: 'HKG-Edge-01', to_next_ms: 3, healthy: true }, { name: 'TPE-Line-08', to_next_ms: 18, healthy: true }] },
-        { name: '出口组', role: 'exit', to_next_ms: 0, servers: [{ name: 'TYO-Core-02', to_next_ms: 0, healthy: true }] },
-      ],
-      trend: Array.from({ length: 288 }, (_, i) => ({ ts: trendStart + i * 300, e2e_ms: Math.round(44 + Math.sin(i / 18) * 4 + rand() * 3), loss: 0 })),
-      traffic: null,
-    }],
+    forward,
     servers,
   }
 }
