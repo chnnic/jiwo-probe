@@ -2,8 +2,18 @@
 :is(.probe-conn-history, .probe-history-dialog, .probe-forward) {
   --ph-bg: var(--surface, #fff); --ph-text: var(--text, var(--foreground, #172033)); --ph-muted: var(--muted, #64748b);
   --ph-line: var(--border, #e2e8f0); --ph-tcp: #169b78; --ph-udp: #4385d5;
+  /* 主题强调色：转发链流量柱、选中高亮、延迟趋势线等非状态类配色。经典主题读 --accent（Lumina 黑金/白金、玻璃），
+     没有时读各配色的 --primary；独立主题在下方映射到各自的强调色。状态色（正常/偏慢/异常）不跟随。 */
+  --ph-accent: var(--accent, var(--primary, #2563eb));
   color: var(--ph-text); box-sizing: border-box; font-family: inherit;
 }
+:root.theme-luminaplus .probe-forward { --ph-accent: var(--lp-accent); }
+:root.theme-lite .probe-forward { --ph-accent: var(--mini-accent); }
+:root.theme-emerald .probe-forward { --ph-accent: var(--em-accent); }
+body.gm-body .probe-forward { --ph-accent: #2fd4a1; }
+body.gm-light-body .probe-forward { --ph-accent: #0d946e; }
+:root.theme-premium .probe-forward { --ph-accent: #d8b46a; }
+:root.theme-premium.platinum .probe-forward { --ph-accent: #a87c22; }
 :root:is(.dark, .gold) :is(.probe-conn-history, .probe-history-dialog, .probe-forward) { --ph-tcp: #63cdb1; --ph-udp: #82b3f1; }
 :root.theme-luminaplus :is(.probe-conn-history, .probe-history-dialog, .probe-forward) { --ph-bg: var(--lp-surface); --ph-text: var(--lp-text); --ph-muted: var(--lp-muted); --ph-line: var(--lp-border); --ph-tcp: var(--lp-green); --ph-udp: var(--lp-blue); }
 :root.theme-lite :is(.probe-conn-history, .probe-history-dialog, .probe-forward) { --ph-bg: var(--mini-surface); --ph-text: var(--mini-text); --ph-muted: var(--mini-muted); --ph-line: var(--mini-border); --ph-tcp: var(--mini-green); --ph-udp: var(--mini-blue); }
@@ -115,8 +125,9 @@ dialog.probe-history-dialog { width: min(860px, calc(100vw - 24px)); max-height:
 @keyframes fw-blink { 50% { opacity: .25; } }
 /* 节点实时网速（⇅ 上下行合计，悬停看分项） */
 .probe-forward-group li { flex-wrap: wrap; row-gap: 1px; }
-.probe-forward-speed { order: 3; flex-basis: 100%; padding-left: 13px; font-style: normal; font-size: 10px; line-height: 1.3; color: var(--ph-muted); font-variant-numeric: tabular-nums; }
-.probe-forward-speed[data-active] { color: var(--ph-udp); }
+.probe-forward-speed { order: 3; flex-basis: 100%; display: flex; gap: 10px; padding-left: 13px; font-style: normal; font-size: 10px; line-height: 1.3; color: var(--ph-muted); font-variant-numeric: tabular-nums; }
+.probe-forward-speed span { white-space: nowrap; }
+.probe-forward-speed[data-active] { color: var(--ph-accent); }
 /* 链路卡片状态条：每格一个探测周期 */
 .probe-forward-cells { display: flex; gap: 2px; margin-top: 2px; }
 .probe-forward-cells i { flex: 1; height: 6px; border-radius: 2px; background: var(--fw-ok); }
@@ -133,16 +144,16 @@ dialog.probe-history-dialog { width: min(860px, calc(100vw - 24px)); max-height:
 .probe-forward-trend { height: 170px; }
 .probe-forward-panel h4 { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; }
 .probe-forward-legend { display: inline-flex; align-items: center; gap: 5px; margin-left: auto; font-weight: 500; }
-.probe-forward-legend i { display: inline-block; width: 14px; height: 0; border-top: 2px solid var(--ph-tcp); margin-left: 6px; }
+.probe-forward-legend i { display: inline-block; width: 14px; height: 0; border-top: 2px solid var(--ph-accent); margin-left: 6px; }
 .probe-forward-legend i[data-series="loss"] { border-top: 1.5px dashed var(--fw-down); }
 .probe-forward-bars { display: grid; grid-template-columns: repeat(7, 1fr); align-items: end; gap: 6px; height: 120px; }
 .probe-forward-bars button { display: flex; flex-direction: column; justify-content: flex-end; align-items: center; gap: 4px; height: 100%; min-width: 0; padding: 0; border: 0; border-radius: 6px; background: transparent; color: inherit; font: inherit; cursor: pointer; }
-.probe-forward-bars button:hover { background: color-mix(in srgb, var(--ph-udp) 8%, transparent); }
-.probe-forward-bars button:focus-visible { outline: 2px solid var(--ph-udp); outline-offset: 1px; }
-.probe-forward-bars i { width: 100%; max-width: 28px; border-radius: 4px 4px 0 0; background: color-mix(in srgb, var(--ph-udp) 75%, var(--ph-bg)); }
+.probe-forward-bars button:hover { background: color-mix(in srgb, var(--ph-accent) 8%, transparent); }
+.probe-forward-bars button:focus-visible { outline: 2px solid var(--ph-accent); outline-offset: 1px; }
+.probe-forward-bars i { width: 100%; max-width: 28px; border-radius: 4px 4px 0 0; background: color-mix(in srgb, var(--ph-accent) 55%, var(--ph-bg)); }
 /* 选中某天：其余柱子变淡，选中的加深 */
 .probe-forward-bars[data-selected] button:not([aria-pressed="true"]) i { opacity: .35; }
-.probe-forward-bars button[aria-pressed="true"] i { background: var(--ph-udp); }
+.probe-forward-bars button[aria-pressed="true"] i { background: var(--ph-accent); }
 .probe-forward-bars button[aria-pressed="true"] small { color: var(--ph-text); font-weight: 600; }
 .probe-forward-hint { margin: 8px 0 0; font-size: 11px; color: var(--ph-muted); }
 .probe-forward-day > p { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 10px 0 0; font-size: 12px; color: var(--ph-muted); }

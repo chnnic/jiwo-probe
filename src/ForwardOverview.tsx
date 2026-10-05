@@ -84,7 +84,9 @@ export function ForwardOverview({ data }: { data: ProbePayload }) {
                   return <li key={`${server.name}-${i}`}>
                     {group.role !== 'exit' && <i data-healthy={server.healthy} title={server.healthy ? '探测正常' : '探测异常'} />}
                     <span title={server.name}>{server.name}</span>
-                    {live && <em className="probe-forward-speed" data-active={flowLevel(liveBytes(live)) > 0 || undefined} title={`实时 ↑ ${networkSpeed(live.upload_speed)} · ↓ ${networkSpeed(live.download_speed)}`}>⇅ {networkSpeed(liveBytes(live))}</em>}
+                    {live && <em className="probe-forward-speed" data-active={flowLevel(liveBytes(live)) > 0 || undefined} title="实时上行 / 下行">
+                      <span>↑ {networkSpeed(live.upload_speed)}</span><span>↓ {networkSpeed(live.download_speed)}</span>
+                    </em>}
                     {group.role !== 'exit' && <strong data-tone={server.healthy ? latencyTone(server.to_next_ms) : 'down'}>{server.healthy ? latency(server.to_next_ms) : '不可达'}</strong>}
                   </li>
                 })}</ul>
@@ -112,7 +114,7 @@ export function ForwardOverview({ data }: { data: ProbePayload }) {
                 <YAxis yAxisId="ms" width={55} tick={{ fontSize: 11 }} tickFormatter={(value) => `${value} ms`} domain={[0, 'auto']} axisLine={false} tickLine={false} />
                 <YAxis yAxisId="loss" orientation="right" width={44} tickCount={3} allowDecimals={false} tick={{ fontSize: 11 }} tickFormatter={(value) => `${value}%`} domain={[0, (max: number) => Math.min(100, Math.max(10, Math.ceil(max / 10) * 10))]} axisLine={false} tickLine={false} />
                 <Tooltip formatter={(value, name) => name === 'loss' ? [`${Number(value).toFixed(1)}%`, '丢包'] : [latency(Number(value)), '端到端延迟']} labelFormatter={(value) => time(Number(value))} />
-                <Line yAxisId="ms" dataKey="e2e_ms" name="e2e_ms" type="linear" stroke="var(--ph-tcp)" strokeWidth={2} dot={chain.trend.length === 1} connectNulls={false} isAnimationActive={false} />
+                <Line yAxisId="ms" dataKey="e2e_ms" name="e2e_ms" type="linear" stroke="var(--ph-accent)" strokeWidth={2} dot={chain.trend.length === 1} connectNulls={false} isAnimationActive={false} />
                 <Line yAxisId="loss" dataKey="loss" name="loss" type="stepAfter" stroke="var(--fw-down)" strokeWidth={1.5} strokeDasharray="4 3" dot={chain.trend.length === 1} connectNulls={false} isAnimationActive={false} />
               </LineChart></ResponsiveContainer>
             </div>
