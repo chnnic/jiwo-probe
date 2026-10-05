@@ -100,6 +100,10 @@ dialog.probe-history-dialog { width: min(860px, calc(100vw - 24px)); max-height:
 .probe-forward-panel { min-width: 0; }
 .probe-forward-panel h4 { margin: 0 0 8px; font-size: 12px; font-weight: 600; color: var(--ph-muted); }
 .probe-forward-trend { height: 170px; }
+.probe-forward-panel h4 { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; }
+.probe-forward-legend { display: inline-flex; align-items: center; gap: 5px; margin-left: auto; font-weight: 500; }
+.probe-forward-legend i { display: inline-block; width: 14px; height: 0; border-top: 2px solid var(--ph-tcp); margin-left: 6px; }
+.probe-forward-legend i[data-series="loss"] { border-top: 1.5px dashed var(--fw-down); }
 .probe-forward-bars { display: grid; grid-template-columns: repeat(7, 1fr); align-items: end; gap: 6px; height: 120px; }
 .probe-forward-bars button { display: flex; flex-direction: column; justify-content: flex-end; align-items: center; gap: 4px; height: 100%; min-width: 0; padding: 0; border: 0; border-radius: 6px; background: transparent; color: inherit; font: inherit; cursor: pointer; }
 .probe-forward-bars button:hover { background: color-mix(in srgb, var(--ph-udp) 8%, transparent); }

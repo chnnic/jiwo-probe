@@ -77,13 +77,21 @@ export function ForwardOverview({ data }: { data: ProbePayload }) {
           })}
         </div>
         <div className="probe-forward-panels">
-          {!!chain.trend?.length && <div className="probe-forward-panel"><h4>端到端延迟 · 近 {Math.round(chain.trend.length * (chain.bucket_sec || 300) / 60)} 分钟</h4>
-            <div className="probe-forward-trend" role="img" aria-label={`${chain.name} 端到端延迟趋势`}>
-              <ResponsiveContainer width="100%" height="100%"><LineChart data={chain.trend.map((point) => ({ ...point, e2e_ms: Number.isFinite(point.e2e_ms) && point.e2e_ms >= 0 ? point.e2e_ms : null }))} margin={{ top: 10, left: 0, right: 16, bottom: 0 }}>
+          {!!chain.trend?.length && <div className="probe-forward-panel"><h4>端到端延迟与丢包 · 近 {Math.round(chain.trend.length * (chain.bucket_sec || 300) / 60)} 分钟
+              <span className="probe-forward-legend"><i data-series="latency" />延迟<i data-series="loss" />丢包</span></h4>
+            <div className="probe-forward-trend" role="img" aria-label={`${chain.name} 端到端延迟与丢包趋势`}>
+              {/* 延迟用左轴（ms），丢包用右轴（%，至少显示到 10%，避免 0% 贴底时看不出来） */}
+              <ResponsiveContainer width="100%" height="100%"><LineChart data={chain.trend.map((point) => ({
+                ...point,
+                e2e_ms: Number.isFinite(point.e2e_ms) && point.e2e_ms >= 0 ? point.e2e_ms : null,
+                loss: Number.isFinite(point.loss) && point.loss >= 0 ? point.loss : null,
+              }))} margin={{ top: 10, left: 0, right: 0, bottom: 0 }}>
                 <XAxis dataKey="ts" type="number" domain={['dataMin', 'dataMax']} tickFormatter={time} tick={{ fontSize: 11 }} minTickGap={30} axisLine={false} tickLine={false} />
-                <YAxis width={55} tick={{ fontSize: 11 }} tickFormatter={(value) => `${value} ms`} domain={[0, 'auto']} axisLine={false} tickLine={false} />
-                <Tooltip formatter={(value) => [latency(Number(value)), '端到端延迟']} labelFormatter={(value) => time(Number(value))} />
-                <Line dataKey="e2e_ms" type="linear" stroke="var(--ph-tcp)" strokeWidth={2} dot={chain.trend.length === 1} connectNulls={false} isAnimationActive={false} />
+                <YAxis yAxisId="ms" width={55} tick={{ fontSize: 11 }} tickFormatter={(value) => `${value} ms`} domain={[0, 'auto']} axisLine={false} tickLine={false} />
+                <YAxis yAxisId="loss" orientation="right" width={44} tickCount={3} allowDecimals={false} tick={{ fontSize: 11 }} tickFormatter={(value) => `${value}%`} domain={[0, (max: number) => Math.min(100, Math.max(10, Math.ceil(max / 10) * 10))]} axisLine={false} tickLine={false} />
+                <Tooltip formatter={(value, name) => name === 'loss' ? [`${Number(value).toFixed(1)}%`, '丢包'] : [latency(Number(value)), '端到端延迟']} labelFormatter={(value) => time(Number(value))} />
+                <Line yAxisId="ms" dataKey="e2e_ms" name="e2e_ms" type="linear" stroke="var(--ph-tcp)" strokeWidth={2} dot={chain.trend.length === 1} connectNulls={false} isAnimationActive={false} />
+                <Line yAxisId="loss" dataKey="loss" name="loss" type="stepAfter" stroke="var(--fw-down)" strokeWidth={1.5} strokeDasharray="4 3" dot={chain.trend.length === 1} connectNulls={false} isAnimationActive={false} />
               </LineChart></ResponsiveContainer>
             </div>
           </div>}
