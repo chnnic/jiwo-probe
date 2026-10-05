@@ -79,6 +79,7 @@ dialog.probe-history-dialog { width: min(860px, calc(100vw - 24px)); max-height:
 .probe-forward-detail > header h3 { margin: 0; font-size: 14px; color: var(--ph-text); }
 .probe-forward-detail > header h3 span { padding: 1px 7px; border-radius: 999px; font-size: 11px; color: var(--fw); background: color-mix(in srgb, var(--fw) 12%, var(--ph-bg)); }
 .probe-forward-detail > header strong { margin-left: 6px; color: var(--ph-text); }
+.probe-forward-interval { margin-left: 4px; font-size: 11px; color: var(--ph-muted); }
 .probe-forward-detail > header p { flex-basis: 100%; margin: 0; color: var(--fw); }
 .probe-forward-topology { display: flex; align-items: stretch; gap: 0; overflow-x: auto; padding-bottom: 6px; }
 .probe-forward-group { flex: 1 0 190px; min-width: 0; padding: 10px 12px; border: 1.5px solid var(--ph-line); border-radius: 10px; }

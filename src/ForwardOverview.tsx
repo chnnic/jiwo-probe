@@ -11,6 +11,8 @@ const latency = (value?: number) => typeof value === 'number' && Number.isFinite
 const loss = (value?: number) => typeof value === 'number' && Number.isFinite(value) && value >= 0 ? `${value.toFixed(1)}%` : '—'
 const time = (value: number) => new Date(value * 1000).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', hour12: false })
 const day = (value: string) => value.slice(5).replace('-', '/')
+// 主控按 bucket_sec 汇总一次延迟与丢包（默认 300 秒）；页面每 3 秒刷新，数字只在下一轮探测后变化
+const probeInterval = (bucketSec?: number) => `主控每 ${Math.max(1, Math.round((bucketSec || 300) / 60))} 分钟探测一次`
 // 放在页首后默认折叠；访客展开或折叠后记在本浏览器
 const OPEN_KEY = 'probe-forward-open'
 const readOpen = () => { try { return localStorage.getItem(OPEN_KEY) === '1' } catch { return false } }
@@ -48,14 +50,14 @@ export function ForwardOverview({ data }: { data: ProbePayload }) {
           const total = chainTraffic(item.chain)?.total
           return <button type="button" key={item.chain.name} data-status={item.status} aria-pressed={item === current} onClick={() => setSelected(item.chain.name)} title={item.reasons.join('；') || STATUS_LABEL[item.status]}>
             <span className="probe-forward-chain-name"><i aria-hidden="true" />{item.chain.name}</span>
-            <span className="probe-forward-chain-stats"><strong data-tone={latencyTone(item.chain.end_to_end_ms)}>{latency(item.chain.end_to_end_ms)}</strong><span>丢包 {loss(item.chain.loss_pct)}</span>{total !== undefined && <span>7 天 {formatGb(total)}</span>}</span>
+            <span className="probe-forward-chain-stats"><strong data-tone={latencyTone(item.chain.end_to_end_ms)}>{latency(item.chain.end_to_end_ms)}</strong><span title={probeInterval(item.chain.bucket_sec)}>丢包 {loss(item.chain.loss_pct)}</span>{total !== undefined && <span>7 天 {formatGb(total)}</span>}</span>
             {item.reasons.length > 0 && <small>{item.reasons.join(' · ')}</small>}
           </button>
         })}
       </div>
       <div className="probe-forward-detail" data-status={current.status}>
         <header><h3><i aria-hidden="true" />{chain.name}<span>{STATUS_LABEL[current.status]}</span></h3>
-          <span>端到端 <strong>{latency(chain.end_to_end_ms)}</strong></span><span>丢包 <strong>{loss(chain.loss_pct)}</strong></span>
+          <span>端到端 <strong>{latency(chain.end_to_end_ms)}</strong></span><span>丢包 <strong>{loss(chain.loss_pct)}</strong><small className="probe-forward-interval">（{probeInterval(chain.bucket_sec)}）</small></span>
           {current.reasons.length > 0 && <p>{current.reasons.join('；')}</p>}
         </header>
         <div className="probe-forward-topology" aria-label={`${chain.name} 转发拓扑`}>
