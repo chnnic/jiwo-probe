@@ -61,7 +61,8 @@ dialog.probe-history-dialog { width: min(860px, calc(100vw - 24px)); max-height:
 .probe-forward [data-status="ok"] { --fw: var(--fw-ok); }
 .probe-forward [data-status="warn"] { --fw: var(--fw-warn); }
 .probe-forward [data-status="down"] { --fw: var(--fw-down); }
-.probe-forward [data-tone="good"] { --fw-tone: var(--fw-ok); }
+/* 延迟色阶：良好（<80ms）用主题强调色与界面协调；偏高 / 很高仍用橙 / 红提醒。状态色（--fw）不受影响 */
+.probe-forward [data-tone="good"] { --fw-tone: var(--ph-accent); }
 .probe-forward [data-tone="ok"] { --fw-tone: var(--fw-warn); }
 .probe-forward [data-tone="hi"], .probe-forward [data-tone="down"] { --fw-tone: var(--fw-down); }
 .probe-forward [data-tone="idle"] { --fw-tone: var(--ph-muted); }
