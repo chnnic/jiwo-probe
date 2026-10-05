@@ -134,6 +134,22 @@ dialog.probe-history-dialog { width: min(860px, calc(100vw - 24px)); max-height:
 .probe-forward-cells i[data-tone="warn"] { background: var(--fw-warn); }
 .probe-forward-cells i[data-tone="down"] { background: var(--fw-down); }
 .probe-forward-cells i[data-tone="idle"] { background: var(--ph-line); }
+/* 选路段：分叉处并列各条路，在用的路高亮并流动，备用路变淡 */
+.probe-forward-fork { display: grid; align-content: center; gap: 6px; flex: 1.2 0 230px; min-width: 0; margin: 0 10px; }
+.probe-forward-fork > p { margin: 0; font-size: 10px; color: var(--ph-muted); }
+.probe-forward-route { display: grid; gap: 3px; padding: 6px 8px; border: 1px dashed var(--ph-line); border-radius: 8px; opacity: .6; }
+.probe-forward-route[data-selected] { border-style: solid; border-color: color-mix(in srgb, var(--ph-accent) 55%, var(--ph-line)); background: color-mix(in srgb, var(--ph-accent) 6%, transparent); opacity: 1; }
+.probe-forward-route-head { display: flex; align-items: center; gap: 6px; min-width: 0; font-size: 11px; }
+.probe-forward-route-head strong { flex: none; }
+.probe-forward-route-via { display: flex; gap: 4px; min-width: 0; overflow: hidden; }
+.probe-forward-route-via em { overflow: hidden; padding: 0 5px; border-radius: 4px; font-style: normal; font-size: 10px; white-space: nowrap; text-overflow: ellipsis; color: var(--ph-muted); background: color-mix(in srgb, var(--ph-line) 45%, transparent); }
+.probe-forward-route-head b { margin-left: auto; flex: none; font-weight: 600; color: var(--fw-tone); }
+.probe-forward-route-head small { flex: none; font-size: 10px; color: var(--fw-tone); }
+.probe-forward-route .probe-forward-hop { flex: none; padding: 0; }
+.probe-forward-route-by { overflow: hidden; font-size: 10px; white-space: nowrap; text-overflow: ellipsis; color: var(--ph-muted); }
+.probe-forward-route[data-selected] .probe-forward-route-by { color: var(--ph-accent); }
+.probe-forward-route-tag { flex: none; font-size: 10px; color: var(--ph-accent); }
+.probe-forward-server-loss { flex: none; font-size: 10px; color: var(--fw-down); }
 .probe-forward-note { margin: 0; padding: 8px 10px; border: 1px dashed color-mix(in srgb, var(--fw-warn) 45%, var(--ph-line)); border-radius: 8px; font-size: 11px; line-height: 1.6; color: var(--ph-muted); background: color-mix(in srgb, var(--fw-warn) 6%, var(--ph-bg)); }
 @media (prefers-reduced-motion: reduce) {
   .probe-forward-hop i, .probe-forward-hop[data-tone="down"] i { animation: none; }
@@ -187,4 +203,15 @@ dialog.probe-history-dialog { width: min(860px, calc(100vw - 24px)); max-height:
   }
   .probe-forward-hop[data-flow="0"] i { background: linear-gradient(color-mix(in srgb, var(--fw-tone) 55%, transparent), color-mix(in srgb, var(--fw-tone) 55%, transparent)) 50% 0 / 2px 100% no-repeat; }
   .probe-forward-hop[data-tone="down"] i { background: repeating-linear-gradient(180deg, var(--fw-tone) 0 6px, transparent 6px 10px) 50% 0 / 2px 100% no-repeat; animation-name: fw-blink; }
+  /* 选路段在手机上竖排在两组之间，各条路内部的连线仍保持横向 */
+  .probe-forward-fork { margin: 8px 0 8px 16px; }
+  .probe-forward-route .probe-forward-hop { min-height: 0; padding: 0; }
+  .probe-forward-route .probe-forward-hop i {
+    order: 0; flex: 1 1 auto; height: 6px;
+    background:
+      radial-gradient(circle, var(--fw-tone) 0 2.2px, transparent 2.6px) 0 50% / var(--fw-dot-gap) 6px repeat-x,
+      linear-gradient(color-mix(in srgb, var(--fw-tone) 35%, transparent), color-mix(in srgb, var(--fw-tone) 35%, transparent)) 0 50% / 100% 2px no-repeat;
+    animation-name: fw-flow;
+  }
+  .probe-forward-route .probe-forward-hop[data-flow="0"] i { background: linear-gradient(color-mix(in srgb, var(--fw-tone) 55%, transparent), color-mix(in srgb, var(--fw-tone) 55%, transparent)) 0 50% / 100% 2px no-repeat; }
 }

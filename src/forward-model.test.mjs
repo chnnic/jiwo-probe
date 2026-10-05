@@ -1,6 +1,29 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { chainStatus, chainTraffic, chainTrafficDay, flowDuration, flowLevel, formatGb, forwardSummary, hopTone, latencyTone, mayHaveRouteSelection, sortChains, trendCells } from './forward-model.ts'
+import { chainStatus, chainTraffic, chainTrafficDay, flowDuration, flowLevel, formatGb, forwardSummary, hopTone, latencyTone, mayHaveRouteSelection, routeFork, sortChains, trendCells } from './forward-model.ts'
+
+test('选路段：按 route_hop 分叉，带策略说明与各路状态；有 routes 时不再提示可能是选路', () => {
+  const chain = {
+    name: 'akari', end_to_end_ms: 15, loss_pct: 0, bucket_sec: 300, trend: [],
+    groups: [
+      { name: '入口', role: 'entry', to_next_ms: 6, servers: [{ name: 'a', to_next_ms: 5, healthy: true, route: '路1' }] },
+      { name: '出口', role: 'exit', to_next_ms: 0, servers: [{ name: 'x', to_next_ms: 0, healthy: false }] },
+    ],
+    route_hop: 0, route_policy: 'lowest_latency', failover_ms: 150,
+    routes: [
+      { name: '路1', via: [], latency_ms: 16, loss_pct: 0, selected: true, selected_by: ['a'] },
+      { name: '路2', via: ['组3'], latency_ms: 200, loss_pct: 0, selected: false },
+      { name: '路3', via: ['组4'], latency_ms: 16, loss_pct: 80, selected: false },
+    ],
+  }
+  const fork = routeFork(chain)
+  assert.equal(fork.hop, 0)
+  assert.equal(fork.policy, '最低延迟优先 · 故障转移 150 ms')
+  assert.deepEqual(fork.routes.map(r => r.tone), ['good', 'hi', 'down'])
+  assert.equal(mayHaveRouteSelection(chain), false)
+  assert.equal(routeFork({ ...chain, route_hop: 1 }), null, '分叉不能在最后一组之后')
+  assert.equal(routeFork({ ...chain, routes: [] }), null)
+})
 
 test('状态条每段按链路口径着色，无数据为 idle', () => {
   const c = { name: 't', end_to_end_ms: 20, loss_pct: 0, bucket_sec: 300, groups: [], trend: [

@@ -157,13 +157,30 @@ export interface ForwardChainServerData {
   name: string
   to_next_ms: number
   healthy: boolean
+  /** 主控 v0.5.6-beta.4 起：本台到下一跳的丢包率 */
+  loss_pct?: number
+  /** 选路段分叉组成员当前走的路名（如「路1」） */
+  route?: string
 }
 
 export interface ForwardChainGroupData {
   name: string
   role: 'entry' | 'mid' | 'exit'
   to_next_ms: number
+  /** 主控 v0.5.6-beta.4 起 */
+  loss_pct?: number
   servers: ForwardChainServerData[]
+}
+
+/** 选路段里的一条路（主控 v0.5.6-beta.4 起，#1136）。via 为绕经的中转组名，空数组表示直连下一组。 */
+export interface ForwardChainRoute {
+  name: string
+  via: string[]
+  latency_ms: number
+  loss_pct: number
+  selected: boolean
+  /** 当前走这条路的分叉组成员 */
+  selected_by?: string[]
 }
 
 export interface ForwardChainBucket {
@@ -194,4 +211,9 @@ export interface ForwardChainData {
   bucket_sec: number
   trend: ForwardChainBucket[]
   traffic?: ForwardChainTraffic | null
+  /** 选路段：groups[route_hop] 之后分叉成 routes，汇合到 groups[route_hop + 1] */
+  route_hop?: number
+  route_policy?: string
+  failover_ms?: number
+  routes?: ForwardChainRoute[]
 }

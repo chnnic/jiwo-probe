@@ -182,16 +182,20 @@ export function buildDemoPayload({ theme = 'luminaplus', now = Date.now() } = {}
       traffic: traffic([['HKG-Edge-01', '入口组', 'entry', 18], ['TPE-Line-08', '入口组', 'entry', 7], ['SEL-Game-07', '中转组', 'mid', 15], ['SIN-Relay-03', '中转组', 'mid', 6], ['TYO-Core-02', '出口组', 'exit', 0]]),
     },
     {
-      // 选路段：入口直连 / 经组 3 / 经组 4 按最低延迟择一，主控接口扁平成两个连续中转组
+      // 选路段（主控 v0.5.6-beta.4 起的结构）：入口之后分叉成直连 / 经组 3 / 经组 4 三条路，按最低延迟择一
       name: 'HKG → LAX 选路',
-      end_to_end_ms: 172, loss_pct: 0, bucket_sec: bucket,
+      end_to_end_ms: 132, loss_pct: 0, bucket_sec: bucket,
       groups: [
-        { name: '入口', role: 'entry', to_next_ms: 6, servers: [node('HKG-Edge-01', 5), node('TPE-Line-08', 7)] },
-        { name: '组 3', role: 'mid', to_next_ms: 83, servers: [node('TYO-Core-02', 83)] },
-        { name: '组 4', role: 'mid', to_next_ms: 83, servers: [node('SEL-Game-07', 83)] },
-        { name: '组 2', role: 'exit', to_next_ms: 0, servers: [node('LAX-Main-04', 0, false)] },
+        { name: '入口', role: 'entry', to_next_ms: 6, loss_pct: 0, servers: [{ ...node('HKG-Edge-01', 5), loss_pct: 0, route: '路2' }, { ...node('TPE-Line-08', 7), loss_pct: 1.2, route: '路1' }] },
+        { name: '组 2', role: 'exit', to_next_ms: 0, loss_pct: 0, servers: [node('LAX-Main-04', 0, false)] },
       ],
-      trend: trend(172, (i) => [i === 7 ? 283 : 172, 0]),
+      route_hop: 0, route_policy: 'lowest_latency', failover_ms: 150,
+      routes: [
+        { name: '路1', via: [], latency_ms: 138, loss_pct: 0, selected: true, selected_by: ['TPE-Line-08'] },
+        { name: '路2', via: ['组 3'], latency_ms: 126, loss_pct: 0, selected: true, selected_by: ['HKG-Edge-01'] },
+        { name: '路3', via: ['组 4'], latency_ms: 171, loss_pct: 2.5, selected: false },
+      ],
+      trend: trend(132, (i) => [i === 7 ? 283 : 132, 0]),
       traffic: traffic([['HKG-Edge-01', '入口', 'entry', 3], ['TYO-Core-02', '组 3', 'mid', 1], ['SEL-Game-07', '组 4', 'mid', 0.4], ['LAX-Main-04', '组 2', 'exit', 0]]),
     },
     {

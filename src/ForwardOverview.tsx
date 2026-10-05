@@ -2,7 +2,7 @@ import { Fragment, useMemo, useState, type CSSProperties } from 'react'
 import { ChevronDown, Network } from 'lucide-react'
 import { Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import type { ProbePayload, ProbeServer } from './types'
-import { chainTraffic, chainTrafficDay, flowDuration, flowLevel, formatGb, forwardSummary, groupHealth, hopTone, latencyTone, mayHaveRouteSelection, sortChains, trendCells, type ForwardStatus } from './forward-model'
+import { chainTraffic, chainTrafficDay, flowDuration, flowLevel, formatGb, forwardSummary, groupHealth, hopTone, latencyTone, mayHaveRouteSelection, routeFork, sortChains, trendCells, type ForwardStatus } from './forward-model'
 import { useNetworkSpeed } from './use-network-speed'
 import './probe-history.css'
 
@@ -38,6 +38,7 @@ export function ForwardOverview({ data }: { data: ProbePayload }) {
   const current = chains.find((item) => item.chain.name === selected) || chains[0]
   const chain = current?.chain
   const traffic = chain ? chainTraffic(chain) : null
+  const fork = chain ? routeFork(chain) : null
   const peak = traffic ? Math.max(...traffic.daily.map((item) => item.gb), 0) : 0
   const dayIndex = chain && daySel?.chain === chain.name ? daySel.index : null
   const dayDetail = chain && dayIndex !== null ? chainTrafficDay(chain, dayIndex) : null
@@ -70,6 +71,7 @@ export function ForwardOverview({ data }: { data: ProbePayload }) {
         </header>
         <div className="probe-forward-topology" aria-label={`${chain.name} 转发拓扑`}>
           {chain.groups.map((group, index) => {
+            const isFork = fork?.hop === index
             const health = groupHealth(group)
             const groupStatus = !health || health.total === 0 ? undefined : health.healthy === 0 ? 'down' : health.healthy < health.total ? 'warn' : 'ok'
             const tone = hopTone(group)
@@ -88,10 +90,29 @@ export function ForwardOverview({ data }: { data: ProbePayload }) {
                       <span>↑ {networkSpeed(live.upload_speed)}</span><span>↓ {networkSpeed(live.download_speed)}</span>
                     </em>}
                     {group.role !== 'exit' && <strong data-tone={server.healthy ? latencyTone(server.to_next_ms) : 'down'}>{server.healthy ? latency(server.to_next_ms) : '不可达'}</strong>}
+                    {group.role !== 'exit' && typeof server.loss_pct === 'number' && server.loss_pct > 0 && <small className="probe-forward-server-loss" title="本台到下一跳的丢包率">丢包 {loss(server.loss_pct)}</small>}
+                    {server.route && <small className="probe-forward-route-tag" title="当前走的路">→ {server.route}</small>}
                   </li>
                 })}</ul>
               </section>
-              {index < chain.groups.length - 1 && <span className="probe-forward-hop" data-tone={tone} data-flow={flow}
+              {isFork && fork && <div className="probe-forward-fork" role="group" aria-label="选路段">
+                <p>选路段{fork.policy && <> · {fork.policy}</>}</p>
+                {fork.routes.map((route) => {
+                  const routeBytes = (route.selected_by || []).reduce((sum, name) => sum + liveBytes(liveByName.get(name)), 0)
+                  const routeFlow = route.selected && route.tone !== 'down' ? flowLevel(routeBytes) : 0
+                  return <div key={route.name} className="probe-forward-route" data-selected={route.selected || undefined}>
+                    <div className="probe-forward-route-head">
+                      <strong>{route.name}</strong>
+                      <span className="probe-forward-route-via">{route.via.length ? route.via.map((name) => <em key={name}>{name}</em>) : <em data-direct>直连</em>}</span>
+                      <b data-tone={route.tone}>{latency(route.latency_ms)}</b>
+                      {route.loss_pct > 0 && <small data-tone={route.loss_pct >= 5 ? 'down' : 'ok'}>丢包 {loss(route.loss_pct)}</small>}
+                    </div>
+                    <span className="probe-forward-hop" data-tone={route.tone} data-flow={routeFlow} style={{ '--fw-flow-duration': `${flowDuration(route.latency_ms)}s` } as CSSProperties}><i aria-hidden="true" /></span>
+                    <small className="probe-forward-route-by">{route.selected ? `在用${route.selected_by?.length ? `：${route.selected_by.join('、')}` : ''}` : '备用'}</small>
+                  </div>
+                })}
+              </div>}
+              {!isFork && index < chain.groups.length - 1 && <span className="probe-forward-hop" data-tone={tone} data-flow={flow}
                 style={{ '--fw-flow-duration': `${flowDuration(group.to_next_ms)}s` } as CSSProperties}
                 title={tone === 'down' ? '该组无可用服务器' : `到下一组 ${latency(group.to_next_ms)} · 本组实时 ${networkSpeed(groupBytes)}`}>
                 <b>{tone === 'down' ? '中断' : latency(group.to_next_ms)}</b><i aria-hidden="true" />
