@@ -92,3 +92,14 @@ export function formatGb(gb: number): string {
   if (gb >= 1) return `${gb.toFixed(1)} GB`
   return `${Math.max(1, Math.round(gb * 1024))} MB`
 }
+
+/** 某一天的流量明细：当天合计与各节点用量（从多到少，0 流量不列出）；越界或无数据返回 null。 */
+export function chainTrafficDay(chain: ForwardChainData, dayIndex: number) {
+  const traffic = chain.traffic
+  if (!traffic?.days?.length || !traffic.servers?.length || dayIndex < 0 || dayIndex >= traffic.days.length) return null
+  const servers = traffic.servers
+    .map((server) => ({ name: server.name, group: server.group, role: server.role, gb: finite(server.daily_gb?.[dayIndex]) ? server.daily_gb[dayIndex] : 0 }))
+    .filter((server) => server.gb > 0)
+    .sort((a, b) => b.gb - a.gb)
+  return { date: traffic.days[dayIndex], total: servers.reduce((sum, server) => sum + server.gb, 0), servers }
+}

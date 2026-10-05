@@ -2,7 +2,7 @@ import { Fragment, useState } from 'react'
 import { ChevronDown, Network } from 'lucide-react'
 import { Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import type { ProbePayload } from './types'
-import { chainTraffic, formatGb, forwardSummary, groupHealth, hopTone, latencyTone, sortChains, type ForwardStatus } from './forward-model'
+import { chainTraffic, chainTrafficDay, formatGb, forwardSummary, groupHealth, hopTone, latencyTone, sortChains, type ForwardStatus } from './forward-model'
 import './probe-history.css'
 
 const roles = { entry: '入口', mid: '中转', exit: '出口' }
@@ -22,6 +22,8 @@ const readOpen = () => { try { return localStorage.getItem(OPEN_KEY) === '1' } c
  */
 export function ForwardOverview({ data }: { data: ProbePayload }) {
   const [selected, setSelected] = useState('')
+  // 选中的某一天（按链记录，切换链路时自动回到 7 天汇总）
+  const [daySel, setDaySel] = useState<{ chain: string; index: number } | null>(null)
   const [open, setOpen] = useState(readOpen)
   if (data.show_forward === false || (!data.show_forward && !data.forward?.length)) return null
   const chains = sortChains(data.forward || [])
@@ -30,6 +32,8 @@ export function ForwardOverview({ data }: { data: ProbePayload }) {
   const chain = current?.chain
   const traffic = chain ? chainTraffic(chain) : null
   const peak = traffic ? Math.max(...traffic.daily.map((item) => item.gb), 0) : 0
+  const dayIndex = chain && daySel?.chain === chain.name ? daySel.index : null
+  const dayDetail = chain && dayIndex !== null ? chainTrafficDay(chain, dayIndex) : null
   return <details className="probe-forward" open={open} onToggle={(event) => {
     const next = event.currentTarget.open
     setOpen(next)
@@ -85,12 +89,21 @@ export function ForwardOverview({ data }: { data: ProbePayload }) {
           </div>}
           {traffic && traffic.total <= 0 && <div className="probe-forward-panel"><h4>近 7 天无流量</h4></div>}
           {traffic && traffic.total > 0 && <div className="probe-forward-panel"><h4>近 7 天流量 · 合计 {formatGb(traffic.total)}</h4>
-            <div className="probe-forward-bars" role="img" aria-label={`${chain.name} 近 7 天每日流量`}>
-              {traffic.daily.map((item) => <span key={item.date} title={`${item.date} · ${formatGb(item.gb)}`}>
+            <div className="probe-forward-bars" role="group" aria-label={`${chain.name} 近 7 天每日流量，点击某天查看明细`} data-selected={dayIndex !== null || undefined}>
+              {traffic.daily.map((item, index) => <button type="button" key={item.date} aria-pressed={dayIndex === index} title={`${item.date} · ${formatGb(item.gb)}${dayIndex === index ? ' · 再次点击返回 7 天汇总' : ' · 点击查看当日明细'}`}
+                onClick={() => setDaySel(dayIndex === index ? null : { chain: chain.name, index })}>
                 <i style={{ height: `${peak > 0 ? Math.max(item.gb > 0 ? 4 : 0, item.gb / peak * 100) : 0}%` }} /><small>{day(item.date)}</small>
-              </span>)}
+              </button>)}
             </div>
-            {traffic.servers.length > 0 && <ol className="probe-forward-top">{traffic.servers.map((server) => <li key={server.name}><span title={server.name}>{server.name}</span><small>{roles[server.role as keyof typeof roles] ?? server.role}</small><strong>{formatGb(server.total_gb)}</strong></li>)}</ol>}
+            {dayDetail ? <div className="probe-forward-day" aria-live="polite">
+              <p><strong>{dayDetail.date}</strong> 当日合计 <strong>{formatGb(dayDetail.total)}</strong><button type="button" onClick={() => setDaySel(null)}>返回 7 天汇总</button></p>
+              {dayDetail.servers.length > 0
+                ? <ol className="probe-forward-top">{dayDetail.servers.map((server) => <li key={server.name}><span title={server.name}>{server.name}</span><small>{roles[server.role as keyof typeof roles] ?? server.role} · {server.group}</small><strong>{formatGb(server.gb)}</strong></li>)}</ol>
+                : <p className="probe-forward-empty">当天各节点均无流量。</p>}
+            </div> : <>
+              <p className="probe-forward-hint">点击柱子查看当天各节点流量</p>
+              {traffic.servers.length > 0 && <ol className="probe-forward-top">{traffic.servers.map((server) => <li key={server.name}><span title={server.name}>{server.name}</span><small>{roles[server.role as keyof typeof roles] ?? server.role}</small><strong>{formatGb(server.total_gb)}</strong></li>)}</ol>}
+            </>}
           </div>}
         </div>
       </div>

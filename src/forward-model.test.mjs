@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { chainStatus, chainTraffic, formatGb, forwardSummary, hopTone, latencyTone, sortChains } from './forward-model.ts'
+import { chainStatus, chainTraffic, chainTrafficDay, formatGb, forwardSummary, hopTone, latencyTone, sortChains } from './forward-model.ts'
 
 const server = (name, healthy, to_next_ms = 5) => ({ name, healthy, to_next_ms })
 const chain = (name, { e2e = 20, loss = 0, entry = [true, true], mid, exitHealthy = false, trend = [{ ts: 1, e2e_ms: 20, loss: 0 }], traffic = null } = {}) => ({
@@ -54,4 +54,18 @@ test('7 天流量按天合计各节点，取流量最多的节点', () => {
   assert.deepEqual(result.servers.map(s => s.name), ['b', 'a'])
   assert.equal(chainTraffic(chain('none')), null)
   assert.deepEqual([0, 0.5, 12.34, 512, 2048].map(formatGb), ['0 GB', '512 MB', '12.3 GB', '512 GB', '2.00 TB'])
+})
+
+test('某一天的流量明细：当天合计、按用量排序、不列 0 流量节点', () => {
+  const traffic = { days: ['10-03', '10-04'], total_gb: 9, servers: [
+    { name: 'in-a', group: '入口组', role: 'entry', daily_gb: [1, 0.5], total_gb: 1.5 },
+    { name: 'out-b', group: '出口组', role: 'exit', daily_gb: [3, 4.5], total_gb: 7.5 },
+    { name: 'idle', group: '入口组', role: 'entry', daily_gb: [0, 0], total_gb: 0 },
+  ] }
+  const day = chainTrafficDay(chain('t', { traffic }), 1)
+  assert.equal(day.date, '10-04')
+  assert.equal(day.total, 5)
+  assert.deepEqual(day.servers.map(s => `${s.name} ${s.gb}`), ['out-b 4.5', 'in-a 0.5'])
+  assert.equal(chainTrafficDay(chain('t', { traffic }), 2), null)
+  assert.equal(chainTrafficDay(chain('none'), 0), null)
 })
