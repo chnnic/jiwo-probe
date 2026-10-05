@@ -58,6 +58,15 @@ dialog.probe-history-dialog { width: min(860px, calc(100vw - 24px)); max-height:
 /* 转发链：状态色与主控 CSS 同一组（正常 / 偏慢 / 异常），延迟色阶沿用上游 Premium 转发页 */
 .probe-forward { --fw-ok: #2f9e6b; --fw-warn: #d18a1b; --fw-down: #d64545; margin: 20px 0; padding: 18px; border: 1px solid var(--ph-line); border-radius: var(--radius, 14px); background: var(--ph-bg); color: var(--ph-text); }
 :root:is(.dark, .gold) .probe-forward, body.gm-body:not(.gm-light-body) .probe-forward { --fw-ok: #4cc38a; --fw-warn: #f0b04a; --fw-down: #f07373; }
+/* 状态色（正常 / 偏慢 / 异常）改用各主题自带的同类色，仍保持三色可区分：
+   LuminaPlus 三套配色与 Lite 有自己的绿黄红；Lumina 黑金 / 白金以金色表示在线，偏慢改橙色拉开差别 */
+:root.theme-luminaplus .probe-forward { --fw-ok: var(--lp-green); --fw-warn: var(--lp-warn); --fw-down: var(--lp-red); }
+:root.theme-lite .probe-forward { --fw-ok: var(--mini-meter-good); --fw-warn: var(--mini-meter-warm); --fw-down: var(--mini-meter-high); }
+:root.theme-emerald .probe-forward { --fw-ok: var(--em-accent); }
+body.gm-body .probe-forward { --fw-ok: #2fd4a1; }
+body.gm-light-body .probe-forward { --fw-ok: #0d946e; }
+:root.theme-lumina.gold .probe-forward { --fw-ok: #dfb65a; --fw-warn: #e0883a; --fw-down: #e5645a; }
+:root.theme-lumina.platinum .probe-forward { --fw-ok: #a87c22; --fw-warn: #c0661f; --fw-down: #b8473f; }
 .probe-forward [data-status="ok"] { --fw: var(--fw-ok); }
 .probe-forward [data-status="warn"] { --fw: var(--fw-warn); }
 .probe-forward [data-status="down"] { --fw: var(--fw-down); }
