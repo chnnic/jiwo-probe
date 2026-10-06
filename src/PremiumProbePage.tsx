@@ -1563,6 +1563,46 @@ function ForwardTrafficChart({ traffic }: { traffic: ForwardChainTraffic }) {
   );
 }
 
+const routePolicyLabel: Record<string, string> = {
+  lowest_latency: "最低延迟优先",
+  failover: "按顺序故障转移",
+  weighted: "按权重分流",
+};
+
+/** 选路段:分叉那组到下一组之间并行的几条路,标出在用的那条(主控 #1136) */
+function ForwardRoutes({ chain }: { chain: ForwardChainData }) {
+  const routes = chain.routes ?? [];
+  return (
+    <div className="rroutes">
+      <div className="rr-h">
+        选路 · {routePolicyLabel[chain.route_policy ?? ""] ?? chain.route_policy}
+        {chain.failover_ms ? ` · 故障转移 ${chain.failover_ms}ms` : ""}
+      </div>
+      {routes.map((r) => (
+        <div
+          key={r.name}
+          className={`rr${r.selected ? " is-on" : ""}`}
+          title={
+            r.selected_by?.length
+              ? `正在走:${r.selected_by.join("、")}`
+              : undefined
+          }
+        >
+          <span className="rn">{r.name}</span>
+          <span className="rv">
+            {r.via.length ? `经 ${r.via.join(" → ")}` : "直连"}
+          </span>
+          <span className={`rl ${forwardLatencyClass(r.latency_ms)}`}>
+            {r.latency_ms > 0 ? `${r.latency_ms} ms` : "—"}
+          </span>
+          {r.loss_pct > 0 && <span className="rlo">丢 {r.loss_pct}%</span>}
+          {r.selected && <span className="ron">在用</span>}
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function ForwardChainView({ wsChains }: { wsChains?: ForwardChainData[] }) {
   // 优先用 WS payload 下发的转发链数据(实时);未走 WS 才拉 /api/forward 兜底。
   const hasWS = wsChains !== undefined;
@@ -1652,7 +1692,11 @@ function ForwardChainView({ wsChains }: { wsChains?: ForwardChainData[] }) {
             {chain.end_to_end_ms}
             <span className="u">ms</span>
           </div>
-          <div className="foot">入口 → 出口 · 各组均值之和</div>
+          <div className="foot">
+            {chain.routes?.length
+              ? "入口 → 出口 · 按在用的路"
+              : "入口 → 出口 · 各组均值之和"}
+          </div>
         </div>
         <div className="stat is-ok">
           <div className="k">平均丢包</div>
@@ -1672,6 +1716,7 @@ function ForwardChainView({ wsChains }: { wsChains?: ForwardChainData[] }) {
           <div className="foot">
             入口 {roleTally.entry || 0} · 中转 {roleTally.mid || 0} · 出口{" "}
             {roleTally.exit || 0}
+            {chain.routes?.length ? ` · 选路 ${chain.routes.length} 条` : ""}
           </div>
         </div>
         <div className="stat is-gold">
@@ -1701,13 +1746,16 @@ function ForwardChainView({ wsChains }: { wsChains?: ForwardChainData[] }) {
                   <span className="gname">{group.name}</span>
                   <span className="gmeta">{group.servers.length} 节点</span>
                 </div>
-                {index < chain.groups.length - 1 && (
-                  <div className="rlink">
-                    <span className="lat">{group.to_next_ms} ms</span>
-                    <span className="arw" />
-                    <span className="lbl">→ 下一组</span>
-                  </div>
-                )}
+                {index < chain.groups.length - 1 &&
+                  (chain.routes?.length && chain.route_hop === index ? (
+                    <ForwardRoutes chain={chain} />
+                  ) : (
+                    <div className="rlink">
+                      <span className="lat">{group.to_next_ms} ms</span>
+                      <span className="arw" />
+                      <span className="lbl">→ 下一组</span>
+                    </div>
+                  ))}
               </Fragment>
             ))}
           </div>
@@ -1745,7 +1793,11 @@ function ForwardChainView({ wsChains }: { wsChains?: ForwardChainData[] }) {
                       />
                       <span className="sn">
                         <Twemoji>{srv.name}</Twemoji>
+                        {srv.route && <span className="srt">{srv.route}</span>}
                       </span>
+                      {(srv.loss_pct ?? 0) > 0 && (
+                        <span className="sloss">丢 {srv.loss_pct}%</span>
+                      )}
                       <span
                         className={`slat ${forwardLatencyClass(srv.to_next_ms)}`}
                       >
@@ -1754,13 +1806,16 @@ function ForwardChainView({ wsChains }: { wsChains?: ForwardChainData[] }) {
                     </div>
                   ))}
                 </div>
-                {index < chain.groups.length - 1 && (
-                  <div className="tconn">
-                    <span className="cl">组间</span>
-                    <span className="cv">{group.to_next_ms} ms</span>
-                    <span className="cline" />
-                  </div>
-                )}
+                {index < chain.groups.length - 1 &&
+                  (chain.routes?.length && chain.route_hop === index ? (
+                    <ForwardRoutes chain={chain} />
+                  ) : (
+                    <div className="tconn">
+                      <span className="cl">组间</span>
+                      <span className="cv">{group.to_next_ms} ms</span>
+                      <span className="cline" />
+                    </div>
+                  ))}
               </Fragment>
             ))}
           </div>

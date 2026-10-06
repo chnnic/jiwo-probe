@@ -135,7 +135,8 @@ export function mayHaveRouteSelection(chain: ForwardChainData): boolean {
   return false
 }
 
-const POLICY_LABEL: Record<string, string> = { lowest_latency: '最低延迟优先' }
+// 与上游 Premium 转发页（c6839d2）同一组策略名
+const POLICY_LABEL: Record<string, string> = { lowest_latency: '最低延迟优先', failover: '按顺序故障转移', weighted: '按权重分流' }
 
 /**
  * 选路段（主控 v0.5.6-beta.4 起，#1136）：groups[route_hop] 之后分叉成多条路，汇合到下一组。

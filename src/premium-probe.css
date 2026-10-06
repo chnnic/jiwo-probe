@@ -4906,3 +4906,79 @@
   color: #33250d;
   background: linear-gradient(90deg, #e4c67f, #f2dfac);
 }
+
+/* 选路段:分叉那组到下一组之间并行的几条路(#1136) */
+.premium-probe-forward .rroutes {
+  flex: 0 0 220px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 5px;
+  padding: 6px 10px;
+  border-left: 2px solid var(--pp-border);
+  border-right: 2px solid var(--pp-border);
+  margin: 0 6px;
+}
+.premium-probe-forward .rroutes .rr-h {
+  font-size: 10px;
+  color: #8f867a;
+  margin-bottom: 2px;
+}
+.premium-probe-forward .rroutes .rr {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 7px;
+  font-size: 11px;
+  border: 1px dashed var(--pp-border);
+  border-radius: 7px;
+  color: #a39a8a;
+  font-variant-numeric: tabular-nums;
+}
+.premium-probe-forward .rroutes .rr.is-on {
+  border-style: solid;
+  border-color: var(--pp-gold);
+  color: inherit;
+  background: rgba(216, 180, 106, 0.07);
+}
+.premium-probe-forward .rroutes .rn {
+  font-weight: 700;
+}
+.premium-probe-forward .rroutes .rv {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.premium-probe-forward .rroutes .rl {
+  font-weight: 600;
+}
+.premium-probe-forward .rroutes .rlo,
+.premium-probe-forward .srv .sloss {
+  font-size: 10px;
+  color: #e07a5f;
+}
+.premium-probe-forward .rroutes .ron {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--pp-gold-bright);
+}
+.premium-probe-forward .srv .srt {
+  margin-left: 6px;
+  padding: 0 5px;
+  font-size: 10px;
+  border-radius: 4px;
+  color: var(--pp-gold-bright);
+  background: rgba(216, 180, 106, 0.12);
+}
+
+/* 选路段（上游 c6839d2）在白金配色下的可读性：上游灰字与亮金按深色底写，米白底上改用白金体系的深灰与暗金 */
+:root.theme-premium.platinum .premium-probe-forward .rroutes .rr-h { color: #75674e; }
+:root.theme-premium.platinum .premium-probe-forward .rroutes .rr { color: #7d705a; }
+:root.theme-premium.platinum .premium-probe-forward .rroutes .rr.is-on { color: #302919; border-color: #a87c22; background: rgba(168, 124, 34, 0.07); }
+:root.theme-premium.platinum .premium-probe-forward .rroutes .ron,
+:root.theme-premium.platinum .premium-probe-forward .srv .srt { color: #8a6210; }
+:root.theme-premium.platinum .premium-probe-forward .srv .srt { background: rgba(168, 124, 34, 0.12); }
+:root.theme-premium.platinum .premium-probe-forward .rroutes .rlo,
+:root.theme-premium.platinum .premium-probe-forward .srv .sloss { color: #b8473f; }
