@@ -12,3 +12,5 @@ wrangler.local.jsonc
 .wrangler-deploy.jsonc
 HANDOVER.md
 .DS_Store
+AGENTS.md
+CLAUDE.md
