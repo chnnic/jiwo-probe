@@ -161,6 +161,8 @@ const routes: Record<string, string> = {
   '/api/probe': '/api/public/probe-servers',
   '/api/series': '/api/public/probe-series',
   '/api/stream': '/api/public/probe-ws',
+  // Premium 转发页在 WS 未带 forward 时的 HTTP 兜底（与上游 f6fc04b 一致）。
+  '/api/forward': '/api/public/probe-forward',
 }
 
 // Passkey 是探针唯一允许向主控 POST 的公开鉴权端点；不携带只读 PROBE_TOKEN。
@@ -700,7 +702,16 @@ export default {
     }
 
     const target = upstreamURL(request, env)
-    if (!target) return env.ASSETS.fetch(request)
+    if (!target) {
+      // 未知的 /api/* 明确返回 404，不回落到 SPA 首页，免得前端把 HTML 当 JSON 解析。
+      if (incoming.pathname.startsWith('/api/')) {
+        return new Response('Not found', {
+          status: 404,
+          headers: { 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' },
+        })
+      }
+      return env.ASSETS.fetch(request)
+    }
     if (request.method !== 'GET') return new Response('Method not allowed', { status: 405 })
     if (!env.PROBE_TOKEN) {
       return new Response('Probe access secret is not configured', { status: 503 })
