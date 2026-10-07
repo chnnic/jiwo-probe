@@ -489,7 +489,7 @@ npm run screenshots # 用虚拟数据重新生成 README 截图（需本机安�
 
 ## 更新与密钥轮换
 
-更新代码后执行 `npm ci && npm run deploy`。首次更新到带 ProbeHub 的版本时，Wrangler 会自动创建和绑定 Durable Object，无需手动配置；Cloudflare 网页部署同样会按仓库中的配置自动处理。轮换密钥时，先在主控生成新密钥，立即执行 `npx wrangler secret put PROBE_TOKEN` 并重新部署；在 Worker 更新完成前，探针可能短暂返回 `404`。主控只保存密钥的 SHA-256 哈希，无法找回旧密钥。
+更新代码后执行 `npm ci && npm run deploy`。如果想让脚本在上传后确认线上已换成新版本，可以带上站点地址：`PROBE_VERIFY_URL=https://你的探针域名 npm run deploy`，它会等待最多 90 秒，直到线上 `index.html` 和本地构建一致，否则报错；不设置时跳过。首次更新到带 ProbeHub 的版本时，Wrangler 会自动创建和绑定 Durable Object，无需手动配置；Cloudflare 网页部署同样会按仓库中的配置自动处理。轮换密钥时，先在主控生成新密钥，立即执行 `npx wrangler secret put PROBE_TOKEN` 并重新部署；在 Worker 更新完成前，探针可能短暂返回 `404`。主控只保存密钥的 SHA-256 哈希，无法找回旧密钥。
 
 ## 故障排查
 

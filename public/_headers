@@ -12,3 +12,11 @@
 
 /unlock-icons/*
   Cache-Control: public, max-age=604800, stale-while-revalidate=86400
+
+# 全站基础安全头。Ran 的访客提示会同源嵌入 map.html，所以只允许同源 iframe；
+# 剪贴板（复制 SSH）和 Passkey 登录不受 Permissions-Policy 限制。
+/*
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: SAMEORIGIN
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=()

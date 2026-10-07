@@ -10,3 +10,7 @@ cd "$(dirname "$0")/.."
 
 npm run build
 node scripts/deploy-worker.mjs
+
+# 可选：设置 PROBE_VERIFY_URL（如 https://tz.mmwx.org）后，等待线上 index.html
+# 换成本次构建的 main-*.js，90 秒内不一致则报错；未设置时跳过。
+node scripts/verify-deploy.mjs

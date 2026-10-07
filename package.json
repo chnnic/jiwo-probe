@@ -51,13 +51,10 @@
     "deploy": "./scripts/deploy.sh",
     "screenshots": "npm run build && node scripts/screenshots/capture.mjs",
     "typecheck": "tsc --noEmit",
-    "test": "node --experimental-strip-types --test src/shared-modules.test.mjs src/probe-delta.test.mjs src/stale-data.test.mjs src/forward-model.test.mjs src/globe.test.mjs src/conn-sparkline.test.mjs src/probe-ranges.test.mjs src/value.test.mjs src/network-speed.test.mjs src/ping-groups.test.mjs src/theme-name.test.mjs src/theme-picker-model.test.mjs src/unlocks.test.mjs src/leaderboards.test.mjs src/mini/mini-model.test.mjs src/mini/mini-trends.test.mjs src/luminaplus/luminaplus-model.test.mjs src/luminaplus/luminaplus-appearance.test.mjs worker/ping-config.test.mjs scripts/deploy-worker.test.mjs src/ran/api/mmwx-adapter.test.mjs src/ran/utils/traffic.test.mjs src/ran/i18n/zh.test.mjs"
+    "test": "node --experimental-strip-types --test src/shared-modules.test.mjs src/probe-delta.test.mjs src/stale-data.test.mjs src/forward-model.test.mjs src/globe.test.mjs src/conn-sparkline.test.mjs src/probe-ranges.test.mjs src/value.test.mjs src/network-speed.test.mjs src/ping-groups.test.mjs src/theme-name.test.mjs src/theme-picker-model.test.mjs src/unlocks.test.mjs src/leaderboards.test.mjs src/mini/mini-model.test.mjs src/mini/mini-trends.test.mjs src/luminaplus/luminaplus-model.test.mjs src/luminaplus/luminaplus-appearance.test.mjs worker/ping-config.test.mjs scripts/deploy-worker.test.mjs scripts/verify-deploy.test.mjs src/ran/api/mmwx-adapter.test.mjs src/ran/utils/traffic.test.mjs src/ran/i18n/zh.test.mjs"
   },
   "dependencies": {
     "@simplewebauthn/browser": "^14.0.0",
-    "@types/d3-geo": "^3.1.1",
-    "@types/topojson-client": "^3.1.5",
-    "@vitejs/plugin-react-swc": "^4.1.0",
     "d3-geo": "^3.1.1",
     "i18n-iso-countries": "^7.14.0",
     "lottie-react": "^2.4.1",
@@ -68,16 +65,22 @@
     "simple-icons": "^16.28.0",
     "topojson-client": "^3.1.0",
     "twemoji": "^14.0.2",
-    "vite": "^7.1.9",
     "world-atlas": "^2.0.2"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^5.20260731.1",
+    "@types/d3-geo": "^3.1.1",
     "@types/node": "^26.2.0",
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0",
+    "@types/topojson-client": "^3.1.5",
     "@types/twemoji": "^13.1.1",
+    "@vitejs/plugin-react-swc": "^4.1.0",
     "typescript": "~5.9.3",
+    "vite": "^7.1.9",
     "wrangler": "^4.119.0"
+  },
+  "overrides": {
+    "sharp": "^0.35.5"
   }
 }
