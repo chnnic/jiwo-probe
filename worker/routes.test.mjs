@@ -7,10 +7,21 @@ const bundle = await build({ entryPoints: [new URL('./index.ts', import.meta.url
 const { default: worker } = await import(`data:text/javascript;base64,${Buffer.from(bundle.outputFiles[0].text).toString('base64')}`)
 
 const TOKEN = 'test-probe-token'
+// 模拟 not_found_handling 为 none 的静态资源：只有列出的文件存在，其余返回 404
+const FILES = {
+  '/': ['<!doctype html>', 'text/html'],
+  '/map.html': ['<!doctype html><title>map</title>', 'text/html'],
+  '/assets/main-abc.js': ['export {}', 'text/javascript'],
+}
 const env = assetCalls => ({
   MMWX_ORIGIN: 'https://panel.test',
   PROBE_TOKEN: TOKEN,
-  ASSETS: { fetch: async request => { assetCalls.push(new URL(request.url).pathname); return new Response('<!doctype html>', { headers: { 'Content-Type': 'text/html' } }) } },
+  ASSETS: { fetch: async request => {
+    const path = new URL(request.url).pathname
+    assetCalls.push(path)
+    const file = FILES[path]
+    return file ? new Response(file[0], { headers: { 'Content-Type': file[1] } }) : new Response('', { status: 404 })
+  } },
 })
 
 async function withUpstream(handler, run) {
@@ -53,11 +64,29 @@ test('未知的 /api 路径返回 404，不回落到首页也不访问主控', a
   })
 })
 
-test('非 /api 路径仍交给静态资源（SPA 路由照常工作）', async () => {
+test('不带扩展名的未知路径回落到首页（单页应用路由照常工作）', async () => {
   const assetCalls = []
   const response = await worker.fetch(new Request('https://probe.test/server/3'), env(assetCalls), { waitUntil() {} })
   assert.equal(response.status, 200)
-  assert.deepEqual(assetCalls, ['/server/3'])
+  assert.equal(await response.text(), '<!doctype html>')
+  assert.deepEqual(assetCalls, ['/server/3', '/'])
+})
+
+test('缺失的构建产物返回不缓存的 404，不回落成首页 HTML', async () => {
+  for (const path of ['/assets/LuminaPlusApp-old.js', '/assets/main-old.css', '/twemoji/1f1ed-1f1f0.svg', '/fonts/missing.woff2']) {
+    const assetCalls = []
+    const response = await worker.fetch(new Request(`https://probe.test${path}`), env(assetCalls), { waitUntil() {} })
+    assert.equal(response.status, 404, path)
+    assert.equal(response.headers.get('Cache-Control'), 'no-store', path)
+    assert.deepEqual(assetCalls, [path], path)
+  }
+})
+
+test('存在的静态文件原样返回', async () => {
+  const response = await worker.fetch(new Request('https://probe.test/assets/main-abc.js'), env([]), { waitUntil() {} })
+  assert.equal(response.status, 200)
+  assert.equal(response.headers.get('Content-Type'), 'text/javascript')
+  assert.equal((await worker.fetch(new Request('https://probe.test/map.html'), env([]), { waitUntil() {} })).status, 200)
 })
 
 test('Passkey 鉴权转发不携带只读探针密钥和访客 Cookie', async () => {

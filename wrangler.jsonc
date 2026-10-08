@@ -23,7 +23,8 @@
   "assets": {
     "directory": "./dist",
     "binding": "ASSETS",
-    "not_found_handling": "single-page-application",
+    // 不让 CF 把缺失的资源回落成首页（会带着 /assets/* 一年的缓存头）；缺失路径交给 Worker 的 serveStatic 处理
+    "not_found_handling": "none",
     "run_worker_first": ["/api/*", "/login"]
   }
 }

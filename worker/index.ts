@@ -284,6 +284,28 @@ function hubPollIntervalMs(env: Env): number {
   return Math.min(HUB_MAX_POLL_MS, Math.max(HUB_MIN_POLL_MS, Math.round(milliseconds)))
 }
 
+/**
+ * 静态资源没命中时才会走到这里（wrangler.jsonc 的 not_found_handling 为 none，命中的资源由 CF 直接返回）。
+ * 构建产物和带扩展名的文件找不到时明确返回不缓存的 404：部署切换的几秒里，个别边缘节点还在旧版本，
+ * 若像以前一样回落成首页 HTML，它会带着 /assets/* 一年 immutable 的缓存头被浏览器当成 JS 缓存下来，主题一直打不开。
+ * 其余路径仍回落到首页，保持单页应用路由。
+ */
+async function serveStatic(request: Request, env: Env): Promise<Response> {
+  const incoming = new URL(request.url)
+  const lastSegment = incoming.pathname.slice(incoming.pathname.lastIndexOf('/') + 1)
+  if (incoming.pathname.startsWith('/assets/') || lastSegment.includes('.')) {
+    const asset = await env.ASSETS.fetch(request)
+    if (asset.status !== 404) return asset
+    return new Response('Not found', {
+      status: 404,
+      headers: { 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' },
+    })
+  }
+  const asset = await env.ASSETS.fetch(request)
+  if (asset.status !== 404 || (request.method !== 'GET' && request.method !== 'HEAD')) return asset
+  return env.ASSETS.fetch(new Request(new URL('/', incoming), { method: request.method, headers: request.headers }))
+}
+
 async function directUpstream(request: Request, env: Env, target: URL): Promise<Response> {
   return fetch(new Request(target, {
     method: 'GET',
@@ -710,7 +732,7 @@ export default {
           headers: { 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' },
         })
       }
-      return env.ASSETS.fetch(request)
+      return serveStatic(request, env)
     }
     if (request.method !== 'GET') return new Response('Method not allowed', { status: 405 })
     if (!env.PROBE_TOKEN) {
