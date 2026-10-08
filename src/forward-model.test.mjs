@@ -43,7 +43,10 @@ test('连续两个以上中转组提示可能是选路段；单个中转不提�
 
 test('流动档位按实时 bit/s 划分（主控为 byte/s），流动速度按延迟换算', () => {
   assert.deepEqual([0, 5_000, 20_000, 1_000_000, 5_000_000].map(flowLevel), [0, 0, 1, 2, 3])
-  assert.deepEqual([1, 14, 120, 500, 0, undefined].map(flowDuration), [0.8, 1, 2.8, 3.2, 2.4, 2.4])
+  assert.deepEqual([1, 14, 120, 500, 0, undefined].map(flowDuration), [1, 1, 2.4, 3.2, 2.4, 2.4])
+  // 同一档内延迟小幅波动不改变动画时长，避免光点跳动
+  assert.equal(flowDuration(15), flowDuration(16))
+  assert.equal(flowDuration(31), flowDuration(79))
 })
 
 const server = (name, healthy, to_next_ms = 5) => ({ name, healthy, to_next_ms })

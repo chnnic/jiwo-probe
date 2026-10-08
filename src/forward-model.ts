@@ -222,8 +222,14 @@ export function flowLevel(bytesPerSecond: number): FlowLevel {
   return 3
 }
 
-/** 连线光点流动一轮的秒数：延迟越低越快（0.8～3.2 秒）。 */
+/**
+ * 连线光点流动一轮的秒数：延迟越低越快，按档位取值（与延迟色阶同一组界线）。
+ * 不随毫秒连续变化：快照每 3 秒刷新，时长一变浏览器就按新时长重算进度，光点会跳一下。
+ */
 export function flowDuration(ms: number | undefined): number {
   if (!finite(ms) || ms <= 0) return 2.4
-  return Math.round(Math.min(3.2, Math.max(0.8, 0.8 + ms / 60)) * 10) / 10
+  if (ms < 30) return 1
+  if (ms < 80) return 1.6
+  if (ms < FORWARD_SLOW_MS) return 2.4
+  return 3.2
 }

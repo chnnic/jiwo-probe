@@ -120,19 +120,29 @@ body.gm-light-body .probe-forward { --fw-ok: #0d946e; }
    流动速度按到下一组的延迟（--fw-flow-duration，由组件按延迟换算），无流量时只留轨道 */
 .probe-forward-hop i {
   --fw-dot-gap: 18px;
-  align-self: stretch; height: 6px; border-radius: 3px;
-  background:
-    radial-gradient(circle, var(--fw-tone) 0 2.2px, transparent 2.6px) 0 50% / var(--fw-dot-gap) 6px repeat-x,
-    linear-gradient(color-mix(in srgb, var(--fw-tone) 35%, transparent), color-mix(in srgb, var(--fw-tone) 35%, transparent)) 0 50% / 100% 2px no-repeat;
-  animation: fw-flow calc(var(--fw-flow-duration, 2s) * 0.6) linear infinite;
+  /* 高 12px、上下各收 3px：布局仍按 6px 占位，裁切范围留出最高档光点的光晕 */
+  position: relative; overflow: hidden;
+  align-self: stretch; height: 12px; margin: -3px 0; border-radius: 6px;
+  background: linear-gradient(color-mix(in srgb, var(--fw-tone) 35%, transparent), color-mix(in srgb, var(--fw-tone) 35%, transparent)) 0 50% / 100% 2px no-repeat;
 }
-.probe-forward-hop[data-flow="0"] i { background: linear-gradient(color-mix(in srgb, var(--fw-tone) 55%, transparent), color-mix(in srgb, var(--fw-tone) 55%, transparent)) 0 50% / 100% 2px no-repeat; animation: none; }
+/* 光点单独一层、用 transform 平移：交给合成器，不逐帧重绘，也不受快照刷新时主线程忙碌影响；
+   改 background-position 会按整像素取整，慢速时一格一格地跳。层多出一个间距，平移一个间距后无缝衔接 */
+.probe-forward-hop i::before {
+  content: ""; position: absolute; top: 0; bottom: 0; left: calc(-1 * var(--fw-dot-gap)); width: calc(100% + var(--fw-dot-gap));
+  background: radial-gradient(circle, var(--fw-tone) 0 2.2px, transparent 2.6px) 0 50% / var(--fw-dot-gap) 6px repeat-x;
+  animation: fw-flow calc(var(--fw-flow-duration, 2s) * 0.6) linear infinite;
+  will-change: transform;
+}
+.probe-forward-hop[data-flow="0"] i { background: linear-gradient(color-mix(in srgb, var(--fw-tone) 55%, transparent), color-mix(in srgb, var(--fw-tone) 55%, transparent)) 0 50% / 100% 2px no-repeat; }
+.probe-forward-hop[data-flow="0"] i::before { content: none; }
 .probe-forward-hop[data-flow="1"] i { --fw-dot-gap: 22px; }
 .probe-forward-hop[data-flow="2"] i { --fw-dot-gap: 14px; }
-.probe-forward-hop[data-flow="3"] i { --fw-dot-gap: 9px; filter: drop-shadow(0 0 3px color-mix(in srgb, var(--fw-tone) 70%, transparent)); }
+.probe-forward-hop[data-flow="3"] i { --fw-dot-gap: 9px; }
+.probe-forward-hop[data-flow="3"] i::before { filter: drop-shadow(0 0 3px color-mix(in srgb, var(--fw-tone) 70%, transparent)); }
 .probe-forward-hop[data-tone="down"] i { background: repeating-linear-gradient(90deg, var(--fw-tone) 0 6px, transparent 6px 10px) 0 50% / 100% 2px no-repeat; animation: fw-blink 1.2s ease-in-out infinite; }
-@keyframes fw-flow { from { background-position: 0 50%, 0 50%; } to { background-position: var(--fw-dot-gap) 50%, 0 50%; } }
-@keyframes fw-flow-y { from { background-position: 50% 0, 50% 0; } to { background-position: 50% var(--fw-dot-gap), 50% 0; } }
+.probe-forward-hop[data-tone="down"] i::before { content: none; }
+@keyframes fw-flow { from { transform: translate3d(0, 0, 0); } to { transform: translate3d(var(--fw-dot-gap), 0, 0); } }
+@keyframes fw-flow-y { from { transform: translate3d(0, 0, 0); } to { transform: translate3d(0, var(--fw-dot-gap), 0); } }
 @keyframes fw-blink { 50% { opacity: .25; } }
 /* 节点实时网速（⇅ 上下行合计，悬停看分项） */
 .probe-forward-group li { flex-wrap: wrap; row-gap: 1px; }
@@ -166,7 +176,7 @@ body.gm-light-body .probe-forward { --fw-ok: #0d946e; }
 .probe-forward-server-loss { flex: none; font-size: 10px; color: var(--fw-down); }
 .probe-forward-note { margin: 0; padding: 8px 10px; border: 1px dashed color-mix(in srgb, var(--fw-warn) 45%, var(--ph-line)); border-radius: 8px; font-size: 11px; line-height: 1.6; color: var(--ph-muted); background: color-mix(in srgb, var(--fw-warn) 6%, var(--ph-bg)); }
 @media (prefers-reduced-motion: reduce) {
-  .probe-forward-hop i, .probe-forward-hop[data-tone="down"] i { animation: none; }
+  .probe-forward-hop i::before, .probe-forward-hop[data-tone="down"] i { animation: none; }
 }
 .probe-forward-panels { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
 .probe-forward-panel { min-width: 0; }
@@ -209,10 +219,12 @@ body.gm-light-body .probe-forward { --fw-ok: #0d946e; }
   /* 手机竖排：连线变成左侧竖条，与主控 CSS 手机版一致 */
   .probe-forward-hop { flex: none; flex-direction: row; justify-content: flex-start; gap: 10px; min-height: 34px; padding: 0 0 0 16px; }
   .probe-forward-hop i {
-    order: -1; flex: 0 0 6px; align-self: stretch; height: auto;
-    background:
-      radial-gradient(circle, var(--fw-tone) 0 2.2px, transparent 2.6px) 50% 0 / 6px var(--fw-dot-gap) repeat-y,
-      linear-gradient(color-mix(in srgb, var(--fw-tone) 35%, transparent), color-mix(in srgb, var(--fw-tone) 35%, transparent)) 50% 0 / 2px 100% no-repeat;
+    order: -1; flex: 0 0 12px; margin: 0 -3px; align-self: stretch; height: auto;
+    background: linear-gradient(color-mix(in srgb, var(--fw-tone) 35%, transparent), color-mix(in srgb, var(--fw-tone) 35%, transparent)) 50% 0 / 2px 100% no-repeat;
+  }
+  .probe-forward-hop i::before {
+    top: calc(-1 * var(--fw-dot-gap)); bottom: auto; left: 0; right: 0; width: auto; height: calc(100% + var(--fw-dot-gap));
+    background: radial-gradient(circle, var(--fw-tone) 0 2.2px, transparent 2.6px) 50% 0 / 6px var(--fw-dot-gap) repeat-y;
     animation-name: fw-flow-y;
   }
   .probe-forward-hop[data-flow="0"] i { background: linear-gradient(color-mix(in srgb, var(--fw-tone) 55%, transparent), color-mix(in srgb, var(--fw-tone) 55%, transparent)) 50% 0 / 2px 100% no-repeat; }
@@ -221,10 +233,12 @@ body.gm-light-body .probe-forward { --fw-ok: #0d946e; }
   .probe-forward-fork { margin: 8px 0 8px 16px; }
   .probe-forward-route .probe-forward-hop { min-height: 0; padding: 0; }
   .probe-forward-route .probe-forward-hop i {
-    order: 0; flex: 1 1 auto; height: 6px;
-    background:
-      radial-gradient(circle, var(--fw-tone) 0 2.2px, transparent 2.6px) 0 50% / var(--fw-dot-gap) 6px repeat-x,
-      linear-gradient(color-mix(in srgb, var(--fw-tone) 35%, transparent), color-mix(in srgb, var(--fw-tone) 35%, transparent)) 0 50% / 100% 2px no-repeat;
+    order: 0; flex: 1 1 auto; height: 12px; margin: -3px 0;
+    background: linear-gradient(color-mix(in srgb, var(--fw-tone) 35%, transparent), color-mix(in srgb, var(--fw-tone) 35%, transparent)) 0 50% / 100% 2px no-repeat;
+  }
+  .probe-forward-route .probe-forward-hop i::before {
+    top: 0; bottom: 0; left: calc(-1 * var(--fw-dot-gap)); right: auto; width: calc(100% + var(--fw-dot-gap)); height: auto;
+    background: radial-gradient(circle, var(--fw-tone) 0 2.2px, transparent 2.6px) 0 50% / var(--fw-dot-gap) 6px repeat-x;
     animation-name: fw-flow;
   }
   .probe-forward-route .probe-forward-hop[data-flow="0"] i { background: linear-gradient(color-mix(in srgb, var(--fw-tone) 55%, transparent), color-mix(in srgb, var(--fw-tone) 55%, transparent)) 0 50% / 100% 2px no-repeat; }
