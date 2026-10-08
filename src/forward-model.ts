@@ -125,6 +125,53 @@ export function trendCells(chain: ForwardChainData): { ts: number; tone: CellTon
   })
 }
 
+const CELL_TONE: Record<string, CellTone> = { o: 'ok', d: 'down', n: 'idle' }
+const CELL_LABEL: Record<CellTone, string> = { ok: '正常', warn: '降级', down: '中断', idle: '无数据' }
+const DAY_MS = 24 * 3600 * 1000
+const clock = (ms: number) => new Date(ms).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', hour12: false })
+
+/**
+ * 近 24 小时状态条（主控 v0.5.6-beta.6 起的 cells）：每个字符一格、按时间先后排列，最后一格是当前。
+ * 已见到的编码只有 o 正常、d 中断、n 无数据，其余字符一律按降级显示。主控不下发时返回 null。
+ */
+export function availabilityCells(chain: ForwardChainData, now = Date.now()): { key: number; tone: CellTone; label: string }[] | null {
+  const cells = chain.cells
+  if (typeof cells !== 'string' || !cells.length) return null
+  const span = DAY_MS / cells.length
+  return [...cells].map((char, index) => {
+    const tone = CELL_TONE[char] ?? 'warn'
+    const end = now - (cells.length - 1 - index) * span
+    return { key: index, tone, label: `约 ${clock(end - span)}–${clock(end)} · ${CELL_LABEL[tone]}` }
+  })
+}
+
+/** 近 24 小时可用率（百分比）；主控下发 0–1，未下发返回 null。 */
+export function availabilityPct(chain: ForwardChainData): number | null {
+  const value = chain.availability_24h
+  if (!finite(value) || value < 0) return null
+  return Math.min(100, value <= 1 ? value * 100 : value)
+}
+
+/** 可用率文字：满格写 100%，接近满格保留两位小数，免得 99.96% 被四舍五入成 100%。 */
+export function formatAvailability(pct: number): string {
+  if (pct >= 100) return '100%'
+  if (pct >= 99) return `${(Math.floor(pct * 100) / 100).toFixed(2)}%`
+  return `${(Math.floor(pct * 10) / 10).toFixed(1)}%`
+}
+
+export function formatJitter(ms: number | undefined): string | null {
+  if (!finite(ms) || ms < 0) return null
+  return `${ms < 10 ? ms.toFixed(1) : Math.round(ms)} ms`
+}
+
+/** 入口在这条链上的实时上下行（byte/s，主控 v0.5.6-beta.6 起）；未下发返回 null。 */
+export function chainLiveSpeed(chain: ForwardChainData): { up: number; down: number; total: number } | null {
+  if (!finite(chain.speed_up) && !finite(chain.speed_down)) return null
+  const up = finite(chain.speed_up) && chain.speed_up > 0 ? chain.speed_up : 0
+  const down = finite(chain.speed_down) && chain.speed_down > 0 ? chain.speed_down : 0
+  return { up, down, total: up + down }
+}
+
 /**
  * 主控接口只下发按顺序排列的组，不含选路结构：连续两个以上中转组既可能是串联，也可能是
  * 「选路段」里的多条并行路线（例如入口直连 / 经组 3 / 经组 4 按最低延迟择一）。

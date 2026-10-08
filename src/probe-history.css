@@ -93,6 +93,7 @@ body.gm-light-body .probe-forward { --fw-ok: #0d946e; }
 :is(.probe-forward-chain-name, .probe-forward-detail h3) > i { flex: 0 0 9px; height: 9px; border-radius: 50%; background: var(--fw); }
 .probe-forward-chain-stats { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 11px; color: var(--ph-muted); }
 .probe-forward-chain-stats strong { color: var(--fw-tone); }
+.probe-forward-chain-speed { color: var(--ph-accent); }
 .probe-forward-chains small { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: 11px; color: var(--fw); }
 .probe-forward-detail { display: grid; gap: 14px; padding-top: 4px; }
 .probe-forward-detail > header { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 20px; font-size: 12px; color: var(--ph-muted); }
@@ -144,6 +145,9 @@ body.gm-light-body .probe-forward { --fw-ok: #0d946e; }
 .probe-forward-cells i[data-tone="warn"] { background: var(--fw-warn); }
 .probe-forward-cells i[data-tone="down"] { background: var(--fw-down); }
 .probe-forward-cells i[data-tone="idle"] { background: var(--ph-line); }
+/* 24 小时状态条有 72 格，收窄间距免得窄卡片里每格只剩一条细线 */
+.probe-forward-cells[data-span="day"] { gap: 1px; }
+.probe-forward-cells[data-span="day"] i { border-radius: 1px; }
 /* 选路段：分叉处并列各条路，在用的路高亮并流动，备用路变淡 */
 .probe-forward-fork { display: grid; align-content: center; gap: 6px; flex: 1.2 0 230px; min-width: 0; margin: 0 10px; }
 .probe-forward-fork > p { margin: 0; font-size: 10px; color: var(--ph-muted); }

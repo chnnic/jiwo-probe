@@ -18,7 +18,7 @@ import { probeBucketLabel } from './probe-ranges'
 import { CYCLE_LABELS, CYCLE_MONTHS, expiryTimestamp, isPermanent } from './renewal'
 import './premium-probe.css'
 import { serverHealth, averageLatency, percentage, resourcePercentage } from './server-health'
-import { FORWARD_TRAFFIC_NOTE, FORWARD_TRAFFIC_SETTLE_MINUTES } from './forward-model'
+import { availabilityCells, availabilityPct, chainLiveSpeed, formatAvailability, formatJitter, FORWARD_TRAFFIC_NOTE, FORWARD_TRAFFIC_SETTLE_MINUTES } from './forward-model'
 
 type ProbeData = ProbePayload
 
@@ -1610,6 +1610,7 @@ function ForwardChainView({ wsChains }: { wsChains?: ForwardChainData[] }) {
   const [data, setData] = useState<ForwardPayload | undefined>();
   const [status, setStatus] = useState<"loading" | "ok" | "error">("loading");
   const [chainIdx, setChainIdx] = useState(0);
+  const networkSpeed = useNetworkSpeed();
   useEffect(() => {
     if (hasWS) return; // WS 有数据就不走 HTTP 轮询
     const controller = new AbortController();
@@ -1660,6 +1661,12 @@ function ForwardChainView({ wsChains }: { wsChains?: ForwardChainData[] }) {
     {} as Record<string, number>,
   );
   const totalGB = chain.traffic?.total_gb || 0;
+  // 主控 v0.5.6-beta.6 起才有：可用率 / 24 小时状态条 / 链级网速 / 抖动；旧主控仍是 4 张指标卡
+  const availability = availabilityPct(chain);
+  const dayCells = availabilityCells(chain);
+  const liveSpeed = chainLiveSpeed(chain);
+  const jitter = formatJitter(chain.jitter_ms);
+  const extraStats = availability !== null || liveSpeed !== null;
   const trafficStat =
     totalGB >= 1024
       ? { value: (totalGB / 1024).toFixed(1), unit: "TB" }
@@ -1686,7 +1693,7 @@ function ForwardChainView({ wsChains }: { wsChains?: ForwardChainData[] }) {
         </div>
       )}
 
-      <div className="premium-probe-forward-stats">
+      <div className={`premium-probe-forward-stats${extraStats ? " is-extended" : ""}`}>
         <div className="stat is-gold">
           <div className="k">端到端延迟</div>
           <div className="v">
@@ -1697,6 +1704,7 @@ function ForwardChainView({ wsChains }: { wsChains?: ForwardChainData[] }) {
             {chain.routes?.length
               ? "入口 → 出口 · 按在用的路"
               : "入口 → 出口 · 各组均值之和"}
+            {jitter && ` · 抖动 ${jitter}`}
           </div>
         </div>
         <div className="stat is-ok">
@@ -1707,6 +1715,33 @@ function ForwardChainView({ wsChains }: { wsChains?: ForwardChainData[] }) {
           </div>
           <div className="foot">全链探测点均值</div>
         </div>
+        {availability !== null && (
+          <div className="stat is-ok">
+            <div className="k">24 小时可用率</div>
+            <div className="v">
+              {formatAvailability(availability).replace("%", "")}
+              <span className="u">%</span>
+            </div>
+            {dayCells ? (
+              <div className="foot premium-probe-forward-cells" aria-label="近 24 小时状态">
+                {dayCells.map((cell) => (
+                  <i key={cell.key} data-tone={cell.tone} title={cell.label} />
+                ))}
+              </div>
+            ) : (
+              <div className="foot">近 24 小时</div>
+            )}
+          </div>
+        )}
+        {liveSpeed && (
+          <div className="stat is-gold">
+            <div className="k">当前网速</div>
+            <div className="v premium-probe-forward-speed">
+              <span>↓ {networkSpeed(liveSpeed.down)}</span>
+            </div>
+            <div className="foot">↑ {networkSpeed(liveSpeed.up)} · 入口在这条链上的实时流量</div>
+          </div>
+        )}
         <div className="stat is-n">
           <div className="k">链路结构</div>
           <div className="v">

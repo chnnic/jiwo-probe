@@ -216,4 +216,13 @@ export interface ForwardChainData {
   route_policy?: string
   failover_ms?: number
   routes?: ForwardChainRoute[]
+  /** 主控 v0.5.6-beta.6 起：入口在这条链上的实时上行 / 下行（byte/s） */
+  speed_up?: number
+  speed_down?: number
+  /** 主控 v0.5.6-beta.6 起：近 24 小时可用率（0–1） */
+  availability_24h?: number
+  /** 主控 v0.5.6-beta.6 起：近 24 小时状态条，每个字符一格（o 正常、d 中断、n 无数据，其余视为降级） */
+  cells?: string
+  /** 主控 v0.5.6-beta.6 起：端到端延迟抖动（ms） */
+  jitter_ms?: number
 }

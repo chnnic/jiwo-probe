@@ -2,7 +2,7 @@ import { Fragment, useMemo, useState, type CSSProperties } from 'react'
 import { ChevronDown, Network } from 'lucide-react'
 import { Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import type { ProbePayload, ProbeServer } from './types'
-import { chainTraffic, chainTrafficDay, flowDuration, FORWARD_TRAFFIC_NOTE, flowLevel, formatGb, forwardSummary, groupHealth, hopTone, latencyTone, mayHaveRouteSelection, routeFork, sortChains, trendCells, type ForwardStatus } from './forward-model'
+import { availabilityCells, availabilityPct, chainLiveSpeed, chainTraffic, chainTrafficDay, flowDuration, FORWARD_TRAFFIC_NOTE, formatAvailability, formatJitter, flowLevel, formatGb, forwardSummary, groupHealth, hopTone, latencyTone, mayHaveRouteSelection, routeFork, sortChains, trendCells, type ForwardStatus } from './forward-model'
 import { useNetworkSpeed } from './use-network-speed'
 import './probe-history.css'
 
@@ -39,6 +39,9 @@ export function ForwardOverview({ data }: { data: ProbePayload }) {
   const chain = current?.chain
   const traffic = chain ? chainTraffic(chain) : null
   const fork = chain ? routeFork(chain) : null
+  const chainSpeed = chain ? chainLiveSpeed(chain) : null
+  const chainAvailability = chain ? availabilityPct(chain) : null
+  const jitter = chain ? formatJitter(chain.jitter_ms) : null
   const peak = traffic ? Math.max(...traffic.daily.map((item) => item.gb), 0) : 0
   const dayIndex = chain && daySel?.chain === chain.name ? daySel.index : null
   const dayDetail = chain && dayIndex !== null ? chainTrafficDay(chain, dayIndex) : null
@@ -54,11 +57,16 @@ export function ForwardOverview({ data }: { data: ProbePayload }) {
       <div className="probe-forward-chains" role="group" aria-label="转发链列表（异常与偏慢置顶）">
         {chains.map((item) => {
           const total = chainTraffic(item.chain)?.total
+          const availability = availabilityPct(item.chain)
+          const speed = chainLiveSpeed(item.chain)
+          const dayCells = availabilityCells(item.chain)
           return <button type="button" key={item.chain.name} data-status={item.status} aria-pressed={item === current} onClick={() => setSelected(item.chain.name)} title={item.reasons.join('；') || STATUS_LABEL[item.status]}>
             <span className="probe-forward-chain-name"><i aria-hidden="true" />{item.chain.name}</span>
-            <span className="probe-forward-chain-stats"><strong data-tone={latencyTone(item.chain.end_to_end_ms)}>{latency(item.chain.end_to_end_ms)}</strong><span title={probeInterval(item.chain.bucket_sec)}>丢包 {loss(item.chain.loss_pct)}</span>{total !== undefined && <span title={`流量由${FORWARD_TRAFFIC_NOTE}`}>7 天 {formatGb(total)}</span>}</span>
+            <span className="probe-forward-chain-stats"><strong data-tone={latencyTone(item.chain.end_to_end_ms)}>{latency(item.chain.end_to_end_ms)}</strong><span title={probeInterval(item.chain.bucket_sec)}>丢包 {loss(item.chain.loss_pct)}</span>{availability !== null && <span title="近 24 小时可用率">可用 {formatAvailability(availability)}</span>}{total !== undefined && <span title={`流量由${FORWARD_TRAFFIC_NOTE}`}>7 天 {formatGb(total)}</span>}{speed && speed.total > 0 && <span className="probe-forward-chain-speed" title="入口在这条链上的实时下行 / 上行">↓ {networkSpeed(speed.down)} ↑ {networkSpeed(speed.up)}</span>}</span>
             {item.reasons.length > 0 && <small>{item.reasons.join(' · ')}</small>}
-            {!!item.chain.trend?.length && <span className="probe-forward-cells" aria-label={`近 ${Math.round(item.chain.trend.length * (item.chain.bucket_sec || 300) / 60)} 分钟状态`}>
+            {dayCells ? <span className="probe-forward-cells" data-span="day" aria-label="近 24 小时状态">
+              {dayCells.map((cell) => <i key={cell.key} data-tone={cell.tone} title={cell.label} />)}
+            </span> : !!item.chain.trend?.length && <span className="probe-forward-cells" aria-label={`近 ${Math.round(item.chain.trend.length * (item.chain.bucket_sec || 300) / 60)} 分钟状态`}>
               {trendCells(item.chain).map((cell) => <i key={cell.ts} data-tone={cell.tone} title={cell.label} />)}
             </span>}
           </button>
@@ -66,7 +74,9 @@ export function ForwardOverview({ data }: { data: ProbePayload }) {
       </div>
       <div className="probe-forward-detail" data-status={current.status}>
         <header><h3><i aria-hidden="true" />{chain.name}<span>{STATUS_LABEL[current.status]}</span></h3>
-          <span>端到端 <strong>{latency(chain.end_to_end_ms)}</strong></span><span>丢包 <strong>{loss(chain.loss_pct)}</strong><small className="probe-forward-interval">（{probeInterval(chain.bucket_sec)}）</small></span>
+          <span>端到端 <strong>{latency(chain.end_to_end_ms)}</strong></span>{jitter && <span title="端到端延迟的波动幅度">抖动 <strong>{jitter}</strong></span>}<span>丢包 <strong>{loss(chain.loss_pct)}</strong><small className="probe-forward-interval">（{probeInterval(chain.bucket_sec)}）</small></span>
+          {chainAvailability !== null && <span>24 小时可用 <strong>{formatAvailability(chainAvailability)}</strong></span>}
+          {chainSpeed && <span title="入口在这条链上的实时下行 / 上行">当前网速 <strong>↓ {networkSpeed(chainSpeed.down)}</strong> <strong>↑ {networkSpeed(chainSpeed.up)}</strong></span>}
           {current.reasons.length > 0 && <p>{current.reasons.join('；')}</p>}
         </header>
         <div className="probe-forward-topology" aria-label={`${chain.name} 转发拓扑`}>
@@ -77,7 +87,8 @@ export function ForwardOverview({ data }: { data: ProbePayload }) {
             const tone = hopTone(group)
             // 连线光点：速度按到下一组的延迟，密度按本组服务器的实时流量
             const groupBytes = group.servers.reduce((sum, server) => sum + liveBytes(liveByName.get(server.name)), 0)
-            const flow = tone === 'down' ? 0 : flowLevel(groupBytes)
+            const hopBytes = chainSpeed ? chainSpeed.total : groupBytes
+            const flow = tone === 'down' ? 0 : flowLevel(hopBytes)
             return <Fragment key={`${group.name}-${index}`}>
               <section className="probe-forward-group" data-status={groupStatus}>
                 <h3><small>{roles[group.role]}</small><span title={group.name}>{group.name}</span>{health && <em>{health.healthy}/{health.total} 可用</em>}</h3>
@@ -114,7 +125,7 @@ export function ForwardOverview({ data }: { data: ProbePayload }) {
               </div>}
               {!isFork && index < chain.groups.length - 1 && <span className="probe-forward-hop" data-tone={tone} data-flow={flow}
                 style={{ '--fw-flow-duration': `${flowDuration(group.to_next_ms)}s` } as CSSProperties}
-                title={tone === 'down' ? '该组无可用服务器' : `到下一组 ${latency(group.to_next_ms)} · 本组实时 ${networkSpeed(groupBytes)}`}>
+                title={tone === 'down' ? '该组无可用服务器' : `到下一组 ${latency(group.to_next_ms)} · ${chainSpeed ? '本链实时' : '本组实时'} ${networkSpeed(hopBytes)}`}>
                 <b>{tone === 'down' ? '中断' : latency(group.to_next_ms)}</b><i aria-hidden="true" />
               </span>}
             </Fragment>

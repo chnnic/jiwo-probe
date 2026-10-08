@@ -4328,6 +4328,38 @@
 .premium-probe-forward-stats .stat.is-n {
   --edge: #4a4636;
 }
+/* 主控 v0.5.6-beta.6 起多出可用率、当前网速两张卡：6 张排成 3 列两行 */
+.premium-probe-forward-stats.is-extended {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.premium-probe-forward-stats .stat .v.premium-probe-forward-speed {
+  font-size: 24px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* 近 24 小时状态条：72 格，一格约 20 分钟 */
+.premium-probe-forward-cells {
+  display: flex;
+  gap: 1px;
+  height: 8px;
+  margin-top: 12px;
+}
+.premium-probe-forward-cells i {
+  flex: 1;
+  min-width: 0;
+  border-radius: 1px;
+  background: #6bd39a;
+}
+.premium-probe-forward-cells i[data-tone="warn"] {
+  background: #e6884a;
+}
+.premium-probe-forward-cells i[data-tone="down"] {
+  background: #e07a5f;
+}
+.premium-probe-forward-cells i[data-tone="idle"] {
+  background: rgba(216, 180, 106, 0.16);
+}
 
 /* 卡片外壳 */
 .premium-probe-forward-card {
@@ -4690,13 +4722,15 @@
 }
 
 @media (max-width: 820px) {
-  .premium-probe-forward-stats {
+  .premium-probe-forward-stats,
+  .premium-probe-forward-stats.is-extended {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
 @media (max-width: 520px) {
-  .premium-probe-forward-stats {
+  .premium-probe-forward-stats,
+  .premium-probe-forward-stats.is-extended {
     grid-template-columns: minmax(0, 1fr);
     gap: 12px;
   }
@@ -4775,6 +4809,19 @@
 /* 白金:近白值色(链路结构)在奶白底上不可见 → 主题深色文字 */
 :root.theme-premium.platinum .premium-probe-forward-stats .stat.is-n .v {
   color: #241e14;
+}
+/* 白金:状态条沿用本页白金状态色,无数据格换成能在奶白底上看见的浅棕 */
+:root.theme-premium.platinum .premium-probe-forward-cells i {
+  background: #4e7c5a;
+}
+:root.theme-premium.platinum .premium-probe-forward-cells i[data-tone="warn"] {
+  background: #c27a32;
+}
+:root.theme-premium.platinum .premium-probe-forward-cells i[data-tone="down"] {
+  background: #b8473f;
+}
+:root.theme-premium.platinum .premium-probe-forward-cells i[data-tone="idle"] {
+  background: rgba(95, 82, 68, 0.18);
 }
 /* 白金:选中组标签 / 悬停日期在奶白底上要压深 */
 :root.theme-premium.platinum .premium-probe-forward-grouptabs button.is-active {
