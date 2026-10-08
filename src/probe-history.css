@@ -89,11 +89,17 @@ body.gm-light-body .probe-forward { --fw-ok: #0d946e; }
 .probe-forward-chains button[aria-pressed="true"] { box-shadow: 0 0 0 2px color-mix(in srgb, var(--fw) 55%, transparent); }
 .probe-forward-chains button:focus-visible { outline: 2px solid var(--fw); outline-offset: 2px; }
 .probe-forward-chain-name, .probe-forward-detail h3 { display: flex; align-items: center; gap: 8px; min-width: 0; font-size: 13px; font-weight: 600; }
-.probe-forward-chain-name { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.probe-forward-chain-head { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.probe-forward-chain-head .probe-forward-chain-name { flex: 1 1 auto; }
+.probe-forward-chain-name > span { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.probe-forward-chain-head > strong { flex: none; font-size: 12px; color: var(--fw-tone); }
 :is(.probe-forward-chain-name, .probe-forward-detail h3) > i { flex: 0 0 9px; height: 9px; border-radius: 50%; background: var(--fw); }
-.probe-forward-chain-stats { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 11px; color: var(--ph-muted); }
-.probe-forward-chain-stats strong { color: var(--fw-tone); }
-.probe-forward-chain-speed { overflow: hidden; font-size: 11px; white-space: nowrap; text-overflow: ellipsis; color: var(--ph-muted); }
+.probe-forward-chain-stats { overflow: hidden; font-size: 11px; white-space: nowrap; text-overflow: ellipsis; color: var(--ph-muted); }
+.probe-forward-chain-stats > span + span::before { content: "·"; margin: 0 6px; opacity: .6; }
+/* 第三行无论有无内容都占一行高，卡片同高 */
+.probe-forward-chain-foot { display: flex; align-items: baseline; gap: 10px; min-width: 0; min-height: 16px; font-size: 11px; line-height: 16px; }
+.probe-forward-chain-speed { flex: none; white-space: nowrap; color: var(--ph-muted); }
+.probe-forward-chain-foot small { flex: 1 1 auto; min-width: 0; }
 .probe-forward-chain-speed[data-active] { color: var(--ph-accent); }
 .probe-forward-chains small { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: 11px; color: var(--fw); }
 .probe-forward-detail { display: grid; gap: 14px; padding-top: 4px; }
