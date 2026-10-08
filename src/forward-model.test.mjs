@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { chainStatus, chainTraffic, chainTrafficDay, flowDuration, flowLevel, formatGb, forwardSummary, hopTone, latencyTone, mayHaveRouteSelection, routeFork, sortChains, trendCells } from './forward-model.ts'
+import { chainStatus, chainTraffic, chainTrafficDay, flowDuration, flowLevel, formatGb, FORWARD_TRAFFIC_NOTE, FORWARD_TRAFFIC_SETTLE_MINUTES, forwardSummary, hopTone, latencyTone, mayHaveRouteSelection, routeFork, sortChains, trendCells } from './forward-model.ts'
 
 test('选路段：按 route_hop 分叉，带策略说明与各路状态；有 routes 时不再提示可能是选路', () => {
   const chain = {
@@ -112,4 +112,9 @@ test('某一天的流量明细：当天合计、按用量排序、不列 0 流�
   assert.deepEqual(day.servers.map(s => `${s.name} ${s.gb}`), ['out-b 4.5', 'in-a 0.5'])
   assert.equal(chainTrafficDay(chain('t', { traffic }), 2), null)
   assert.equal(chainTrafficDay(chain('none'), 0), null)
+})
+
+test('转发链流量的更新提示使用主控 15 分钟结算周期', () => {
+  assert.equal(FORWARD_TRAFFIC_SETTLE_MINUTES, 15)
+  assert.equal(FORWARD_TRAFFIC_NOTE, '主控每 15 分钟更新一次')
 })

@@ -2,7 +2,7 @@ import { Fragment, useMemo, useState, type CSSProperties } from 'react'
 import { ChevronDown, Network } from 'lucide-react'
 import { Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import type { ProbePayload, ProbeServer } from './types'
-import { chainTraffic, chainTrafficDay, flowDuration, flowLevel, formatGb, forwardSummary, groupHealth, hopTone, latencyTone, mayHaveRouteSelection, routeFork, sortChains, trendCells, type ForwardStatus } from './forward-model'
+import { chainTraffic, chainTrafficDay, flowDuration, FORWARD_TRAFFIC_NOTE, flowLevel, formatGb, forwardSummary, groupHealth, hopTone, latencyTone, mayHaveRouteSelection, routeFork, sortChains, trendCells, type ForwardStatus } from './forward-model'
 import { useNetworkSpeed } from './use-network-speed'
 import './probe-history.css'
 
@@ -56,7 +56,7 @@ export function ForwardOverview({ data }: { data: ProbePayload }) {
           const total = chainTraffic(item.chain)?.total
           return <button type="button" key={item.chain.name} data-status={item.status} aria-pressed={item === current} onClick={() => setSelected(item.chain.name)} title={item.reasons.join('；') || STATUS_LABEL[item.status]}>
             <span className="probe-forward-chain-name"><i aria-hidden="true" />{item.chain.name}</span>
-            <span className="probe-forward-chain-stats"><strong data-tone={latencyTone(item.chain.end_to_end_ms)}>{latency(item.chain.end_to_end_ms)}</strong><span title={probeInterval(item.chain.bucket_sec)}>丢包 {loss(item.chain.loss_pct)}</span>{total !== undefined && <span>7 天 {formatGb(total)}</span>}</span>
+            <span className="probe-forward-chain-stats"><strong data-tone={latencyTone(item.chain.end_to_end_ms)}>{latency(item.chain.end_to_end_ms)}</strong><span title={probeInterval(item.chain.bucket_sec)}>丢包 {loss(item.chain.loss_pct)}</span>{total !== undefined && <span title={`流量由${FORWARD_TRAFFIC_NOTE}`}>7 天 {formatGb(total)}</span>}</span>
             {item.reasons.length > 0 && <small>{item.reasons.join(' · ')}</small>}
             {!!item.chain.trend?.length && <span className="probe-forward-cells" aria-label={`近 ${Math.round(item.chain.trend.length * (item.chain.bucket_sec || 300) / 60)} 分钟状态`}>
               {trendCells(item.chain).map((cell) => <i key={cell.ts} data-tone={cell.tone} title={cell.label} />)}
@@ -140,8 +140,8 @@ export function ForwardOverview({ data }: { data: ProbePayload }) {
               </LineChart></ResponsiveContainer>
             </div>
           </div>}
-          {traffic && traffic.total <= 0 && <div className="probe-forward-panel"><h4>近 7 天无流量</h4></div>}
-          {traffic && traffic.total > 0 && <div className="probe-forward-panel"><h4>近 7 天流量 · 合计 {formatGb(traffic.total)}</h4>
+          {traffic && traffic.total <= 0 && <div className="probe-forward-panel"><h4>近 7 天无流量<small className="probe-forward-interval">（{FORWARD_TRAFFIC_NOTE}）</small></h4></div>}
+          {traffic && traffic.total > 0 && <div className="probe-forward-panel"><h4>近 7 天流量 · 合计 {formatGb(traffic.total)}<small className="probe-forward-interval">（{FORWARD_TRAFFIC_NOTE}）</small></h4>
             <div className="probe-forward-bars" role="group" aria-label={`${chain.name} 近 7 天每日流量，点击某天查看明细`} data-selected={dayIndex !== null || undefined}>
               {traffic.daily.map((item, index) => <button type="button" key={item.date} aria-pressed={dayIndex === index} title={`${item.date} · ${formatGb(item.gb)}${dayIndex === index ? ' · 再次点击返回 7 天汇总' : ' · 点击查看当日明细'}`}
                 onClick={() => setDaySel(dayIndex === index ? null : { chain: chain.name, index })}>

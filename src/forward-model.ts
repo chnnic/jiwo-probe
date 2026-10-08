@@ -69,6 +69,10 @@ export function forwardSummary(chains: ForwardChainData[]) {
   return counts
 }
 
+// 主控每 15 分钟批量结算一次各转发链流量，接口不下发这个周期（2026-10-08 实测，主控开发者确认）
+export const FORWARD_TRAFFIC_SETTLE_MINUTES = 15
+export const FORWARD_TRAFFIC_NOTE = `主控每 ${FORWARD_TRAFFIC_SETTLE_MINUTES} 分钟更新一次`
+
 /** 7 天流量：每天各节点合计与流量最多的节点；无数据返回 null。 */
 export function chainTraffic(chain: ForwardChainData, top = 3) {
   const traffic = chain.traffic

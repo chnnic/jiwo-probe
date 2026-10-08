@@ -18,6 +18,7 @@ import { probeBucketLabel } from './probe-ranges'
 import { CYCLE_LABELS, CYCLE_MONTHS, expiryTimestamp, isPermanent } from './renewal'
 import './premium-probe.css'
 import { serverHealth, averageLatency, percentage, resourcePercentage } from './server-health'
+import { FORWARD_TRAFFIC_NOTE, FORWARD_TRAFFIC_SETTLE_MINUTES } from './forward-model'
 
 type ProbeData = ProbePayload
 
@@ -1725,7 +1726,7 @@ function ForwardChainView({ wsChains }: { wsChains?: ForwardChainData[] }) {
             {trafficStat.value}
             <span className="u">{trafficStat.unit}</span>
           </div>
-          <div className="foot">近 7 天全链累计</div>
+          <div className="foot">近 7 天全链累计 · 每 {FORWARD_TRAFFIC_SETTLE_MINUTES} 分钟更新</div>
         </div>
       </div>
 
@@ -1829,7 +1830,7 @@ function ForwardChainView({ wsChains }: { wsChains?: ForwardChainData[] }) {
               <Gauge />
               转发组流量详情
             </h3>
-            <span>周期内每日 · 按转发组切换 · 组内每台服务器堆叠</span>
+            <span>周期内每日 · 按转发组切换 · 组内每台服务器堆叠 · {FORWARD_TRAFFIC_NOTE}</span>
           </header>
           <div className="body">
             <ForwardTrafficChart traffic={chain.traffic} />
