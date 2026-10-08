@@ -62,7 +62,9 @@ export function ForwardOverview({ data }: { data: ProbePayload }) {
           const dayCells = availabilityCells(item.chain)
           return <button type="button" key={item.chain.name} data-status={item.status} aria-pressed={item === current} onClick={() => setSelected(item.chain.name)} title={item.reasons.join('；') || STATUS_LABEL[item.status]}>
             <span className="probe-forward-chain-name"><i aria-hidden="true" />{item.chain.name}</span>
-            <span className="probe-forward-chain-stats"><strong data-tone={latencyTone(item.chain.end_to_end_ms)}>{latency(item.chain.end_to_end_ms)}</strong><span title={probeInterval(item.chain.bucket_sec)}>丢包 {loss(item.chain.loss_pct)}</span>{availability !== null && <span title="近 24 小时可用率">可用 {formatAvailability(availability)}</span>}{total !== undefined && <span title={`流量由${FORWARD_TRAFFIC_NOTE}`}>7 天 {formatGb(total)}</span>}{speed && speed.total > 0 && <span className="probe-forward-chain-speed" title="入口在这条链上的实时下行 / 上行">↓ {networkSpeed(speed.down)} ↑ {networkSpeed(speed.up)}</span>}</span>
+            <span className="probe-forward-chain-stats"><strong data-tone={latencyTone(item.chain.end_to_end_ms)}>{latency(item.chain.end_to_end_ms)}</strong><span title={probeInterval(item.chain.bucket_sec)}>丢包 {loss(item.chain.loss_pct)}</span>{availability !== null && <span title="近 24 小时可用率">可用 {formatAvailability(availability)}</span>}{total !== undefined && <span title={`流量由${FORWARD_TRAFFIC_NOTE}`}>7 天 {formatGb(total)}</span>}</span>
+            {/* 主控下发链级网速时每张卡固定占一行（无流量显示灰色 0），免得有流量时卡片变高、页面忽高忽低 */}
+            {speed && <span className="probe-forward-chain-speed" data-active={speed.total > 0 || undefined} title="入口在这条链上的实时下行 / 上行">↓ {networkSpeed(speed.down)} ↑ {networkSpeed(speed.up)}</span>}
             {item.reasons.length > 0 && <small>{item.reasons.join(' · ')}</small>}
             {dayCells ? <span className="probe-forward-cells" data-span="day" aria-label="近 24 小时状态">
               {dayCells.map((cell) => <i key={cell.key} data-tone={cell.tone} title={cell.label} />)}
