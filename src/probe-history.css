@@ -110,9 +110,10 @@ body.gm-light-body .probe-forward { --fw-ok: #0d946e; }
 .probe-forward-interval { margin-left: 4px; font-size: 11px; color: var(--ph-muted); }
 .probe-forward-detail > header p { flex-basis: 100%; margin: 0; color: var(--fw); }
 .probe-forward-topology { display: flex; align-items: stretch; gap: 0; overflow-x: auto; padding-bottom: 6px; }
-.probe-forward-group { flex: 1 0 190px; min-width: 0; padding: 10px 12px; border: 1.5px solid var(--ph-line); border-radius: 10px; }
+/* 标题与服务器列表的间距用 gap：LuminaPlus 等主题会把 h3 外边距清零，margin 不可靠 */
+.probe-forward-group { display: grid; align-content: start; gap: 12px; flex: 1 0 190px; min-width: 0; padding: 10px 12px; border: 1.5px solid var(--ph-line); border-radius: 10px; }
 .probe-forward-group:is([data-status="warn"], [data-status="down"]) { border-color: var(--fw); }
-.probe-forward-group h3 { display: flex; align-items: center; gap: 7px; margin: 0 0 10px; font-size: 13px; }
+.probe-forward-group h3 { display: flex; align-items: center; gap: 7px; margin: 0; font-size: 13px; }
 .probe-forward-group h3 small { flex: none; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 600; letter-spacing: .06em; color: var(--ph-tcp); background: color-mix(in srgb, var(--ph-tcp) 10%, var(--ph-bg)); }
 .probe-forward-group h3 span { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .probe-forward-group h3 em { margin-left: auto; flex: none; font-style: normal; font-size: 11px; font-weight: 500; color: var(--fw, var(--ph-muted)); }
