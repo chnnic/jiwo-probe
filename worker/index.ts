@@ -285,6 +285,23 @@ function hubPollIntervalMs(env: Env): number {
 }
 
 /**
+ * 只放行探针自己页面发出的请求（移植上游 4cf4ae7，判据对齐主控 probeSameOriginRequest）。
+ * 密钥由本 Worker 代加、主控见密钥即放行，来源只能在这里校验：别的网站在浏览器里 fetch / 嵌入探针接口
+ * 一律 404，没有任何来源信息的裸请求（脚本、curl）同样拒绝。
+ */
+function fromOwnPage(request: Request, self: string): boolean {
+  const origin = request.headers.get('Origin')
+  if (origin) return origin === self
+  const site = request.headers.get('Sec-Fetch-Site')
+  if (site) return site === 'same-origin'
+  try {
+    return new URL(request.headers.get('Referer') ?? '').origin === self
+  } catch {
+    return false
+  }
+}
+
+/**
  * 静态资源没命中时才会走到这里（wrangler.jsonc 的 not_found_handling 为 none，命中的资源由 CF 直接返回）。
  * 构建产物和带扩展名的文件找不到时明确返回不缓存的 404：部署切换的几秒里，个别边缘节点还在旧版本，
  * 若像以前一样回落成首页 HTML，它会带着 /assets/* 一年 immutable 的缓存头被浏览器当成 JS 缓存下来，主题一直打不开。
@@ -735,6 +752,10 @@ export default {
       return serveStatic(request, env)
     }
     if (request.method !== 'GET') return new Response('Method not allowed', { status: 405 })
+    // 在读边缘缓存之前校验，免得别的站点借缓存拿到快照
+    if (!fromOwnPage(request, incoming.origin)) {
+      return new Response('Not found', { status: 404, headers: { 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' } })
+    }
     if (!env.PROBE_TOKEN) {
       return new Response('Probe access secret is not configured', { status: 503 })
     }

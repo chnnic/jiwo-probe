@@ -31,9 +31,12 @@ async function withUpstream(handler, run) {
   try { return await run(calls) } finally { globalThis.fetch = original }
 }
 
+// 探针自己页面发出的请求：浏览器同源 fetch 会带 Sec-Fetch-Site: same-origin
+const ownPage = { 'Sec-Fetch-Site': 'same-origin' }
+
 test('/api/forward 只读代理到主控 probe-forward 并带上探针密钥', async () => {
   await withUpstream(() => Response.json({ chains: [] }), async calls => {
-    const response = await worker.fetch(new Request('https://probe.test/api/forward'), env([]), { waitUntil() {} })
+    const response = await worker.fetch(new Request('https://probe.test/api/forward', { headers: ownPage }), env([]), { waitUntil() {} })
     assert.equal(response.status, 200)
     assert.deepEqual(await response.json(), { chains: [] })
     assert.equal(calls.length, 1)
@@ -45,8 +48,40 @@ test('/api/forward 只读代理到主控 probe-forward 并带上探针密钥', a
 
 test('/api/forward 拒绝非 GET 请求且不访问主控', async () => {
   await withUpstream(() => Response.json({}), async calls => {
-    const response = await worker.fetch(new Request('https://probe.test/api/forward', { method: 'POST', body: '{}' }), env([]), { waitUntil() {} })
+    const response = await worker.fetch(new Request('https://probe.test/api/forward', { method: 'POST', headers: ownPage }), env([]), { waitUntil() {} })
     assert.equal(response.status, 405)
+    assert.equal(calls.length, 0)
+  })
+})
+
+test('代理接口只放行探针自己页面：同源 Origin、同源 Sec-Fetch-Site 或本站 Referer', async () => {
+  await withUpstream(() => Response.json({ chains: [] }), async calls => {
+    for (const headers of [{ Origin: 'https://probe.test' }, { 'Sec-Fetch-Site': 'same-origin' }, { Referer: 'https://probe.test/?theme=premium' }]) {
+      const response = await worker.fetch(new Request('https://probe.test/api/forward', { headers }), env([]), { waitUntil() {} })
+      assert.equal(response.status, 200, JSON.stringify(headers))
+    }
+    assert.equal(calls.length, 3)
+  })
+})
+
+test('别的网站和没有来源信息的请求一律 404，不访问主控', async () => {
+  await withUpstream(() => Response.json({ chains: [] }), async calls => {
+    const rejected = [
+      {},
+      { Origin: 'https://evil.test' },
+      { 'Sec-Fetch-Site': 'cross-site' },
+      { 'Sec-Fetch-Site': 'none' },
+      { Referer: 'https://evil.test/probe.test' },
+      // Origin 优先：同源 Referer 也救不了外站 Origin
+      { Origin: 'https://evil.test', Referer: 'https://probe.test/' },
+    ]
+    for (const headers of rejected) {
+      for (const path of ['/api/forward', '/api/probe', '/api/series?server=0']) {
+        const response = await worker.fetch(new Request(`https://probe.test${path}`, { headers }), env([]), { waitUntil() {} })
+        assert.equal(response.status, 404, `${path} ${JSON.stringify(headers)}`)
+        assert.equal(response.headers.get('Cache-Control'), 'no-store')
+      }
+    }
     assert.equal(calls.length, 0)
   })
 })
