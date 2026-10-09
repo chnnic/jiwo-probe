@@ -3066,6 +3066,27 @@
   color: #17130d;
   background: #d8b46a;
 }
+/* 抽屉里流量曲线的开关：与上面「当前周期 / 最近 7 日」同一套金色细框与字号。
+   .premium-probe-page button 会清零边框和内边距，选择器多一级才能盖过 */
+.premium-probe-page .traffic-line-toggle button {
+  gap: 0.3rem;
+  min-height: 0;
+  padding: 0.28rem 0.5rem;
+  border: 1px solid rgba(216, 180, 106, 0.18);
+  border-radius: 0.25rem;
+  color: #d9ccae;
+  background: transparent;
+  font-size: 0.56rem;
+}
+.premium-probe-page .traffic-line-toggle button:hover {
+  border-color: rgba(216, 180, 106, 0.45);
+}
+.premium-probe-page .traffic-line-toggle button.active {
+  background: rgba(216, 180, 106, 0.08);
+}
+.premium-probe-page .traffic-line-toggle button.off {
+  color: #827a6c;
+}
 .premium-probe-traffic-note {
   margin: 0 0 0.45rem;
   color: #827a6c;
@@ -4078,6 +4099,19 @@
 /* 白金: 原始上下行日流量切换按钮/说明(浅底深字) */
 :root.theme-premium.platinum .premium-probe-traffic-heading > div {
   border-color: rgba(168, 124, 34, 0.25);
+}
+:root.theme-premium.platinum .premium-probe-page .traffic-line-toggle button {
+  border-color: rgba(168, 124, 34, 0.25);
+  color: #3a2f1c;
+}
+:root.theme-premium.platinum .premium-probe-page .traffic-line-toggle button:hover {
+  border-color: rgba(168, 124, 34, 0.55);
+}
+:root.theme-premium.platinum .premium-probe-page .traffic-line-toggle button.active {
+  background: rgba(168, 124, 34, 0.07);
+}
+:root.theme-premium.platinum .premium-probe-page .traffic-line-toggle button.off {
+  color: #746b5c;
 }
 :root.theme-premium.platinum .premium-probe-traffic-heading button {
   color: #746b5c;

@@ -1415,33 +1415,45 @@ footer a:hover {
   margin: 8px 0 2px;
   flex-wrap: wrap;
 }
+/* 曲线开关：外框、字号与「当前周期 / 最近 7 日」一致，圆角跟随主题（同图表上方的时间范围按钮），只用主题变量（--border / --text / --muted / --primary），
+   各主题自动配色；线条色只留在圆点上对应曲线。此前没设边框，浏览器默认的立体边框叠上线条色，和主题格格不入 */
 .traffic-line-toggle button {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  min-height: 22px;
-  padding: 1px 8px;
+  gap: 6px;
+  min-height: 24px;
+  padding: 3px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius, 7px);
+  color: var(--text);
+  background: transparent;
+  font: inherit;
   font-size: 11px;
   white-space: nowrap;
-  border-radius: var(--radius);
+  cursor: pointer;
+  transition: border-color .15s, background .15s, opacity .15s;
+}
+.traffic-line-toggle button:hover {
+  border-color: color-mix(in srgb, var(--primary) 45%, var(--border));
 }
 .traffic-line-toggle .dot {
   width: 8px;
   height: 8px;
+  border: 1.5px solid var(--line-color);
   border-radius: 50%;
   background: var(--line-color);
   flex-shrink: 0;
 }
 .traffic-line-toggle button.active {
-  color: var(--line-color);
-  border-color: color-mix(in srgb, var(--line-color) 55%, transparent);
-  background: color-mix(in srgb, var(--line-color) 10%, transparent);
+  background: color-mix(in srgb, var(--primary) 7%, transparent);
 }
 .traffic-line-toggle button.off {
-  opacity: 0.45;
+  color: var(--muted);
+  text-decoration: line-through;
+  opacity: .7;
 }
 .traffic-line-toggle button.off .dot {
-  background: var(--border);
+  background: transparent;
 }
 .chart {
   position: relative;
