@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom'
 import { MoveHorizontal, ZoomIn, ZoomOut } from 'lucide-react'
 import { Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import type { ProbeServer } from '../types'
-import { dailyTrafficRows, hasTrafficPeriod, trafficFormulaLabel, trafficRuleLabel, type TrafficRange } from '../traffic-display'
+import { dailyTrafficRows, hasMoreDailyTraffic, hasTrafficPeriod, trafficFormulaLabel, trafficRangeLabel, trafficRuleLabel, type TrafficRange } from '../traffic-display'
 import { bytes } from '../server-format'
 import { HorizontalChart } from './HorizontalChart'
 
@@ -175,9 +175,19 @@ export function TrafficDialog({ server, close }: { server: ProbeServer; close: (
             >
               最近 7 日
             </button>
+            {hasMoreDailyTraffic(server) && (
+              <button
+                type='button'
+                className={range === 'all' ? 'active' : ''}
+                title={`主控保存的全部每日流量，共 ${server.daily_traffic?.length ?? 0} 天（最多 30 天）`}
+                onClick={() => setRange('all')}
+              >
+                全部
+              </button>
+            )}
           </div>
           <strong>
-            {range === 'period' ? '当前周期' : '最近 7 日'}原始合计：{bytes(total, false)}
+            {trafficRangeLabel(range, server)}原始合计：{bytes(total, false)}
           </strong>
           <small>
             趋势展示原始上、下行，不应用计费方向或对账调整；卡片按{trafficRuleLabel(server)}计费

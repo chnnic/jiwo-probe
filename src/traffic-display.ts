@@ -1,6 +1,7 @@
 import type { ProbeServer } from './types'
 
-export type TrafficRange = 'period' | 'recent7'
+// all：主控下发的全部每日流量（主控最多保存 30 天，每台服务器从开始统计算起，天数各不相同）
+export type TrafficRange = 'period' | 'recent7' | 'all'
 
 export function billableTraffic(server: ProbeServer): number | undefined {
   return server.traffic_used ?? server.traffic_used_total
@@ -82,6 +83,7 @@ export function dailyTrafficRows(
   const rows = [...(server.daily_traffic || [])].sort((left, right) =>
     left.date.localeCompare(right.date)
   )
+  if (range === 'all') return rows
   if (
     range === 'period' &&
     server.period_start &&
@@ -93,4 +95,15 @@ export function dailyTrafficRows(
     )
   }
   return rows.slice(-7)
+}
+
+/** 每日流量超过 7 天时才值得提供「全部」：否则与「最近 7 日」完全相同。 */
+export function hasMoreDailyTraffic(server: ProbeServer): boolean {
+  return (server.daily_traffic?.length ?? 0) > 7
+}
+
+export function trafficRangeLabel(range: TrafficRange, server: ProbeServer): string {
+  if (range === 'period') return '当前周期'
+  if (range === 'recent7') return '最近 7 日'
+  return `全部 ${server.daily_traffic?.length ?? 0} 日`
 }

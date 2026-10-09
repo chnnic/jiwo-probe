@@ -68,6 +68,13 @@ export function buildDemoPayload({ theme = 'luminaplus', now = Date.now() } = {}
       const uplink = total * between(0.3, 0.5)
       return { date: isoDay(now - (6 - d) * DAY), uplink: Math.round(uplink), downlink: Math.round(total - uplink), total: Math.round(total) }
     })
+    // 主控最多保存 30 天每日流量，各台天数不同：前几台往前补更早的日子（固定公式，不消耗随机数，其余演示数值不变）
+    const extraDays = [23, 14, 7][index] ?? 0
+    days.unshift(...Array.from({ length: extraDays }, (_, d) => {
+      const total = (used / 18) * (0.7 + 0.5 * Math.abs(Math.sin(index * 7 + d)))
+      const uplink = total * 0.4
+      return { date: isoDay(now - (6 + extraDays - d) * DAY), uplink: Math.round(uplink), downlink: Math.round(total - uplink), total: Math.round(total) }
+    }))
     const [cycle, currency, price] = CYCLES[index % CYCLES.length]
     const expires = now + Math.round(between(-2, 340)) * DAY
     const memTotal = [1, 2, 4, 8, 16][index % 5] * GB
@@ -97,7 +104,7 @@ export function buildDemoPayload({ theme = 'luminaplus', now = Date.now() } = {}
       daily_traffic: days,
       daily_traffic_scope: 'configured_period_and_recent_7d',
       daily_traffic_start: days[0].date,
-      daily_traffic_end: days[6].date,
+      daily_traffic_end: days[days.length - 1].date,
       boot_traffic_up: Math.round(up * 1.4),
       boot_traffic_down: Math.round((used - up) * 1.4),
       boot_traffic_scope: 'current_boot',

@@ -12,7 +12,7 @@ import { getThemeOverride, parseThemeName } from './use-probe'
 import { EXTRA_LICENSE_BADGES, HEADER_LICENSE_BADGES } from './license-badges'
 import { FLAG_OPTIONS } from './country-flag'
 import { displayServerName } from './server-name'
-import { dailyTrafficRows, hasTrafficPeriod, trafficRuleLabel, type TrafficRange } from './traffic-display'
+import { dailyTrafficRows, hasMoreDailyTraffic, hasTrafficPeriod, trafficRuleLabel, type TrafficRange } from './traffic-display'
 import { BlackGoldGlobe, type PremiumProbeRegion } from './BlackGoldGlobe'
 import { useProbeRange } from './use-probe-range'
 import { probeBucketLabel } from './probe-ranges'
@@ -2737,6 +2737,16 @@ function ServerDetailDrawer({
               >
                 最近 7 日
               </button>
+              {hasMoreDailyTraffic(server) && (
+                <button
+                  type='button'
+                  className={trafficRange === 'all' ? 'is-active' : ''}
+                  title={`主控保存的全部每日流量，共 ${server.daily_traffic?.length ?? 0} 天（最多 30 天）`}
+                  onClick={() => setTrafficRange('all')}
+                >
+                  全部
+                </button>
+              )}
             </div>
           </div>
           <p className='premium-probe-traffic-note'>
