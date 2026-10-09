@@ -66,13 +66,13 @@ function LuminaPlusCard({ server, index, view, trail }: { server: ProbeServer; i
     { label: '负载', Icon: Gauge, tone: 'load', value: load.value === undefined ? '—' : load.value.toFixed(2), percent: load.percent, note: server.loadavg || '负载未上报' },
   ]
   if (view === 'list') {
-    // 今日上下行：与流量弹窗同一套「今天」口径（主控按 UTC 估算时用 UTC 日期）
+    // 今日上下行合计：与流量弹窗同一套「今天」口径（主控按 UTC 估算时用 UTC 日期）
     const today = trafficWeek(server).today
     const latency = averageLatency(server)
     return <article className={`lp-list-row${server.online ? '' : ' is-offline'}`} aria-label={name}>
       <div className="lp-list-identity"><a href={`#/server/${index}`} className="lp-name" title={`${name} · 查看详情`}><i className="lp-status" aria-label={server.online ? '在线' : '离线'} />{flag && <Twemoji>{flag}</Twemoji>}<h2>{name}</h2></a><small>{country || '地区未知'} · {server.provider_name || '服务商未上报'}</small><div className="lp-routes" role="group" aria-label="电信、联通、移动回程"><ReturnRouteBadges routes={server.return_routes || []} telecomPaidPeer={server.telecom_paid_peer} variant="lumina" /></div></div>
       <div className="lp-list-resources">{resources.slice(0, 3).map(item => <span key={item.label}><span>{item.label}</span><strong>{item.value}</strong></span>)}</div>
-      <div className="lp-list-network"><span className="lp-blue"><ArrowUp size={13} /><span className="lp-speed-tone" data-tone={speedTone(server.upload_speed)}>{validNumber(server.upload_speed) === undefined ? '—' : formatSpeed(server.upload_speed!)}</span></span><span className="lp-green"><ArrowDown size={13} /><span className="lp-speed-tone" data-tone={speedTone(server.download_speed)}>{validNumber(server.download_speed) === undefined ? '—' : formatSpeed(server.download_speed!)}</span></span><small className="lp-list-today" title={`今日上行 ${size(today.upload)} · 下行 ${size(today.download)} · 合计 ${size(today.total)}`}><span>今日 <ArrowUp size={11} aria-label="上行" />{size(today.upload)}</span><span><ArrowDown size={11} aria-label="下行" />{size(today.download)}</span></small></div>
+      <div className="lp-list-network"><span className="lp-blue"><ArrowUp size={13} /><span className="lp-speed-tone" data-tone={speedTone(server.upload_speed)}>{validNumber(server.upload_speed) === undefined ? '—' : formatSpeed(server.upload_speed!)}</span></span><span className="lp-green"><ArrowDown size={13} /><span className="lp-speed-tone" data-tone={speedTone(server.download_speed)}>{validNumber(server.download_speed) === undefined ? '—' : formatSpeed(server.download_speed!)}</span></span><small className="lp-list-today" title={`今日上下行合计 ${size(today.total)}（上行 ${size(today.upload)} · 下行 ${size(today.download)}）`} aria-label={`今日上下行合计 ${size(today.total)}`}><span aria-hidden="true"><ArrowUp size={12} /><ArrowDown size={12} /></span>{size(today.total)}</small></div>
       <div className="lp-list-connections"><LuminaPlusConnections server={server} /><small>平均延迟 <strong>{latency === undefined ? '—' : `${latency.toFixed(0)} ms`}</strong></small></div>
       <div className="lp-card-actions"><UnlockButton server={server} /><LuminaPlusTrafficPopover server={server} name={name} /></div>
     </article>
