@@ -2,6 +2,7 @@ import { ThemeSelect } from './ThemePicker'
 import { useNetworkSpeed } from './use-network-speed'
 import { ConnectionCounts, UnlockButton, UnlockDetails } from './ServerCapabilities'
 import { ConnectionHistory } from './ConnectionHistory'
+import { SystemTrendChart } from './deferred'
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
 import { Activity, ArrowDown, ArrowUp, CalendarClock, CheckCircle2, ChevronRight, CreditCard, Crown, Globe2, Gauge, Layers, Moon, Radio, Server, ShieldCheck, Sparkles, SunMoon, Target, X, XCircle } from 'lucide-react'
 import type { ForwardChainData, ForwardChainTraffic, ForwardTrafficServer, ForwardChainBucket, ProbePingSeries, ProbeServer, ProbePayload } from './types'
@@ -2582,6 +2583,8 @@ function ServerDetailDrawer({
   const latency = averageLatency(server)
   // 原始上下行日流量: 周期/最近7日切换(照上游 6221dd1 + 主控 drawer)
   const hasDailyPeriod = hasTrafficPeriod(server)
+  // 资源使用率历史（移植上游 4cf4ae7 的需求，复用本地 SystemTrendChart，按指标切换）
+  const [resourceMetric, setResourceMetric] = useState<'cpu' | 'mem' | 'disk'>('cpu')
   const [trafficRange, setTrafficRange] = useState<TrafficRange>(() =>
     hasDailyPeriod ? 'period' : 'recent7',
   )
@@ -2839,6 +2842,21 @@ function ServerDetailDrawer({
         <section className='premium-probe-drawer-section'>
           <UnlockDetails key={index} unlocks={server.unlocks} />
         </section>
+        {(server.cpu_pct !== undefined || server.mem_total !== undefined || server.disk_total !== undefined) && (
+          <section className='premium-probe-drawer-section probe-history-embed'>
+            <div className='premium-probe-traffic-heading'>
+              <h3>资源使用率</h3>
+              <div role='group' aria-label='资源指标'>
+                {([['cpu', 'CPU'], ['mem', '内存'], ['disk', '硬盘']] as const).map(([key, label]) => (
+                  <button key={key} type='button' className={resourceMetric === key ? 'is-active' : ''} onClick={() => setResourceMetric(key)}>
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <SystemTrendChart key={resourceMetric} serverIndex={index} metric={resourceMetric} fixedAxis={false} />
+          </section>
+        )}
         <section className='premium-probe-drawer-section'>
           <h3>网络连接</h3>
           <ConnectionCounts server={server} />

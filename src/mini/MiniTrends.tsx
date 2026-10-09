@@ -95,11 +95,14 @@ export function MiniSystemTrends({ server, index }: { server: ProbeServer; index
   const cpu = trendValue(server.cpu_pct)
   const mem = trendValue(server.mem_used), total = trendValue(server.mem_total)
   const memory = mem !== null && total !== null && total > 0 ? mem / total * 100 : null
+  const diskUsed = trendValue(server.disk_used), diskTotal = trendValue(server.disk_total)
+  const disk = diskUsed !== null && diskTotal !== null && diskTotal > 0 ? diskUsed / diskTotal * 100 : null
   const currentSpeed = (value?: number) => trendValue(value) === null ? '—' : speed(value!)
   return <div className="mini-trends mini-system-trends">
     <div className="mini-trend-toolbar"><RangePicker value={range} onChange={setRange} options={options} /></div>
     <ChartCard title="CPU 使用率" value={cpu === null ? '—' : formatPercent(cpu)}><TrendPlot rows={rows} lines={[{ key: 'cpu', label: 'CPU 使用率', color: 'var(--mini-accent)' }]} format={formatPercent} loading={history.loading} error={history.error} multiDay={range.endsWith('d')} /></ChartCard>
     <ChartCard title="内存使用率" value={memory === null ? '—' : formatPercent(memory)}><TrendPlot rows={rows} lines={[{ key: 'mem', label: '内存使用率', color: 'var(--mini-green)' }]} format={formatPercent} loading={history.loading} error={history.error} multiDay={range.endsWith('d')} percent /></ChartCard>
+    <ChartCard title="硬盘使用率" value={disk === null ? '—' : formatPercent(disk)}><TrendPlot rows={rows} lines={[{ key: 'disk', label: '硬盘使用率', color: 'var(--mini-orange, #e97b35)' }]} format={formatPercent} loading={history.loading} error={history.error} multiDay={range.endsWith('d')} percent /></ChartCard>
     <ChartCard title="网络速度" value={<><span className="mini-trend-down">↓ {currentSpeed(server.download_speed)}</span><span className="mini-trend-up">↑ {currentSpeed(server.upload_speed)}</span></>}><TrendPlot rows={rows} lines={[{ key: 'download', label: '下行', color: 'var(--mini-blue)' }, { key: 'upload', label: '上行', color: 'var(--mini-green)' }]} format={speed} loading={history.loading} error={history.error} multiDay={range.endsWith('d')} /></ChartCard>
     <ChartCard title="TCP / UDP 连接数" className="mini-connections-chart" value={<><span style={{ color: 'var(--connection-tcp)' }}><ConnectionLabel protocol="TCP" />{connectionCount(server.tcp_connections)}</span><span style={{ color: 'var(--connection-udp)' }}><ConnectionLabel protocol="UDP" />{connectionCount(server.udp_connections)}</span></>}>
       <TrendPlot rows={connections} lines={[{ key: 'tcp', label: 'TCP', color: 'var(--connection-tcp)' }, { key: 'udp', label: 'UDP', color: 'var(--connection-udp)' }]} format={formatConnectionAverage} loading={history.loading} error={history.error} multiDay={range.endsWith('d')} integer empty="主控暂无 TCP / UDP 历史记录；请确认已开启连接数采集，并等待历史积累。" />

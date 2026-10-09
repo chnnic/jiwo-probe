@@ -18,6 +18,14 @@ test('Mini 系统曲线按时间匹配内存，缺点和零总量不误配', () 
   assert.deepEqual(rows.map(row => row.mem), [50, 0, null, null])
   assert.deepEqual(rows.map(row => row.cpu), [3, 0, null, null])
 })
+test('硬盘使用率按同一时间桶的已用 / 总量换算，缺总量或总量为 0 记空', () => {
+  const rows = systemTrendRows({
+    disk_used: [{ t: 100, value: 20 }, { t: 200, value: 30 }, { t: 300, value: 5 }],
+    disk_total: [{ t: 100, value: 80 }, { t: 300, value: 0 }],
+  })
+  assert.deepEqual(rows.map(row => row.disk), [25, null, null])
+  assert.deepEqual(systemTrendRows({ cpu_pct: [{ t: 100, value: 1 }] }).map(row => row.disk), [null])
+})
 test('Mini 网速保持原始 bytes/s，上下行和时间不交换', () => {
   const rows = systemTrendRows({ upload_speed: [{ t: 100, value: 1024 }, { t: 200, value: 0 }], download_speed: [{ t: 100, value: 2048 }, { t: 300, value: -1 }] })
   assert.deepEqual(rows.map(row => [row.ts, row.upload, row.download]), [[100, 1024, 2048], [200, 0, null], [300, null, null]])

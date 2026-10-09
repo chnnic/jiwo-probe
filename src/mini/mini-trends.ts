@@ -1,7 +1,7 @@
 import type { ProbePingSeries } from '../types'
 
 export type MetricPoint = { t: number; value: number | null }
-export type SystemSeries = Partial<Record<'cpu_pct' | 'mem_used' | 'mem_total' | 'upload_speed' | 'download_speed' | 'tcp_connections' | 'udp_connections', MetricPoint[]>>
+export type SystemSeries = Partial<Record<'cpu_pct' | 'mem_used' | 'mem_total' | 'disk_used' | 'disk_total' | 'upload_speed' | 'download_speed' | 'tcp_connections' | 'udp_connections', MetricPoint[]>>
 export type TrendRow = { ts: number; [key: string]: number | null }
 export const trendValue = (value: unknown): number | null => typeof value === 'number' && Number.isFinite(value) && value >= 0 ? value : null
 
@@ -19,6 +19,8 @@ export function systemTrendRows(series: SystemSeries): TrendRow[] {
   return [...byTime.values()].sort((a, b) => a.ts - b.ts).map(row => ({
     ts: row.ts, cpu: row.cpu_pct ?? null,
     mem: row.mem_used != null && row.mem_total != null && row.mem_total > 0 ? row.mem_used / row.mem_total * 100 : null,
+    // 主控 2026-10 起下发硬盘历史（上游 4cf4ae7）；老主控没有这两列时整条为空
+    disk: row.disk_used != null && row.disk_total != null && row.disk_total > 0 ? row.disk_used / row.disk_total * 100 : null,
     download: row.download_speed ?? null, upload: row.upload_speed ?? null,
     tcp: row.tcp_connections ?? null, udp: row.udp_connections ?? null,
   }))

@@ -20,8 +20,8 @@ body.gm-light-body .probe-forward { --ph-accent: #0d946e; }
 :root.theme-emerald :is(.probe-conn-history, .probe-history-dialog, .probe-forward) { --ph-bg: var(--em-surface-solid); --ph-text: var(--em-text); --ph-muted: var(--em-text-2); --ph-line: var(--em-border); }
 body.gm-body :is(.probe-conn-history, .probe-history-dialog, .probe-forward) { --ph-bg: #171e2a; --ph-text: #f1f5f9; --ph-muted: #b0bbcd; --ph-line: #354255; --ph-tcp: #63cdb1; --ph-udp: #82b3f1; }
 body.gm-light-body :is(.probe-conn-history, .probe-history-dialog, .probe-forward) { --ph-bg: #f8fafc; --ph-text: #172033; --ph-muted: #526078; --ph-line: #dce1e8; --ph-tcp: #169b78; --ph-udp: #4385d5; }
-:root.theme-premium :is(.probe-conn-history, .probe-history-dialog) { --ph-bg: #151612; --ph-text: #f3ecdc; --ph-muted: #bbb09b; --ph-line: #4b4331; }
-:root.theme-premium.platinum :is(.probe-conn-history, .probe-history-dialog) { --ph-bg: #fffdf8; --ph-text: #302919; --ph-muted: #75674e; --ph-line: #e1d7c0; }
+:root.theme-premium :is(.probe-conn-history, .probe-history-dialog, .probe-history-embed) { --ph-bg: #151612; --ph-text: #f3ecdc; --ph-muted: #bbb09b; --ph-line: #4b4331; }
+:root.theme-premium.platinum :is(.probe-conn-history, .probe-history-dialog, .probe-history-embed) { --ph-bg: #fffdf8; --ph-text: #302919; --ph-muted: #75674e; --ph-line: #e1d7c0; }
 button.probe-conn-history { display: block; width: 100%; min-width: 0; margin: 8px 0; padding: 4px 0; border: 0; border-radius: 5px; background: transparent; box-shadow: none; text-align: left; font: inherit; cursor: pointer; }
 .probe-conn-history:focus-visible { outline: 2px solid var(--connection-tcp); outline-offset: 3px; }
 .probe-conn-heading { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 10px; line-height: 16px; color: var(--ph-muted); }
@@ -48,13 +48,20 @@ dialog.probe-history-dialog { width: min(860px, calc(100vw - 24px)); max-height:
 .probe-history-dialog h2 { margin: 0; font-size: 18px; }
 .probe-history-dialog header p { margin: 5px 0 0; font-size: 12px; color: var(--ph-muted); overflow-wrap: anywhere; }
 .probe-history-dialog header button { display: grid; place-items: center; flex-shrink: 0; width: 32px; height: 32px; padding: 0; border: 1px solid var(--ph-line); border-radius: 8px; background: transparent; color: inherit; box-shadow: none; }
-.probe-history-dialog .ranges { display: flex; flex-wrap: wrap; gap: 5px; }
-.probe-history-dialog :is(.ranges, .legend) button { color: var(--ph-muted); background: var(--ph-bg); border: 1px solid var(--ph-line); box-shadow: none; }
-.probe-history-dialog .ranges button.active { color: var(--ph-text); border-color: var(--connection-tcp); background: color-mix(in srgb, var(--connection-tcp) 13%, var(--ph-bg)); }
+:is(.probe-history-dialog, .probe-history-embed) .ranges { display: flex; flex-wrap: wrap; gap: 5px; }
+:is(.probe-history-dialog, .probe-history-embed) :is(.ranges, .legend) button { color: var(--ph-muted); background: var(--ph-bg); border: 1px solid var(--ph-line); box-shadow: none; }
+:is(.probe-history-dialog, .probe-history-embed) .ranges button.active { color: var(--ph-text); border-color: var(--connection-tcp); background: color-mix(in srgb, var(--connection-tcp) 13%, var(--ph-bg)); }
 .probe-history-dialog .detail-chart { height: 300px; min-height: 240px; margin-top: 16px; }
+/* 嵌在 Premium 详情抽屉里的资源使用率趋势（复用弹窗里的范围按钮与图例样式） */
+.probe-history-embed { color: var(--ph-text); }
+.probe-history-embed .detail-chart { height: 220px; margin-top: 12px; }
+/* Premium 页面会把按钮的字号、内边距、边框宽度清零（.premium-probe-page button），这里按经典 .ranges / .legend 尺寸补回 */
+.probe-history-embed .ranges button { min-height: 24px; padding: 1px 6px; border-width: 1px; border-radius: 6px; font-size: 11px; }
+.probe-history-embed .ranges .zoom-btn { width: 24px; padding: 1px 0; }
+.probe-history-embed .legend button { padding: 2px 6px; border-width: 1px; border-color: transparent; font-size: 11px; }
 .probe-history-dialog .detail-connections-note { color: var(--ph-muted); font-size: 11px; line-height: 1.6; }
-:is(.probe-history-dialog, .probe-forward) .recharts-cartesian-axis-tick-value { fill: var(--ph-muted); }
-:is(.probe-history-dialog, .probe-forward) .recharts-default-tooltip { background: var(--ph-bg) !important; color: var(--ph-text); border: 1px solid var(--ph-line) !important; border-radius: 8px; font-size: 12px; }
+:is(.probe-history-dialog, .probe-history-embed, .probe-forward) .recharts-cartesian-axis-tick-value { fill: var(--ph-muted); }
+:is(.probe-history-dialog, .probe-history-embed, .probe-forward) .recharts-default-tooltip { background: var(--ph-bg) !important; color: var(--ph-text); border: 1px solid var(--ph-line) !important; border-radius: 8px; font-size: 12px; }
 /* 转发链：状态色与主控 CSS 同一组（正常 / 偏慢 / 异常），延迟色阶沿用上游 Premium 转发页 */
 .probe-forward { --fw-ok: #2f9e6b; --fw-warn: #d18a1b; --fw-down: #d64545; margin: 20px 0; padding: 18px; border: 1px solid var(--ph-line); border-radius: var(--radius, 14px); background: var(--ph-bg); color: var(--ph-text); }
 :root:is(.dark, .gold) .probe-forward, body.gm-body:not(.gm-light-body) .probe-forward { --fw-ok: #4cc38a; --fw-warn: #f0b04a; --fw-down: #f07373; }

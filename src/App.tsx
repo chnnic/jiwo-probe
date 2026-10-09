@@ -468,12 +468,12 @@ function Leaderboard({ servers }: { servers: ProbeServer[] }) {
     </section>
   )
 }
-function SystemTrendDialog({ serverIndex, title, metric, close }: { serverIndex: number; title: string; metric: 'cpu' | 'mem'; close: () => void }) {
+function SystemTrendDialog({ serverIndex, title, metric, close }: { serverIndex: number; title: string; metric: 'cpu' | 'mem' | 'disk'; close: () => void }) {
   return createPortal(
     <div className="modal-backdrop" role="presentation" onMouseDown={close}>
       <section className="modal" onMouseDown={(event) => event.stopPropagation()} onClick={(event) => event.stopPropagation()}>
         <header>
-          <h2>{title} · {metric === 'cpu' ? 'CPU' : '内存'}趋势</h2>
+          <h2>{title} · {metric === 'cpu' ? 'CPU' : metric === 'mem' ? '内存' : '磁盘'}趋势</h2>
           <button aria-label="关闭" onClick={close}>
             ×
           </button>
@@ -629,6 +629,7 @@ function ServerCardLumina({ server, index }: { server: EnrichedServer; index: nu
   const [trafficOpen, setTrafficOpen] = useState(false)
   const [cpuOpen, setCpuOpen] = useState(false)
   const [memOpen, setMemOpen] = useState(false)
+  const [diskOpen, setDiskOpen] = useState(false)
   const name = server.name || `服务器 ${index + 1}`
   const flag = regionFlag(server.region)
   const isOffline = !server.online
@@ -715,7 +716,19 @@ function ServerCardLumina({ server, index }: { server: EnrichedServer; index: nu
             </button>
           )}
           {server.disk_total !== undefined && (
-            <LuminaMetricBar icon={<HardDrive size={13} />} label="磁盘" value={`${pct(server.disk_used, server.disk_total).toFixed(1)}%`} detail={`${bytes(server.disk_used)} / ${bytes(server.disk_total)}`} paint="var(--progress-disk)" fraction={pct(server.disk_used, server.disk_total) / 100} />
+            <button
+              type="button"
+              className="lumina-metric-btn"
+              aria-label="查看磁盘趋势"
+              title="点击查看磁盘趋势"
+              onMouseDown={(event) => event.stopPropagation()}
+              onClick={(event) => {
+                event.stopPropagation()
+                setDiskOpen(true)
+              }}
+            >
+              <LuminaMetricBar icon={<HardDrive size={13} />} label="磁盘" value={`${pct(server.disk_used, server.disk_total).toFixed(1)}%`} detail={`${bytes(server.disk_used)} / ${bytes(server.disk_total)}`} paint="var(--progress-disk)" fraction={pct(server.disk_used, server.disk_total) / 100} />
+            </button>
           )}
           {load1 !== undefined && (
             <LuminaMetricBar icon={<Gauge size={13} />} label="负载" value={load1.toFixed(2)} detail={`${loadParts[1]?.toFixed(2) ?? '—'} / ${loadParts[2]?.toFixed(2) ?? '—'}`} paint="var(--progress-load)" fraction={loadFraction} />
@@ -840,6 +853,7 @@ function ServerCardLumina({ server, index }: { server: EnrichedServer; index: nu
       {trafficOpen && <TrafficDialog server={server} close={() => setTrafficOpen(false)} />}
       {cpuOpen && <SystemTrendDialog serverIndex={index} title={name} metric="cpu" close={() => setCpuOpen(false)} />}
       {memOpen && <SystemTrendDialog serverIndex={index} title={name} metric="mem" close={() => setMemOpen(false)} />}
+      {diskOpen && <SystemTrendDialog serverIndex={index} title={name} metric="disk" close={() => setDiskOpen(false)} />}
     </>
   )
 }
