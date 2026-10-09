@@ -453,6 +453,10 @@
 .lp-list-resources > span > span { color: var(--lp-muted); font-size: 11px; }
 .lp-list-network { display: flex; flex-direction: column; gap: 7px; font-size: 12px; }
 .lp-list-network > span { display: inline-flex; align-items: center; gap: 4px; }
+/* 今日上 / 下行各是一段不拆开的文字，列宽不够（手机两列布局）时下行换到下一行，不伸进隔壁列 */
+.lp-list-today { display: flex; flex-wrap: wrap; gap: 2px 8px; min-width: 0; color: var(--lp-muted); font-size: 11px; }
+.lp-list-today > span { display: inline-flex; align-items: center; gap: 3px; white-space: nowrap; }
+.lp-list-today svg { flex: none; }
 .lp-list-connections .probe-connections { margin: 0; font-size: 11px; gap: 12px; }
 .lp-list-connections .lp-connections { grid-template-columns: minmax(0,1fr); gap: 4px; }
 .lp-list-connections .lp-connections > span { justify-content: space-between; }
