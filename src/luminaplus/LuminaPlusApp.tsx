@@ -1,10 +1,10 @@
 import { memo, useMemo, useState } from 'react'
-import { Droplet, Globe2, Grid3X3, LayoutGrid, Leaf, List, Moon, Network, Rows3, ScrollText, Search, Sun } from 'lucide-react'
+import { Droplet, Globe2, Grid3X3, LayoutGrid, Leaf, List, Moon, Network, Rows3, ScrollText, Search, Sun, SunMoon } from 'lucide-react'
 import type { ProbePayload, ThemeName } from '../types'
 import { ThemeSelect } from '../ThemePicker'
 import { PasskeyLogin } from '../PasskeyLogin'
-import { followControllerLuminaPlusAppearance, getThemeOverride, setLuminaPlusAppearance } from '../use-probe'
-import { LUMINAPLUS_MODE_NAMES, LUMINAPLUS_PALETTE_NAMES, nextLuminaPlusPalette, type LuminaPlusMode, type LuminaPlusPalette } from './luminaplus-color'
+import { followControllerLuminaPlusAppearance, getLuminaPlusModeSetting, getThemeOverride, setLuminaPlusAppearance } from '../use-probe'
+import { LUMINAPLUS_MODE_NAMES, LUMINAPLUS_PALETTE_NAMES, nextLuminaPlusMode, nextLuminaPlusPalette, type LuminaPlusMode, type LuminaPlusModeSetting, type LuminaPlusPalette } from './luminaplus-color'
 import { isExpiring, miniSummary, selectServers, providerName, type MiniStatus, type MiniSort } from '../mini/mini-model'
 import LuminaPlusCard from './LuminaPlusCard'
 import { parseLuminaPlusView, regionKey, type LuminaPlusView, type SpeedTrail } from './luminaplus-model'
@@ -35,11 +35,14 @@ const LuminaPlusHome = memo(function LuminaPlusHome({ data, trails, error, onThe
   // 配色与明暗各一个按钮，互不影响
   const palette: LuminaPlusPalette = root.classList.contains('lp-paper') ? 'paper' : root.classList.contains('lp-mint') ? 'mint' : 'classic'
   const mode: LuminaPlusMode = root.classList.contains('dark') || root.classList.contains('gold') ? 'dark' : 'light'
+  // 明暗按钮在 浅色 → 深色 → 自动（按北京时间）之间循环；没选过时从当前实际明暗开始
+  const modeSetting: LuminaPlusModeSetting = getLuminaPlusModeSetting() ?? mode
   const nextPalette = nextLuminaPlusPalette(palette)
-  const nextMode: LuminaPlusMode = mode === 'dark' ? 'light' : 'dark'
+  const nextMode = nextLuminaPlusMode(modeSetting)
   const PaletteIcon = palette === 'paper' ? ScrollText : palette === 'mint' ? Leaf : Droplet
-  const ModeIcon = mode === 'dark' ? Moon : Sun
-  const changeAppearance = (next: { palette: LuminaPlusPalette; mode: LuminaPlusMode }) => { setLuminaPlusAppearance(next); setColorRevision(value => value + 1) }
+  const ModeIcon = modeSetting === 'auto' ? SunMoon : mode === 'dark' ? Moon : Sun
+  const modeTitle = modeSetting === 'auto' ? `明暗：自动（北京时间 06:00–18:00 浅色，现在${LUMINAPLUS_MODE_NAMES[mode]}）` : `明暗：${LUMINAPLUS_MODE_NAMES[mode]}`
+  const changeAppearance = (next: { palette: LuminaPlusPalette; mode: LuminaPlusModeSetting }) => { setLuminaPlusAppearance(next); setColorRevision(value => value + 1) }
   const visible = useMemo(() => selectServers(servers, { query, status, provider, sort }).filter(({ server }) => !region || regionKey(server) === region), [servers, query, status, provider, sort, region])
   const regions = useMemo(() => [...servers.reduce((counts, server) => { const key = regionKey(server); counts.set(key, (counts.get(key) || 0) + 1); return counts }, new Map<string, number>())].sort((a, b) => b[1] - a[1]), [servers])
   const summary = useMemo(() => miniSummary(servers), [servers])
@@ -51,8 +54,8 @@ const LuminaPlusHome = memo(function LuminaPlusHome({ data, trails, error, onThe
   return <div className="lp-app" data-view={view}>
     <header className="lp-header"><div className="lp-header-inner"><a href="#" className="lp-brand" aria-label="返回首页"><span className="lp-brand-mark">{data.logo ? <img src={data.logo} alt="" /> : <Network size={23} />}</span><span><h1 title={data.title?.trim() || '服务器状态'}>{data.title?.trim() || '服务器状态'}</h1><small>集群实时探针</small></span></a>
       <nav aria-label="外观与登录"><PasskeyLogin buttonClassName="lp-icon-button" /><ThemeSelect value={getThemeOverride()} onChange={name => { if (name === null) followControllerLuminaPlusAppearance(); onThemeChange(name) }} />
-        <button className="lp-icon-button" type="button" aria-label={`切换至 ${LUMINAPLUS_PALETTE_NAMES[nextPalette]} 配色`} title={`配色：${LUMINAPLUS_PALETTE_NAMES[palette]}；点击切换至 ${LUMINAPLUS_PALETTE_NAMES[nextPalette]}`} onClick={() => changeAppearance({ palette: nextPalette, mode })}><PaletteIcon size={18} aria-hidden="true" /></button>
-        <button className="lp-icon-button" type="button" aria-label={`切换至${LUMINAPLUS_MODE_NAMES[nextMode]}模式`} title={`当前${LUMINAPLUS_MODE_NAMES[mode]}；点击切换至${LUMINAPLUS_MODE_NAMES[nextMode]}`} onClick={() => changeAppearance({ palette, mode: nextMode })}><ModeIcon size={18} aria-hidden="true" /></button>
+        <button className="lp-icon-button" type="button" aria-label={`切换至 ${LUMINAPLUS_PALETTE_NAMES[nextPalette]} 配色`} title={`配色：${LUMINAPLUS_PALETTE_NAMES[palette]}；点击切换至 ${LUMINAPLUS_PALETTE_NAMES[nextPalette]}`} onClick={() => changeAppearance({ palette: nextPalette, mode: modeSetting })}><PaletteIcon size={18} aria-hidden="true" /></button>
+        <button className="lp-icon-button" type="button" aria-label={`切换至${LUMINAPLUS_MODE_NAMES[nextMode]}模式`} title={`${modeTitle}；点击切换至${LUMINAPLUS_MODE_NAMES[nextMode]}`} onClick={() => changeAppearance({ palette, mode: nextMode })}><ModeIcon size={18} aria-hidden="true" /></button>
       </nav>
     </div></header>
     <main className="lp-main">

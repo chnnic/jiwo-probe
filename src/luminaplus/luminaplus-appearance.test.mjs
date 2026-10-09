@@ -37,6 +37,13 @@ test('appearance applies Paper idempotently, persists manual palettes and remove
         assert.equal(storage.has(LUMINAPLUS_COLOR_KEY), false, '旧版合并值不再写入')
       }
     }
+    // 自动：记成 auto，按北京时间决定是否挂 dark
+    setLuminaPlusAppearance({ palette: 'mint', mode: 'auto' })
+    applyAppearance({ theme: 'luminaplus-mint-light' })
+    const hour = (new Date().getUTCHours() + 8) % 24
+    assert.equal(storage.get(LUMINAPLUS_MODE_KEY), 'auto')
+    assert.equal(root.classList.contains('dark'), !(hour >= 6 && hour < 18), '自动按北京时间，不跟主控固定的浅色')
+    assert.equal(root.classList.contains('lp-mint'), true)
     setLuminaPlusAppearance({ palette: 'paper', mode: 'light' })
     for (const theme of ['pixel', 'flat', 'anime', 'glass', 'lumina', 'lite', 'premium', 'glassmorphism', 'emerald', 'ran']) {
       applyAppearance({ theme })

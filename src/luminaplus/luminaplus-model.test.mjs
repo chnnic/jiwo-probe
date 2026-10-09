@@ -2,7 +2,7 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import { trafficWeek, trafficPopoverPosition } from './luminaplus-traffic.ts'
 import { rankLiveSpeeds, rankPeriodTraffic } from './luminaplus-model.ts'
-import { nextLuminaPlusPalette, resolveLuminaPlusAppearance as resolve, splitLegacyLuminaPlusColor } from './luminaplus-color.ts'
+import { nextLuminaPlusMode, nextLuminaPlusPalette, resolveLuminaPlusAppearance as resolve, splitLegacyLuminaPlusColor } from './luminaplus-color.ts'
 
 const look = (palette, mode) => ({ palette, mode })
 
@@ -10,6 +10,16 @@ test('配色按钮按 经典 → Paper → Mint 循环，与明暗无关', () =>
   assert.equal(nextLuminaPlusPalette('classic'), 'paper')
   assert.equal(nextLuminaPlusPalette('paper'), 'mint')
   assert.equal(nextLuminaPlusPalette('mint'), 'classic')
+})
+
+test('明暗按钮按 浅色 → 深色 → 自动 循环；自动按北京时间切换，并覆盖主控固定的明暗', () => {
+  assert.equal(nextLuminaPlusMode('light'), 'dark')
+  assert.equal(nextLuminaPlusMode('dark'), 'auto')
+  assert.equal(nextLuminaPlusMode('auto'), 'light')
+  for (const [hour, mode] of [[0, 'dark'], [5, 'dark'], [6, 'light'], [12, 'light'], [17, 'light'], [18, 'dark'], [23, 'dark']]) {
+    assert.deepEqual(resolve({ savedPalette: 'paper', savedMode: 'auto', paper: true, light: true, hour }), look('paper', mode), `${hour} 点`)
+    assert.deepEqual(resolve({ savedMode: 'auto', legacyColor: 'mint-dark', legacy: 'dark', hour }), look('mint', mode), `旧设置不影响自动：${hour} 点`)
+  }
 })
 
 test('访客手动选的配色、明暗各自优先，没选的一项跟随主控', () => {

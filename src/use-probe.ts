@@ -4,7 +4,7 @@ import type { ProbeAppearance, ProbeBackgroundAppearance, ProbePayload, ProbeSer
 import { DEFAULT_PING_GROUP_CONFIG, parsePingGroupConfig, type PingGroupConfig } from './ping-groups'
 import { DEFAULT_NETWORK_SPEED_UNIT, parseNetworkSpeedUnit, type NetworkSpeedUnit } from './network-speed'
 import { canonicalThemeOverride, parseThemeName } from './theme-name'
-import { LUMINAPLUS_COLOR_KEY, LUMINAPLUS_MODE_KEY, LUMINAPLUS_PALETTE_KEY, resolveLuminaPlusAppearance, type LuminaPlusAppearance } from './luminaplus/luminaplus-color'
+import { isLuminaPlusModeSetting, LUMINAPLUS_COLOR_KEY, LUMINAPLUS_MODE_KEY, LUMINAPLUS_PALETTE_KEY, resolveLuminaPlusAppearance, type LuminaPlusModeSetting, type LuminaPlusPalette } from './luminaplus/luminaplus-color'
 import { DEFAULT_SHOW_CONNECTION_CHART, parseShowConnectionChart } from './connection-chart'
 import { applyProbeDelta, isProbeDeltaFrame } from './probe-delta'
 export { isBuiltinTheme, parseThemeName } from './theme-name'
@@ -298,8 +298,18 @@ export function getDarkOverride(): string | null {
   return localStorage.getItem(DARK_OVERRIDE)
 }
 
+/** 访客当前的明暗选择（浅 / 深 / 自动）；没选过返回 null，表示跟随主控。 */
+export function getLuminaPlusModeSetting(): LuminaPlusModeSetting | null {
+  try {
+    const saved = localStorage.getItem(LUMINAPLUS_MODE_KEY)
+    return isLuminaPlusModeSetting(saved) ? saved : null
+  } catch {
+    return null
+  }
+}
+
 /** 访客手动选择 LuminaPlus 的配色与明暗：两项一起记下，旧版合并值不再使用。 */
-export function setLuminaPlusAppearance(next: LuminaPlusAppearance) {
+export function setLuminaPlusAppearance(next: { palette: LuminaPlusPalette; mode: LuminaPlusModeSetting }) {
   localStorage.setItem(LUMINAPLUS_PALETTE_KEY, next.palette)
   localStorage.setItem(LUMINAPLUS_MODE_KEY, next.mode)
   localStorage.removeItem(LUMINAPLUS_COLOR_KEY)
