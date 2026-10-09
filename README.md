@@ -471,7 +471,7 @@ npm run dev
 - `src/server-format.ts`：共用流量格式、地区显示、到期判断及图表格式化。
 - `src/server-health.ts`：健康评分与相关资源/延迟计算，不依赖 Premium 页面。
 - `src/charts/`：共用流量、延迟、系统历史图及横轴交互容器。
-- `src/components/`：共用系统图标、回程标签、Lumina 状态条与许可证页尾；许可证内容仍只从原配置读取。
+- `src/components/`：共用系统图标、回程标签、Lumina 状态条与许可证页尾；许可证内容仍只从原配置读取。`ProbeLicenseBar` 把许可证放在页面末尾、右侧带动画开关（开关按主题分别记忆），经典界面五个主题与 LuminaPlus 共用，Premium 用自己的同款页尾，所有主题都不再悬浮遮挡内容。
 - 主题和详情页直接引用公共模块，不从 `App.tsx` 或 `PremiumProbePage.tsx` 导入工具或组件。Premium 保持动态加载，样式随主题加载。
 
 `npm test` 包含公共计算边界与静态依赖检查，防止重新引入页面反向引用和循环依赖。调整模块后还需执行 `npm run build`，并检查桌面/手机下的主题切换、详情弹窗与图表。此阶段仅整理依赖，不改变主控数据、计费口径、许可证内容或 Ran。

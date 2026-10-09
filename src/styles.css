@@ -1159,25 +1159,15 @@ footer a:hover {
   color: var(--primary);
   text-decoration: underline;
 }
-.app-shell.has-license-footer {
-  padding-bottom: 58px;
-}
+/* 许可证铭牌一排：所有主题都放在页面末尾（ProbeLicenseBar），不再悬浮遮挡内容 */
 .probe-license-footer {
-  position: fixed;
-  z-index: 45;
-  right: 0;
-  bottom: 0;
-  left: 0;
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
-  min-height: 46px;
+  min-height: 40px;
   align-items: center;
   justify-content: center;
-  padding: 8px 16px;
-  border-top: 1px solid var(--border);
-  background: color-mix(in srgb, var(--surface) 86%, transparent);
-  backdrop-filter: blur(10px);
+  padding: 7px 3px;
 }
 .probe-license-nameplate {
   position: relative;
@@ -4558,14 +4548,9 @@ footer a:hover {
   box-shadow: none;
 }
 
-/* 页首与固定许可证页尾直接使用卡片的同一不透明背景色。 */
-:root.theme-lumina .topbar,
-:root.theme-lumina .probe-license-footer {
+/* 页首直接使用卡片的同一不透明背景色。 */
+:root.theme-lumina .topbar {
   background: var(--lumina-glass-card);
-}
-
-:root.theme-lumina.gold .probe-license-footer {
-  border-top-color: rgba(223, 182, 90, 0.28);
 }
 
 :root.theme-lumina.gold .app-shell > footer {
@@ -4770,8 +4755,83 @@ footer a:hover {
 }
 
 /* 清除 Lumina 继承到的全局页尾与详情遮罩模糊；许可证动画和内容保持原样。 */
-:root.theme-lumina .probe-license-footer,
 :root.theme-lumina .server-detail-backdrop {
   -webkit-backdrop-filter: none;
   backdrop-filter: none;
+}
+
+/* 经典界面：许可证放在页面末尾（与 LuminaPlus、Premium 一致），右侧带动画开关 */
+.probe-license-bar {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 0 16px calc(20px + env(safe-area-inset-bottom, 0px));
+}
+.probe-license-bar .probe-license-footer {
+  flex: 0 1 auto;
+  flex-wrap: nowrap;
+  justify-content: flex-start;
+  min-width: 0;
+  min-height: 40px;
+  gap: 8px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+}
+.probe-license-bar .probe-license-footer::-webkit-scrollbar {
+  display: none;
+}
+.probe-license-bar .probe-license-nameplate {
+  flex-shrink: 0;
+  max-width: 420px;
+}
+.probe-license-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  flex: 0 0 auto;
+  height: 34px;
+  padding: 0 9px;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  background: var(--lumina-glass-control, var(--surface));
+  color: var(--muted);
+  box-shadow: none;
+  font: inherit;
+  font-size: 11px;
+  cursor: pointer;
+}
+.probe-license-toggle[aria-checked="true"] {
+  color: var(--primary);
+  border-color: color-mix(in srgb, var(--primary) 60%, var(--border));
+  background: color-mix(in srgb, var(--primary) 10%, var(--lumina-glass-control, var(--surface)));
+}
+.probe-license-toggle i {
+  position: relative;
+  display: block;
+  width: 21px;
+  height: 12px;
+  border: 1px solid currentColor;
+  border-radius: 20px;
+}
+.probe-license-toggle i::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  transition: left 0.15s;
+}
+.probe-license-toggle[aria-checked="true"] i::after {
+  left: 11px;
+}
+@media (max-width: 600px) {
+  .probe-license-bar { gap: 8px; }
+  .probe-license-toggle > svg { display: none; }
 }

@@ -20,7 +20,7 @@ import { StaleDataBanner } from './StaleDataBanner'
 import { ForwardOverview, prefetchDeferred, ServerDetail, SystemTrendChart, TrafficDialog, TrendDialog } from './deferred'
 import { Meter, systemTitle, SystemIcon, routeCarrierLabels, goldRoutes, displayReturnRoute, ReturnRouteBadges } from './components/ServerVisuals'
 import { LUMINA_QUOTA_SEGMENTS } from './components/LuminaHealthBars'
-import { ProbeLicenseFooter } from './components/ProbeLicenseFooter'
+import { ProbeLicenseBar } from './components/ProbeLicenseBar'
 
 const RegionGlobe = lazy(() => import('./RegionGlobe').then((module) => ({ default: module.RegionGlobe })))
 const PremiumProbePage = lazy(() => import('./PremiumProbePage').then((module) => ({ default: module.PremiumProbePage })))
@@ -1503,7 +1503,7 @@ function ProbeApp({ data, error }: ReturnType<typeof useProbe>) {
   const totalUpload = servers.reduce((sum, server) => sum + (server.upload_speed || 0), 0)
   const totalDownload = servers.reduce((sum, server) => sum + (server.download_speed || 0), 0)
   return (
-    <div className={data.license_badge ? 'app-shell has-license-footer' : 'app-shell'}>
+    <div className='app-shell'>
       <header className="topbar">
         <div>
           {data.logo && <img src={data.logo} alt="" />}
@@ -1696,7 +1696,8 @@ function ProbeApp({ data, error }: ReturnType<typeof useProbe>) {
           MMWX Group
         </a>
       </footer>
-      <ProbeLicenseFooter badges={data.license_badge} />
+      {/* 许可证放在页面末尾并带动画开关（与 LuminaPlus、Premium 一致）；开关按主题分别记忆 */}
+      <ProbeLicenseBar badges={data.license_badge} storageKey={`jiwo-${activeTheme}-license-anim`} className="probe-license-bar" toggleClassName="probe-license-toggle" />
       {detailIndex !== null && servers[detailIndex] && (
         <ServerDetail
           server={servers[detailIndex]}
