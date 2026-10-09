@@ -1,4 +1,4 @@
-/* LuminaPlus · v0.3.7 · 2026-09-30 — Palettes: Light, Carbon, Paper and Mint (light / night).
+/* LuminaPlus · v0.3.7 · 2026-09-30 — Palettes Classic (Light / Carbon), Paper and Mint, each with light and dark modes.
  * Independent, opaque Jiwo skin. Visual reference attribution: NOTICE.md.
  * No animated backgrounds, nested blur, or continuously animating meters.
  */
@@ -36,6 +36,16 @@
   --lp-tint: #312a3e; --lp-on-tint: #d4bdf5; --lp-ping-good: #80b99f;
   --lp-speed-low: #f2c66d;
   color-scheme: dark;
+}
+/* Paper Night：Paper 的深色版，深咖啡底、暖白字、浅陶土强调，延续 Paper 的低饱和暖色调。 */
+:root.theme-luminaplus.lp-paper.dark {
+  --lp-page: #1c1a17; --lp-surface: #242119; --lp-soft: #2b2720; --lp-text: #efe9dd;
+  --lp-secondary: #cfc6b5; --lp-muted: #a89f8f; --lp-border: #3a352c; --lp-track: #322d25;
+  --lp-cpu: #8fb0c4; --lp-memory: #b9a8c9; --lp-disk: #d9a07e; --lp-load: #cfa3b0;
+  --lp-blue: #8fb0c4; --lp-green: #8fb59b; --lp-accent: #e08a6a; --lp-warn: #d9a85a; --lp-red: #e08a8a;
+  --lp-tint: #3a2a22; --lp-on-tint: #f0b49b; --lp-ping-good: #8fb59b;
+  --lp-speed-low: #d9a85a; --lp-speed-high: #e08a6a;
+  --lp-traffic-end: #c9bf8f; --lp-ping-warn: #d9b27a; --lp-ping-bad: #d99a93;
 }
 /* Mint：取自 nodecloak.com 的配色（暖白纸底 / 墨黑字 / 薄荷绿点缀），浅色 Mint 与深色 Mint Night 两套。
    原站几乎只有黑白与薄荷绿，四种资源条另配低饱和的钢蓝、琥珀、石板灰以便区分。 */

@@ -55,6 +55,8 @@ test('luminaplus-paper is a palette of LuminaPlus, with case-insensitive control
     assert.equal(canonicalThemeOverride(input), 'luminaplus-paper')
   }
   assert.equal(parseThemeName('lumina-paper').paper, undefined)
+  assert.deepEqual(parseThemeName('luminaplus-paper-dark'), { theme: 'luminaplus', gold: false, platinum: false, light: false, paper: true })
+  assert.equal(canonicalThemeOverride('LuminaPlus Paper Light'), 'luminaplus-paper-light')
   assert.equal(parseThemeName('luminaplus').paper, undefined)
 })
 

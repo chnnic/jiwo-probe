@@ -7,9 +7,12 @@ const BUILTIN_THEMES = new Set([
   'ran-tomcat', 'ran-teal', 'ran-midnight', 'ran-mint', 'ran-butter', 'ran-ji',
 ])
 
-// LuminaPlus 的配色组合名（主控直接写这个名字即可指定配色）。Mint 不带明暗后缀时按北京时间自动切换浅 / 深。
+// LuminaPlus 的配色组合名（主控直接写这个名字即可指定配色）。luminaplus-paper 沿用旧行为固定浅色；
+// Mint 不带明暗后缀时按北京时间自动切换浅 / 深；-light / -dark 后缀固定明暗。
 const LUMINAPLUS_PALETTES: Record<string, { canonical: string; light?: boolean; paper?: boolean; mint?: boolean }> = {
   luminapluspaper: { canonical: 'luminaplus-paper', light: true, paper: true },
+  luminapluspaperlight: { canonical: 'luminaplus-paper-light', light: true, paper: true },
+  luminapluspaperdark: { canonical: 'luminaplus-paper-dark', light: false, paper: true },
   luminaplusmint: { canonical: 'luminaplus-mint', mint: true },
   luminaplusmintlight: { canonical: 'luminaplus-mint-light', light: true, mint: true },
   luminaplusmintdark: { canonical: 'luminaplus-mint-dark', light: false, mint: true },
