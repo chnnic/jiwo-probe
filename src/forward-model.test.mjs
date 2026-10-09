@@ -122,11 +122,12 @@ test('转发链流量的更新提示使用主控 15 分钟结算周期', () => {
   assert.equal(FORWARD_TRAFFIC_NOTE, '主控每 15 分钟更新一次')
 })
 
-test('24 小时状态条：o 正常、d 中断、n 无数据，其余按降级；最后一格是当前', () => {
+test('24 小时状态条：o 正常、d 降级、b 中断、n 无数据，不认识的字符按无数据；最后一格是当前', () => {
   const now = Date.UTC(2026, 9, 8, 12, 0)
-  const cells = availabilityCells({ cells: 'nodx' }, now)
-  assert.deepEqual(cells.map((cell) => cell.tone), ['idle', 'ok', 'down', 'warn'])
-  assert.match(cells[3].label, /降级$/)
+  const cells = availabilityCells({ cells: 'nodbx' }, now)
+  assert.deepEqual(cells.map((cell) => cell.tone), ['idle', 'ok', 'warn', 'down', 'idle'])
+  assert.match(cells[2].label, /降级$/)
+  assert.match(cells[3].label, /中断$/)
   assert.match(cells[0].label, /无数据$/)
   // 4 格铺满 24 小时，每格 6 小时
   assert.equal(availabilityCells({ cells: 'o'.repeat(72) }, now).length, 72)
@@ -137,8 +138,10 @@ test('主控未下发新字段时，状态条、可用率、网速、抖动都�
   assert.equal(availabilityCells(chain), null)
   assert.equal(availabilityCells({ ...chain, cells: '' }), null)
   assert.equal(availabilityPct(chain), null)
+  assert.equal(availabilityPct({ ...chain, availability_24h: null }), null)
   assert.equal(chainLiveSpeed(chain), null)
   assert.equal(formatJitter(undefined), null)
+  assert.equal(formatJitter(null), null)
 })
 
 test('可用率按 0–1 换算成百分比，接近满格不四舍五入成 100%', () => {

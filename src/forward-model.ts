@@ -125,21 +125,22 @@ export function trendCells(chain: ForwardChainData): { ts: number; tone: CellTon
   })
 }
 
-const CELL_TONE: Record<string, CellTone> = { o: 'ok', d: 'down', n: 'idle' }
+// 编码与上游 4cf4ae7 的类型注释一致：o 正常、d 降级、b 中断、n 无数据；不认识的字符按无数据
+const CELL_TONE: Record<string, CellTone> = { o: 'ok', d: 'warn', b: 'down', n: 'idle' }
 const CELL_LABEL: Record<CellTone, string> = { ok: '正常', warn: '降级', down: '中断', idle: '无数据' }
 const DAY_MS = 24 * 3600 * 1000
 const clock = (ms: number) => new Date(ms).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', hour12: false })
 
 /**
  * 近 24 小时状态条（主控 v0.5.6-beta.6 起的 cells）：每个字符一格、按时间先后排列，最后一格是当前。
- * 已见到的编码只有 o 正常、d 中断、n 无数据，其余字符一律按降级显示。主控不下发时返回 null。
+ * 主控不下发时返回 null。
  */
 export function availabilityCells(chain: ForwardChainData, now = Date.now()): { key: number; tone: CellTone; label: string }[] | null {
   const cells = chain.cells
   if (typeof cells !== 'string' || !cells.length) return null
   const span = DAY_MS / cells.length
   return [...cells].map((char, index) => {
-    const tone = CELL_TONE[char] ?? 'warn'
+    const tone = CELL_TONE[char] ?? 'idle'
     const end = now - (cells.length - 1 - index) * span
     return { key: index, tone, label: `约 ${clock(end - span)}–${clock(end)} · ${CELL_LABEL[tone]}` }
   })
@@ -159,7 +160,7 @@ export function formatAvailability(pct: number): string {
   return `${(Math.floor(pct * 10) / 10).toFixed(1)}%`
 }
 
-export function formatJitter(ms: number | undefined): string | null {
+export function formatJitter(ms: number | null | undefined): string | null {
   if (!finite(ms) || ms < 0) return null
   return `${ms < 10 ? ms.toFixed(1) : Math.round(ms)} ms`
 }

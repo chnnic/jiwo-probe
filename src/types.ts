@@ -219,10 +219,10 @@ export interface ForwardChainData {
   /** 主控 v0.5.6-beta.6 起：入口在这条链上的实时上行 / 下行（byte/s） */
   speed_up?: number
   speed_down?: number
-  /** 主控 v0.5.6-beta.6 起：近 24 小时可用率（0–1） */
-  availability_24h?: number
-  /** 主控 v0.5.6-beta.6 起：近 24 小时状态条，每个字符一格（o 正常、d 中断、n 无数据，其余视为降级） */
+  /** 主控 v0.5.6-beta.6 起：近 24 小时可用率（0–1）；这条链没有历史时为 null */
+  availability_24h?: number | null
+  /** 主控 v0.5.6-beta.6 起：近 24 小时状态条，72 个字符、20 分钟一格（o 正常、d 降级、b 中断、n 无数据） */
   cells?: string
-  /** 主控 v0.5.6-beta.6 起：端到端延迟抖动（ms） */
-  jitter_ms?: number
+  /** 主控 v0.5.6-beta.6 起：最近一次采样的端到端抖动（ms）；超过 2 分钟没采到为 null */
+  jitter_ms?: number | null
 }

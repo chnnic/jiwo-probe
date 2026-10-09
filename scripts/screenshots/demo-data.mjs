@@ -186,7 +186,7 @@ export function buildDemoPayload({ theme = 'luminaplus', now = Date.now() } = {}
       ],
       trend: trend(46),
       speed_up: 1_820_000, speed_down: 9_640_000, jitter_ms: 1.4,
-      availability_24h: 0.9986, cells: day24([18, 19, 'w']),
+      availability_24h: 0.9986, cells: day24([18, 19, 'd']),
       traffic: traffic([['HKG-Edge-01', '入口组', 'entry', 18], ['TPE-Line-08', '入口组', 'entry', 7], ['SEL-Game-07', '中转组', 'mid', 15], ['SIN-Relay-03', '中转组', 'mid', 6], ['TYO-Core-02', '出口组', 'exit', 0]]),
     },
     {
@@ -218,7 +218,7 @@ export function buildDemoPayload({ theme = 'luminaplus', now = Date.now() } = {}
       ],
       trend: trend(162, (i) => [i >= 7 ? 168 : 158, i >= 7 ? 8.3 : 0]),
       speed_up: 41_000, speed_down: 188_000, jitter_ms: 12.6,
-      availability_24h: 0.9583, cells: day24([40, 43, 'd'], [64, 72, 'w']),
+      availability_24h: 0.9583, cells: day24([40, 43, 'b'], [64, 72, 'd']),
       traffic: traffic([['SIN-Relay-03', '入口组', 'entry', 4], ['HKG-Edge-01', '入口组', 'entry', 2], ['FRA-Store-05', '出口组', 'exit', 0]]),
     },
     {
@@ -232,7 +232,7 @@ export function buildDemoPayload({ theme = 'luminaplus', now = Date.now() } = {}
       ],
       trend: trend(0, (i) => (i < 5 ? [24, 0] : [0, 100])),
       speed_up: 0, speed_down: 0, jitter_ms: 0,
-      availability_24h: 0.3125, cells: day24([0, 6, 'n'], [28, 72, 'd']),
+      availability_24h: 0.3125, cells: day24([0, 6, 'n'], [28, 72, 'b']),
       traffic: traffic([['AMS-Back-09', '入口组', 'entry', 0.2], ['PAR-Test-10', '中转组', 'mid', 0], ['LON-Edge-06', '出口组', 'exit', 0]]),
     },
   ]
