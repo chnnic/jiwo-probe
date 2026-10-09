@@ -165,10 +165,12 @@ body.gm-light-body .probe-forward { --fw-ok: #0d946e; }
 .probe-forward-speed span { white-space: nowrap; }
 .probe-forward-speed[data-active] { color: var(--ph-accent); }
 /* 链路卡片状态条：每格一个探测周期 */
-.probe-forward-cells { display: flex; gap: 2px; margin-top: auto; padding-top: 2px; }
-.probe-forward-cells i { flex: 1; height: 6px; border-radius: 2px; background: var(--fw-ok); }
-.probe-forward-cells i[data-tone="warn"] { background: var(--fw-warn); }
-.probe-forward-cells i[data-tone="down"] { background: var(--fw-down); }
+.probe-forward-cells { display: flex; align-items: flex-end; height: 10px; gap: 2px; margin-top: auto; padding-top: 2px; box-sizing: content-box; }
+/* 正常格矮而浅，降级 / 中断格满高且保持饱和色：Lumina 等暖色主题三种状态色相接近，
+   72 格细条里只靠颜色，橙色降级几乎看不出来；高度差让出问题的格子直接凸出来 */
+.probe-forward-cells i { flex: 1; height: 5px; border-radius: 2px; background: color-mix(in srgb, var(--fw-ok) 42%, var(--ph-line)); }
+.probe-forward-cells i[data-tone="warn"] { height: 10px; background: var(--fw-warn); }
+.probe-forward-cells i[data-tone="down"] { height: 10px; background: var(--fw-down); }
 .probe-forward-cells i[data-tone="idle"] { background: var(--ph-line); }
 /* 24 小时状态条有 72 格，收窄间距免得窄卡片里每格只剩一条细线 */
 .probe-forward-cells[data-span="day"] { gap: 1px; }
