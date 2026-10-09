@@ -217,16 +217,18 @@ export function applyAppearance(input?: ProbeAppearance) {
   let gold = false
   let platinum = false
   let paper = false
+  let mint = false
   // premium 配色三态(auto/白金/黑金, 由 PremiumProbePage 控制 localStorage premium-probe-color-mode):
   // applyAppearance 在 WS/轮询每帧(5s)都会跑, 必须尊重三态, 否则 remove('platinum') 会冲掉
   // auto/手动白金类造成白金黑金横跳(2026-08-17 用户实测)
   if (theme === 'luminaplus') {
     const mode = resolveLuminaPlusColor({
-      saved: localStorage.getItem(LUMINAPLUS_COLOR_KEY), paper: parsed.paper, light: parsed.light,
+      saved: localStorage.getItem(LUMINAPLUS_COLOR_KEY), paper: parsed.paper, mint: parsed.mint, light: parsed.light,
       legacy: darkOverride, hour: (new Date().getUTCHours() + 8) % 24,
     })
-    dark = mode === 'dark'
+    dark = mode === 'dark' || mode === 'mint-dark'
     paper = mode === 'paper'
+    mint = mode === 'mint' || mode === 'mint-dark'
   } else if (theme === 'premium') {
     const premiumMode = localStorage.getItem('premium-probe-color-mode')
     if (premiumMode === 'platinum') {
@@ -280,6 +282,7 @@ export function applyAppearance(input?: ProbeAppearance) {
   root.classList.toggle('gold', gold)
   root.classList.toggle('platinum', platinum)
   root.classList.toggle('lp-paper', paper)
+  root.classList.toggle('lp-mint', mint)
   // Glassmorphism 明暗下发: 写 master 缓存, GmApp 初始化/轮询时读取(用户手动切换优先)
   // 无后缀 glassmorphism = auto 模式(北京时间白天浅色/夜间深色); light/dark 后缀固定对应模式
   if (theme === 'glassmorphism') {

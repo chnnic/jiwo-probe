@@ -4,13 +4,24 @@ import { trafficWeek, trafficPopoverPosition } from './luminaplus-traffic.ts'
 import { rankLiveSpeeds, rankPeriodTraffic } from './luminaplus-model.ts'
 import { nextLuminaPlusColor, resolveLuminaPlusColor } from './luminaplus-color.ts'
 
-test('LuminaPlus cycles exactly three palettes and manual selection takes priority', () => {
+test('LuminaPlus 按 Light → Carbon → Paper → Mint → Mint Night 循环，手动选择优先', () => {
   assert.equal(nextLuminaPlusColor('light'), 'dark')
   assert.equal(nextLuminaPlusColor('dark'), 'paper')
-  assert.equal(nextLuminaPlusColor('paper'), 'light')
-  for (const saved of ['light', 'dark', 'paper']) {
+  assert.equal(nextLuminaPlusColor('paper'), 'mint')
+  assert.equal(nextLuminaPlusColor('mint'), 'mint-dark')
+  assert.equal(nextLuminaPlusColor('mint-dark'), 'light')
+  for (const saved of ['light', 'dark', 'paper', 'mint', 'mint-dark']) {
     assert.equal(resolveLuminaPlusColor({ saved, paper: true, legacy: 'gold', hour: 23 }), saved)
   }
+})
+
+test('主控 luminaplus-mint 按北京时间切换浅 / 深，带后缀时固定，访客手动选择优先', () => {
+  for (const hour of [6, 12, 17]) assert.equal(resolveLuminaPlusColor({ mint: true, hour }), 'mint')
+  for (const hour of [0, 5, 18, 23]) assert.equal(resolveLuminaPlusColor({ mint: true, hour }), 'mint-dark')
+  assert.equal(resolveLuminaPlusColor({ mint: true, light: true, hour: 23 }), 'mint')
+  assert.equal(resolveLuminaPlusColor({ mint: true, light: false, hour: 12 }), 'mint-dark')
+  assert.equal(resolveLuminaPlusColor({ mint: true, legacy: 'dark', hour: 12 }), 'mint', '其他主题的旧深色设置不影响 Mint')
+  assert.equal(resolveLuminaPlusColor({ saved: 'paper', mint: true, hour: 12 }), 'paper')
 })
 
 test('Paper stays warm throughout the day and explicit follow-controller ignores legacy choices', () => {

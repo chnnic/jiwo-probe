@@ -7,12 +7,24 @@ const BUILTIN_THEMES = new Set([
   'ran-tomcat', 'ran-teal', 'ran-midnight', 'ran-mint', 'ran-butter', 'ran-ji',
 ])
 
-export function parseThemeName(raw: string): { theme: string; gold: boolean; platinum: boolean; light?: boolean; paper?: boolean } {
+// LuminaPlus 的配色组合名（主控直接写这个名字即可指定配色）。Mint 不带明暗后缀时按北京时间自动切换浅 / 深。
+const LUMINAPLUS_PALETTES: Record<string, { canonical: string; light?: boolean; paper?: boolean; mint?: boolean }> = {
+  luminapluspaper: { canonical: 'luminaplus-paper', light: true, paper: true },
+  luminaplusmint: { canonical: 'luminaplus-mint', mint: true },
+  luminaplusmintlight: { canonical: 'luminaplus-mint-light', light: true, mint: true },
+  luminaplusmintdark: { canonical: 'luminaplus-mint-dark', light: false, mint: true },
+}
+
+export function parseThemeName(raw: string): { theme: string; gold: boolean; platinum: boolean; light?: boolean; paper?: boolean; mint?: boolean } {
   const lower = raw.toLowerCase().replace(/[\s_-]/g, '')
   if (lower === 'luminaplus') return { theme: 'luminaplus', gold: false, platinum: false }
   if (lower === 'luminapluslight') return { theme: 'luminaplus', gold: false, platinum: false, light: true }
   if (lower === 'luminaplusdark') return { theme: 'luminaplus', gold: false, platinum: false, light: false }
-  if (lower === 'luminapluspaper') return { theme: 'luminaplus', gold: false, platinum: false, light: true, paper: true }
+  const palette = LUMINAPLUS_PALETTES[lower]
+  if (palette) {
+    const { canonical: _canonical, ...flags } = palette
+    return { theme: 'luminaplus', gold: false, platinum: false, ...flags }
+  }
   if (lower === 'luminagold') return { theme: 'lumina', gold: true, platinum: false }
   if (lower === 'luminaplatinum') return { theme: 'lumina', gold: false, platinum: true }
   if (lower === 'premiumplatinum' || lower === 'premiumlight') return { theme: 'premium', gold: false, platinum: true }
@@ -26,12 +38,13 @@ export function parseThemeName(raw: string): { theme: string; gold: boolean; pla
 }
 
 export function isBuiltinTheme(value?: string): boolean {
-  return typeof value === 'string' && (value.toLowerCase().replace(/[\s_-]/g, '') === 'luminapluspaper' || BUILTIN_THEMES.has(value.trim().toLowerCase()))
+  return typeof value === 'string' && (value.toLowerCase().replace(/[\s_-]/g, '') in LUMINAPLUS_PALETTES || BUILTIN_THEMES.has(value.trim().toLowerCase()))
 }
 
 export function canonicalThemeOverride(value: string | null): string | null {
   if (value === null) return null
   const name = value.trim().toLowerCase()
-  if (name.replace(/[\s_-]/g, '') === 'luminapluspaper') return 'luminaplus-paper'
+  const palette = LUMINAPLUS_PALETTES[name.replace(/[\s_-]/g, '')]
+  if (palette) return palette.canonical
   return name === 'mini' ? 'lite' : isBuiltinTheme(name) ? name : value
 }

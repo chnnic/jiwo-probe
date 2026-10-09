@@ -51,6 +51,23 @@ test('appearance applies Paper idempotently, persists manual palettes and remove
     assert.equal(root.classList.contains('lp-paper'), true)
     setTheme(null)
     assert.equal(root.classList.contains('lp-paper'), true)
+
+    // Mint：浅色只挂 lp-mint，深色同时挂 dark；与 Paper 互斥，切到其他主题时摘掉
+    for (const [mode, dark] of [['mint', false], ['mint-dark', true]]) {
+      setLuminaPlusColorMode(mode)
+      applyAppearance({ theme: 'luminaplus' })
+      assert.equal(root.classList.contains('lp-mint'), true, mode)
+      assert.equal(root.classList.contains('dark'), dark, mode)
+      assert.equal(root.classList.contains('lp-paper'), false, mode)
+    }
+    applyAppearance({ theme: 'lumina' })
+    assert.equal(root.classList.contains('lp-mint'), false)
+    setLuminaPlusColorMode('auto')
+    applyAppearance({ theme: 'luminaplus-mint-light' })
+    assert.equal(root.classList.contains('lp-mint'), true)
+    assert.equal(root.classList.contains('dark'), false)
+    applyAppearance({ theme: 'luminaplus-mint-dark' })
+    assert.equal(root.classList.contains('dark'), true)
   } finally {
     if (previousDocument === undefined) delete globalThis.document; else globalThis.document = previousDocument
     if (previousStorage === undefined) delete globalThis.localStorage; else globalThis.localStorage = previousStorage

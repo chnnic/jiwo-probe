@@ -1,4 +1,4 @@
-/* LuminaPlus · v0.3.7 · 2026-09-30 — Three palettes: Light, Carbon and Paper.
+/* LuminaPlus · v0.3.7 · 2026-09-30 — Palettes: Light, Carbon, Paper and Mint (light / night).
  * Independent, opaque Jiwo skin. Visual reference attribution: NOTICE.md.
  * No animated backgrounds, nested blur, or continuously animating meters.
  */
@@ -36,6 +36,26 @@
   --lp-tint: #312a3e; --lp-on-tint: #d4bdf5; --lp-ping-good: #80b99f;
   --lp-speed-low: #f2c66d;
   color-scheme: dark;
+}
+/* Mint：取自 nodecloak.com 的配色（暖白纸底 / 墨黑字 / 薄荷绿点缀），浅色 Mint 与深色 Mint Night 两套。
+   原站几乎只有黑白与薄荷绿，四种资源条另配低饱和的钢蓝、琥珀、石板灰以便区分。 */
+:root.theme-luminaplus.lp-mint:not(.dark):not(.gold) {
+  --lp-page: #f6f4ef; --lp-surface: #ffffff; --lp-soft: #eeece6; --lp-text: #11151b;
+  --lp-secondary: #485361; --lp-muted: #64707d; --lp-border: #dddcd5; --lp-track: #ebe9e2;
+  --lp-cpu: #34c88a; --lp-memory: #4f7fa8; --lp-disk: #d39b4c; --lp-load: #8e9aa8;
+  --lp-blue: #2f6f9f; --lp-green: #0b6e48; --lp-accent: #0b6e48; --lp-warn: #a5741c; --lp-red: #c2414b;
+  --lp-tint: #ddf6ea; --lp-on-tint: #0b6e48; --lp-ping-good: #3ddc97;
+  --lp-speed-low: #a5741c; --lp-speed-high: #0b6e48;
+  --lp-traffic-end: #3ddc97; --lp-ping-warn: #d9b25f; --lp-ping-bad: #d98a8f;
+}
+:root.theme-luminaplus.lp-mint.dark {
+  --lp-page: #11151b; --lp-surface: #181e26; --lp-soft: #1d242e; --lp-text: #f6f4ef;
+  --lp-secondary: #c5ccd5; --lp-muted: #9aa3ae; --lp-border: #2a313b; --lp-track: #242b35;
+  --lp-cpu: #3ddc97; --lp-memory: #7fb2e0; --lp-disk: #e0b46a; --lp-load: #9aa3ae;
+  --lp-blue: #7fb2e0; --lp-green: #3ddc97; --lp-accent: #3ddc97; --lp-warn: #e0b46a; --lp-red: #f07373;
+  --lp-tint: #173528; --lp-on-tint: #3ddc97; --lp-ping-good: #3ddc97;
+  --lp-speed-low: #e0b46a; --lp-speed-high: #3ddc97;
+  --lp-traffic-end: #3ddc97; --lp-ping-warn: #e0b46a; --lp-ping-bad: #f07373;
 }
 :root.theme-luminaplus:is(.dark, .gold) :is(.lp-resource p,.lp-speed-value > span,.lp-card .card-ping-selector select) { font-size: 12px; font-weight: 500; }
 :root.theme-luminaplus:is(.dark, .gold) .lp-app input::placeholder { color: var(--lp-muted); opacity: 1; }

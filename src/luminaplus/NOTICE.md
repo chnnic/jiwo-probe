@@ -15,6 +15,10 @@ was studied as a reference. Jiwo's overview, snapshot trails and data logic are
 independently implemented here; no third-party adapter or application is bundled.
 This is not an official Anthropic product; the site's identity and features remain.
 
+The Mint / Mint Night palettes take their colour values (paper background, ink text,
+mint accent) from [nodecloak.com](https://nodecloak.com/); only colour values are
+used, no logos, fonts, images or site assets are bundled.
+
 The reference project's MIT notice is retained below for the adapted visual design.
 
 MIT License

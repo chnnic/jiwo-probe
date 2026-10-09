@@ -1,5 +1,5 @@
 import { memo, useMemo, useState } from 'react'
-import { Globe2, Grid3X3, LayoutGrid, List, Moon, Network, Rows3, ScrollText, Search, Sun } from 'lucide-react'
+import { Globe2, Grid3X3, LayoutGrid, Leaf, List, Moon, Network, Rows3, ScrollText, Search, Sun } from 'lucide-react'
 import type { ProbePayload, ThemeName } from '../types'
 import { ThemeSelect } from '../ThemePicker'
 import { PasskeyLogin } from '../PasskeyLogin'
@@ -32,9 +32,10 @@ const LuminaPlusHome = memo(function LuminaPlusHome({ data, trails, error, onThe
   const changeView = (next: LuminaPlusView) => { setView(next); try { localStorage.setItem('jiwo-luminaplus-view', next) } catch { /* Private mode still works for this session. */ } }
   const [, setColorRevision] = useState(0)
   const root = document.documentElement
-  const color: LuminaPlusColor = root.classList.contains('lp-paper') ? 'paper' : root.classList.contains('dark') || root.classList.contains('gold') ? 'dark' : 'light'
+  const darkRoot = root.classList.contains('dark') || root.classList.contains('gold')
+  const color: LuminaPlusColor = root.classList.contains('lp-paper') ? 'paper' : root.classList.contains('lp-mint') ? (darkRoot ? 'mint-dark' : 'mint') : darkRoot ? 'dark' : 'light'
   const nextColor = nextLuminaPlusColor(color)
-  const ColorIcon = color === 'paper' ? ScrollText : color === 'dark' ? Moon : Sun
+  const ColorIcon = color === 'paper' ? ScrollText : color === 'mint' || color === 'mint-dark' ? Leaf : color === 'dark' ? Moon : Sun
   const visible = useMemo(() => selectServers(servers, { query, status, provider, sort }).filter(({ server }) => !region || regionKey(server) === region), [servers, query, status, provider, sort, region])
   const regions = useMemo(() => [...servers.reduce((counts, server) => { const key = regionKey(server); counts.set(key, (counts.get(key) || 0) + 1); return counts }, new Map<string, number>())].sort((a, b) => b[1] - a[1]), [servers])
   const summary = useMemo(() => miniSummary(servers), [servers])
