@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { availabilityCells, availabilityPct, chainLiveSpeed, formatAvailability, formatJitter, chainStatus, chainTraffic, chainTrafficDay, flowDuration, flowLevel, formatGb, FORWARD_TRAFFIC_NOTE, FORWARD_TRAFFIC_SETTLE_MINUTES, forwardSummary, hopTone, latencyTone, mayHaveRouteSelection, routeFork, sortChains, trendCells } from './forward-model.ts'
+import { availabilityCells, availabilityPct, chainLiveSpeed, formatAvailability, formatJitter, chainStatus, chainTraffic, chainTrafficDay, flowDuration, flowLevel, formatGb, groupTrafficByRole, FORWARD_TRAFFIC_NOTE, FORWARD_TRAFFIC_SETTLE_MINUTES, forwardSummary, hopTone, latencyTone, mayHaveRouteSelection, routeFork, sortChains, trendCells } from './forward-model.ts'
 
 test('选路段：按 route_hop 分叉，带策略说明与各路状态；有 routes 时不再提示可能是选路', () => {
   const chain = {
@@ -90,7 +90,7 @@ test('组内全部不可用时连线标为 down', () => {
   assert.equal(hopTone({ role: 'exit', to_next_ms: 0, servers: [server('a', false)] }), 'idle')
 })
 
-test('7 天流量按天合计各节点，取流量最多的节点', () => {
+test('7 天流量按天合计各节点，节点按角色分组列出、不截断', () => {
   const traffic = { days: ['d1', 'd2'], total_gb: 6, servers: [
     { name: 'a', group: 'g', role: 'entry', daily_gb: [1, 2], total_gb: 3 },
     { name: 'b', group: 'g', role: 'exit', daily_gb: [0.5, 2.5], total_gb: 3.5 },
@@ -98,12 +98,12 @@ test('7 天流量按天合计各节点，取流量最多的节点', () => {
   ] }
   const result = chainTraffic(chain('t', { traffic }))
   assert.deepEqual(result.daily, [{ date: 'd1', gb: 1.5 }, { date: 'd2', gb: 4.5 }])
-  assert.deepEqual(result.servers.map(s => s.name), ['b', 'a'])
+  assert.deepEqual(result.groups.map(g => [g.label, g.servers.map(s => s.name)]), [['入口', ['a']], ['出口', ['b']]])
   assert.equal(chainTraffic(chain('none')), null)
   assert.deepEqual([0, 0.5, 12.34, 512, 2048].map(formatGb), ['0 GB', '512 MB', '12.3 GB', '512 GB', '2.00 TB'])
 })
 
-test('某一天的流量明细：当天合计、按用量排序、不列 0 流量节点', () => {
+test('某一天的流量明细：当天合计、按角色分组组内按用量排序、不列 0 流量节点', () => {
   const traffic = { days: ['10-03', '10-04'], total_gb: 9, servers: [
     { name: 'in-a', group: '入口组', role: 'entry', daily_gb: [1, 0.5], total_gb: 1.5 },
     { name: 'out-b', group: '出口组', role: 'exit', daily_gb: [3, 4.5], total_gb: 7.5 },
@@ -112,9 +112,22 @@ test('某一天的流量明细：当天合计、按用量排序、不列 0 流�
   const day = chainTrafficDay(chain('t', { traffic }), 1)
   assert.equal(day.date, '10-04')
   assert.equal(day.total, 5)
-  assert.deepEqual(day.servers.map(s => `${s.name} ${s.gb}`), ['out-b 4.5', 'in-a 0.5'])
+  assert.deepEqual(day.groups.map(g => [g.label, g.gb, g.servers.map(s => `${s.name} ${s.gb}`)]), [['入口', 0.5, ['in-a 0.5']], ['出口', 4.5, ['out-b 4.5']]])
   assert.equal(chainTrafficDay(chain('t', { traffic }), 2), null)
   assert.equal(chainTrafficDay(chain('none'), 0), null)
+})
+
+test('流量分组顺序固定为 入口 → 中转 → 出口，组内从大到小，小流量的中转也列出，未知角色排最后', () => {
+  const servers = [
+    { name: 'out-small', role: 'exit', gb: 1 }, { name: 'in-big', role: 'entry', gb: 9 },
+    { name: 'mid', role: 'mid', gb: 0.2 }, { name: 'out-big', role: 'exit', gb: 5 },
+    { name: 'in-small', role: 'entry', gb: 2 }, { name: 'weird', role: 'relay', gb: 3 },
+  ]
+  assert.deepEqual(groupTrafficByRole(servers).map(g => [g.label, g.gb, g.servers.map(s => s.name)]), [
+    ['入口', 11, ['in-big', 'in-small']], ['中转', 0.2, ['mid']], ['出口', 6, ['out-big', 'out-small']], ['其他', 3, ['weird']],
+  ])
+  // 没有中转就只有入口、出口两组
+  assert.deepEqual(groupTrafficByRole(servers.filter(s => s.role === 'entry' || s.role === 'exit')).map(g => g.label), ['入口', '出口'])
 })
 
 test('转发链流量的更新提示使用主控 15 分钟结算周期', () => {

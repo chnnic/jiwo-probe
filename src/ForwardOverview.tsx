@@ -2,7 +2,7 @@ import { Fragment, useMemo, useState, type CSSProperties } from 'react'
 import { ChevronDown, Network } from 'lucide-react'
 import { Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import type { ProbePayload, ProbeServer } from './types'
-import { availabilityCells, availabilityPct, chainLiveSpeed, chainTraffic, chainTrafficDay, flowDuration, FORWARD_TRAFFIC_NOTE, formatAvailability, formatJitter, flowLevel, formatGb, forwardSummary, groupHealth, hopTone, latencyTone, mayHaveRouteSelection, routeFork, sortChains, trendCells, type ForwardStatus } from './forward-model'
+import { availabilityCells, availabilityPct, chainLiveSpeed, chainTraffic, chainTrafficDay, type TrafficRoleGroup, flowDuration, FORWARD_TRAFFIC_NOTE, formatAvailability, formatJitter, flowLevel, formatGb, forwardSummary, groupHealth, hopTone, latencyTone, mayHaveRouteSelection, routeFork, sortChains, trendCells, type ForwardStatus } from './forward-model'
 import { useNetworkSpeed } from './use-network-speed'
 import './probe-history.css'
 
@@ -17,6 +17,16 @@ const probeInterval = (bucketSec?: number) => `主控每 ${Math.max(1, Math.roun
 // 放在页首后默认折叠；访客展开或折叠后记在本浏览器
 const OPEN_KEY = 'probe-forward-open'
 const readOpen = () => { try { return localStorage.getItem(OPEN_KEY) === '1' } catch { return false } }
+
+/** 各节点流量按 入口 → 中转 → 出口 分组列出，组标题带小计，组内从大到小。 */
+function TrafficByRole({ groups }: { groups: TrafficRoleGroup<{ name: string; group: string; gb: number }>[] }) {
+  return <ol className="probe-forward-top">
+    {groups.map((group) => <Fragment key={group.role || 'other'}>
+      <li className="probe-forward-top-role"><span>{group.label}</span><strong>{formatGb(group.gb)}</strong></li>
+      {group.servers.map((server) => <li key={`${group.role}-${server.name}`}><span title={server.name}>{server.name}</span><small>{server.group}</small><strong>{formatGb(server.gb)}</strong></li>)}
+    </Fragment>)}
+  </ol>
+}
 
 /**
  * 转发链总览（各主题共用，Premium 有自己的转发页）。沿用主控快照/展示开关，不另开轮询。
@@ -166,12 +176,12 @@ export function ForwardOverview({ data }: { data: ProbePayload }) {
             </div>
             {dayDetail ? <div className="probe-forward-day" aria-live="polite">
               <p><strong>{dayDetail.date}</strong> 当日合计 <strong>{formatGb(dayDetail.total)}</strong><button type="button" onClick={() => setDaySel(null)}>返回 7 天汇总</button></p>
-              {dayDetail.servers.length > 0
-                ? <ol className="probe-forward-top">{dayDetail.servers.map((server) => <li key={server.name}><span title={server.name}>{server.name}</span><small>{roles[server.role as keyof typeof roles] ?? server.role} · {server.group}</small><strong>{formatGb(server.gb)}</strong></li>)}</ol>
+              {dayDetail.groups.length > 0
+                ? <TrafficByRole groups={dayDetail.groups} />
                 : <p className="probe-forward-empty">当天各节点均无流量。</p>}
             </div> : <>
               <p className="probe-forward-hint">点击柱子查看当天各节点流量</p>
-              {traffic.servers.length > 0 && <ol className="probe-forward-top">{traffic.servers.map((server) => <li key={server.name}><span title={server.name}>{server.name}</span><small>{roles[server.role as keyof typeof roles] ?? server.role}</small><strong>{formatGb(server.total_gb)}</strong></li>)}</ol>}
+              {traffic.groups.length > 0 && <TrafficByRole groups={traffic.groups} />}
             </>}
           </div>}
         </div>

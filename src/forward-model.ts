@@ -73,20 +73,41 @@ export function forwardSummary(chains: ForwardChainData[]) {
 export const FORWARD_TRAFFIC_SETTLE_MINUTES = 15
 export const FORWARD_TRAFFIC_NOTE = `主控每 ${FORWARD_TRAFFIC_SETTLE_MINUTES} 分钟更新一次`
 
-/** 7 天流量：每天各节点合计与流量最多的节点；无数据返回 null。 */
-export function chainTraffic(chain: ForwardChainData, top = 3) {
+const TRAFFIC_ROLES = [
+  { role: 'entry', label: '入口' },
+  { role: 'mid', label: '中转' },
+  { role: 'exit', label: '出口' },
+]
+
+export type TrafficRoleGroup<T> = { role: string; label: string; gb: number; servers: T[] }
+
+/**
+ * 按角色分组：入口 → 中转 → 出口（没有中转就只有两组），组内按流量从大到小；主控若下发其他角色归入最后的「其他」。
+ * 不按流量混排、不截断，中转节点流量小也会列出。
+ */
+export function groupTrafficByRole<T extends { role: string; gb: number }>(servers: T[]): TrafficRoleGroup<T>[] {
+  const known = new Set(TRAFFIC_ROLES.map((item) => item.role))
+  return [...TRAFFIC_ROLES, { role: '', label: '其他' }]
+    .map(({ role, label }) => {
+      const members = servers.filter((server) => (role ? server.role === role : !known.has(server.role))).sort((a, b) => b.gb - a.gb)
+      return { role, label, gb: members.reduce((sum, server) => sum + server.gb, 0), servers: members }
+    })
+    .filter((group) => group.servers.length > 0)
+}
+
+/** 7 天流量：每天各节点合计，以及按角色分组的各节点 7 天用量（0 流量节点不列出）；无数据返回 null。 */
+export function chainTraffic(chain: ForwardChainData) {
   const traffic = chain.traffic
   if (!traffic?.days?.length || !traffic.servers?.length) return null
   const daily = traffic.days.map((date, i) => ({
     date,
     gb: traffic.servers.reduce((sum, server) => sum + (finite(server.daily_gb?.[i]) ? server.daily_gb[i] : 0), 0),
   }))
-  const servers = [...traffic.servers]
+  const groups = groupTrafficByRole(traffic.servers
     .filter((server) => finite(server.total_gb) && server.total_gb > 0)
-    .sort((a, b) => b.total_gb - a.total_gb)
-    .slice(0, top)
+    .map((server) => ({ name: server.name, group: server.group, role: server.role, gb: server.total_gb })))
   const total = finite(traffic.total_gb) ? traffic.total_gb : daily.reduce((sum, day) => sum + day.gb, 0)
-  return { daily, servers, total }
+  return { daily, groups, total }
 }
 
 export function formatGb(gb: number): string {
@@ -97,15 +118,14 @@ export function formatGb(gb: number): string {
   return `${Math.max(1, Math.round(gb * 1024))} MB`
 }
 
-/** 某一天的流量明细：当天合计与各节点用量（从多到少，0 流量不列出）；越界或无数据返回 null。 */
+/** 某一天的流量明细：当天合计与各节点用量（按角色分组、组内从多到少，0 流量不列出）；越界或无数据返回 null。 */
 export function chainTrafficDay(chain: ForwardChainData, dayIndex: number) {
   const traffic = chain.traffic
   if (!traffic?.days?.length || !traffic.servers?.length || dayIndex < 0 || dayIndex >= traffic.days.length) return null
   const servers = traffic.servers
     .map((server) => ({ name: server.name, group: server.group, role: server.role, gb: finite(server.daily_gb?.[dayIndex]) ? server.daily_gb[dayIndex] : 0 }))
     .filter((server) => server.gb > 0)
-    .sort((a, b) => b.gb - a.gb)
-  return { date: traffic.days[dayIndex], total: servers.reduce((sum, server) => sum + server.gb, 0), servers }
+  return { date: traffic.days[dayIndex], total: servers.reduce((sum, server) => sum + server.gb, 0), groups: groupTrafficByRole(servers) }
 }
 
 export type CellTone = ForwardStatus | 'idle'

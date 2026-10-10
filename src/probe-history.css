@@ -222,6 +222,10 @@ body.gm-light-body .probe-forward { --fw-ok: #0d946e; }
 .probe-forward-top span { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .probe-forward-top small { flex: none; font-size: 10px; color: var(--ph-muted); }
 .probe-forward-top strong { margin-left: auto; flex: none; font-weight: 600; }
+/* 角色组标题：入口 / 中转 / 出口 + 小计，组与组之间留出间隔 */
+.probe-forward-top li.probe-forward-top-role { margin-top: 6px; padding-bottom: 3px; border-bottom: 1px solid var(--ph-line); font-size: 11px; color: var(--ph-muted); }
+.probe-forward-top li.probe-forward-top-role:first-child { margin-top: 0; }
+.probe-forward-top li.probe-forward-top-role strong { font-weight: 500; color: var(--ph-muted); }
 .probe-forward-empty { color: var(--ph-muted); font-size: 12px; padding-top: 16px; }
 @media (max-width: 600px) {
   dialog.probe-history-dialog { padding: 16px; }
