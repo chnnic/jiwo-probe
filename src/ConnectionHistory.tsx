@@ -1,37 +1,16 @@
-import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react'
-import { createPortal } from 'react-dom'
-import { X } from 'lucide-react'
+import { useState } from 'react'
 import type { ProbeServer } from './types'
 import { connectionCount } from './unlocks'
 import { SystemTrendChart } from './deferred'
+import { ProbeHistoryDialog } from './components/ProbeHistoryDialog'
 import { useProbe } from './use-probe'
 import { connBucketLabel, connHoverIndex, connSparklineMax, connSparklinePath, normalizeConnHistory } from './conn-sparkline'
 import './probe-history.css'
 
 function ConnectionHistoryDialog({ serverIndex, name, close }: { serverIndex: number; name: string; close: () => void }) {
-  const ref = useRef<HTMLDialogElement>(null)
-  const title = useId()
-  useLayoutEffect(() => {
-    const dialog = ref.current!
-    const focused = document.activeElement as HTMLElement | null
-    dialog.showModal()
-    return () => { dialog.close(); focused?.focus({ preventScroll: true }) }
-  }, [])
-  useEffect(() => {
-    const previous = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-    return () => { document.body.style.overflow = previous }
-  }, [])
-  return createPortal(<dialog ref={ref} className="probe-history-dialog" aria-labelledby={title}
-    onCancel={event => { event.preventDefault(); close() }} onKeyDown={event => event.stopPropagation()}
-    onMouseDown={event => event.stopPropagation()} onClick={event => {
-      event.stopPropagation()
-      const rect = event.currentTarget.getBoundingClientRect()
-      if (event.target === event.currentTarget && (event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom)) close()
-    }}>
-    <header><div><h2 id={title}>TCP / UDP 连接数历史</h2><p>{name}</p></div><button type="button" aria-label="关闭连接数历史" onClick={close} autoFocus><X size={18} /></button></header>
+  return <ProbeHistoryDialog title="TCP / UDP 连接数历史" subtitle={name} closeLabel="关闭连接数历史" close={close}>
     <SystemTrendChart serverIndex={serverIndex} metric="connections" fixedAxis={false} />
-  </dialog>, document.body)
+  </ProbeHistoryDialog>
 }
 
 /** 卡片共用主控快照，不启动请求/采样；只有打开历史弹窗才按需读取 /api/series。 */
