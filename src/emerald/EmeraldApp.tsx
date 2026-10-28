@@ -41,6 +41,7 @@ import {
 } from 'lucide-react'
 import { RegionGlobe } from '../RegionGlobe'
 import { CardPingGroups } from '../CardPingGroups'
+import { primaryPing } from '../ping-groups'
 import { ConnectionHistory } from '../ConnectionHistory'
 import { ForwardOverview, ServerDetail, TrafficDialog } from '../deferred'
 import { Twemoji } from '../Twemoji'
@@ -107,7 +108,7 @@ function regionFlag(server: ProbeServer): string {
 }
 
 function averagePing(server: ProbeServer): { latency: number; loss: number } | null {
-  const series = (server.ping || []).filter((item) => Number.isFinite(item.current_ms) && item.current_ms >= 0)
+  const series = primaryPing(server.ping).filter((item) => Number.isFinite(item.current_ms) && item.current_ms >= 0)
   if (!series.length) return null
   return {
     latency: series.reduce((sum, item) => sum + item.current_ms, 0) / series.length,

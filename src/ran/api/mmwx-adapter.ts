@@ -1,4 +1,5 @@
 import type { ProbeServer } from '../../types'
+import { primaryPing } from '../../ping-groups.ts'
 import type { PingHistory, PingTask } from '@/api/client'
 import type { KomariNode, KomariRecord } from '@/types/komari'
 
@@ -81,8 +82,8 @@ export function toMmwxNode(server: ProbeServer, index: number): KomariNode {
 
 export function toMmwxRecord(server: ProbeServer, index: number): KomariRecord {
   const load = parseLoadAverage(server.loadavg)
-  const validPing = (server.ping ?? []).filter((line) => line.current_ms >= 0)
-  const validLoss = (server.ping ?? []).filter((line) => line.loss_pct >= 0)
+  const validPing = primaryPing(server.ping).filter((line) => line.current_ms >= 0)
+  const validLoss = primaryPing(server.ping).filter((line) => line.loss_pct >= 0)
   return {
     uuid: uuidFor(index),
     online: server.online,

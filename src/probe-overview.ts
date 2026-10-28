@@ -1,4 +1,5 @@
 // 经典主题探针页的汇总、健康判定、排序 —— 纯函数，移植自上游 989b8e7 的 src/probe-overview.ts（与主控内置探针同一份逻辑）。
+import { primaryPing } from './ping-groups.ts'
 
 export type ProbeOverviewServer = {
   name?: string
@@ -21,7 +22,7 @@ export type ProbeOverviewServer = {
   daily_traffic?: Array<{ date: string; total: number }>
   /** 日流量由累计值估算（xray 来源）：主控探针页的日流量合计不算这些机器 */
   daily_traffic_estimated?: boolean
-  ping?: Array<{ current_ms: number; loss_pct?: number; buckets?: Array<{ ms: number; loss: number }> }>
+  ping?: Array<{ key?: string; label?: string; current_ms: number; loss_pct?: number; buckets?: Array<{ ms: number; loss: number }> }>
 }
 
 /** 进度条变红的阈值，告警也按它 */
@@ -107,7 +108,7 @@ export function sortProbeServers<T extends { server: ProbeOverviewServer; index:
       case 'traffic': return trafficUsed(s)
       case 'expiry': return s.expires_at || undefined
       case 'latency': {
-        const ms = (s.ping ?? []).map((p) => p.current_ms).filter((v) => v >= 0)
+        const ms = primaryPing(s.ping).map((p) => p.current_ms).filter((v) => v >= 0)
         return ms.length ? Math.min(...ms) : undefined
       }
     }
@@ -172,15 +173,16 @@ export function quotaSummary(servers: ProbeOverviewServer[]) {
 
 /**
  * 一台服务器的延迟与丢包：各延迟目标近 1 小时分桶的平均（与主控内置探针页的数值对得上）；
- * 没有分桶时退回当前值。失败的 -1 不算。
+ * 没有分桶时退回当前值。失败的 -1 不算；开了 IPv6 延迟的服务器只算 IPv4 目标。
  */
 export function serverPing(s: ProbeOverviewServer): { latency?: number; loss?: number } {
-  const buckets = (s.ping ?? []).flatMap((p) => p.buckets ?? [])
+  const ping = primaryPing(s.ping)
+  const buckets = ping.flatMap((p) => p.buckets ?? [])
   const valid = (values: Array<number | undefined>) => values.filter((v): v is number => typeof v === 'number' && v >= 0)
   const bucketMs = valid(buckets.map((b) => b.ms))
-  const ms = bucketMs.length ? bucketMs : valid((s.ping ?? []).map((p) => p.current_ms))
+  const ms = bucketMs.length ? bucketMs : valid(ping.map((p) => p.current_ms))
   const bucketLoss = valid(buckets.map((b) => b.loss))
-  const loss = bucketLoss.length ? bucketLoss : valid((s.ping ?? []).map((p) => p.loss_pct))
+  const loss = bucketLoss.length ? bucketLoss : valid(ping.map((p) => p.loss_pct))
   return {
     latency: ms.length ? ms.reduce((a, b) => a + b, 0) / ms.length : undefined,
     loss: loss.length ? loss.reduce((a, b) => a + b, 0) / loss.length : undefined,

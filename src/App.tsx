@@ -16,6 +16,7 @@ import { connectionCount } from './unlocks'
 import { ProbeHistoryDaysContext } from './use-probe-range'
 import { CYCLE_LABELS as cycleLabel, CYCLE_MONTHS, expiryTimestamp, isPermanent } from './renewal'
 import { bytes, expiring, expired, remainingDays, regionFlag, hasLeadingFlag, pct, averagePing } from './server-format'
+import { primaryPing } from './ping-groups'
 import { StaleDataBanner } from './StaleDataBanner'
 import { ForwardOverview, prefetchDeferred, ServerDetail, SystemTrendChart, TrafficDialog, TrendDialog } from './deferred'
 import { Meter, systemTitle, SystemIcon, routeCarrierLabels, goldRoutes, displayReturnRoute, ReturnRouteBadges } from './components/ServerVisuals'
@@ -121,7 +122,7 @@ function assetStats(servers: ProbeServer[]) {
 const isCnLabel = (label: string) => /电信|联通|移动/.test(label)
 
 function groupedPingAvg(ping: ProbePingSeries[], cn: boolean): number {
-  const list = (ping || []).filter((item) => isCnLabel(item.label) === cn)
+  const list = primaryPing(ping).filter((item) => isCnLabel(item.label) === cn)
   const current = list.filter((item) => item.current_ms >= 0).map((item) => item.current_ms)
   return current.length ? current.reduce((a, b) => a + b, 0) / current.length : -1
 }
@@ -165,7 +166,7 @@ function daysLeft(server: ProbeServer): number {
 }
 
 function avgLossPct(server: ProbeServer, cn: boolean): number {
-  const losses = (server.ping || [])
+  const losses = primaryPing(server.ping)
     .filter((item) => isCnLabel(item.label) === cn)
     .map((item) => item.loss_pct)
     .filter((value) => value >= 0)
@@ -244,7 +245,7 @@ function Leaderboard({ servers }: { servers: ProbeServer[] }) {
         : tab === 'ping-idc' ? groupedPingAvg(server.ping || [], false)
         : avg.current_ms
       const lines = pingTab || lossTab
-        ? (server.ping || [])
+        ? primaryPing(server.ping)
             .filter((item) => isCnLabel(item.label) === (tab === 'ping-cn' || tab === 'loss-cn'))
             .map((item) => ({ label: item.label, ms: item.current_ms, loss: item.loss_pct }))
         : []

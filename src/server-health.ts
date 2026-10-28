@@ -1,8 +1,9 @@
 import type { ProbeServer } from './types.ts'
 import { isPermanent } from './renewal.ts'
+import { primaryPing } from './ping-groups.ts'
 
 export function averageLatency(server: ProbeServer): number | undefined {
-  const values = (server.ping || [])
+  const values = primaryPing(server.ping)
     .map((series) => series.current_ms)
     .filter((value) => value >= 0)
   if (!values.length) return undefined
@@ -56,7 +57,7 @@ export function serverHealth(server: ProbeServer): HealthResult {
     }
   }
   const latency = averageLatency(server)
-  const losses = (server.ping || [])
+  const losses = primaryPing(server.ping)
     .map((item) => item.loss_pct)
     .filter((value) => value >= 0)
   const loss = losses.length

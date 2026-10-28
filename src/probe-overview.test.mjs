@@ -97,6 +97,8 @@ test('网络质量：在线服务器取各目标平均，按 Premium 同一口�
   assert.equal(hourly.loss, 3)
   assert.equal(hourly.medium, 1)
   assert.equal(networkQuality([{ online: true }]), undefined)
+  const dual = networkQuality([{ online: true, ping: [{ key: 'sh-ct-v4', label: '上海电信', current_ms: 40, loss_pct: 0, buckets: [{ ms: 40, loss: 0 }] }, { key: 'sh-cu-v6', label: '上海联通 IPv6', current_ms: 300, loss_pct: 30, buckets: [{ ms: 300, loss: 30 }] }] }])
+  assert.equal(dual.latency, 40)
 })
 
 test('连接数：合计 TCP / UDP，近 1 小时曲线按时段相加，全缺的时段为 null', () => {

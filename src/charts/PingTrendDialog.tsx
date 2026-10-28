@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom'
 import { MoveHorizontal, ZoomIn, ZoomOut } from 'lucide-react'
 import { Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import type { ProbePingSeries } from '../types'
-import { pingTargetOptions, isPingAverage } from '../ping-groups'
+import { PING_IPV6_AVERAGE, historyPingSeries, inPingChartGroup, isIpv6Ping, isPingAverage, pingTargetOptions, type PingChartGroup } from '../ping-groups'
 import { useProbeRange } from '../use-probe-range'
 import { probeRangeBucketSec } from '../probe-ranges'
 import { formatAxisDateTime, lossScale, formatLossTick } from '../server-format'
@@ -14,7 +14,7 @@ const colors = ['#8b5cf6', '#0ea5e9', '#22c55e', '#f59e0b', '#ef4444', '#ec4899'
 
 export function TrendDialog({ serverIndex, initial, targetKey, cardTarget, title, mode, close }: { serverIndex: number; initial: ProbePingSeries[]; targetKey: string; cardTarget?: string; title: string; mode: 'latency' | 'loss'; close: () => void }) {
   const { range, setRange, options: ranges } = useProbeRange()
-  const [group, setGroup] = useState<'all' | 'cn' | 'idc'>(cardTarget === '__avg_cn__' ? 'cn' : cardTarget === '__avg_intl__' ? 'idc' : 'all')
+  const [group, setGroup] = useState<PingChartGroup>(cardTarget === '__avg_cn__' ? 'cn' : cardTarget === '__avg_intl__' ? 'idc' : cardTarget === PING_IPV6_AVERAGE.key ? 'v6' : 'all')
   const [hidden, setHidden] = useState<Set<string>>(new Set())
   const [series, setSeries] = useState<ProbePingSeries[]>(initial)
   const [loading, setLoading] = useState(false)
@@ -26,19 +26,15 @@ export function TrendDialog({ serverIndex, initial, targetKey, cardTarget, title
     bucketSec: 300,
   })
 
-  const isCnLabel = (label: string) => /电信|联通|移动/.test(label)
+  const hasIpv6 = series.some(isIpv6Ping)
   const groupSeries = useMemo(() => {
     if (cardTarget) {
       // 卡片指定的范围平均由真实线路重新计算，切换时间范围后也不退回全部平均。
-      const scope = group === 'cn' ? 'cn' : group === 'idc' ? 'intl' : 'all'
-      const averageKey = scope === 'cn' ? '__avg_cn__' : scope === 'intl' ? '__avg_intl__' : '__avg__'
-      return pingTargetOptions(series).filter(option => option.series && (option.key === averageKey || (!isPingAverage(option.key) && (scope === 'all' || option.scope === scope))))
+      const averageKey = group === 'cn' ? '__avg_cn__' : group === 'idc' ? '__avg_intl__' : group === 'v6' ? PING_IPV6_AVERAGE.key : '__avg__'
+      return pingTargetOptions(series).filter(option => option.series && (option.key === averageKey || (!isPingAverage(option.key) && inPingChartGroup(option.series, group))))
         .map((option, index) => ({ item: option.series!, index }))
     }
-    const list = series.map((item, index) => ({ item, index }))
-    if (group === 'all') return list
-    const cn = group === 'cn'
-    return list.filter(({ item }) => item.key !== '__avg__' && isCnLabel(item.label) === cn)
+    return series.map((item, index) => ({ item, index })).filter(({ item }) => inPingChartGroup(item, group))
   }, [series, group, cardTarget])
   const displaySeries = useMemo(
     () => groupSeries.filter(({ item }) => !hidden.has(item.key || item.label)),
@@ -74,7 +70,7 @@ export function TrendDialog({ serverIndex, initial, targetKey, cardTarget, title
       .then((payload) => {
         if (controller.signal.aborted) return
         if (payload.success) {
-          setSeries([...(payload.series ? [{ ...payload.series, key: '__avg__', label: '平均' }] : []), ...(payload.all_series || [])])
+          setSeries(historyPingSeries(payload.series, payload.all_series))
           setTimeMeta({
             generatedAt: payload.generated_at ?? Math.floor(Date.now() / 1000),
             bucketSec: payload.bucket_sec ?? probeRangeBucketSec(range),
@@ -155,6 +151,11 @@ export function TrendDialog({ serverIndex, initial, targetKey, cardTarget, title
           <button type="button" className={group === 'idc' ? 'active' : ''} onClick={() => setGroup('idc')}>
             海外
           </button>
+          {hasIpv6 && (
+            <button type="button" className={group === 'v6' ? 'active' : ''} onClick={() => setGroup('v6')}>
+              IPv6
+            </button>
+          )}
           <span className="ranges-sep" />
           <button
             type="button"
@@ -194,7 +195,7 @@ export function TrendDialog({ serverIndex, initial, targetKey, cardTarget, title
           {loading && <div className="loading-overlay">加载中…</div>}
           {!loading && !displaySeries.length && (
             <div className="chart-empty">
-              该服务器未配置{group === 'cn' ? '内地' : '海外'}探测点
+              该服务器未配置{group === 'cn' ? '内地' : group === 'v6' ? ' IPv6 ' : '海外'}探测点
             </div>
           )}
           <HorizontalChart width={Math.max(120, rows.length * 82 * zoom)}>

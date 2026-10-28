@@ -35,10 +35,27 @@ export const PING_AVERAGES = [
   { key: '__avg_intl__', label: '海外延迟', scope: 'intl' },
 ] as const
 
+/** 主控开启 IPv6 延迟后按服务器追加的目标（key 以 -v6 结尾，名称带「IPv6」），单独成一组平均。 */
+export const PING_IPV6_AVERAGE = { key: '__avg_v6__', label: 'IPv6 延迟', scope: 'cn' } as const
+
+export function isIpv6Ping(series: { key?: string; label?: string }): boolean {
+  return /(^|[-_:])v6$/i.test(series.key?.trim() || '') || /\bIPv6\b/i.test(series.label || '')
+}
+
+/**
+ * 整机汇总（平均延迟、内地 / 海外平均、榜单、网络质量、健康分）只算 IPv4 目标：
+ * 只有部分服务器开了 IPv6 延迟，混进去会让这几台和其他服务器不可比。全是 IPv6 目标时退回全部。
+ */
+export function primaryPing<T extends { key?: string; label?: string }>(ping: readonly T[] = []): T[] {
+  const ipv4 = ping.filter(item => !isIpv6Ping(item))
+  return ipv4.length ? ipv4 : [...ping]
+}
+
 const aliases: Record<string, string> = {
   '平均': '__avg__', '平均延迟': '__avg__', '全部平均': '__avg__', avg: '__avg__',
   '内地延迟': '__avg_cn__', '国内延迟': '__avg_cn__', '内地平均': '__avg_cn__', '国内平均': '__avg_cn__', 'avg-cn': '__avg_cn__',
   '海外延迟': '__avg_intl__', '国际延迟': '__avg_intl__', '海外平均': '__avg_intl__', '国际平均': '__avg_intl__', 'avg-intl': '__avg_intl__',
+  'ipv6延迟': '__avg_v6__', 'ipv6 延迟': '__avg_v6__', 'ipv6平均': '__avg_v6__', 'ipv6 平均': '__avg_v6__', 'avg-v6': '__avg_v6__',
 }
 
 export function normalizePingTarget(value: string): string {
@@ -79,7 +96,7 @@ export function pingTargetKey(series: ProbePingSeries): string {
 }
 
 export function isPingAverage(key: string): boolean {
-  return PING_AVERAGES.some(average => average.key === key)
+  return key === PING_IPV6_AVERAGE.key || PING_AVERAGES.some(average => average.key === key)
 }
 
 const mean = (values: number[]) => {
@@ -109,12 +126,41 @@ export interface PingTargetOption {
 
 export function pingTargetOptions(ping: ProbePingSeries[]): PingTargetOption[] {
   const lines = [...new Map(ping.filter(item => !isPingAverage(item.key || '')).map(item => [pingTargetKey(item), item])).values()]
+  const primary = primaryPing(lines)
+  const ipv6 = lines.filter(isIpv6Ping)
   return [
     ...PING_AVERAGES.map(average => {
-      const selected = average.scope === 'all' ? lines : lines.filter(item => pingScope(item) === average.scope)
+      const selected = average.scope === 'all' ? primary : primary.filter(item => pingScope(item) === average.scope)
       return { ...average, series: selected.length ? aggregatePingGroup(selected, average.key, average.label) : undefined }
     }),
+    // 没开 IPv6 延迟的服务器不出现这一项，以免每张卡片的下拉都多一个「无目标」。
+    ...(ipv6.length ? [{ ...PING_IPV6_AVERAGE, series: aggregatePingGroup(ipv6, PING_IPV6_AVERAGE.key, PING_IPV6_AVERAGE.label) }] : []),
     ...lines.map(item => ({ key: pingTargetKey(item), label: item.label, scope: pingScope(item), series: { ...item, key: pingTargetKey(item) } })),
+  ]
+}
+
+export type PingChartGroup = 'all' | 'cn' | 'idc' | 'v6'
+
+/** 趋势图「全部 / 内地 / 海外 / IPv6」分组：内地、海外只放 IPv4 线路，IPv6 线路和 IPv6 平均单独一组 */
+export function inPingChartGroup(series: ProbePingSeries, group: PingChartGroup): boolean {
+  if (group === 'all') return true
+  const key = series.key || ''
+  if (group === 'v6') return key === PING_IPV6_AVERAGE.key || (!isPingAverage(key) && isIpv6Ping(series))
+  if (isPingAverage(key) || isIpv6Ping(series)) return false
+  return /电信|联通|移动/.test(series.label) === (group === 'cn')
+}
+
+/**
+ * 历史接口（/api/series）的线路列表：主控给的平均线把 IPv6 目标也算了进去，
+ * 有 IPv6 目标时按 IPv4 目标重算平均，并补一条 IPv6 平均，和卡片口径一致。
+ */
+export function historyPingSeries(average: ProbePingSeries | undefined, all: ProbePingSeries[] = [], label = '平均'): ProbePingSeries[] {
+  const ipv6 = all.filter(isIpv6Ping)
+  if (!ipv6.length) return [...(average ? [{ ...average, key: '__avg__', label }] : []), ...all]
+  return [
+    aggregatePingGroup(primaryPing(all), '__avg__', label),
+    aggregatePingGroup(ipv6, PING_IPV6_AVERAGE.key, PING_IPV6_AVERAGE.label),
+    ...all,
   ]
 }
 

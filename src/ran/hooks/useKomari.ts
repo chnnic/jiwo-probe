@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useProbe } from '../../use-probe'
+import { primaryPing } from '../../ping-groups'
 import { toMmwxNode, toMmwxPingHistory, toMmwxRecord, uuidFor } from '@/api/mmwx-adapter'
 import type { PingHistory } from '@/api/client'
 import type { KomariMe, KomariNode, KomariPublicConfig, KomariRecord } from '@/types/komari'
@@ -41,7 +42,7 @@ export function useKomari(): KomariState {
     if (!servers.length) return
     for (const [index, server] of servers.entries()) {
       const uuid = uuidFor(index)
-      const lines = server.ping ?? []
+      const lines = primaryPing(server.ping)
       const ms = lines.filter((l) => l.current_ms >= 0).map((l) => l.current_ms)
       const loss = lines.filter((l) => l.loss_pct >= 0).map((l) => l.loss_pct)
       if (ms.length) {

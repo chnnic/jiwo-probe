@@ -1,5 +1,6 @@
 import type { ProbeServer } from '../types'
 import { expiryTimestamp } from '../renewal.ts'
+import { primaryPing } from '../ping-groups.ts'
 
 export type MiniStatus = 'all' | 'online' | 'offline' | 'expiring'
 export type MiniSort = 'default' | 'name' | 'cpu' | 'memory' | 'traffic' | 'latency' | 'expiry'
@@ -17,7 +18,7 @@ export function ratio(used?: number, total?: number): number | undefined {
 }
 
 export function averageLatency(server: ProbeServer): number | undefined {
-  const values = (server.ping || []).map(item => validNumber(item.current_ms)).filter((value): value is number => value !== undefined)
+  const values = primaryPing(server.ping).map(item => validNumber(item.current_ms)).filter((value): value is number => value !== undefined)
   return values.length ? values.reduce((sum, value) => sum + value, 0) / values.length : undefined
 }
 

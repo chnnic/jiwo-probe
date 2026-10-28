@@ -16,6 +16,7 @@ import { computeMonthlyTrafficCost, computeRemainingValue, formatMoney } from '.
 import { CYCLE_LABELS as cycleLabel, isPermanent } from './renewal'
 import { useProbeRange } from './use-probe-range'
 import { probeRangeBucketSec } from './probe-ranges'
+import { PING_IPV6_AVERAGE, aggregatePingGroup, historyPingSeries, inPingChartGroup, isIpv6Ping, type PingChartGroup } from './ping-groups'
 
 function formatUptime(seconds: number): string {
   const d = Math.floor(seconds / 86400)
@@ -75,7 +76,7 @@ const colors = ['#8b5cf6', '#0ea5e9', '#22c55e', '#f59e0b', '#ef4444', '#ec4899'
 
 function PingTrendChart({ serverIndex, initial, targetKey, mode }: { serverIndex: number; initial: ProbePingSeries[]; targetKey: string; mode: 'latency' | 'loss' }) {
   const { range, setRange, options: RANGES } = useProbeRange()
-  const [group, setGroup] = useState<'all' | 'cn' | 'idc'>('all')
+  const [group, setGroup] = useState<PingChartGroup>('all')
   const [hidden, setHidden] = useState<Set<string>>(new Set())
   const [series, setSeries] = useState<ProbePingSeries[]>(initial)
   const [loading, setLoading] = useState(false)
@@ -87,13 +88,11 @@ function PingTrendChart({ serverIndex, initial, targetKey, mode }: { serverIndex
     bucketSec: 300,
   })
 
-  const isCnLabel = (label: string) => /电信|联通|移动/.test(label)
-  const groupSeries = useMemo(() => {
-    const list = series.map((item, index) => ({ item, index }))
-    if (group === 'all') return list
-    const cn = group === 'cn'
-    return list.filter(({ item }) => item.key !== '__avg__' && isCnLabel(item.label) === cn)
-  }, [series, group])
+  const hasIpv6 = series.some(isIpv6Ping)
+  const groupSeries = useMemo(
+    () => series.map((item, index) => ({ item, index })).filter(({ item }) => inPingChartGroup(item, group)),
+    [series, group],
+  )
   const displaySeries = useMemo(
     () => groupSeries.filter(({ item }) => !hidden.has(item.key || item.label)),
     [groupSeries, hidden],
@@ -128,7 +127,7 @@ function PingTrendChart({ serverIndex, initial, targetKey, mode }: { serverIndex
       .then((payload) => {
         if (controller.signal.aborted) return
         if (payload.success) {
-          setSeries([...(payload.series ? [{ ...payload.series, key: '__avg__', label: '平均' }] : []), ...(payload.all_series || [])])
+          setSeries(historyPingSeries(payload.series, payload.all_series))
           setTimeMeta({
             generatedAt: payload.generated_at ?? Math.floor(Date.now() / 1000),
             bucketSec: payload.bucket_sec ?? probeRangeBucketSec(range),
@@ -200,6 +199,11 @@ function PingTrendChart({ serverIndex, initial, targetKey, mode }: { serverIndex
         <button type="button" className={group === 'idc' ? 'active' : ''} onClick={() => setGroup('idc')}>
           海外
         </button>
+        {hasIpv6 && (
+          <button type="button" className={group === 'v6' ? 'active' : ''} onClick={() => setGroup('v6')}>
+            IPv6
+          </button>
+        )}
         <span className="ranges-sep" />
         <button
           type="button"
@@ -239,7 +243,7 @@ function PingTrendChart({ serverIndex, initial, targetKey, mode }: { serverIndex
         {loading && <div className="loading-overlay">加载中…</div>}
         {!loading && !displaySeries.length && (
           <div className="chart-empty">
-            该服务器未配置{group === 'cn' ? '内地' : '海外'}探测点
+            该服务器未配置{group === 'cn' ? '内地' : group === 'v6' ? ' IPv6 ' : '海外'}探测点
           </div>
         )}
         <HorizontalChart width={Math.max(120, rows.length * 82 * zoom)}>
@@ -320,7 +324,9 @@ export function ServerDetail({ server, index, onClose, showHealthScore = false }
   const flag = regionFlag(server.region)
   const ping = server.ping || []
   const average = averagePing(ping)
-  const lines = [{ ...average, key: '__avg__' }, ...ping]
+  const ipv6 = ping.filter(isIpv6Ping)
+  const ipv6Average = ipv6.length ? aggregatePingGroup(ipv6, PING_IPV6_AVERAGE.key, PING_IPV6_AVERAGE.label) : undefined
+  const lines = [{ ...average, key: '__avg__' }, ...(ipv6Average ? [ipv6Average] : []), ...ping]
   const health = useMemo(() => serverHealth(server), [server])
 
   useEffect(() => {
@@ -548,6 +554,7 @@ export function ServerDetail({ server, index, onClose, showHealthScore = false }
                     <Wifi size={14} />
                     <select value={selected} onChange={(event) => setSelected(event.target.value)}>
                       <option value="__avg__">平均</option>
+                      {ipv6Average && <option value={PING_IPV6_AVERAGE.key}>{PING_IPV6_AVERAGE.label}</option>}
                       {ping.map((item) => (
                         <option key={item.key || item.label} value={item.key || item.label}>
                           {item.label}

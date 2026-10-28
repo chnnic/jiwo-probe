@@ -1,5 +1,6 @@
 import type { ProbeBucket, ProbePingSeries, ProbeServer } from './types.ts'
 import { expiryTimestamp } from './renewal.ts'
+import { primaryPing } from './ping-groups.ts'
 
 export function formatAxisDateTime(unixSeconds: number, showMinutes = true): string {
   return new Intl.DateTimeFormat('zh-CN', {
@@ -81,7 +82,9 @@ export function pct(used = 0, total = 0): number {
 }
 
 
-export function averagePing(series: ProbePingSeries[]): ProbePingSeries {
+/** 整机平均（只算 IPv4 目标，见 primaryPing） */
+export function averagePing(allSeries: ProbePingSeries[]): ProbePingSeries {
+  const series = primaryPing(allSeries)
   const count = series[0]?.buckets.length || 0
   const buckets: ProbeBucket[] = Array.from({ length: count }, (_, index) => {
     const values = series.map((item) => item.buckets[index]).filter(Boolean)

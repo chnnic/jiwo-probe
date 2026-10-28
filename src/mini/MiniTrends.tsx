@@ -6,6 +6,7 @@ import { ConnectionLabel } from '../ConnectionLabel'
 import { connectionCount } from '../unlocks'
 import { connectionTrendRows, formatConnectionAverage, pingTrendRows, systemTrendRows, trendValue, type SystemSeries, type TrendRow } from './mini-trends'
 import { useProbeRange } from '../use-probe-range'
+import { historyPingSeries } from '../ping-groups'
 import { probeBucketLabel, probeRangeBucketSec, type ProbeRange, type ProbeRangeOption } from '../probe-ranges'
 
 const colors = ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444', '#06b6d4', '#ec4899', '#84cc16', '#f97316']
@@ -60,10 +61,7 @@ export function MiniLatencyTrends({ server, index }: { server: ProbeServer; inde
   const [mode, setMode] = useState<'latency' | 'loss'>('latency')
   const [hidden, setHidden] = useState<Set<string>>(new Set())
   const history = useHistory<SeriesPayload>(index, range, 'ping')
-  const series = useMemo(() => history.data ? [
-    ...(history.data.series ? [{ ...history.data.series, key: '__avg__', label: '平均' }] : []),
-    ...(history.data.all_series || []),
-  ] : server.ping || [], [history.data, server.ping])
+  const series = useMemo(() => history.data ? historyPingSeries(history.data.series, history.data.all_series) : server.ping || [], [history.data, server.ping])
   const targets = series.map((line, slot) => ({ key: `line${slot}`, id: line.key || line.label, label: line.label, color: line.key === '__avg__' ? 'var(--mini-text)' : colors[slot % colors.length], series: line }))
   const visible = targets.filter(line => !hidden.has(line.id))
   const bucketSec = history.data?.bucket_sec || probeRangeBucketSec(range)
