@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { ChevronDown, RotateCcw, Unplug } from 'lucide-react'
+import { ChevronDown, Clock, RotateCcw, Unplug } from 'lucide-react'
 import type { ProbeBucket, ProbePingSeries } from './types'
 import { useProbe } from './use-probe'
 import { pingTargetOptions, resolvePingGroups } from './ping-groups'
@@ -7,7 +7,7 @@ import { LuminaHealthBars, luminaHeatColor } from './components/LuminaHealthBars
 import { TrendDialog } from './deferred'
 import './card-ping-groups.css'
 
-type Variant = 'classic' | 'lumina' | 'gm' | 'emerald'
+type Variant = 'classic' | 'lumina' | 'gm' | 'emerald' | 'probe'
 type Mode = 'latency' | 'loss'
 
 function readSelections(key: string): Array<string | null> {
@@ -17,7 +17,9 @@ function readSelections(key: string): Array<string | null> {
   } catch { return [] }
 }
 
-function barLevel(variant: Variant, kind: Mode, value: number): string {
+function barLevel(variant: Variant, kind: Mode, value: number, bucket?: ProbeBucket): string {
+  // 经典卡片照主控探针页：整桶没数据为灰，只有延迟没回（超时）为红
+  if (variant === 'probe' && kind === 'latency' && bucket && bucket.ms < 0 && bucket.loss >= 0) return 'bad'
   if (!Number.isFinite(value) || value < 0) return variant === 'emerald' ? 'empty' : 'none'
   if (variant === 'emerald') {
     return kind === 'latency'
@@ -43,7 +45,7 @@ function Bars({ variant, kind, buckets }: { variant: Variant; kind: Mode; bucket
   return <span className="card-ping-bars" aria-hidden="true">
     {padded.map((bucket, index) => {
       const value = kind === 'latency' ? bucket.ms : bucket.loss
-      return <i key={index} className={`is-${barLevel(variant, kind, value)}`} title={value < 0 ? '无数据' : kind === 'latency' ? `${value.toFixed(0)} ms` : `${value.toFixed(1)}%`} />
+      return <i key={index} className={`is-${barLevel(variant, kind, value, bucket)}`} title={value < 0 ? '无数据' : kind === 'latency' ? `${value.toFixed(0)} ms` : `${value.toFixed(1)}%`} />
     })}
   </span>
 }
@@ -76,6 +78,54 @@ export function CardPingGroups({ ping = [], serverIndex, serverName, variant, av
     } catch { /* 隐私模式仍允许本次会话选择。 */ }
   }
   const name = serverName || `服务器 ${serverIndex + 1}`
+  const selectFor = (group: (typeof groups)[number], index: number) => {
+    const targetKey = group.target?.key || ''
+    return <select aria-label={`${name} 第 ${index + 1} 组测试目标`} value={targetKey}
+      title={group.fallback ? `${options.find(option => option.key === group.requested)?.label || group.requested || '默认目标'} 未命中，使用 ${group.target?.label}` : group.target?.label || '没有可用的默认或国际备用目标'}
+      onClick={event => event.stopPropagation()}
+      onChange={event => {
+        const next = Array.from({ length: config.count }, (_, slot) => overrides[slot] ?? null)
+        next[index] = event.target.value
+        update(next)
+      }}>
+      {!targetKey && <option value="" disabled>未配置</option>}
+      {options.map(option => <option key={option.key} value={option.key}
+        disabled={!option.series || groups.some((other, slot) => slot !== index && other.target?.key === option.key)}>{option.label}{!option.series ? '（无目标）' : ''}</option>)}
+    </select>
+  }
+  const valueText = (kind: Mode, value: number | undefined, available: boolean) => {
+    const valid = value !== undefined && Number.isFinite(value) && value >= 0
+    return !available ? '—' : !valid ? kind === 'latency' ? '超时' : '—' : kind === 'latency' ? `${value.toFixed(0)} ms` : `${value.toFixed(1)} %`
+  }
+  // 经典卡片（照主控 v0.6.1-beta.3 探针页）：每组一行「目标 · 延迟 · 丢包」，下面并排延迟条与丢包条
+  if (variant === 'probe') {
+    return <div className="card-ping-groups card-ping-probe" data-group-count={groups.length}
+      onClick={event => event.stopPropagation()} onMouseDown={event => event.stopPropagation()} onKeyDown={event => event.stopPropagation()}>
+      {groups.map((group, index) => {
+        const current = group.target?.series
+        const targetKey = group.target?.key || ''
+        const open = (mode: Mode) => group.target && setTrend({ key: targetKey, label: group.target.label, mode })
+        const loss = current?.loss_pct
+        return <section className="card-ping-group" key={index} aria-label={`${name} 第 ${index + 1} 组延迟与丢包`} data-target={targetKey} data-fallback={group.fallback}>
+          <div className="card-ping-row">
+            <span className="card-ping-selector"><Clock size={13} aria-hidden="true" />{averageOnly ? <span>平均延迟</span> : selectFor(group, index)}</span>
+            <strong>{valueText('latency', current?.current_ms, !!current)}</strong>
+            <span className={`card-ping-loss${loss !== undefined && loss > 0 ? ' warning' : ''}`}>丢包 {valueText('loss', loss, !!current)}</span>
+            {!averageOnly && index === 0 && overrides.some(Boolean) && <button type="button" className="card-ping-reset" title="恢复后台默认目标" aria-label={`${name} 恢复后台默认目标`} onClick={event => { event.stopPropagation(); update([]) }}><RotateCcw size={11} /></button>}
+          </div>
+          <div className="card-ping-bar-pair">
+            {(['latency', 'loss'] as const).map(kind => <button type="button" key={kind} className="card-ping-trend" disabled={!current}
+              title={kind === 'latency' ? '点击查看延迟趋势' : '点击查看丢包率趋势'}
+              aria-label={`${name} 第 ${index + 1} 组 ${group.target?.label || '未配置'} ${kind === 'latency' ? '延迟' : '丢包率'}趋势`}
+              onClick={event => { event.stopPropagation(); open(kind) }}>
+              <Bars variant={variant} kind={kind} buckets={current?.buckets || []} />
+            </button>)}
+          </div>
+        </section>
+      })}
+      {trend && <TrendDialog serverIndex={serverIndex} initial={ping} targetKey={trend.key} cardTarget={trend.key} title={trend.label} mode={trend.mode} close={() => setTrend(null)} />}
+    </div>
+  }
   return <div className={`card-ping-groups card-ping-${variant}`} data-group-count={groups.length}
     onClick={event => event.stopPropagation()} onMouseDown={event => event.stopPropagation()} onKeyDown={event => event.stopPropagation()}>
     {groups.map((group, index) => {
@@ -86,24 +136,13 @@ export function CardPingGroups({ ping = [], serverIndex, serverName, variant, av
           {(['latency', 'loss'] as const).map(kind => {
             const value = kind === 'latency' ? current?.current_ms : current?.loss_pct
             const valid = value !== undefined && Number.isFinite(value) && value >= 0
-            const text = !current ? '—' : !valid ? kind === 'latency' ? '超时' : '—' : kind === 'latency' ? `${value.toFixed(0)} ms` : `${value.toFixed(1)}%`
+            const text = valueText(kind, value, !!current).replace(' %', '%')
             const label = kind === 'latency' ? '延迟' : '丢包率'
             const openTrend = () => group.target && setTrend({ key: targetKey, label: group.target.label, mode: kind })
             return <div key={kind} className={`card-ping-metric${!current ? ' is-unavailable' : ''}`} onClick={openTrend}>
               <div className="card-ping-head">
                 {kind === 'latency' ? averageOnly ? <span>平均延迟</span> : <span className="card-ping-selector">
-                  <select aria-label={`${name} 第 ${index + 1} 组测试目标`} value={targetKey}
-                    title={group.fallback ? `${options.find(option => option.key === group.requested)?.label || group.requested || '默认目标'} 未命中，使用 ${group.target?.label}` : group.target?.label || '没有可用的默认或国际备用目标'}
-                    onClick={event => event.stopPropagation()}
-                    onChange={event => {
-                      const next = Array.from({ length: config.count }, (_, slot) => overrides[slot] ?? null)
-                      next[index] = event.target.value
-                      update(next)
-                    }}>
-                    {!targetKey && <option value="" disabled>未配置</option>}
-                    {options.map(option => <option key={option.key} value={option.key}
-                      disabled={!option.series || groups.some((other, slot) => slot !== index && other.target?.key === option.key)}>{option.label}{!option.series ? '（无目标）' : ''}</option>)}
-                  </select>
+                  {selectFor(group, index)}
                   <ChevronDown size={10} aria-hidden="true" />
                 </span> : <span>
                   {!averageOnly && index === 0 && overrides.some(Boolean)

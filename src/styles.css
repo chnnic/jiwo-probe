@@ -369,82 +369,136 @@ button {
   background: #dc2626;
   border-color: #dc2626;
 }
-/* ===== 顶部指标与工具条（移植上游 989b8e7） ===== */
+/* ===== 顶部汇总（照主控 v0.6.1-beta.3 探针页）：一张卡里排指标格，右侧一张地区小卡 ===== */
 .overview {
   width: min(1600px, calc(100% - 48px));
   margin: 18px auto 0;
-}
-/* 4 列两行：服务器、连接数、实时网速（占两格）/ 今日流量、本期额度、网络质量、续费 */
-.kpi-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  grid-auto-rows: 1fr;
   gap: 12px;
 }
-.kpi {
+@media (min-width: 1024px) {
+  .overview.with-globe {
+    grid-template-columns: minmax(0, 1fr) 260px;
+  }
+}
+.kpi-panel {
+  container: kpi-panel / inline-size;
   display: flex;
-  min-width: 0;
-  min-height: 118px;
   flex-direction: column;
-  gap: 3px;
+  min-width: 0;
+  overflow: hidden;
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 12px 16px;
-  color: var(--foreground);
   background: var(--surface);
   box-shadow: var(--shadow);
+}
+/* 格子之间的细线由每格右、下各 1px 阴影画出；网格向右下多出 1px，最外侧那条被卡片裁掉 */
+.kpi-grid {
+  display: grid;
+  flex: 1;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  /* 右侧地区卡更高时，各行平分多出来的高度，不在卡片底部留空 */
+  grid-auto-rows: 1fr;
+  grid-auto-flow: row dense;
+  margin: 0 -1px -1px 0;
+}
+/* 4 列两行：服务器、实时网速（两格）、连接数 / 今日流量、额度与网络质量（两格）、续费 */
+@container kpi-panel (min-width: 760px) {
+  .kpi-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+.kpi-cell {
+  container: kpi-cell / inline-size;
+  display: flex;
+  gap: 10px;
+  min-width: 0;
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  padding: 10px 14px;
+  color: var(--foreground);
+  background: transparent;
+  box-shadow: 1px 1px 0 0 var(--border);
   font: inherit;
   text-align: left;
 }
-.kpi.wide {
+.kpi-cell.wide {
   grid-column: span 2;
 }
-button.kpi {
+button.kpi-cell {
   cursor: pointer;
+  transition: background-color 0.15s;
 }
-button.kpi:hover,
-button.kpi.active {
-  border-color: color-mix(in srgb, var(--primary) 45%, var(--border));
+button.kpi-cell:hover {
+  background: color-mix(in srgb, var(--muted) 8%, transparent);
+}
+.kpi-main {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 2px;
+  min-width: 0;
+  min-height: 68px;
 }
 .kpi-label {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   gap: 6px;
+  min-width: 0;
   color: var(--muted);
-  font-size: 13px;
+  font-size: 12px;
+  line-height: 16px;
 }
 .kpi-label svg {
   flex-shrink: 0;
 }
+.kpi-label > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .kpi-value {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
+  display: block;
   min-width: 0;
   overflow: hidden;
-  font-size: 24px;
-  font-weight: 650;
-  line-height: 1.25;
+  font-size: 22px;
+  font-weight: 600;
+  line-height: 1.1;
+  text-overflow: ellipsis;
   white-space: nowrap;
   font-variant-numeric: tabular-nums;
 }
 .kpi-value em {
   font-style: normal;
 }
-/* 实时网速一格放下行、上行两个大数字 */
-.kpi.wide .kpi-value {
-  gap: 0 22px;
-}
 .kpi-unit {
-  margin-left: 5px;
   color: var(--muted);
-  font-size: 15px;
-  font-weight: 500;
+  font-size: 14px;
+  font-weight: 400;
+}
+.kpi-speed {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 8px;
+  font-size: 17px;
+}
+.kpi-pair {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 12px;
 }
 .kpi-sub {
+  display: block;
+  min-width: 0;
+  min-height: 16px;
   overflow: hidden;
   color: var(--muted);
   font-size: 12px;
+  line-height: 16px;
   text-overflow: ellipsis;
   white-space: nowrap;
   font-variant-numeric: tabular-nums;
@@ -452,50 +506,52 @@ button.kpi.active {
 .kpi-sub b {
   font-weight: 600;
 }
-.kpi .online,
-.kpi .down {
+.kpi-cell .online,
+.kpi-cell .down {
   color: #16a34a;
 }
-.kpi .offline {
+.kpi-cell .offline {
   color: #ef4444;
 }
-.kpi .up {
+.kpi-cell .up {
   color: #ea580c;
 }
-.kpi .warn {
+.kpi-cell .warn {
   color: #d97706;
 }
-/* 底部小图贴在格子最下面，各格对齐 */
-.kpi-foot {
-  margin-top: auto;
-  padding-top: 8px;
+/* 右栏小图：网速折线铺满，日流量柱贴底 */
+.kpi-aside {
+  position: relative;
+  flex: none;
+  width: 96px;
+  min-height: 68px;
 }
-.kpi-bar {
-  display: flex;
-  height: 6px;
-  overflow: hidden;
-  border-radius: 99px;
-  background: color-mix(in srgb, var(--border) 70%, transparent);
+.kpi-aside .kpi-spark {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100% !important;
 }
-.kpi-bar i {
-  height: 100%;
-  background: var(--primary);
+.kpi-aside .kpi-spark-area {
+  opacity: 0.08;
 }
-.kpi-bar i.ok {
-  background: #22c55e;
+@container kpi-cell (max-width: 239px) {
+  .kpi-aside {
+    display: none;
+  }
 }
-.kpi-bar i.warn {
-  background: #eab308;
+@container kpi-cell (max-width: 419px) {
+  .kpi-cell.wide > .kpi-aside {
+    display: none;
+  }
 }
-.kpi-bar i.bad {
-  background: #ef4444;
-}
-.kpi-bar i.quota {
-  background: var(--primary);
+@container kpi-cell (min-width: 420px) {
+  .kpi-speed {
+    flex-wrap: nowrap;
+  }
 }
 .kpi-spark {
   display: block;
-  width: 100%;
   overflow: visible;
 }
 .kpi-spark-area {
@@ -506,12 +562,6 @@ button.kpi.active {
   fill: none;
   stroke-width: 1.5;
   vector-effect: non-scaling-stroke;
-}
-.kpi-spark .conn .kpi-spark-area {
-  fill: var(--primary);
-}
-.kpi-spark .conn .kpi-spark-line {
-  stroke: var(--primary);
 }
 .kpi-spark .down .kpi-spark-area {
   fill: #22c55e;
@@ -526,27 +576,128 @@ button.kpi.active {
   stroke: #ea580c;
 }
 .kpi-columns {
+  position: absolute;
+  inset: auto 0 0;
   display: flex;
   align-items: flex-end;
-  gap: 4px;
-  height: 40px;
+  gap: 3px;
+  height: 34px;
 }
 .kpi-columns i {
   flex: 1;
   min-height: 2px;
-  border-radius: 2px 2px 0 0;
-  background: color-mix(in srgb, var(--primary) 22%, transparent);
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--primary) 30%, transparent);
 }
 .kpi-columns i.today {
   background: var(--primary);
 }
-.kpi-note {
-  display: block;
+/* 额度与网络质量一格：额度细条、已用 / 总量、优中差分段条、丢包 */
+.kpi-quota-line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.kpi-quota-line > span {
+  flex-shrink: 0;
+}
+.kpi-quota-line > .kpi-mini-bar {
+  flex: 1 1 40px;
+  min-width: 40px;
+  height: 4px;
   overflow: hidden;
-  color: var(--muted);
+  border-radius: 99px;
+  background: color-mix(in srgb, var(--border) 70%, transparent);
+}
+.kpi-mini-bar i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--primary);
+}
+.kpi-mini-bar i.warn {
+  background: #eab308;
+}
+.kpi-mini-bar i.bad {
+  background: #ef4444;
+}
+.kpi-quality-bar {
+  display: flex;
+  width: 48px;
+  height: 8px;
+  overflow: hidden;
+  border-radius: 99px;
+  background: color-mix(in srgb, var(--border) 70%, transparent);
+}
+.kpi-quality-bar i {
+  height: 100%;
+}
+.kpi-quality-bar i.ok {
+  background: #22c55e;
+}
+.kpi-quality-bar i.warn {
+  background: #eab308;
+}
+.kpi-quality-bar i.bad {
+  background: #ef4444;
+}
+/* 地区小卡：112px 地球 + 各国家 / 地区台数 */
+.globe-card.globe-mini {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  padding: 10px 14px;
+}
+.globe-mini-stage {
+  flex: none;
+  width: 112px;
+  height: 112px;
+}
+.globe-mini-stage .globe-stage {
+  padding: 0;
+}
+.globe-mini-stage .region-globe {
+  width: 112px;
+  height: 112px;
+}
+.globe-mini-stage .globe-loading {
+  min-height: 112px;
   font-size: 11px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+}
+.globe-mini-info {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+.globe-mini-count {
+  color: var(--muted);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+.globe-mini-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.globe-mini-chips span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 22px;
+  border-radius: 6px;
+  padding: 0 6px;
+  color: var(--muted);
+  background: color-mix(in srgb, var(--muted) 12%, transparent);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+.globe-mini-chips b {
+  color: var(--foreground);
+  font-weight: 600;
 }
 .filters {
   flex-wrap: wrap;
@@ -612,6 +763,180 @@ button.kpi.active {
   margin-left: -1px;
   border-top-left-radius: 0;
   border-bottom-left-radius: 0;
+}
+/* 状态筛选、卡片密度：分段按钮组（照主控 v0.6.1-beta.3 探针页），搜索框和下拉统一 34px 高 */
+.filters .filter-seg {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  border-radius: var(--radius);
+  padding: 2px;
+  background: color-mix(in srgb, var(--muted) 13%, transparent);
+}
+.filters .filter-seg button,
+.filters .filter-seg button + button {
+  height: 30px;
+  margin: 0;
+  border: 0;
+  border-radius: max(2px, calc(var(--radius) - 3px));
+  padding: 0 10px;
+  color: var(--muted);
+  background: transparent;
+  box-shadow: none;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+.filters .filter-seg button:hover {
+  color: var(--foreground);
+}
+.filters .filter-seg button.active {
+  color: var(--foreground);
+  background: var(--surface);
+  font-weight: 600;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.1);
+}
+.filter-count {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 400;
+}
+.filter-count.bad {
+  color: #dc2626;
+}
+.filter-count.warn {
+  color: #d97706;
+}
+/* 选中项的数字跟着按钮文字色走：玻璃、Lumina 黑金 / 白金会把选中项填成彩色底 */
+.filters .filter-seg button.active .filter-count:not(.bad):not(.warn) {
+  color: inherit;
+  opacity: 0.7;
+}
+.filters .server-search {
+  height: 34px;
+  padding: 0 10px;
+}
+.toolbar-select,
+.filters .region-trigger {
+  height: 34px;
+  padding-block: 0;
+  font-size: 13px;
+}
+@media (min-width: 641px) {
+  .filters .server-search {
+    max-width: 320px;
+  }
+}
+/* ===== 经典服务器卡片（照主控 v0.6.1-beta.3 探针页）：四项占用两列、三个小格、每组延迟一行 ===== */
+/* 主控卡片标题行不带「详情 ›」，名字多留位置；整张卡片仍可点开详情 */
+.probe-card .detail-hint {
+  display: none;
+}
+.probe-card .metrics {
+  gap: 8px 20px;
+  margin: 0 16px;
+  padding: 8px 0 10px;
+}
+.probe-card .metric-head span {
+  flex-shrink: 1;
+  min-width: 0;
+}
+.probe-card .metric-head svg {
+  flex-shrink: 0;
+}
+.probe-card .metric-head strong {
+  flex-shrink: 0;
+  color: color-mix(in srgb, var(--foreground) 80%, transparent);
+  font-weight: 400;
+}
+.metric-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.probe-card .meter {
+  height: 6px;
+  margin-top: 3px;
+}
+.net-boxes {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0 16px;
+  padding: 8px 0;
+  border-top: 1px solid var(--border);
+}
+.net-box {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  margin: 0;
+  border: 0;
+  border-radius: 6px;
+  padding: 6px 10px;
+  color: var(--foreground);
+  background: color-mix(in srgb, var(--muted) 9%, transparent);
+  box-shadow: none;
+  font: inherit;
+  font-size: 12px;
+  line-height: 16px;
+  text-align: left;
+  font-variant-numeric: tabular-nums;
+}
+.net-box > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.net-box b {
+  color: color-mix(in srgb, var(--foreground) 80%, transparent);
+  font-weight: 400;
+}
+.net-box .net-box-label {
+  color: var(--muted);
+  font-size: 11px;
+}
+.net-box .download {
+  color: #16a34a;
+}
+.net-box .upload {
+  color: #ea580c;
+}
+button.net-box {
+  cursor: pointer;
+}
+button.net-box:hover {
+  background: color-mix(in srgb, var(--muted) 16%, transparent);
+}
+.probe-card.dense .net-boxes {
+  gap: 6px;
+}
+.probe-card.dense .net-box {
+  padding: 5px 7px;
+}
+.probe-card .return-route-badges {
+  gap: 6px;
+  margin: 0 16px;
+  padding: 8px 0;
+}
+.probe-card .server-meta {
+  margin: 0 16px;
+  padding: 6px 0 9px;
+}
+/* 动漫卡片自带蕾丝内边距，各区块不再缩进 */
+.theme-anime .probe-card .metrics,
+.theme-anime .probe-card .net-boxes,
+.theme-anime .probe-card .card-ping-probe {
+  margin-inline: 0;
+}
+.theme-anime .probe-card .net-boxes,
+.theme-anime .probe-card .card-ping-probe {
+  border-color: #eadffc;
+}
+/* 动漫的蕾丝边框留给大卡片，地区小卡太小放不下 */
+:root.theme-anime .globe-card.globe-mini {
+  padding: 10px 14px;
+}
+:root.theme-anime .globe-card.globe-mini::after {
+  content: none;
 }
 /* 宽屏吸顶；窄屏换行后太高，吸顶会遮住半屏 */
 @media (min-width: 1024px) {
@@ -1692,11 +2017,11 @@ footer a:hover {
 :root.theme-pixel .modal {
   border-width: 2px;
 }
-:root.theme-pixel .kpi,
+:root.theme-pixel .kpi-panel,
 :root.theme-pixel .probe-toolbar {
   border-width: 2px;
 }
-:root.theme-pixel .kpi {
+:root.theme-pixel .kpi-panel {
   border-radius: 2px;
 }
 :root.theme-pixel button {
@@ -1784,7 +2109,7 @@ footer a:hover {
 }
 :root.theme-anime .leaderboard-card,
 :root.theme-anime .globe-card,
-:root.theme-anime .kpi {
+:root.theme-anime .kpi-panel {
   position: relative;
   border: 0;
   border-radius: 0;
@@ -1890,7 +2215,8 @@ footer a:hover {
   width: min(1600px, calc(100% - 48px));
   margin: 16px auto 0;
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  /* 地球已挪到顶部汇总右侧，这一行只剩多维榜单 */
+  grid-template-columns: minmax(0, 1fr);
   gap: 16px;
   align-items: start;
 }
@@ -2500,27 +2826,11 @@ footer a:hover {
   .overview {
     margin-top: 12px;
   }
-  .kpi-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 8px;
-  }
-  .kpi {
-    min-height: 104px;
-    padding: 10px 12px;
+  .kpi-cell {
+    padding: 9px 12px;
   }
   .kpi-value {
-    font-size: 19px;
-  }
-  .kpi.wide .kpi-value {
-    gap: 0 14px;
-  }
-  /* 两列太窄，说明文字换行而不是截断 */
-  .kpi-sub,
-  .kpi-note {
-    white-space: normal;
-  }
-  .kpi-unit {
-    font-size: 13px;
+    font-size: 20px;
   }
   .toolbar-end {
     margin-left: 0;
@@ -3155,7 +3465,7 @@ footer a:hover {
 :root.theme-glass .modal,
 :root.theme-glass .detail-cols > div,
 :root.theme-glass .detail-panel,
-:root.theme-glass .kpi {
+:root.theme-glass .kpi-panel {
   position: relative;
   border-color: var(--glass-border);
   background: var(--glass-surface);
@@ -3173,7 +3483,7 @@ footer a:hover {
 :root.theme-glass .detail-cols > div::before,
 :root.theme-glass .detail-panel::before,
 :root.theme-glass .server-detail::before,
-:root.theme-glass .kpi::before {
+:root.theme-glass .kpi-panel::before {
   content: '';
   position: absolute;
   z-index: 1;
@@ -3192,7 +3502,7 @@ footer a:hover {
 :root.theme-glass .modal > *,
 :root.theme-glass .detail-cols > div > *,
 :root.theme-glass .detail-panel > *,
-:root.theme-glass .kpi > * {
+:root.theme-glass .kpi-panel > * {
   position: relative;
   z-index: 2;
 }
@@ -3400,7 +3710,7 @@ footer a:hover {
 :root.dark.theme-glass .detail-cols > div::before,
 :root.dark.theme-glass .detail-panel::before,
 :root.dark.theme-glass .server-detail::before,
-:root.dark.theme-glass .kpi::before {
+:root.dark.theme-glass .kpi-panel::before {
   background: linear-gradient(90deg, transparent, rgba(224, 247, 252, 0.28), transparent);
 }
 :root.dark.theme-glass .server-title,
@@ -3506,7 +3816,7 @@ footer a:hover {
 :root.theme-glass .leaderboard-card,
 :root.theme-glass .server-table-wrap,
 :root.theme-glass .detail-panel,
-:root.theme-glass .kpi {
+:root.theme-glass .kpi-panel {
     box-shadow: var(--glass-shadow), var(--glass-inset);
   }
   :root.theme-glass .server-card:hover,
@@ -3798,13 +4108,13 @@ footer a:hover {
 :root.theme-lumina.gold .lumina-card,
 :root.theme-lumina.gold .globe-card,
 :root.theme-lumina.gold .leaderboard-card,
-:root.theme-lumina.gold .kpi {
+:root.theme-lumina.gold .kpi-panel {
   position: relative;
 }
 :root.theme-lumina.gold .lumina-card::after,
 :root.theme-lumina.gold .globe-card::after,
 :root.theme-lumina.gold .leaderboard-card::after,
-:root.theme-lumina.gold .kpi::after {
+:root.theme-lumina.gold .kpi-panel::after {
   position: absolute;
   z-index: 5;
   top: 0;
@@ -3836,7 +4146,7 @@ footer a:hover {
 :root.theme-lumina.gold .probe-toolbar,
 :root.theme-lumina.gold .globe-card,
 :root.theme-lumina.gold .leaderboard-card,
-:root.theme-lumina.gold .kpi {
+:root.theme-lumina.gold .kpi-panel {
   background:
     linear-gradient(140deg, rgba(216, 180, 106, 0.055), transparent 48%),
     var(--surface);
@@ -3852,7 +4162,7 @@ footer a:hover {
 :root.theme-lumina.gold .probe-toolbar:hover,
 :root.theme-lumina.gold .globe-card:hover,
 :root.theme-lumina.gold .leaderboard-card:hover,
-:root.theme-lumina.gold .kpi:hover {
+:root.theme-lumina.gold .kpi-panel:hover {
   background:
     linear-gradient(140deg, rgba(216, 180, 106, 0.075), transparent 48%),
     color-mix(in srgb, var(--hover-bg) 38%, var(--surface));
@@ -3966,13 +4276,13 @@ footer a:hover {
 :root.theme-lumina.platinum .lumina-card,
 :root.theme-lumina.platinum .globe-card,
 :root.theme-lumina.platinum .leaderboard-card,
-:root.theme-lumina.platinum .kpi {
+:root.theme-lumina.platinum .kpi-panel {
   position: relative;
 }
 :root.theme-lumina.platinum .lumina-card::after,
 :root.theme-lumina.platinum .globe-card::after,
 :root.theme-lumina.platinum .leaderboard-card::after,
-:root.theme-lumina.platinum .kpi::after {
+:root.theme-lumina.platinum .kpi-panel::after {
   position: absolute;
   z-index: 5;
   top: 0;
@@ -3990,7 +4300,7 @@ footer a:hover {
 :root.theme-lumina.platinum .probe-toolbar,
 :root.theme-lumina.platinum .globe-card,
 :root.theme-lumina.platinum .leaderboard-card,
-:root.theme-lumina.platinum .kpi {
+:root.theme-lumina.platinum .kpi-panel {
   background:
     linear-gradient(140deg, rgba(168, 124, 34, 0.06), transparent 48%),
     var(--surface);
@@ -4007,7 +4317,7 @@ footer a:hover {
 :root.theme-lumina.platinum .probe-toolbar:hover,
 :root.theme-lumina.platinum .globe-card:hover,
 :root.theme-lumina.platinum .leaderboard-card:hover,
-:root.theme-lumina.platinum .kpi:hover {
+:root.theme-lumina.platinum .kpi-panel:hover {
   background:
     linear-gradient(140deg, rgba(168, 124, 34, 0.06), transparent 48%),
     var(--surface);
@@ -4027,7 +4337,7 @@ footer a:hover {
 :root.theme-lumina .server-detail,
 :root.theme-lumina .modal,
 :root.theme-lumina .server-mini-card,
-:root.theme-lumina .kpi {
+:root.theme-lumina .kpi-panel {
   box-shadow: none;
 }
 :root.theme-lumina .topbar {
@@ -4042,7 +4352,7 @@ footer a:hover {
 :root.theme-lumina .server-mini-card,
 :root.theme-lumina .modal,
 :root.theme-lumina .server-detail,
-:root.theme-lumina .kpi {
+:root.theme-lumina .kpi-panel {
   background: var(--surface);
   border: 1px solid var(--border);
 }
@@ -4665,7 +4975,7 @@ footer a:hover {
 :root.theme-lumina .globe-card,
 :root.theme-lumina .leaderboard-card,
 :root.theme-lumina .server-mini-card,
-:root.theme-lumina .kpi {
+:root.theme-lumina .kpi-panel {
   border-width: 0 !important;
   background: var(--lumina-glass-card) !important;
   -webkit-backdrop-filter: none;
@@ -4678,7 +4988,7 @@ footer a:hover {
 :root.theme-lumina .globe-card:hover,
 :root.theme-lumina .leaderboard-card:hover,
 :root.theme-lumina .server-mini-card:hover,
-:root.theme-lumina .kpi:hover {
+:root.theme-lumina .kpi-panel:hover {
   transform: none;
   border-color: transparent !important;
   background: var(--lumina-glass-card) !important;
@@ -4696,8 +5006,8 @@ footer a:hover {
 :root.theme-lumina.platinum .lumina-card::after,
 :root.theme-lumina.platinum .globe-card::after,
 :root.theme-lumina.platinum .leaderboard-card::after,
-:root.theme-lumina.gold .kpi::after,
-:root.theme-lumina.platinum .kpi::after {
+:root.theme-lumina.gold .kpi-panel::after,
+:root.theme-lumina.platinum .kpi-panel::after {
   content: none;
   animation: none;
 }

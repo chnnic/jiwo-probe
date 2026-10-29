@@ -51,3 +51,23 @@
 .card-ping-emerald .card-ping-bars .is-bad { background: #f43f5e; }
 .card-ping-emerald option { color: var(--em-text); background: var(--em-surface-solid); }
 .card-ping-groups :is(select, button):focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
+
+/* 经典卡片（照主控 v0.6.1-beta.3 探针页）：一行「目标 · 延迟 · 丢包」，下面两条 10px 色块条 */
+.card-ping-probe { gap: 8px; margin: 0 16px; padding: 8px 0 0; border-top: 1px solid var(--border); }
+.card-ping-probe .card-ping-group + .card-ping-group { padding-top: 0; }
+.card-ping-probe .card-ping-row { display: flex; align-items: center; gap: 12px; margin-bottom: 4px; font-size: 12px; line-height: 20px; font-variant-numeric: tabular-nums; }
+.card-ping-probe .card-ping-selector { display: flex; flex: 1; align-items: center; gap: 4px; min-width: 0; color: var(--muted); }
+.card-ping-probe .card-ping-selector svg { position: static; flex-shrink: 0; transform: none; opacity: 1; }
+.card-ping-probe .card-ping-selector select { flex: 1; min-width: 0; max-width: 120px; overflow: hidden; border: 1px solid var(--border); border-radius: 4px; padding: 1px 4px; background: transparent; color: inherit; font: inherit; font-size: 12px; text-overflow: ellipsis; white-space: nowrap; cursor: pointer; outline: none; }
+.card-ping-probe .card-ping-row > strong { flex-shrink: 0; font-weight: 500; }
+.card-ping-probe .card-ping-loss { flex-shrink: 0; color: var(--muted); }
+.card-ping-probe .card-ping-loss.warning { color: #d97706; }
+.card-ping-probe button.card-ping-reset { display: inline-flex; flex-shrink: 0; align-items: center; border: 0; padding: 0; background: transparent; color: var(--muted); box-shadow: none; cursor: pointer; }
+.card-ping-probe .card-ping-bar-pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.card-ping-probe button.card-ping-trend { display: block; width: 100%; min-width: 0; min-height: 0; border: 0; border-radius: 0; padding: 0; background: transparent; box-shadow: none; transform: none; cursor: pointer; }
+.card-ping-probe button.card-ping-trend:disabled { cursor: default; }
+.card-ping-probe .card-ping-bars { height: 10px; gap: 2px; }
+.card-ping-probe .card-ping-bars i { border-radius: 2px; background: color-mix(in srgb, var(--border) 80%, transparent); }
+.card-ping-probe .card-ping-bars .is-good { background: #22c55e; }
+.card-ping-probe .card-ping-bars .is-warn { background: #eab308; }
+.card-ping-probe .card-ping-bars .is-bad { background: #ef4444; }

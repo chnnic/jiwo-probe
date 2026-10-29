@@ -1,7 +1,7 @@
 import { ThemeSelect } from './ThemePicker'
 import { useNetworkSpeed } from './use-network-speed'
 import { ConnectionCounts, UnlockButton } from './ServerCapabilities'
-import { ConnectionHistory } from './ConnectionHistory'
+import { ConnectionBox, ConnectionHistory } from './ConnectionHistory'
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { Activity, LockOpen, ArrowDown, ArrowDownUp, ArrowUp, BadgeDollarSign, Cable, ChartColumn, Calendar, CalendarClock, ChevronDown, CircleDollarSign, Clock, Cpu, Crown, Database, Gauge, Gem, Globe2, HardDrive, LayoutGrid, List, MapPin, MemoryStick, Moon, Network, PieChart, RefreshCw, Rows3, Rows4, Search, Server, Sun, SunMoon, TrendingUp, TriangleAlert, Trophy, Wallet, Wifi } from 'lucide-react'
@@ -878,9 +878,13 @@ function ServerCard({ server, index, dense = false }: { server: ProbeServer; ind
       </article>
     )
   }
+  // 计费用量：按周期统计的写「本周期」，其余（计数器累计、按累计值估算）写「计数器重置以来」，与主控探针页同一叫法
+  const trafficLabel = server.traffic_used_scope && server.traffic_used_scope !== 'configured_period' ? '计数器重置以来计费用量' : '本周期计费用量'
+  const bootDown = server.boot_traffic_down ?? server.cumulative_down
+  const bootUp = server.boot_traffic_up ?? server.cumulative_up
   return (
     <>
-    <article className={`server-card${dense ? ' dense' : ''}`} data-alert={issue ? 'true' : undefined} {...cardProps}>
+    <article className={`server-card probe-card${dense ? ' dense' : ''}`} data-alert={issue ? 'true' : undefined} {...cardProps}>
       {title}
       <div className="metrics">
         {server.cpu_pct !== undefined && <Meter icon={<Cpu size={14} />} label="CPU" value={`${server.cpu_pct.toFixed(1)}%`} percent={server.cpu_pct} sub={cpuCoresLabel(server)} title={cpuInfo} />}
@@ -899,39 +903,36 @@ function ServerCard({ server, index, dense = false }: { server: ProbeServer; ind
             <div className="metric-head">
               <span>
                 <PieChart size={14} />
-                流量
+                <span className="metric-label">{trafficLabel}</span>
               </span>
               <strong>
-                {server.traffic_limit && !dense ? `${bytes(server.traffic_used, false)} / ${bytes(server.traffic_limit, false)}` : bytes(server.traffic_used, false)}
+                {server.traffic_limit ? `${bytes(server.traffic_used, false)} / ${bytes(server.traffic_limit, false)}` : bytes(server.traffic_used, false)}
               </strong>
             </div>
             <div className="meter">
               <i className={trafficPct > PROBE_ALERT_PCT ? 'bad' : undefined} style={{ width: `${trafficPct}%` }} />
             </div>
             <div className="metric-sub">
-              <span>{server.traffic_limit ? (dense ? `${trafficPct.toFixed(0)}% · ${bytes(server.traffic_limit, false)}` : `已用 ${trafficPct.toFixed(0)}%`) : '不限量'}</span>
+              <span>{server.traffic_limit ? `${trafficPct.toFixed(0)}%` : '不限量'}</span>
               {server.period_end && <span>{server.period_end.slice(5, 10).replace('-', '/')} 重置</span>}
             </div>
           </button>
         )}
       </div>
-      <div className="speed speed--connections">
-        <div className="card-speed-pair">
-          {(server.upload_speed !== undefined || server.download_speed !== undefined) && <>
-            <span className="download" title={`下行 ${networkSpeed(server.download_speed)}`}>
-              <ArrowDown size={13} />
-              <span className="card-speed-value">{networkSpeed(server.download_speed)}</span>
-            </span>
-            <span className="upload" title={`上行 ${networkSpeed(server.upload_speed)}`}>
-              <ArrowUp size={13} />
-              <span className="card-speed-value">{networkSpeed(server.upload_speed)}</span>
-            </span>
-          </>}
+      <div className="net-boxes">
+        <div className="net-box">
+          <span className="net-box-label">网速</span>
+          <span className="download" title={`下行 ${networkSpeed(server.download_speed)}`}>↓ {networkSpeed(server.download_speed)}</span>
+          <span className="upload" title={`上行 ${networkSpeed(server.upload_speed)}`}>↑ {networkSpeed(server.upload_speed)}</span>
         </div>
-        {!dense && <ConnectionCounts server={server} variant="inline" />}
+        <ConnectionBox server={server} serverIndex={index} />
+        <div className="net-box" title="本次开机以来网卡收发">
+          <span className="net-box-label">开机以来</span>
+          <span>↓ <b>{bootDown !== undefined ? bytes(bootDown, false) : '—'}</b></span>
+          <span>↑ <b>{bootUp !== undefined ? bytes(bootUp, false) : '—'}</b></span>
+        </div>
       </div>
-      {!dense && <ConnectionHistory server={server} serverIndex={index} />}
-      {!dense && <CardPingGroups variant="classic" ping={server.ping} serverIndex={index} serverName={server.name} />}
+      {!dense && <CardPingGroups variant="probe" ping={server.ping} serverIndex={index} serverName={server.name} />}
       {!dense && !!server.return_routes?.length && <ReturnRouteBadges routes={server.return_routes} telecomPaidPeer={server.telecom_paid_peer} variant={document.documentElement.classList.contains('theme-anime') ? 'anime' : undefined} />}
       {meta}
     </article>
@@ -1319,14 +1320,17 @@ function writePref(key: string, value: string) {
   try { localStorage.setItem(key, value) } catch { /* 隐私模式下不记忆 */ }
 }
 
-// 顶部指标格（照主控内置探针页）：图标 + 标题、大数字、说明，底部一条小图；可点击的就是一个筛选入口
-function Kpi({ icon, label, value, sub, foot, wide, onClick, active, title }: { icon: ReactNode; label: string; value: ReactNode; sub?: ReactNode; foot?: ReactNode; wide?: boolean; onClick?: () => void; active?: boolean; title?: string }) {
-  const className = ['kpi', wide ? 'wide' : '', active ? 'active' : ''].filter(Boolean).join(' ')
+// 汇总区的一格（照主控 v0.6.1-beta.3 探针页）：标题、大数字、说明三行定高；aside 是右栏 96px 小图，窄屏不显示。
+// 可点击的格子同时是筛选入口
+function Kpi({ icon, label, value, sub, aside, wide, onClick, active, title }: { icon: ReactNode; label: string; value: ReactNode; sub?: ReactNode; aside?: ReactNode; wide?: boolean; onClick?: () => void; active?: boolean; title?: string }) {
+  const className = ['kpi-cell', wide ? 'wide' : '', aside ? 'has-aside' : '', active ? 'active' : ''].filter(Boolean).join(' ')
   const body = <>
-    <span className="kpi-label">{icon}{label}</span>
-    <strong className="kpi-value">{value}</strong>
-    {sub && <small className="kpi-sub">{sub}</small>}
-    {foot && <div className="kpi-foot">{foot}</div>}
+    <span className="kpi-main">
+      <span className="kpi-label">{icon}<span>{label}</span></span>
+      <strong className="kpi-value">{value}</strong>
+      {sub && <span className="kpi-sub">{sub}</span>}
+    </span>
+    {aside && <span className="kpi-aside" aria-hidden="true">{aside}</span>}
   </>
   return onClick ? <button type="button" className={className} aria-pressed={active} onClick={onClick} title={title}>{body}</button> : <div className={className} title={title}>{body}</div>
 }
@@ -1388,7 +1392,6 @@ function ProbeApp({ data, error }: ReturnType<typeof useProbe>) {
   const setDensity = (value: ProbeDensity) => { setDensityState(value); writePref('probe-density', value) }
   const [region, setRegion] = useState('all')
   const [search, setSearch] = useState('')
-  const [globeOpen, setGlobeOpen] = useState(false)
   const [theme, setThemeState] = useState<ThemeName | null>(() => getThemeOverride())
   const [activeTheme, setActiveTheme] = useState<string>(() => getActiveTheme())
   // 主控下发主题变化（如自定义主题名）→ 同步 activeTheme（用户手动 override 时不覆盖）
@@ -1585,92 +1588,99 @@ function ProbeApp({ data, error }: ReturnType<typeof useProbe>) {
     .sort((a, b) => a.at - b.at)[0]
   const peakDown = Math.max(0, ...speedSamples.map((item) => item.down))
   const peakUp = Math.max(0, ...speedSamples.map((item) => item.up))
-  const pctBar = (parts: Array<{ value: number; tone: string }>) => {
+  const qualityBar = (q: NonNullable<typeof quality>) => {
+    const parts = [{ value: q.good, tone: 'ok', label: '优' }, { value: q.medium, tone: 'warn', label: '中' }, { value: q.poor, tone: 'bad', label: '差' }]
     const total = parts.reduce((sum, part) => sum + part.value, 0)
-    return <div className="kpi-bar">{total > 0 && parts.map((part) => part.value > 0 && <i key={part.tone} className={part.tone} style={{ width: `${(part.value / total) * 100}%` }} />)}</div>
+    return <span className="kpi-quality-bar">{total > 0 && parts.map((part) => part.value > 0 && <i key={part.tone} className={part.tone} title={`${part.label} ${part.value}`} style={{ width: `${(part.value / total) * 100}%` }} />)}</span>
   }
+  const dailyMax = Math.max(1, ...dailyTotals.map((day) => day.total))
   const kpis = [
     <Kpi
       key="servers"
-      icon={<Server size={15} />}
+      icon={<Server size={14} />}
       label="服务器"
-      value={<><em className="online">{onlineCount}</em><span className="kpi-unit">/ {servers.length}</span></>}
+      value={<><em className="online">{onlineCount}</em><span className="kpi-unit"> / {servers.length} 在线</span></>}
       sub={<>离线 <b className={offlineCount > 0 ? 'offline' : ''}>{offlineCount}</b> · 告警 <b className={alertCount > 0 ? 'offline' : ''}>{alertCount}</b>{regionCount > 0 && ` · ${regionCount} 个地区`}</>}
-      foot={pctBar([{ value: onlineCount, tone: 'ok' }, { value: offlineCount, tone: 'bad' }])}
       active={filter === 'all'}
       onClick={() => selectFilter('all')}
     />,
-    connections && (
-      <Kpi
-        key="connections"
-        icon={<Network size={15} />}
-        label="连接数"
-        value={connections.total.toLocaleString('en-US')}
-        sub={`TCP ${connections.tcp.toLocaleString('en-US')} · UDP ${connections.udp.toLocaleString('en-US')}`}
-        foot={connections.history && <KpiSpark series={[{ values: connections.history, tone: 'conn' }]} height={40} />}
-      />
-    ),
     hasSpeed && (
       <Kpi
         key="speed"
         wide
-        icon={<Activity size={15} />}
+        icon={<Activity size={14} />}
         label="实时网速"
-        value={<><span className="down">↓ {networkSpeed(totalDownload)}</span><span className="up">↑ {networkSpeed(totalUpload)}</span></>}
+        value={<span className="kpi-speed"><span className="down">↓ {networkSpeed(totalDownload)}</span><span className="up">↑ {networkSpeed(totalUpload)}</span></span>}
         sub={speedSamples.length > 1 ? `近 3 分钟峰值 ↓ ${networkSpeed(peakDown)} · ↑ ${networkSpeed(peakUp)}` : '全部服务器合计'}
-        foot={speedSamples.length > 1 && <KpiSpark series={[{ values: speedSamples.map((item) => item.down), tone: 'down' }, { values: speedSamples.map((item) => item.up), tone: 'up' }]} height={44} />}
+        aside={speedSamples.length > 1 && <KpiSpark series={[{ values: speedSamples.map((item) => item.down), tone: 'down' }, { values: speedSamples.map((item) => item.up), tone: 'up' }]} height={68} />}
+      />
+    ),
+    connections && (
+      <Kpi
+        key="connections"
+        icon={<Network size={14} />}
+        label="连接数"
+        value={connections.total.toLocaleString('en-US')}
+        sub={`TCP ${connections.tcp.toLocaleString('en-US')} · UDP ${connections.udp.toLocaleString('en-US')}`}
       />
     ),
     todayTraffic !== undefined && (
       <Kpi
         key="today"
-        icon={<ChartColumn size={15} />}
+        icon={<ChartColumn size={14} />}
         label="今日流量"
         value={bytes(todayTraffic, false)}
         sub={`近 ${dailyTotals.length} 天 ${bytes(recentTraffic, false)}`}
-        foot={<div className="kpi-columns" title={dailyTotals.map((day) => `${day.date.slice(5)} ${bytes(day.total, false)}`).join('\n')}>{dailyTotals.map((day, index) => <i key={day.date} className={index === dailyTotals.length - 1 ? 'today' : undefined} style={{ height: `${Math.max(4, (day.total / Math.max(1, ...dailyTotals.map((d) => d.total))) * 100)}%` }} />)}</div>}
+        title={dailyTotals.map((day) => `${day.date.slice(5)} ${bytes(day.total, false)}`).join('\n')}
+        aside={<span className="kpi-columns">{dailyTotals.map((day, index) => <i key={day.date} className={index === dailyTotals.length - 1 ? 'today' : undefined} style={{ height: `${Math.max(4, (day.total / dailyMax) * 100)}%` }} />)}</span>}
       />
     ),
-    quota && (
+    (quota || quality) && (
       <Kpi
         key="quota"
-        icon={<Gauge size={15} />}
-        label="本期流量额度"
-        value={`${quota.pct.toFixed(0)}%`}
-        sub={`${bytes(quota.used, false)} / ${bytes(quota.limit, false)}${quota.over80 ? ` · ${quota.over80} 台超 80%` : ''}`}
-        foot={<div className="kpi-bar"><i className={meterTone(quota.pct) ?? 'quota'} style={{ width: `${Math.min(100, quota.pct)}%` }} /></div>}
-      />
-    ),
-    quality && (
-      <Kpi
-        key="quality"
-        icon={<Wifi size={15} />}
-        label="网络质量"
-        value={<>{quality.latency.toFixed(0)}<span className="kpi-unit">ms</span></>}
-        sub={`${quality.loss !== undefined ? `丢包 ${quality.loss.toFixed(1)}% · ` : ''}优 ${quality.good} · 中 ${quality.medium} · 差 ${quality.poor}`}
-        foot={pctBar([{ value: quality.good, tone: 'ok' }, { value: quality.medium, tone: 'warn' }, { value: quality.poor, tone: 'bad' }])}
-        title="在线服务器各延迟目标的平均；丢包 ≥10% 或延迟 ≥250ms 为差，丢包 ≥3% 或延迟 ≥120ms 为中"
+        wide
+        icon={<Gauge size={14} />}
+        label={quota && quality ? '本期流量额度 · 网络质量' : quota ? '本期流量额度' : '网络质量'}
+        value={<span className="kpi-pair">{quota && <span>{quota.pct.toFixed(0)}%</span>}{quality && <span>{quality.latency.toFixed(0)}<span className="kpi-unit"> ms</span></span>}</span>}
+        sub={<span className="kpi-quota-line">
+          {quota && <>
+            <span className="kpi-mini-bar"><i className={meterTone(quota.pct) ?? undefined} style={{ width: `${Math.min(100, quota.pct)}%` }} /></span>
+            <span>{bytes(quota.used, false)} / {bytes(quota.limit, false)}</span>
+          </>}
+          {quality && <>
+            {qualityBar(quality)}
+            {quality.loss !== undefined && <span>丢包 {quality.loss.toFixed(1)}%</span>}
+          </>}
+        </span>}
+        title={[
+          quota && `本期流量额度：设了限额的 ${quota.count} 台合计 ${bytes(quota.used, false)} / ${bytes(quota.limit, false)}${quota.over80 ? `，${quota.over80} 台超 80%` : ''}`,
+          quality && `网络质量：在线服务器近 1 小时平均延迟 ${quality.latency.toFixed(0)} ms${quality.loss !== undefined ? `、丢包 ${quality.loss.toFixed(1)}%` : ''}；优 ${quality.good} · 中 ${quality.medium} · 差 ${quality.poor}（丢包 ≥10% 或延迟 ≥250ms 为差，丢包 ≥3% 或延迟 ≥120ms 为中）`,
+        ].filter(Boolean).join('\n')}
       />
     ),
     hasExpiry && (
       <Kpi
         key="renewal"
-        icon={<Wallet size={15} />}
+        icon={<Wallet size={14} />}
         label="续费"
-        value={<><em className={renewalCount > 0 ? 'warn' : undefined}>{renewalCount}</em><span className="kpi-unit">台待续费</span></>}
-        sub={`30 天内 ¥${renewalAmount.toFixed(2)}${monthlyTotal > 0 ? ` · 月均 ¥${monthlyTotal.toFixed(0)}` : ''}`}
-        foot={nearest && <span className="kpi-note">最近到期：{nearest.server.name || '未命名服务器'} · {Math.max(0, Math.ceil((nearest.at - Date.now()) / 86400000))} 天</span>}
+        value={<><em className={renewalCount > 0 ? 'warn' : undefined}>{renewalCount}</em><span className="kpi-unit"> 台 30 天内到期</span></>}
+        sub={[
+          `¥${renewalAmount.toFixed(2)}`,
+          monthlyTotal > 0 && `月均 ¥${monthlyTotal.toFixed(0)}`,
+          nearest && `最近 ${nearest.server.name || '未命名服务器'} ${Math.max(0, Math.ceil((nearest.at - Date.now()) / 86400000))} 天`,
+        ].filter(Boolean).join(' · ')}
         title={assets ? `剩余价值 ${formatMoney(assets.totalValue, 'CNY', true)} · 覆盖 ${assets.priced} / ${servers.length} 台` : undefined}
         active={filter === 'renewal'}
         onClick={() => selectFilter('renewal')}
       />
     ),
   ].filter(Boolean)
-  const globeBody = (
-    <Suspense fallback={<div className="globe-loading">正在加载国界数据…</div>}>
-      <RegionGlobe regions={globeRegions} />
-    </Suspense>
-  )
+  // 右侧地区卡片：小地球 + 各国家 / 地区台数（按台数从多到少）
+  const regionChips = [...globeRegions.reduce((map, value) => {
+    const code = globeCountryCode(value) || value.trim().toUpperCase()
+    map.set(code, (map.get(code) ?? 0) + 1)
+    return map
+  }, new Map<string, number>())].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
   const renderCard = (server: ProbeServer, index: number) => activeTheme === 'lumina'
     ? <ServerCardLumina key={server.name || index} server={server} index={index} />
     : <ServerCard key={server.name || index} server={server} index={index} dense={dense} />
@@ -1707,26 +1717,27 @@ function ProbeApp({ data, error }: ReturnType<typeof useProbe>) {
         </nav>
       </header>
       {servers.length > 0 && (
-        <section className="overview">
-          <div className="kpi-grid">{kpis}</div>
+        <section className={`overview${showGlobe ? ' with-globe' : ''}`}>
+          <div className="kpi-panel"><div className="kpi-grid">{kpis}</div></div>
+          {showGlobe && (
+            <aside className="globe-card globe-mini" aria-label="地区分布">
+              <div className="globe-mini-stage">
+                <Suspense fallback={<div className="globe-loading">加载中…</div>}>
+                  <RegionGlobe regions={globeRegions} compact />
+                </Suspense>
+              </div>
+              <div className="globe-mini-info">
+                <span className="kpi-label"><Globe2 size={14} /><span>地区分布</span></span>
+                <span className="globe-mini-count">{regionCount} 个地区 · {globeRegions.length} 台</span>
+                <div className="globe-mini-chips">
+                  {regionChips.map(([code, count]) => <span key={code} title={regionGroupLabel(code)}><b>{code}</b>{count}</span>)}
+                </div>
+              </div>
+            </aside>
+          )}
         </section>
       )}
       <div className="globe-row">
-        {showGlobe && (
-          <section className={`globe-card ${globeOpen ? 'open' : ''}`}>
-            <button className="globe-toggle" type="button" aria-expanded={globeOpen} onClick={() => setGlobeOpen((value) => !value)}>
-              <span>
-                <Globe2 size={18} />
-                地区分布
-              </span>
-              <span>
-                {regionCount} 个地区
-                <ChevronDown size={17} />
-              </span>
-            </button>
-            {globeOpen && globeBody}
-          </section>
-        )}
         <Leaderboard servers={servers} />
       </div>
       <ForwardOverview data={data} />
@@ -1737,38 +1748,35 @@ function ProbeApp({ data, error }: ReturnType<typeof useProbe>) {
             <input
               type="search"
               aria-label="搜索节点"
-              placeholder="搜索名称、地区、服务商…"
+              placeholder="搜索服务器…"
               value={search}
               onChange={(event) => setSearch(event.target.value)}
             />
           </label>
-          <button className={filter === 'all' ? 'active' : ''} onClick={() => selectFilter('all')}>
-            全部 {servers.length}
-          </button>
-          <button className={filter === 'online' ? 'active' : ''} onClick={() => selectFilter('online')}>
-            在线 {onlineCount}
-          </button>
-          <button className={filter === 'offline' ? 'active' : ''} onClick={() => selectFilter('offline')}>
-            离线 {offlineCount}
-          </button>
-          {hasMetrics && (
-            <button className={filter === 'alert' ? 'active danger' : 'danger'} title={`CPU、内存、硬盘或流量用量超过 ${PROBE_ALERT_PCT}%`} onClick={() => selectFilter('alert')}>
-              <TriangleAlert size={13} /> 告警 {alertCount}
-            </button>
-          )}
-          {hasExpiry && (
-            <>
-              <button className={filter === 'renewal' ? 'active warning' : 'warning'} onClick={() => selectFilter('renewal')}>
-                待续费 {renewalCount}
+          <div className="filter-seg" role="group" aria-label="状态筛选">
+            {([
+              ['all', '全部', servers.length, ''],
+              ['online', '在线', onlineCount, ''],
+              ['offline', '离线', offlineCount, offlineCount > 0 ? 'bad' : ''],
+              ...(hasMetrics ? [['alert', '告警', alertCount, alertCount > 0 ? 'bad' : '']] : []),
+              ...(hasExpiry ? [
+                ['renewal', '待续费', renewalCount, renewalCount > 0 ? 'warn' : ''],
+                ['expiring', '即将到期', expiringCount, expiringCount > 0 ? 'warn' : ''],
+                ['expired', '已到期', expiredCount, expiredCount > 0 ? 'bad' : ''],
+              ] : []),
+            ] as Array<[ProbeFilter, string, number, string]>).map(([key, label, count, tone]) => (
+              <button
+                key={key}
+                type="button"
+                className={filter === key ? 'active' : ''}
+                aria-pressed={filter === key}
+                title={key === 'alert' ? `CPU、内存、硬盘或计费用量超过 ${PROBE_ALERT_PCT}%` : undefined}
+                onClick={() => selectFilter(key)}
+              >
+                {label} <span className={`filter-count${tone ? ` ${tone}` : ''}`}>{count}</span>
               </button>
-              <button className={filter === 'expiring' ? 'active warning' : 'warning'} onClick={() => selectFilter('expiring')}>
-                即将到期 {expiringCount}
-              </button>
-              <button className={filter === 'expired' ? 'active danger' : 'danger'} onClick={() => selectFilter('expired')}>
-                已到期 {expiredCount}
-              </button>
-            </>
-          )}
+            ))}
+          </div>
           <div className="toolbar-end">
             {regions.length > 0 && <RegionSelect regions={regions} value={region} onChange={setRegion} />}
             <label className="toolbar-select">
@@ -1787,9 +1795,9 @@ function ProbeApp({ data, error }: ReturnType<typeof useProbe>) {
               </label>
             )}
             {view === 'card' && activeTheme !== 'lumina' && (
-              <span className="density-toggle" role="group" aria-label="卡片密度">
-                <button className={density === 'standard' ? 'active' : ''} aria-pressed={density === 'standard'} onClick={() => setDensity('standard')}>标准</button>
-                <button className={density === 'dense' ? 'active' : ''} aria-pressed={density === 'dense'} onClick={() => setDensity('dense')}>紧凑</button>
+              <span className="filter-seg density-toggle" role="group" aria-label="卡片密度">
+                <button type="button" className={density === 'standard' ? 'active' : ''} aria-pressed={density === 'standard'} onClick={() => setDensity('standard')}>标准</button>
+                <button type="button" className={density === 'dense' ? 'active' : ''} aria-pressed={density === 'dense'} onClick={() => setDensity('dense')}>紧凑</button>
               </span>
             )}
           </div>

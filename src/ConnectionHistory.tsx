@@ -63,3 +63,24 @@ export function ConnectionHistory({ server, serverIndex }: { server: ProbeServer
     {open && <ConnectionHistoryDialog serverIndex={serverIndex} name={name} close={() => setOpen(false)} />}
   </>
 }
+
+/** 经典卡片的「系统连接数」小格（照主控 v0.6.1-beta.3 探针页）：点开看连接数历史；主控没开连接数曲线时只显示数字 */
+export function ConnectionBox({ server, serverIndex }: { server: ProbeServer; serverIndex: number }) {
+  const { connectionChartEnabled } = useProbe()
+  const [open, setOpen] = useState(false)
+  const name = server.name || `服务器 ${serverIndex + 1}`
+  const help = 'TCP：整机已建立连接；UDP：整机 socket。不是代理用户数；未上报显示 —。'
+  const body = <>
+    <span className="net-box-label" title={help}>系统连接数</span>
+    <span>TCP <b>{connectionCount(server.tcp_connections)}</b></span>
+    <span>UDP <b>{connectionCount(server.udp_connections)}</b></span>
+  </>
+  if (connectionChartEnabled !== true) return <div className="net-box" title={help}>{body}</div>
+  return <>
+    <button type="button" className="net-box net-box-button" aria-label={`查看 ${name} 连接数历史`} aria-haspopup="dialog" title="查看连接数历史"
+      onClick={event => { event.stopPropagation(); setOpen(true) }} onMouseDown={event => event.stopPropagation()} onKeyDown={event => event.stopPropagation()}>
+      {body}
+    </button>
+    {open && <ConnectionHistoryDialog serverIndex={serverIndex} name={name} close={() => setOpen(false)} />}
+  </>
+}

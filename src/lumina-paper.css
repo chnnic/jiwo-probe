@@ -43,11 +43,11 @@
   font-family: var(--paper-heading-font);
 }
 /* Replace the former borderless heavy shadows without touching gold variants. */
-:root.theme-lumina:not(.gold):not(.platinum) :is(.server-card,.lumina-card,.kpi,.probe-toolbar,.globe-card,.leaderboard-card,.server-mini-card) {
+:root.theme-lumina:not(.gold):not(.platinum) :is(.server-card,.lumina-card,.kpi-panel,.probe-toolbar,.globe-card,.leaderboard-card,.server-mini-card) {
   border: 1px solid var(--border) !important;
   box-shadow: var(--lumina-card-shadow) !important;
 }
-:root.theme-lumina:not(.gold):not(.platinum) :is(.server-card,.lumina-card,.kpi,.probe-toolbar,.globe-card,.leaderboard-card,.server-mini-card):hover {
+:root.theme-lumina:not(.gold):not(.platinum) :is(.server-card,.lumina-card,.kpi-panel,.probe-toolbar,.globe-card,.leaderboard-card,.server-mini-card):hover {
   border-color: var(--border) !important; transform: none;
 }
 :root.theme-lumina:not(.gold):not(.platinum) .lumina-card.is-offline {
