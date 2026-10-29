@@ -2215,18 +2215,22 @@ footer a:hover {
   width: min(1600px, calc(100% - 48px));
   margin: 16px auto 0;
   display: grid;
-  /* 地球已挪到顶部汇总右侧，这一行只剩多维榜单 */
-  grid-template-columns: minmax(0, 1fr);
+  /* 地球已挪到顶部汇总右侧，这一行宽屏并排两张多维榜单 */
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 16px;
   align-items: start;
 }
-/* 只有两卡都展开时才等高拉伸；只开一个时另一个保持折叠高度（不联动） */
-.globe-row:has(.globe-card.open):has(.leaderboard-card.open) {
+/* 两张榜单一起展开，展开后等高 */
+.globe-row:has(.leaderboard-card.open) {
   align-items: stretch;
 }
+/* 窄屏放不下两张，只留第一张 */
 @media (max-width: 960px) {
   .globe-row {
     grid-template-columns: 1fr;
+  }
+  .leaderboard-card.secondary {
+    display: none;
   }
 }
 .globe-card {

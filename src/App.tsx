@@ -197,10 +197,10 @@ const LEADERBOARD_META: Record<LeaderboardKey, { label: string; icon: React.Reac
 }
 const LEADERBOARD_TABS = LEADERBOARD_ORDER.map(key => ({ key, ...LEADERBOARD_META[key] }))
 
-function Leaderboard({ servers }: { servers: ProbeServer[] }) {
+// 宽屏并排两张榜单（各自选维度，展开收起一起动）；secondary 那张窄屏不显示
+function Leaderboard({ servers, open, onToggle, initialTab = LEADERBOARD_ORDER[0], secondary = false }: { servers: ProbeServer[]; open: boolean; onToggle: () => void; initialTab?: LeaderboardKey; secondary?: boolean }) {
   const networkSpeed = useNetworkSpeed()
-  const [open, setOpen] = useState(false)
-  const [tab, setTab] = useState<LeaderboardKey>(LEADERBOARD_ORDER[0])
+  const [tab, setTab] = useState<LeaderboardKey>(initialTab)
   const [desc, setDesc] = useState(true)
   const [expanded, setExpanded] = useState<number | null>(null)
   const selectTab = (key: LeaderboardKey) => {
@@ -272,14 +272,14 @@ function Leaderboard({ servers }: { servers: ProbeServer[] }) {
     : tab === 'expiry' ? `${Math.round(value)} 天`
     : `${value.toFixed(0)} ms`
   return (
-    <section className={`leaderboard-card ${open ? 'open' : ''}`}>
-      <button className="globe-toggle" type="button" aria-expanded={open} onClick={() => setOpen((value) => !value)}>
+    <section className={['leaderboard-card', open ? 'open' : '', secondary ? 'secondary' : ''].filter(Boolean).join(' ')}>
+      <button className="globe-toggle" type="button" aria-expanded={open} onClick={onToggle}>
         <span>
           <Trophy size={18} />
           多维榜单
         </span>
         <span>
-          Top 10
+          {LEADERBOARD_META[tab].label} · Top 10
           <ChevronDown size={17} />
         </span>
       </button>
@@ -1378,6 +1378,7 @@ export function App() {
 }
 
 function ProbeApp({ data, error }: ReturnType<typeof useProbe>) {
+  const [boardsOpen, setBoardsOpen] = useState(false)
   const networkSpeed = useNetworkSpeed()
   const servers = data?.servers || []
   const [view, setView] = useState<'card' | 'list' | 'mini'>(() => (localStorage.getItem('probe-view') as 'card' | 'list' | 'mini') || 'card')
@@ -1738,7 +1739,8 @@ function ProbeApp({ data, error }: ReturnType<typeof useProbe>) {
         </section>
       )}
       <div className="globe-row">
-        <Leaderboard servers={servers} />
+        <Leaderboard servers={servers} open={boardsOpen} onToggle={() => setBoardsOpen((value) => !value)} />
+        <Leaderboard servers={servers} open={boardsOpen} onToggle={() => setBoardsOpen((value) => !value)} initialTab={LEADERBOARD_ORDER[1]} secondary />
       </div>
       <ForwardOverview data={data} />
       <section className="probe-toolbar">
