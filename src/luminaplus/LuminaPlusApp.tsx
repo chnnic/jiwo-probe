@@ -12,6 +12,8 @@ import LuminaPlusOverview from './LuminaPlusOverview'
 import { useLuminaPlusSnapshot } from './use-luminaplus-snapshot'
 import { LuminaPlusLicenseFooter } from './LuminaPlusLicenseFooter'
 import { ForwardOverview } from '../deferred'
+import { Leaderboard } from '../Leaderboard'
+import { LEADERBOARD_ORDER } from '../leaderboards'
 import './luminaplus.css'
 
 const sorts: Record<MiniSort, string> = { default: '默认排序', name: '名称 A–Z', cpu: 'CPU 占用 ↓', memory: '内存占用 ↓', traffic: '已用流量 ↓', latency: '延迟最低', expiry: '到期最近' }
@@ -31,6 +33,8 @@ const LuminaPlusHome = memo(function LuminaPlusHome({ data, trails, error, onThe
   const [view, setView] = useState<LuminaPlusView>(() => { try { return parseLuminaPlusView(localStorage.getItem('jiwo-luminaplus-view')) } catch { return 'large' } })
   const changeView = (next: LuminaPlusView) => { setView(next); try { localStorage.setItem('jiwo-luminaplus-view', next) } catch { /* Private mode still works for this session. */ } }
   const [, setColorRevision] = useState(0)
+  // 多维榜单与经典主题共用：宽屏并排两张、一起展开收起，窄屏只留第一张
+  const [boardsOpen, setBoardsOpen] = useState(false)
   const root = document.documentElement
   // 配色与明暗各一个按钮，互不影响
   const palette: LuminaPlusPalette = root.classList.contains('lp-paper') ? 'paper' : root.classList.contains('lp-mint') ? 'mint' : 'classic'
@@ -60,6 +64,10 @@ const LuminaPlusHome = memo(function LuminaPlusHome({ data, trails, error, onThe
     </div></header>
     <main className="lp-main">
       <LuminaPlusOverview servers={servers} />
+      {servers.length > 0 && <section className="lp-boards" aria-label="多维榜单">
+        <Leaderboard servers={servers} open={boardsOpen} onToggle={() => setBoardsOpen(value => !value)} />
+        <Leaderboard servers={servers} open={boardsOpen} onToggle={() => setBoardsOpen(value => !value)} initialTab={LEADERBOARD_ORDER[1]} secondary />
+      </section>}
       <ForwardOverview data={data} />
       <div className="lp-section-title"><h2>所有节点 <small>{visible.length} / {servers.length}</small></h2><span role="status" className={error ? 'has-error' : ''}><i />{error ? '连接中断，显示最近数据' : '数据已同步'}</span></div>
       <section className="lp-toolbar" aria-label="节点筛选"><label className="lp-search"><Search size={16} /><input type="search" aria-label="搜索节点" placeholder="搜索名称、地区、服务商…" value={query} onChange={event => setQuery(event.target.value)} /></label>

@@ -152,6 +152,33 @@
 .lp-overview-card { position: relative; display: flex; flex-direction: column; gap: 12px; min-width: 0; min-height: 164px; border: 1px solid var(--lp-border); border-radius: 18px; padding: 20px 22px; background: var(--lp-surface); }
 .lp-overview-card > header { display: flex; align-items: center; justify-content: space-between; color: var(--lp-secondary); font-size: 12px; letter-spacing: .035em; }
 .lp-overview-card > header svg { color: var(--lp-muted); }
+/* 多维榜单（与经典主题共用组件 Leaderboard.tsx）：宽屏并排两张、一起展开后等高；960px 以下第二张由公共样式隐藏 */
+.lp-boards { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 16px; align-items: start; margin-top: 16px; }
+.lp-boards:has(.leaderboard-card.open) { align-items: stretch; }
+@media (max-width: 960px) { .lp-boards { grid-template-columns: minmax(0,1fr); } }
+.lp-app .leaderboard-card { border: 1px solid var(--lp-border); border-radius: 18px; background: var(--lp-surface); box-shadow: none; }
+.lp-app .leaderboard-card .globe-toggle { min-height: 52px; padding: 12px 20px; color: var(--lp-text); }
+.lp-app .leaderboard-card .globe-toggle span:first-child { font-family: var(--lp-heading-font); font-size: 14px; }
+.lp-app .leaderboard-card .globe-toggle span:first-child svg { color: var(--lp-accent); }
+.lp-app .leaderboard-card .globe-toggle span:last-child { color: var(--lp-muted); }
+.lp-app .leaderboard-card.open .globe-toggle svg:last-child { transform: rotate(180deg); }
+.lp-app .leaderboard-body { padding: 0 16px 16px; }
+.lp-app .leaderboard-tabs button { border-color: var(--lp-border); border-radius: 8px; color: var(--lp-secondary); background: var(--lp-surface); font-size: 11px; }
+.lp-app .leaderboard-tabs button:hover { background: var(--lp-soft); }
+.lp-app .leaderboard-tabs button.active { border-color: transparent; color: var(--lp-on-tint); background: var(--lp-tint); }
+.lp-app .leaderboard-tabs .sort-arrow, .lp-app .leaderboard-list .lb-lines-count { color: var(--lp-on-tint); }
+.lp-app .lb-note { color: var(--lp-muted); }
+.lp-app .leaderboard-list .lb-main { border-radius: 10px; color: var(--lp-text); }
+.lp-app .leaderboard-list li:hover > .lb-row .lb-main, .lp-app .leaderboard-list .lb-main:hover, .lp-app .leaderboard-list .lb-expand:hover { background: var(--lp-soft); }
+.lp-app .leaderboard-list .lb-value { color: var(--lp-secondary); }
+.lp-app .leaderboard-list .rank { color: var(--lp-muted); background: var(--lp-soft); }
+.lp-app .leaderboard-list li:nth-child(1) .rank { color: var(--lp-on-tint); background: var(--lp-tint); }
+.lp-app .leaderboard-list li:nth-child(2) .rank { color: var(--lp-blue); background: color-mix(in srgb, var(--lp-blue) 14%, transparent); }
+.lp-app .leaderboard-list li:nth-child(3) .rank { color: var(--lp-warn); background: color-mix(in srgb, var(--lp-warn) 14%, transparent); }
+.lp-app .leaderboard-list .lb-lines { color: var(--lp-muted); }
+.lp-app .leaderboard-list .lb-lines span { background: var(--lp-soft); }
+.lp-app .leaderboard-list .lb-lines b { color: var(--lp-text); }
+.lp-app .leaderboard-list .lb-lines span.timeout b { color: var(--lp-red); }
 .lp-overview-value { display: block; font-size: clamp(25px,2.25vw,34px); line-height: 1.2; font-weight: 720; letter-spacing: -1px; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
 .lp-overview-value small { font-size: 13px; font-weight: 550; color: var(--lp-muted); margin-left: 5px; letter-spacing: 0; }
 .lp-overview-value em { font-size: .7em; font-style: normal; margin-right: 5px; }
