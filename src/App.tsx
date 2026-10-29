@@ -14,7 +14,7 @@ import { computeRemainingValue, formatMoney } from './value'
 import { LEADERBOARD_ORDER, rankConnectionCounts, rankUnlocks, type LeaderboardKey } from './leaderboards'
 import { connectionCount } from './unlocks'
 import { ProbeHistoryDaysContext } from './use-probe-range'
-import { CYCLE_LABELS as cycleLabel, CYCLE_MONTHS, expiryTimestamp, isPermanent } from './renewal'
+import { CYCLE_LABELS as cycleLabel, CYCLE_MONTHS, expiryTimestamp, isPermanent, renewalPriceCny } from './renewal'
 import { bytes, expiring, expired, remainingDays, regionFlag, hasLeadingFlag, pct, averagePing } from './server-format'
 import { primaryPing } from './ping-groups'
 import { StaleDataBanner } from './StaleDataBanner'
@@ -111,7 +111,8 @@ function assetStats(servers: ProbeServer[]) {
   let priced = 0
   for (const server of servers) {
     const rv = computeRemainingValue(server)
-    if (!rv) continue
+    // 只汇总人民币口径；主控没下发换算价的外币服务器不计入
+    if (!rv || rv.currency.toUpperCase() !== 'CNY') continue
     priced++
     totalValue += rv.value
     totalMonthly += rv.daily * 30
@@ -138,8 +139,8 @@ function formatUptime(seconds: number): string {
 }
 
 function monthlyCost(server: ProbeServer): number {
-  const price = server.renewal_price_cny ?? server.renewal_price
-  if (price === undefined || price === null) return -1
+  const price = renewalPriceCny(server)
+  if (price === undefined) return -1
   const months = CYCLE_MONTHS[server.renewal_cycle || 'month']
   return months ? price / months : -1
 }
@@ -1527,7 +1528,7 @@ function ProbeApp({ data, error }: ReturnType<typeof useProbe>) {
   const expiredCount = servers.filter(expired).length
   const renewalServers = servers.filter((server) => expiring(server) || expired(server))
   const renewalCount = renewalServers.length
-  const renewalAmount = renewalServers.reduce((sum, server) => sum + (server.renewal_price_cny ?? 0), 0)
+  const renewalAmount = renewalServers.reduce((sum, server) => sum + (renewalPriceCny(server) ?? 0), 0)
   const regions = [...new Set(servers.map((server) => server.region?.trim()).filter((value): value is string => !!value))].sort((a, b) => a.localeCompare(b, 'zh-CN'))
   const hasExpiry = servers.some((server) => !!server.expires_at)
   const healthOf = (server: ProbeServer) => probeHealthIssue(server, server.traffic_used)
@@ -1571,9 +1572,10 @@ function ProbeApp({ data, error }: ReturnType<typeof useProbe>) {
   const regionCount = new Set(globeRegions.map((value) => globeCountryCode(value) || value.trim().toUpperCase())).size
   const assets = assetStats(servers)
   const connections = connectionTotals(servers)
-  const dailyTotals = dailyTrafficTotals(servers, 7)
+  // 主控 v0.6.1-beta.3 起公开日流量放宽到 14 天，柱状图跟着显示 14 根；旧主控只有 7 天时照实显示
+  const dailyTotals = dailyTrafficTotals(servers, 14)
   const todayTraffic = dailyTotals.at(-1)?.total
-  const weekTraffic = dailyTotals.reduce((sum, day) => sum + day.total, 0)
+  const recentTraffic = dailyTotals.reduce((sum, day) => sum + day.total, 0)
   const quota = quotaSummary(servers)
   const quality = networkQuality(servers)
   const monthlyTotal = servers.reduce((sum, server) => { const cost = monthlyCost(server); return cost > 0 && !isPermanent(server) ? sum + cost : sum }, 0)
@@ -1625,7 +1627,7 @@ function ProbeApp({ data, error }: ReturnType<typeof useProbe>) {
         icon={<ChartColumn size={15} />}
         label="今日流量"
         value={bytes(todayTraffic, false)}
-        sub={`近 ${dailyTotals.length} 天 ${bytes(weekTraffic, false)}`}
+        sub={`近 ${dailyTotals.length} 天 ${bytes(recentTraffic, false)}`}
         foot={<div className="kpi-columns" title={dailyTotals.map((day) => `${day.date.slice(5)} ${bytes(day.total, false)}`).join('\n')}>{dailyTotals.map((day, index) => <i key={day.date} className={index === dailyTotals.length - 1 ? 'today' : undefined} style={{ height: `${Math.max(4, (day.total / Math.max(1, ...dailyTotals.map((d) => d.total))) * 100)}%` }} />)}</div>}
       />
     ),

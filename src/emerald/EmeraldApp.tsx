@@ -160,7 +160,10 @@ function Overview({ servers }: { servers: EnrichedServer[] }) {
     const traffic = servers.reduce((sum, server) => sum + (server.traffic_used || 0), 0)
     const upload = servers.reduce((sum, server) => sum + (server.upload_speed || 0), 0)
     const download = servers.reduce((sum, server) => sum + (server.download_speed || 0), 0)
-    const remaining = servers.reduce((sum, server) => sum + (computeRemainingValue(server)?.value || 0), 0)
+    const remaining = servers.reduce((sum, server) => {
+      const value = computeRemainingValue(server)
+      return value && value.currency.toUpperCase() === 'CNY' ? sum + value.value : sum
+    }, 0)
     const rows = [
       { key: 'memory', label: '内存用量', icon: <MemoryStick size={17} />, text: bytes(memoryUsed), unit: `/ ${bytes(memoryTotal)}`, tone: 'violet' },
       { key: 'disk', label: '硬盘用量', icon: <HardDrive size={17} />, text: bytes(diskUsed), unit: `/ ${bytes(diskTotal)}`, tone: 'amber' },

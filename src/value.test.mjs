@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import { computeMonthlyTrafficCost, computeRemainingValue } from './value.ts'
-import { CYCLE_MONTHS, expiryTimestamp } from './renewal.ts'
+import { CYCLE_MONTHS, expiryTimestamp, renewalPriceCny } from './renewal.ts'
 
 const base = { online: true, renewal_currency: 'CNY', traffic_limit: 2 * 1024 ** 4 }
 
@@ -72,4 +72,12 @@ test('actual usage, speed, traffic direction and expiry never change the adverti
       assert.deepEqual(computeMonthlyTrafficCost({ ...base, renewal_price: 10, traffic_used, download_speed: 1e9, traffic_stats_mode, expires_at: '2020-01-01' }), expected)
     }
   }
+})
+
+test('汇总用人民币价：优先主控换算价，没有换算时只认人民币原价，外币不当人民币', () => {
+  assert.equal(renewalPriceCny({ renewal_price: 49.9, renewal_currency: 'USD', renewal_price_cny: 355.2 }), 355.2)
+  assert.equal(renewalPriceCny({ renewal_price: 49.9, renewal_currency: 'USD' }), undefined)
+  assert.equal(renewalPriceCny({ renewal_price: 799, renewal_currency: 'CNY' }), 799)
+  assert.equal(renewalPriceCny({ renewal_price: 30 }), 30)
+  assert.equal(renewalPriceCny({}), undefined)
 })
