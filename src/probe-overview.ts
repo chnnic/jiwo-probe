@@ -171,6 +171,14 @@ export function quotaSummary(servers: ProbeOverviewServer[]) {
   return count ? { used, limit, pct: (used / limit) * 100, count, over80 } : undefined
 }
 
+/** 设了额度的每台用量百分比（汇总格右栏一台一根柱），从高到低；用量口径同 quotaSummary */
+export function quotaPerServer(servers: ProbeOverviewServer[]) {
+  return servers
+    .filter((s) => typeof s.traffic_limit === 'number' && s.traffic_limit > 0)
+    .map((s) => ({ name: s.name || '', pct: Math.min(100, ((typeof s.traffic_used === 'number' && s.traffic_used > 0 ? s.traffic_used : 0) / s.traffic_limit!) * 100) }))
+    .sort((a, b) => b.pct - a.pct)
+}
+
 /**
  * 一台服务器的延迟与丢包：各延迟目标近 1 小时分桶的平均（与主控内置探针页的数值对得上）；
  * 没有分桶时退回当前值。失败的 -1 不算；开了 IPv6 延迟的服务器只算 IPv4 目标。
@@ -211,7 +219,10 @@ export function networkQuality(servers: ProbeOverviewServer[]) {
   }
 }
 
-/** 全部服务器的 TCP / UDP 连接数合计，以及近 1 小时的合计曲线（各台同一时段相加，全缺的时段为 null） */
+/**
+ * 全部服务器的 TCP / UDP 连接数合计，以及 TCP、UDP 各自的合计曲线（汇总格右栏小图用）。
+ * 各台采样条数可能不同，按最近一个点从末尾对齐；同一时段各台都缺时为 null。
+ */
 export function connectionTotals(servers: ProbeOverviewServer[]) {
   let tcp = 0
   let udp = 0
@@ -223,13 +234,29 @@ export function connectionTotals(servers: ProbeOverviewServer[]) {
     if (s.conn_history) length = Math.max(length, s.conn_history.tcp.length, s.conn_history.udp.length)
   }
   if (!reported) return undefined
-  const history = length ? Array.from({ length }, (_, i) => {
-    let sum = 0
+  const sum = (pick: (h: NonNullable<ProbeOverviewServer['conn_history']>) => (number | null)[]) => Array.from({ length }, (_, i) => {
+    let total = 0
     let any = false
     for (const s of servers) {
-      for (const v of [s.conn_history?.tcp[i], s.conn_history?.udp[i]]) if (typeof v === 'number') { sum += v; any = true }
+      if (!s.conn_history) continue
+      const values = pick(s.conn_history)
+      const v = values[values.length - length + i]
+      if (typeof v === 'number') { total += v; any = true }
     }
-    return any ? sum : null
-  }) : undefined
-  return { tcp, udp, total: tcp + udp, history }
+    return any ? total : null
+  })
+  return { tcp, udp, total: tcp + udp, tcpHistory: length ? sum((h) => h.tcp) : undefined, udpHistory: length ? sum((h) => h.udp) : undefined }
+}
+
+/**
+ * 汇总格排几列（移植自上游 7de5973）：按每格至少 minCell 宽算出一行最多几格，放不下时按行数均分，
+ * 各行格数一样（6 格 → 3 + 3，不排成 5 + 1 或 4 + 2 留空）。宽度没量到时按 3 列，640 以下固定两列。
+ */
+export function kpiColumns(count: number, width: number, minCell = 320): number {
+  if (count <= 1) return 1
+  if (width <= 0) return Math.min(count, 3)
+  if (width < 640) return 2
+  const max = Math.max(2, Math.floor(width / minCell))
+  if (max >= count) return count
+  return Math.ceil(count / Math.ceil(count / max))
 }

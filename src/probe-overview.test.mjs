@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { connectionTotals, dailyTrafficTotals, formatCapacity, formatSize, meterTone, networkQuality, pingQuality, probeHealthIssue, quotaSummary, relativeTime, sortProbeServers } from './probe-overview.ts'
+import { connectionTotals, kpiColumns, dailyTrafficTotals, formatCapacity, formatSize, meterTone, networkQuality, pingQuality, probeHealthIssue, quotaPerServer, quotaSummary, relativeTime, sortProbeServers } from './probe-overview.ts'
 
 const GB = 1024 ** 3
 
@@ -101,11 +101,33 @@ test('网络质量：在线服务器取各目标平均，按 Premium 同一口�
   assert.equal(dual.latency, 40)
 })
 
-test('连接数：合计 TCP / UDP，近 1 小时曲线按时段相加，全缺的时段为 null', () => {
+test('连接数：合计 TCP / UDP，曲线分 TCP、UDP 按末尾对齐相加，全缺的时段为 null', () => {
   const c = connectionTotals([
     { online: true, tcp_connections: 10, udp_connections: 2, conn_history: { tcp: [1, null, 3], udp: [1, null, null] } },
-    { online: true, tcp_connections: 5, conn_history: { tcp: [2, null, 1], udp: [0, null, 0] } },
+    { online: true, tcp_connections: 5, conn_history: { tcp: [null, 1], udp: [null, 0] } },
   ])
-  assert.deepEqual(c, { tcp: 15, udp: 2, total: 17, history: [4, null, 4] })
+  assert.deepEqual(c, { tcp: 15, udp: 2, total: 17, tcpHistory: [1, null, 4], udpHistory: [1, null, 0] })
+  assert.deepEqual(connectionTotals([{ online: true, tcp_connections: 1 }]), { tcp: 1, udp: 0, total: 1, tcpHistory: undefined, udpHistory: undefined })
   assert.equal(connectionTotals([{ online: true }]), undefined)
+})
+
+test('额度每台用量：只算设了额度的，封顶 100%，从高到低', () => {
+  assert.deepEqual(quotaPerServer([
+    { name: 'a', online: true, traffic_limit: 100, traffic_used: 30 },
+    { name: 'b', online: true, traffic_limit: 100, traffic_used: 150 },
+    { name: 'c', online: true, traffic_used: 50 },
+    { name: 'd', online: false, traffic_limit: 200 },
+  ]), [{ name: 'b', pct: 100 }, { name: 'a', pct: 30 }, { name: 'd', pct: 0 }])
+})
+
+test('汇总格列数：按卡宽算一行最多几格，各行格数均分，手机两列', () => {
+  assert.equal(kpiColumns(6, 0), 3)
+  assert.equal(kpiColumns(6, 375), 2)
+  assert.equal(kpiColumns(6, 700), 2)
+  assert.equal(kpiColumns(6, 1060), 3)
+  assert.equal(kpiColumns(6, 1600), 3)
+  assert.equal(kpiColumns(6, 2000), 6)
+  assert.equal(kpiColumns(5, 1060), 3)
+  assert.equal(kpiColumns(4, 1300), 4)
+  assert.equal(kpiColumns(1, 1300), 1)
 })

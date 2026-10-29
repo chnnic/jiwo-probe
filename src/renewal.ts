@@ -26,3 +26,15 @@ export function expiryTimestamp(server: Pick<ProbeServer, 'renewal_cycle' | 'exp
   const time = Date.parse(/^\d{4}-\d{2}-\d{2}$/.test(server.expires_at) ? `${server.expires_at}T23:59:59` : server.expires_at)
   return Number.isFinite(time) ? time : undefined
 }
+
+/** 最近到期的几台（含已过期，天数为负），按剩余天数从少到多；天数和卡片一样向上取整 */
+export function upcomingExpiries(servers: Array<Pick<ProbeServer, 'name' | 'renewal_cycle' | 'expires_at'>>, now = Date.now(), limit = 3): Array<{ name: string; days: number }> {
+  return servers
+    .flatMap((server) => {
+      const at = expiryTimestamp(server)
+      return at === undefined ? [] : [{ name: server.name || '', at }]
+    })
+    .sort((a, b) => a.at - b.at)
+    .slice(0, limit)
+    .map(({ name, at }) => ({ name, days: Math.ceil((at - now) / 86400000) }))
+}

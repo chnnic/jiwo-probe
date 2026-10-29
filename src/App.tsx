@@ -14,7 +14,7 @@ import { computeRemainingValue, formatMoney } from './value'
 import { LEADERBOARD_ORDER, rankConnectionCounts, rankUnlocks, type LeaderboardKey } from './leaderboards'
 import { connectionCount } from './unlocks'
 import { ProbeHistoryDaysContext } from './use-probe-range'
-import { CYCLE_LABELS as cycleLabel, CYCLE_MONTHS, expiryTimestamp, isPermanent, renewalPriceCny } from './renewal'
+import { CYCLE_LABELS as cycleLabel, CYCLE_MONTHS, expiryTimestamp, isPermanent, renewalPriceCny, upcomingExpiries } from './renewal'
 import { bytes, expiring, expired, remainingDays, regionFlag, hasLeadingFlag, pct, averagePing } from './server-format'
 import { primaryPing } from './ping-groups'
 import { StaleDataBanner } from './StaleDataBanner'
@@ -23,7 +23,7 @@ import { Meter, systemTitle, SystemIcon, routeCarrierLabels, goldRoutes, display
 import { LUMINA_QUOTA_SEGMENTS } from './components/LuminaHealthBars'
 import { ProbeLicenseBar } from './components/ProbeLicenseBar'
 import { globeCountryCode, regionGroupLabel } from './globe-regions'
-import { PROBE_ALERT_PCT, PROBE_SORT_KEYS, PROBE_SORT_LABELS, connectionTotals, dailyTrafficTotals, formatCapacity, formatSize, meterTone, networkQuality, probeHealthIssue, quotaSummary, relativeTime, sortProbeServers, type ProbeHealthIssue, type ProbeSortKey } from './probe-overview'
+import { PROBE_ALERT_PCT, PROBE_SORT_KEYS, PROBE_SORT_LABELS, connectionTotals, dailyTrafficTotals, formatCapacity, formatSize, meterTone, networkQuality, kpiColumns, probeHealthIssue, quotaPerServer, quotaSummary, relativeTime, sortProbeServers, type ProbeHealthIssue, type ProbeSortKey } from './probe-overview'
 
 // 与主控内置探针同款的地区地球（拱形弧线 + 亮点旁旗帜与台数）
 const RegionGlobe = lazy(() => import('./ProbeRegionGlobe').then((module) => ({ default: module.ProbeRegionGlobe })))
@@ -1320,10 +1320,10 @@ function writePref(key: string, value: string) {
   try { localStorage.setItem(key, value) } catch { /* 隐私模式下不记忆 */ }
 }
 
-// 汇总区的一格（照主控 v0.6.1-beta.3 探针页）：标题、大数字、说明三行定高；aside 是右栏 96px 小图，窄屏不显示。
+// 汇总区的一格（照主控 v0.6.1-beta.3 探针页）：标题、大数字、说明三行定高；aside 是右栏小图（至少 96px），格子太窄时不显示。
 // 可点击的格子同时是筛选入口
-function Kpi({ icon, label, value, sub, aside, wide, onClick, active, title }: { icon: ReactNode; label: string; value: ReactNode; sub?: ReactNode; aside?: ReactNode; wide?: boolean; onClick?: () => void; active?: boolean; title?: string }) {
-  const className = ['kpi-cell', wide ? 'wide' : '', aside ? 'has-aside' : '', active ? 'active' : ''].filter(Boolean).join(' ')
+function Kpi({ icon, label, value, sub, aside, onClick, active, title }: { icon: ReactNode; label: string; value: ReactNode; sub?: ReactNode; aside?: ReactNode; onClick?: () => void; active?: boolean; title?: string }) {
+  const className = ['kpi-cell', aside ? 'has-aside' : '', active ? 'active' : ''].filter(Boolean).join(' ')
   const body = <>
     <span className="kpi-main">
       <span className="kpi-label">{icon}<span>{label}</span></span>
@@ -1385,6 +1385,18 @@ function ProbeApp({ data, error }: ReturnType<typeof useProbe>) {
   const [miniExpanded, setMiniExpanded] = useState<boolean>(() => localStorage.getItem('probe-mini-expanded') === '1')
   const [filter, setFilter] = useState<ProbeFilter>('all')
   const speedSamples = useSpeedHistory(data?.servers)
+  // 汇总区实际宽度 → 排几列（kpiColumns）；汇总区是条件渲染的，用回调 ref 挂观察器
+  const [kpiWidth, setKpiWidth] = useState(0)
+  const kpiObserver = useRef<ResizeObserver | null>(null)
+  const kpiGridRef = useCallback((el: HTMLDivElement | null) => {
+    kpiObserver.current?.disconnect()
+    kpiObserver.current = null
+    if (!el) return
+    const observer = new ResizeObserver(() => setKpiWidth(el.clientWidth))
+    observer.observe(el)
+    setKpiWidth(el.clientWidth)
+    kpiObserver.current = observer
+  }, [])
   const [sortKey, setSortKeyState] = useState<ProbeSortKey>(() => readPref('probe-sort', PROBE_SORT_KEYS, 'default'))
   const [groupBy, setGroupByState] = useState<ProbeGroupBy>(() => readPref('probe-group', ['none', 'region'] as const, 'none'))
   const [density, setDensityState] = useState<ProbeDensity>(() => readPref('probe-density', ['standard', 'dense'] as const, 'standard'))
@@ -1581,6 +1593,9 @@ function ProbeApp({ data, error }: ReturnType<typeof useProbe>) {
   const todayTraffic = dailyTotals.at(-1)?.total
   const recentTraffic = dailyTotals.reduce((sum, day) => sum + day.total, 0)
   const quota = quotaSummary(servers)
+  // 汇总格右栏：额度每台一根柱、续费列出最近到期的三台
+  const quotaBars = quotaPerServer(servers)
+  const expiries = upcomingExpiries(servers)
   const quality = networkQuality(servers)
   const monthlyTotal = servers.reduce((sum, server) => { const cost = monthlyCost(server); return cost > 0 && !isPermanent(server) ? sum + cost : sum }, 0)
   const nearest = servers
@@ -1608,11 +1623,11 @@ function ProbeApp({ data, error }: ReturnType<typeof useProbe>) {
     hasSpeed && (
       <Kpi
         key="speed"
-        wide
         icon={<Activity size={14} />}
         label="实时网速"
         value={<span className="kpi-speed"><span className="down">↓ {networkSpeed(totalDownload)}</span><span className="up">↑ {networkSpeed(totalUpload)}</span></span>}
-        sub={speedSamples.length > 1 ? `近 3 分钟峰值 ↓ ${networkSpeed(peakDown)} · ↑ ${networkSpeed(peakUp)}` : '全部服务器合计'}
+        sub={speedSamples.length > 1 ? `峰值 ↓ ${networkSpeed(peakDown)} · ↑ ${networkSpeed(peakUp)}` : '全部服务器合计'}
+        title={speedSamples.length > 1 ? `全部服务器合计；曲线和峰值为本页打开后近 3 分钟` : undefined}
         aside={speedSamples.length > 1 && <KpiSpark series={[{ values: speedSamples.map((item) => item.down), tone: 'down' }, { values: speedSamples.map((item) => item.up), tone: 'up' }]} height={68} />}
       />
     ),
@@ -1623,6 +1638,7 @@ function ProbeApp({ data, error }: ReturnType<typeof useProbe>) {
         label="连接数"
         value={connections.total.toLocaleString('en-US')}
         sub={`TCP ${connections.tcp.toLocaleString('en-US')} · UDP ${connections.udp.toLocaleString('en-US')}`}
+        aside={connections.tcpHistory && connections.tcpHistory.length > 1 && <KpiSpark series={[{ values: connections.tcpHistory, tone: 'tcp' }, { values: connections.udpHistory ?? [], tone: 'udp' }]} height={68} />}
       />
     ),
     todayTraffic !== undefined && (
@@ -1639,9 +1655,9 @@ function ProbeApp({ data, error }: ReturnType<typeof useProbe>) {
     (quota || quality) && (
       <Kpi
         key="quota"
-        wide
         icon={<Gauge size={14} />}
         label={quota && quality ? '本期流量额度 · 网络质量' : quota ? '本期流量额度' : '网络质量'}
+        aside={quotaBars.length > 0 && <span className="kpi-quota-bars">{quotaBars.map((bar, index) => <i key={`${bar.name}-${index}`} className={meterTone(bar.pct) ?? undefined} style={{ height: `${Math.max(4, bar.pct)}%` }} />)}</span>}
         value={<span className="kpi-pair">{quota && <span>{quota.pct.toFixed(0)}%</span>}{quality && <span>{quality.latency.toFixed(0)}<span className="kpi-unit"> ms</span></span>}</span>}
         sub={<span className="kpi-quota-line">
           {quota && <>
@@ -1655,6 +1671,7 @@ function ProbeApp({ data, error }: ReturnType<typeof useProbe>) {
         </span>}
         title={[
           quota && `本期流量额度：设了限额的 ${quota.count} 台合计 ${bytes(quota.used, false)} / ${bytes(quota.limit, false)}${quota.over80 ? `，${quota.over80} 台超 80%` : ''}`,
+          quotaBars.length > 0 && `用量最高：${quotaBars.slice(0, 3).map((bar) => `${bar.name || '未命名服务器'} ${bar.pct.toFixed(0)}%`).join('、')}`,
           quality && `网络质量：在线服务器近 1 小时平均延迟 ${quality.latency.toFixed(0)} ms${quality.loss !== undefined ? `、丢包 ${quality.loss.toFixed(1)}%` : ''}；优 ${quality.good} · 中 ${quality.medium} · 差 ${quality.poor}（丢包 ≥10% 或延迟 ≥250ms 为差，丢包 ≥3% 或延迟 ≥120ms 为中）`,
         ].filter(Boolean).join('\n')}
       />
@@ -1665,11 +1682,12 @@ function ProbeApp({ data, error }: ReturnType<typeof useProbe>) {
         icon={<Wallet size={14} />}
         label="续费"
         value={<><em className={renewalCount > 0 ? 'warn' : undefined}>{renewalCount}</em><span className="kpi-unit"> 台 30 天内到期</span></>}
-        sub={[
-          `¥${renewalAmount.toFixed(2)}`,
-          monthlyTotal > 0 && `月均 ¥${monthlyTotal.toFixed(0)}`,
-          nearest && `最近 ${nearest.server.name || '未命名服务器'} ${Math.max(0, Math.ceil((nearest.at - Date.now()) / 86400000))} 天`,
-        ].filter(Boolean).join(' · ')}
+        sub={<>
+          {[`¥${renewalAmount.toFixed(2)}`, monthlyTotal > 0 && `月均 ¥${monthlyTotal.toFixed(0)}`].filter(Boolean).join(' · ')}
+          {/* 右栏列出最近到期的几台时不重复；格子太窄、右栏隐藏时才显示 */}
+          {nearest && <span className="kpi-nearest"> · 最近 {nearest.server.name || '未命名服务器'} {Math.max(0, Math.ceil((nearest.at - Date.now()) / 86400000))} 天</span>}
+        </>}
+        aside={expiries.length > 0 && <span className="kpi-expiry-list">{expiries.map((item, index) => <span key={`${item.name}-${index}`}><span>{item.name || '未命名服务器'}</span><span className={item.days < 0 ? 'gone' : item.days <= 7 ? 'soon' : undefined}>{item.days < 0 ? `过期 ${-item.days} 天` : `${item.days} 天`}</span></span>)}</span>}
         title={assets ? `剩余价值 ${formatMoney(assets.totalValue, 'CNY', true)} · 覆盖 ${assets.priced} / ${servers.length} 台` : undefined}
         active={filter === 'renewal'}
         onClick={() => selectFilter('renewal')}
@@ -1719,7 +1737,7 @@ function ProbeApp({ data, error }: ReturnType<typeof useProbe>) {
       </header>
       {servers.length > 0 && (
         <section className={`overview${showGlobe ? ' with-globe' : ''}`}>
-          <div className="kpi-panel"><div className="kpi-grid">{kpis}</div></div>
+          <div className="kpi-panel"><div ref={kpiGridRef} className="kpi-grid" style={{ gridTemplateColumns: `repeat(${kpiColumns(kpis.length, kpiWidth)}, minmax(0, 1fr))` }}>{kpis}</div></div>
           {showGlobe && (
             <aside className="globe-card globe-mini" aria-label="地区分布">
               <div className="globe-mini-stage">
