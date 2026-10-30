@@ -140,5 +140,7 @@ export function lossScale(rows: Array<Record<string, string | number | null>>) {
 
 export function formatLossTick(value: number): string {
   const digits = value < 0.1 ? 3 : value < 1 ? 2 : value < 10 ? 1 : 0
-  return `${value.toFixed(digits).replace(/\.?0+$/, '')}%`
+  // 只去小数点后的末尾 0；整数刻度不能动（100 → 1、50 → 5 的错）
+  const text = value.toFixed(digits)
+  return `${text.includes('.') ? text.replace(/\.?0+$/, '') : text}%`
 }

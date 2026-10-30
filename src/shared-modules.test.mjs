@@ -4,7 +4,7 @@ import { readFileSync, readdirSync } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import ts from 'typescript'
-import { bytes, pct, regionFlag, hasLeadingFlag, regionLabel, regionCountryLabel, averagePing, expiring, expired, remainingDays } from './server-format.ts'
+import { bytes, formatLossTick, pct, regionFlag, hasLeadingFlag, regionLabel, regionCountryLabel, averagePing, expiring, expired, remainingDays } from './server-format.ts'
 import { serverHealth, averageLatency, percentage, resourcePercentage } from './server-health.ts'
 
 test('公共格式化保留二进制流量、TB 精度、地区和百分比口径', () => {
@@ -143,4 +143,10 @@ test('实时连接声明增量帧、断线按退避自动重连，主动断开�
   const worker = readFileSync(new URL('../worker/index.ts', import.meta.url), 'utf8')
   assert.match(worker, /probe-hub\.internal\/stream\$\{incoming\.search\}/)
   assert.match(worker, /getTags\(client\)\.includes\(HUB_DELTA_TAG\)/)
+})
+
+test('丢包率刻度：整数刻度保留末尾 0，小数刻度去掉多余的 0', () => {
+  assert.deepEqual([0, 25, 50, 75, 100].map(formatLossTick), ['0%', '25%', '50%', '75%', '100%'])
+  assert.deepEqual([10, 20].map(formatLossTick), ['10%', '20%'])
+  assert.deepEqual([0.05, 0.5, 1, 2.5].map(formatLossTick), ['0.05%', '0.5%', '1%', '2.5%'])
 })
