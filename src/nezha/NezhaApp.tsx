@@ -8,7 +8,7 @@ import { PasskeyLogin } from '../PasskeyLogin'
 import { Twemoji } from '../Twemoji'
 import { applyAppearance, getNezhaMode, getThemeOverride, setNezhaMode } from '../use-probe'
 import { useNetworkSpeed } from '../use-network-speed'
-import { bytes, hasLeadingFlag, regionFlag } from '../server-format'
+import { bytes, hasLeadingFlag, probeRegion, regionFlag } from '../server-format'
 import { SystemIcon, displayReturnRoute, routeCarrierLabels } from '../components/ServerVisuals'
 import { ProbeLicenseBar } from '../components/ProbeLicenseBar'
 import { ForwardOverview } from '../deferred'
@@ -41,7 +41,7 @@ export default function NezhaApp({ data, error, onThemeChange }: { data: ProbePa
   const overview = useMemo(() => nezhaOverview(servers), [servers])
   const tabs = useMemo(() => regionTabs(servers), [servers])
   const visible = useMemo(() => selectNezhaServers(servers, { status, group, query, sort, order }), [servers, status, group, query, sort, order])
-  const globeRegions = useMemo(() => servers.map((server) => server.region_country || server.region || '').filter(Boolean), [servers])
+  const globeRegions = useMemo(() => servers.map(probeRegion).filter(Boolean), [servers])
   const forwardEnabled = data.show_forward !== false && (!!data.show_forward || !!data.forward?.length)
   const title = data.title?.trim() || '服务器状态'
   return (
@@ -181,7 +181,7 @@ function UsageBar({ value }: { value: number }) {
 
 function Flag({ server }: { server: ProbeServer }) {
   const name = server.name || ''
-  const flag = hasLeadingFlag(name) ? '' : regionFlag(server.region_country || server.region)
+  const flag = hasLeadingFlag(name) ? '' : regionFlag(probeRegion(server))
   return <span className="nz-flag">{flag ? <Twemoji>{flag}</Twemoji> : null}</span>
 }
 

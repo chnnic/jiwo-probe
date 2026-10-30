@@ -2,9 +2,9 @@ import { ThemeSelect } from './ThemePicker'
 import { useNetworkSpeed } from './use-network-speed'
 import { ConnectionCounts, UnlockButton } from './ServerCapabilities'
 import { ConnectionBox, ConnectionHistory } from './ConnectionHistory'
-import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
-import { Activity, ArrowDown, ArrowUp, BadgeDollarSign, ChartColumn, Calendar, CalendarClock, ChevronDown, CircleDollarSign, Cpu, Crown, Database, Gauge, Gem, Globe2, HardDrive, LayoutGrid, List, MapPin, MemoryStick, Moon, Network, PieChart, RefreshCw, Rows3, Rows4, Search, Server, Sun, SunMoon, TriangleAlert, Wallet, Wifi } from 'lucide-react'
+import { Activity, ArrowDown, ArrowUp, BadgeDollarSign, ChartColumn, Calendar, CalendarClock, ChevronDown, CircleDollarSign, Cpu, Crown, Database, Gauge, Gem, HardDrive, LayoutGrid, List, MapPin, MemoryStick, Moon, Network, PieChart, RefreshCw, Rows3, Rows4, Search, Server, Sun, SunMoon, TriangleAlert, Wallet, Wifi } from 'lucide-react'
 import type { ProbePingSeries, ProbeServer, ThemeName } from './types'
 import { EnrichedServer, getActiveTheme, getDarkOverride, getThemeOverride, setDarkOverride, setTheme, useProbe } from './use-probe'
 import { Twemoji } from './Twemoji'
@@ -15,14 +15,14 @@ import { LEADERBOARD_ORDER } from './leaderboards'
 import { Leaderboard, formatUptime, monthlyCost } from './Leaderboard'
 import { ProbeHistoryDaysContext } from './use-probe-range'
 import { CYCLE_LABELS as cycleLabel, expiryTimestamp, isPermanent, renewalPriceCny, upcomingExpiries } from './renewal'
-import { bytes, expiring, expired, remainingDays, regionFlag, hasLeadingFlag, pct, averagePing } from './server-format'
+import { bytes, expiring, expired, remainingDays, regionFlag, hasLeadingFlag, pct, averagePing, probeRegion } from './server-format'
 import { StaleDataBanner } from './StaleDataBanner'
 import { ForwardOverview, prefetchDeferred, ServerDetail, SystemTrendChart, TrafficDialog, TrendDialog } from './deferred'
 import { Meter, systemTitle, SystemIcon, routeCarrierLabels, goldRoutes, displayReturnRoute, ReturnRouteBadges } from './components/ServerVisuals'
 import { LUMINA_QUOTA_SEGMENTS } from './components/LuminaHealthBars'
 import { ProbeLicenseBar } from './components/ProbeLicenseBar'
 import { globeCountryCode, regionGroupLabel } from './globe-regions'
-import { PROBE_ALERT_PCT, PROBE_SORT_KEYS, PROBE_SORT_LABELS, connectionTotals, dailyTrafficTotals, formatCapacity, formatSize, meterTone, networkQuality, kpiColumns, probeHealthIssue, quotaPerServer, quotaSummary, relativeTime, sortProbeServers, type ProbeHealthIssue, type ProbeSortKey } from './probe-overview'
+import { PROBE_ALERT_PCT, PROBE_SORT_KEYS, PROBE_SORT_LABELS, connectionTotals, dailyTrafficTotals, formatCapacity, formatSize, meterTone, networkQuality, kpiColumns, probeHealthIssue, quotaSummary, relativeTime, sortProbeServers, type ProbeHealthIssue, type ProbeSortKey } from './probe-overview'
 
 // 与主控内置探针同款的地区地球（拱形弧线 + 亮点旁旗帜与台数）
 const RegionGlobe = lazy(() => import('./ProbeRegionGlobe').then((module) => ({ default: module.ProbeRegionGlobe })))
@@ -1053,8 +1053,58 @@ function writePref(key: string, value: string) {
 
 // 汇总区的一格（照主控 v0.6.1-beta.3 探针页）：标题、大数字、说明三行定高；aside 是右栏小图（至少 96px），格子太窄时不显示。
 // 可点击的格子同时是筛选入口
-function Kpi({ icon, label, value, sub, aside, onClick, active, title }: { icon: ReactNode; label: string; value: ReactNode; sub?: ReactNode; aside?: ReactNode; onClick?: () => void; active?: boolean; title?: string }) {
-  const className = ['kpi-cell', aside ? 'has-aside' : '', active ? 'active' : ''].filter(Boolean).join(' ')
+/**
+ * 一行放不下就等比缩小字号直到放得下（最小 minPx），不折行、不截断。用于实时网速这类关键数字：
+ * 宽字体主题 / 窄格子下宁可字小一点，也不能显示成「1.29 M…」。fitKey 变了（数值变了）重新量。
+ * 最小字号还放不下时藏掉 .fit-drop 说明字，只留数值。
+ */
+function FitText({ children, fitKey, minPx = 9, className }: { children: ReactNode; fitKey: string; minPx?: number; className?: string }) {
+  const ref = useRef<HTMLSpanElement>(null)
+  useLayoutEffect(() => {
+    const el = ref.current
+    // 观察格子本身而不是父元素：文字栏宽度跟着字号变，观察它会「缩字号 → 变窄 → 重置字号 → 变宽」来回打架
+    const box = el?.closest('.kpi-cell') ?? el?.parentElement
+    if (!el || !box) return
+    const shrink = () => {
+      el.style.fontSize = ''
+      let size = parseFloat(getComputedStyle(el).fontSize)
+      // 字距 / 箭头宽度不随字号等比缩，一次算不准，收敛几轮
+      for (let i = 0; i < 6 && size > minPx; i++) {
+        const need = el.scrollWidth
+        const avail = el.clientWidth
+        if (avail <= 0 || need <= avail + 0.5) break
+        size = Math.max(minPx, Math.floor(((size * avail) / need) * 10) / 10 - 0.2)
+        el.style.fontSize = `${size}px`
+      }
+      return el.scrollWidth <= el.clientWidth + 0.5
+    }
+    const fit = () => {
+      delete el.dataset.overflow
+      if (!shrink()) {
+        el.dataset.overflow = '1'
+        shrink()
+      }
+    }
+    fit()
+    // 格子宽窄、字体 / 主题变了都要重量；合到下一帧做一次，回调里改字号引起的尺寸变化也只会再排一帧
+    let raf = 0
+    const ro = new ResizeObserver(() => {
+      cancelAnimationFrame(raf)
+      raf = requestAnimationFrame(fit)
+    })
+    ro.observe(box)
+    ro.observe(el)
+    void document.fonts?.ready.then(fit)
+    return () => {
+      cancelAnimationFrame(raf)
+      ro.disconnect()
+    }
+  }, [fitKey, minPx])
+  return <span ref={ref} className={className ? `fit-text ${className}` : 'fit-text'}>{children}</span>
+}
+
+function Kpi({ icon, label, value, sub, aside, onClick, active, title, className: extra }: { icon: ReactNode; label: string; value: ReactNode; sub?: ReactNode; aside?: ReactNode; onClick?: () => void; active?: boolean; title?: string; className?: string }) {
+  const className = ['kpi-cell', extra, aside ? 'has-aside' : '', active ? 'active' : ''].filter(Boolean).join(' ')
   const body = <>
     <span className="kpi-main">
       <span className="kpi-label">{icon}<span>{label}</span></span>
@@ -1313,7 +1363,7 @@ function ProbeApp({ data, error }: ReturnType<typeof useProbe>) {
   const hasSpeed = servers.some((server) => server.upload_speed !== undefined || server.download_speed !== undefined)
   const totalUpload = servers.reduce((sum, server) => sum + (server.upload_speed || 0), 0)
   const totalDownload = servers.reduce((sum, server) => sum + (server.download_speed || 0), 0)
-  const globeRegions = servers.map((server) => server.region_country || server.region || '').filter(Boolean)
+  const globeRegions = servers.map(probeRegion).filter(Boolean)
   const showGlobe = !!data.show_globe && globeRegions.length > 0
   // 旗帜、国家代码两种写法按国家代码去重（同一地区有的机器只报旗帜）
   const regionCount = new Set(globeRegions.map((value) => globeCountryCode(value) || value.trim().toUpperCase())).size
@@ -1324,8 +1374,7 @@ function ProbeApp({ data, error }: ReturnType<typeof useProbe>) {
   const todayTraffic = dailyTotals.at(-1)?.total
   const recentTraffic = dailyTotals.reduce((sum, day) => sum + day.total, 0)
   const quota = quotaSummary(servers)
-  // 汇总格右栏：额度每台一根柱、续费列出最近到期的三台
-  const quotaBars = quotaPerServer(servers)
+  // 续费格右栏列出最近到期的三台
   const expiries = upcomingExpiries(servers)
   const quality = networkQuality(servers)
   const monthlyTotal = servers.reduce((sum, server) => { const cost = monthlyCost(server); return cost > 0 && !isPermanent(server) ? sum + cost : sum }, 0)
@@ -1356,8 +1405,11 @@ function ProbeApp({ data, error }: ReturnType<typeof useProbe>) {
         key="speed"
         icon={<Activity size={14} />}
         label="实时网速"
-        value={<span className="kpi-speed"><span className="down">↓ {networkSpeed(totalDownload)}</span><span className="up">↑ {networkSpeed(totalUpload)}</span></span>}
-        sub={speedSamples.length > 1 ? `峰值 ↓ ${networkSpeed(peakDown)} · ↑ ${networkSpeed(peakUp)}` : '全部服务器合计'}
+        className="speed-cell"
+        value={<FitText fitKey={`${networkSpeed(totalDownload)}|${networkSpeed(totalUpload)}`} minPx={10} className="kpi-speed"><span className="down">↓ {networkSpeed(totalDownload)}</span>{' '}<span className="up">↑ {networkSpeed(totalUpload)}</span></FitText>}
+        sub={speedSamples.length > 1
+          ? <FitText fitKey={`${networkSpeed(peakDown)}|${networkSpeed(peakUp)}`}><span className="fit-drop">峰值 </span>↓ {networkSpeed(peakDown)} · ↑ {networkSpeed(peakUp)}</FitText>
+          : '全部服务器合计'}
         title={speedSamples.length > 1 ? `全部服务器合计；曲线和峰值为本页打开后近 3 分钟` : undefined}
         aside={speedSamples.length > 1 && <KpiSpark series={[{ values: speedSamples.map((item) => item.down), tone: 'down' }, { values: speedSamples.map((item) => item.up), tone: 'up' }]} height={68} />}
       />
@@ -1388,7 +1440,6 @@ function ProbeApp({ data, error }: ReturnType<typeof useProbe>) {
         key="quota"
         icon={<Gauge size={14} />}
         label={quota && quality ? '本期流量额度 · 网络质量' : quota ? '本期流量额度' : '网络质量'}
-        aside={quotaBars.length > 0 && <span className="kpi-quota-bars">{quotaBars.map((bar, index) => <i key={`${bar.name}-${index}`} className={meterTone(bar.pct) ?? undefined} style={{ height: `${Math.max(4, bar.pct)}%` }} />)}</span>}
         value={<span className="kpi-pair">{quota && <span>{quota.pct.toFixed(0)}%</span>}{quality && <span>{quality.latency.toFixed(0)}<span className="kpi-unit"> ms</span></span>}</span>}
         sub={<span className="kpi-quota-line">
           {quota && <>
@@ -1402,7 +1453,6 @@ function ProbeApp({ data, error }: ReturnType<typeof useProbe>) {
         </span>}
         title={[
           quota && `本期流量额度：设了限额的 ${quota.count} 台合计 ${bytes(quota.used, false)} / ${bytes(quota.limit, false)}${quota.over80 ? `，${quota.over80} 台超 80%` : ''}`,
-          quotaBars.length > 0 && `用量最高：${quotaBars.slice(0, 3).map((bar) => `${bar.name || '未命名服务器'} ${bar.pct.toFixed(0)}%`).join('、')}`,
           quality && `网络质量：在线服务器近 1 小时平均延迟 ${quality.latency.toFixed(0)} ms${quality.loss !== undefined ? `、丢包 ${quality.loss.toFixed(1)}%` : ''}；优 ${quality.good} · 中 ${quality.medium} · 差 ${quality.poor}（丢包 ≥10% 或延迟 ≥250ms 为差，丢包 ≥3% 或延迟 ≥120ms 为中）`,
         ].filter(Boolean).join('\n')}
       />
@@ -1425,12 +1475,7 @@ function ProbeApp({ data, error }: ReturnType<typeof useProbe>) {
       />
     ),
   ].filter(Boolean)
-  // 右侧地区卡片：小地球 + 各国家 / 地区台数（按台数从多到少）
-  const regionChips = [...globeRegions.reduce((map, value) => {
-    const code = globeCountryCode(value) || value.trim().toUpperCase()
-    map.set(code, (map.get(code) ?? 0) + 1)
-    return map
-  }, new Map<string, number>())].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+  const kpiCols = kpiColumns(kpis.length, kpiWidth)
   const renderCard = (server: ProbeServer, index: number) => activeTheme === 'lumina'
     ? <ServerCardLumina key={server.name || index} server={server} index={index} />
     : <ServerCard key={server.name || index} server={server} index={index} dense={dense} />
@@ -1468,20 +1513,13 @@ function ProbeApp({ data, error }: ReturnType<typeof useProbe>) {
       </header>
       {servers.length > 0 && (
         <section className={`overview${showGlobe ? ' with-globe' : ''}`}>
-          <div className="kpi-panel"><div ref={kpiGridRef} className="kpi-grid" style={{ gridTemplateColumns: `repeat(${kpiColumns(kpis.length, kpiWidth)}, minmax(0, 1fr))` }}>{kpis}</div></div>
+          <div className="kpi-panel"><div ref={kpiGridRef} className={kpiCols === 2 && kpiWidth > 0 && kpiWidth < 640 ? 'kpi-grid two-col' : 'kpi-grid'} style={{ gridTemplateColumns: `repeat(${kpiCols}, minmax(0, 1fr))` }}>{kpis}</div></div>
           {showGlobe && (
             <aside className="globe-card globe-mini" aria-label="地区分布">
               <div className="globe-mini-stage">
                 <Suspense fallback={<div className="globe-loading">加载中…</div>}>
                   <RegionGlobe regions={globeRegions} compact />
                 </Suspense>
-              </div>
-              <div className="globe-mini-info">
-                <span className="kpi-label"><Globe2 size={14} /><span>地区分布</span></span>
-                <span className="globe-mini-count">{regionCount} 个地区 · {globeRegions.length} 台</span>
-                <div className="globe-mini-chips">
-                  {regionChips.map(([code, count]) => <span key={code} title={regionGroupLabel(code)}><b>{code}</b>{count}</span>)}
-                </div>
               </div>
             </aside>
           )}
@@ -1563,7 +1601,7 @@ function ProbeApp({ data, error }: ReturnType<typeof useProbe>) {
                 <small>{group.items.length} 台</small>
               </h2>
             )}
-            <div className={['server-grid', dense ? 'dense' : '', grouped ? 'fill' : ''].filter(Boolean).join(' ')}>
+            <div className={dense ? 'server-grid dense' : 'server-grid'}>
               {group.items.map(({ server, index }) => renderCard(server, index))}
             </div>
           </section>

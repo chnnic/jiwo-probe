@@ -281,7 +281,9 @@ test('unknown expiry does not become a zero-value asset, but an expired real ass
 })
 
 test('region filters tolerate missing labels and normalize case', () => {
-  assert.equal(regionKey({ region_country: 'hk', region: 'Japan' }), 'HK')
+  assert.equal(regionKey({ region_country: 'hk', region: 'jp' }), 'JP')
+  assert.equal(regionKey({ region_country: 'hk', region: ' ' }), 'HK')
+  assert.equal(regionKey({ region_country: 'US', region: '🇭🇰' }), 'HK')
   assert.equal(regionKey({ region: 'JP' }), 'JP')
   assert.equal(regionKey({}), '未知')
   assert.equal(regionKey({ region_country: '  ', region: 'jp' }), 'JP')

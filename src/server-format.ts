@@ -61,6 +61,14 @@ export function regionFlag(region?: string): string {
   return String.fromCodePoint(...[...country].map((char) => 0x1f1e6 + char.charCodeAt(0) - 65))
 }
 
+/**
+ * 服务器所在地区：管理员在主控探针设置里手动选的国旗（region）优先；region_country 是许可证服务
+ * 按 IP 网段自动识别的，只在没手动选时兜底。反过来的话 IP 库认错国家时手动改了也不生效。
+ */
+export function probeRegion(server: { region?: string; region_country?: string }): string {
+  return server.region?.trim() || server.region_country?.trim() || ''
+}
+
 export function hasLeadingFlag(value: string): boolean {
   return /^\p{Regional_Indicator}{2}/u.test(value.trim())
 }

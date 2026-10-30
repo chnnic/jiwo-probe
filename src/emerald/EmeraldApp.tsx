@@ -98,7 +98,8 @@ function flagFromCode(code?: string): string {
 }
 
 function regionCode(server: ProbeServer): string {
-  return (server.region_country || flagToCountryCode(server.region || '') || 'UN').toUpperCase()
+  // 手动选的国旗（region）优先，按 IP 自动识别的 region_country 兜底
+  return (flagToCountryCode(server.region || '') || server.region_country || 'UN').toUpperCase()
 }
 
 function regionFlag(server: ProbeServer): string {

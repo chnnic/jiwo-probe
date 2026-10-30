@@ -1,5 +1,6 @@
 import type { ProbeServer } from '../types'
 import { CYCLE_DAYS, CYCLE_MONTHS, expiryTimestamp, isPermanent } from '../renewal.ts'
+import { globeCountryCode } from '../globe-regions.ts'
 
 export const LUMINA_PLUS_VIEWS = ['large', 'compact', 'mini', 'list'] as const
 export type LuminaPlusView = typeof LUMINA_PLUS_VIEWS[number]
@@ -100,8 +101,10 @@ export function pulseStrength(value?: number): number {
   return speed === undefined || speed === 0 ? 0 : Math.min(1, .25 + Math.log10(1 + speed / 1024) / 5)
 }
 
+// 手动选的国旗（region）优先，按 IP 自动识别的 region_country 兜底；旗帜和国家代码统一成代码，同一地区不拆成两组
 export function regionKey(server: ProbeServer): string {
-  return [server.region_country, server.region, server.region_name].map(value => value?.trim()).find(Boolean)?.toUpperCase() || '未知'
+  const raw = [server.region, server.region_country, server.region_name].map(value => value?.trim()).find(Boolean)
+  return raw ? globeCountryCode(raw) || raw.toUpperCase() : '未知'
 }
 
 /** Controller-converted CNY takes precedence. Never invent an FX rate or add currencies. */

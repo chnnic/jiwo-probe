@@ -47,7 +47,8 @@ export function osShortName(os?: string): string {
 export function regionTabs(servers: ProbeServer[]): Array<{ key: string; label: string; count: number }> {
   const counts = new Map<string, { label: string; count: number }>()
   for (const s of servers) {
-    const raw = s.region_country || s.region || ''
+    // 手动选的国旗（region）优先，按 IP 自动识别的 region_country 兜底
+    const raw = s.region?.trim() || s.region_country || ''
     if (!raw.trim()) continue
     const key = globeCountryCode(raw) || raw.trim()
     const item = counts.get(key) || { label: regionGroupLabel(raw), count: 0 }
@@ -59,7 +60,7 @@ export function regionTabs(servers: ProbeServer[]): Array<{ key: string; label: 
 }
 
 export function serverRegionKey(s: ProbeServer): string {
-  const raw = s.region_country || s.region || ''
+  const raw = s.region?.trim() || s.region_country || ''
   return globeCountryCode(raw) || raw.trim()
 }
 

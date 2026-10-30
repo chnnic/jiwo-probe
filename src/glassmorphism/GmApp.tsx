@@ -82,8 +82,9 @@ function countryFlag(code?: string): string {
 
 function serverRegionKey(server: ProbeServer): string {
   return (
-    server.region_country ||
+    // 手动选的国旗（region）优先，按 IP 自动识别的 region_country 兜底（见 server-format probeRegion）
     flagToCountryCode(server.region ?? '') ||
+    server.region_country ||
     server.region?.trim() ||
     'UNKNOWN'
   ).toUpperCase()

@@ -511,10 +511,9 @@ button.kpi-cell:hover {
 .kpi-cell .warn {
   color: #d97706;
 }
-/* 右栏小图：文字栏只占所需宽度（最多 70%），剩下的宽度都给小图，宽格子里图跟着变宽、小字也不截断 */
+/* 右栏小图：文字栏只占所需宽度，剩下的宽度都给小图（至少 96px），宽格子里图跟着变宽、小字也不截断 */
 .kpi-cell.has-aside > .kpi-main {
   flex: 0 1 auto;
-  max-width: 70%;
 }
 .kpi-aside {
   position: relative;
@@ -542,13 +541,34 @@ button.kpi-cell:hover {
   }
   .kpi-cell.has-aside > .kpi-main {
     flex: 1;
-    max-width: none;
   }
 }
-@container kpi-cell (min-width: 420px) {
-  .kpi-speed {
-    flex-wrap: nowrap;
-  }
+/* 一行到底：放不下时由 FitText 缩字号，不折行、不截断；最小字号还放不下时藏掉说明字 */
+.fit-text {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+}
+.fit-text[data-overflow] > .fit-drop {
+  display: none;
+}
+.fit-text.kpi-speed .up {
+  margin-left: 4px;
+}
+/* 实时网速：文字优先，小图至少留 64px */
+.kpi-cell.speed-cell .kpi-aside {
+  flex-basis: 64px;
+  min-width: 64px;
+}
+/* 手机上两列格只有一百多像素，网速两个数放不下：独占一行，其它格子补位，落单的末格补满 */
+.kpi-grid.two-col {
+  grid-auto-flow: row dense;
+}
+.kpi-grid.two-col > .speed-cell,
+.kpi-grid.two-col:has(> .speed-cell) > :last-child:nth-child(even),
+.kpi-grid.two-col:not(:has(> .speed-cell)) > :last-child:nth-child(odd):not(:first-child) {
+  grid-column: span 2;
 }
 .kpi-spark {
   display: block;
@@ -603,28 +623,6 @@ button.kpi-cell:hover {
 }
 .kpi-columns i.today {
   background: var(--primary);
-}
-/* 额度格右栏：设了额度的每台一根柱，按用量从高到低，超 70% / 90% 变黄 / 红 */
-.kpi-quota-bars {
-  position: absolute;
-  inset: auto 0 0;
-  display: flex;
-  align-items: flex-end;
-  gap: 3px;
-  height: 48px;
-}
-.kpi-quota-bars i {
-  flex: 1;
-  max-width: 14px;
-  min-height: 2px;
-  border-radius: 2px;
-  background: color-mix(in srgb, var(--primary) 60%, transparent);
-}
-.kpi-quota-bars i.warn {
-  background: #eab308;
-}
-.kpi-quota-bars i.bad {
-  background: #ef4444;
 }
 /* 续费格右栏：最近到期的三台，名称省略、天数对齐 */
 .kpi-expiry-list {
@@ -712,62 +710,29 @@ button.kpi-cell:hover {
 .kpi-quality-bar i.bad {
   background: #ef4444;
 }
-/* 地区小卡：112px 地球 + 各国家 / 地区台数 */
+/* 地区小卡：只放地球本身，150px 居中（地区数已在「服务器」格里） */
 .globe-card.globe-mini {
   display: flex;
   align-items: center;
-  gap: 12px;
+  justify-content: center;
   min-width: 0;
-  padding: 10px 14px;
+  padding: 8px;
 }
 .globe-mini-stage {
   flex: none;
-  width: 112px;
-  height: 112px;
+  width: 150px;
+  height: 150px;
 }
 .globe-mini-stage .globe-stage {
   padding: 0;
 }
 .globe-mini-stage .region-globe {
-  width: 112px;
-  height: 112px;
+  width: 150px;
+  height: 150px;
 }
 .globe-mini-stage .globe-loading {
-  min-height: 112px;
+  min-height: 150px;
   font-size: 11px;
-}
-.globe-mini-info {
-  display: flex;
-  flex: 1;
-  flex-direction: column;
-  gap: 6px;
-  min-width: 0;
-}
-.globe-mini-count {
-  color: var(--muted);
-  font-size: 12px;
-  font-variant-numeric: tabular-nums;
-}
-.globe-mini-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-}
-.globe-mini-chips span {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  height: 22px;
-  border-radius: 6px;
-  padding: 0 6px;
-  color: var(--muted);
-  background: color-mix(in srgb, var(--muted) 12%, transparent);
-  font-size: 12px;
-  font-variant-numeric: tabular-nums;
-}
-.globe-mini-chips b {
-  color: var(--foreground);
-  font-weight: 600;
 }
 .filters {
   flex-wrap: wrap;
@@ -1003,7 +968,7 @@ button.net-box:hover {
 }
 /* 动漫的蕾丝边框留给大卡片，地区小卡太小放不下 */
 :root.theme-anime .globe-card.globe-mini {
-  padding: 10px 14px;
+  padding: 8px;
 }
 :root.theme-anime .globe-card.globe-mini::after {
   content: none;
@@ -1016,7 +981,8 @@ button.net-box:hover {
     z-index: 30;
   }
 }
-/* 卡片视图：按地区分组时每组一个网格，不分组时只有一组 */
+/* 卡片视图：按地区分组时每组一个网格，不分组时只有一组。
+   用 auto-fill：筛选后只剩一两台、或组里只有一两台时不该被拉满整行，列宽与满屏时一致 */
 .servers.grouped {
   display: flex;
   flex-direction: column;
@@ -1024,17 +990,10 @@ button.net-box:hover {
 }
 .server-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 380px), 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 380px), 1fr));
   gap: 16px;
 }
 .server-grid.dense {
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
-}
-/* 分组时用 auto-fill：只有一两台的组不该被拉满整行，各组列宽对齐 */
-.server-grid.fill {
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 380px), 1fr));
-}
-.server-grid.dense.fill {
   grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
 }
 .server-group {

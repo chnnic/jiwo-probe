@@ -171,14 +171,6 @@ export function quotaSummary(servers: ProbeOverviewServer[]) {
   return count ? { used, limit, pct: (used / limit) * 100, count, over80 } : undefined
 }
 
-/** 设了额度的每台用量百分比（汇总格右栏一台一根柱），从高到低；用量口径同 quotaSummary */
-export function quotaPerServer(servers: ProbeOverviewServer[]) {
-  return servers
-    .filter((s) => typeof s.traffic_limit === 'number' && s.traffic_limit > 0)
-    .map((s) => ({ name: s.name || '', pct: Math.min(100, ((typeof s.traffic_used === 'number' && s.traffic_used > 0 ? s.traffic_used : 0) / s.traffic_limit!) * 100) }))
-    .sort((a, b) => b.pct - a.pct)
-}
-
 /**
  * 一台服务器的延迟与丢包：各延迟目标近 1 小时分桶的平均（与主控内置探针页的数值对得上）；
  * 没有分桶时退回当前值。失败的 -1 不算；开了 IPv6 延迟的服务器只算 IPv4 目标。

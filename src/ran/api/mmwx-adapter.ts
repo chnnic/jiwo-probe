@@ -21,11 +21,18 @@ function parseLoadAverage(value?: string) {
     .filter(Number.isFinite)
 }
 
+// 手动选的国旗（region）优先，按 IP 自动识别的 region_country 兜底；旗帜 emoji 换成国家代码
 function countryCode(server: ProbeServer) {
-  const explicit = server.region_country?.trim().toUpperCase()
-  if (explicit && /^[A-Z]{2}$/.test(explicit)) return explicit
-  const source = server.region?.trim().toUpperCase()
-  return source && /^[A-Z]{2}$/.test(source) ? source : undefined
+  for (const value of [server.region, server.region_country]) {
+    const raw = value?.trim() || ''
+    const points = [...raw].map((char) => char.codePointAt(0) || 0)
+    if (points.length === 2 && points.every((point) => point >= 0x1f1e6 && point <= 0x1f1ff)) {
+      return points.map((point) => String.fromCharCode(point - 0x1f1e6 + 65)).join('')
+    }
+    const code = raw.toUpperCase()
+    if (/^[A-Z]{2}$/.test(code)) return code
+  }
+  return undefined
 }
 
 function compactRegion(server: ProbeServer) {

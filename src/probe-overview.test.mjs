@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { connectionTotals, kpiColumns, dailyTrafficTotals, formatCapacity, formatSize, meterTone, networkQuality, pingQuality, probeHealthIssue, quotaPerServer, quotaSummary, relativeTime, sortProbeServers } from './probe-overview.ts'
+import { connectionTotals, kpiColumns, dailyTrafficTotals, formatCapacity, formatSize, meterTone, networkQuality, pingQuality, probeHealthIssue, quotaSummary, relativeTime, sortProbeServers } from './probe-overview.ts'
 
 const GB = 1024 ** 3
 
@@ -109,15 +109,6 @@ test('连接数：合计 TCP / UDP，曲线分 TCP、UDP 按末尾对齐相加�
   assert.deepEqual(c, { tcp: 15, udp: 2, total: 17, tcpHistory: [1, null, 4], udpHistory: [1, null, 0] })
   assert.deepEqual(connectionTotals([{ online: true, tcp_connections: 1 }]), { tcp: 1, udp: 0, total: 1, tcpHistory: undefined, udpHistory: undefined })
   assert.equal(connectionTotals([{ online: true }]), undefined)
-})
-
-test('额度每台用量：只算设了额度的，封顶 100%，从高到低', () => {
-  assert.deepEqual(quotaPerServer([
-    { name: 'a', online: true, traffic_limit: 100, traffic_used: 30 },
-    { name: 'b', online: true, traffic_limit: 100, traffic_used: 150 },
-    { name: 'c', online: true, traffic_used: 50 },
-    { name: 'd', online: false, traffic_limit: 200 },
-  ]), [{ name: 'b', pct: 100 }, { name: 'a', pct: 30 }, { name: 'd', pct: 0 }])
 })
 
 test('汇总格列数：按卡宽算一行最多几格，各行格数均分，手机两列', () => {
