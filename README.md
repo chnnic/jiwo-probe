@@ -397,7 +397,7 @@ ProbeHub 连接或快照异常时会自动回退到原来的主控直连，不�
 整个过程由 Cloudflare 从 GitHub 拉取、编译和部署，不需要在本地 clone，也不需要安装 Node.js：
 
 > **推荐先 fork 再导入**：先在 GitHub 上把 `chnnic/jiwo-probe` fork 到自己的账号，然后按下面的步骤导入**自己的 fork**。这样自带 `sync-upstream.yml` 自动同步工作流，上游更新无需手动合并（详见下文"自动同步上游更新"）。
-> ⚠️ **不要用页面上的 "Deploy with Workers" 一键部署按钮**（`deploy.workers.cloudflare.com`）：它会在你的 GitHub 生成一个**复制仓库**，且复制时跳过隐藏目录 `.github/`，导致自动同步工作流丢失，之后无法跟随上游更新。请使用 Dashboard 的 **Import a repository** 直接连接你的 fork。
+> ⚠️ **不要用 Cloudflare 的 "Deploy with Workers" 一键部署**（`deploy.workers.cloudflare.com`）：它会在你的 GitHub 生成一个**复制仓库**，且复制时跳过隐藏目录 `.github/`，导致自动同步工作流丢失，之后无法跟随上游更新。请使用 Dashboard 的 **Import a repository** 直接连接你的 fork。
 
 1. 在 GitHub 上 fork `chnnic/jiwo-probe`（页面右上角 **Fork** 按钮）。
 2. 在 Cloudflare Dashboard 的 **Workers & Pages → Create application → Import a repository**，选择**你 fork 出来的仓库**（而不是原仓库）。
