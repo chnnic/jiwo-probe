@@ -4,6 +4,23 @@
 
 [![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/chnnic/jiwo-probe)
 
+## 快速安装
+
+探针不用装到服务器上：它是部署在你自己 Cloudflare 账号里的网页，从你的妙妙屋 X 主控读取数据，服务器上的上报程序照常在主控里安装。全程在网页上操作，不用本地装 Node.js，大约十分钟。
+
+1. **准备账号**：能用 HTTPS 访问的妙妙屋 X 主控（版本要支持「独立探针访问密钥」），Cloudflare 账号（免费版即可），GitHub 账号。
+2. **在主控里生成密钥**：主控「系统设置 → 探针」启用探针，勾选要展示的服务器和指标，点「生成独立探针访问密钥」并**马上保存**，密钥只显示一次。
+3. **Fork 本仓库**：在本页右上角点 **Fork**，复制到自己账号下。
+4. **在 Cloudflare 导入并部署**：
+   - **Workers & Pages → Create application → Import a repository**，选你自己 fork 出来的仓库。不要用上面的「Deploy with Workers」一键按钮，它生成的复制仓库缺少自动同步配置，以后跟不上更新。
+   - 构建设置：Production branch `main`，Build command `npm run build`，Deploy command `./scripts/deploy.sh`，Root directory 留空。
+   - 首次部署后，在 Worker 的 **Settings → Variables and Secrets**（运行时变量，不是 Build Variables）添加 `MMWX_ORIGIN`（Text，主控地址，如 `https://panel.example.com`，结尾不带 `/`）和 `PROBE_TOKEN`（Secret，第 2 步的密钥），保存后再点一次 **Deploy**。
+   - 打开 `xxx.workers.dev`，能看到服务器列表和实时数据就是装好了。
+5. **收尾**：回主控开启「仅允许独立探针访问」；需要时在 Worker 的 **Settings → Domains & Routes** 绑定自己的域名；想用 Passkey 登录，把探针完整地址加到主控的 `MMWX_WEBAUTHN_RELATED_ORIGINS` 并重启主控。
+6. **开启自动更新（建议）**：在 fork 仓库的 **Settings → Actions → General** 勾选 *Allow all actions and reusable workflows*，Workflow permissions 选 *Read and write permissions*。之后每天北京时间 11:23 自动同步本仓库更新并重新部署。
+
+可选变量（背景图、网速单位、首页延迟组数等）见 [Cloudflare 网页部署](#cloudflare-网页部署推荐)，自动同步的细节见[自动同步上游更新](#自动同步上游更新)，出错时先看[故障排查](#故障排查)。
+
 ## 界面预览
 
 > 截图全部使用**虚拟演示数据**（服务器名、服务商、价格均为虚构），由 `npm run screenshots` 生成，不连接任何主控。点击图片查看原图。
