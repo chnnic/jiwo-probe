@@ -11,7 +11,7 @@ import { connectionCount } from '../unlocks'
 import { Twemoji } from '../Twemoji'
 import { useNetworkSpeed } from '../use-network-speed'
 import { averageLatency, expiryTime, ratio, validNumber } from '../mini/mini-model'
-import { trafficRuleLabel, trafficUsageLabel } from '../traffic-display'
+import { isOneTimeTraffic, trafficRuleLabel, trafficUsageLabel } from '../traffic-display'
 import { filledSegments, loadMetric, quotaMetric, resetDays, speedTone, combinedSpeedTrail, type LuminaPlusView, type SpeedTrail } from './luminaplus-model'
 import { SpeedPulse } from './SpeedPulse'
 import { LuminaPlusTrafficPopover } from './LuminaPlusTrafficPopover'
@@ -139,7 +139,7 @@ function LuminaPlusCard({ server, index, view, trail }: { server: ProbeServer; i
       <LuminaPlusConnections server={server} />
     </section>}
     {view !== 'mini' && <div className="lp-quota lp-trend-trigger" {...trendTrigger('traffic', '日流量')} title={`${trafficUsageLabel(server)} · ${trafficRuleLabel(server)} · 点击查看日流量趋势`}>
-      <div className="lp-quota-heading"><span><Database size={14} />{quota.unlimited ? '不限流量' : quota.exceeded ? '额度已超出' : `剩余 ${size(quota.remaining)}`}{reset !== undefined && <small>· {reset === 0 ? '今天重置' : `${reset}天后重置`}</small>}</span>{view === 'compact' ? <span className="lp-quota-age" title="运行时间">{server.online ? '在线' : '离线'}：{age}</span> : <span>{size(quota.used)} / {quota.unlimited ? '不限' : size(quota.limit)}</span>}</div>
+      <div className="lp-quota-heading"><span><Database size={14} />{quota.unlimited ? '不限流量' : quota.exceeded ? '额度已超出' : `剩余 ${size(quota.remaining)}`}{reset !== undefined ? <small>· {reset === 0 ? '今天重置' : `${reset}天后重置`}</small> : isOneTimeTraffic(server) && <small>· 一次性</small>}</span>{view === 'compact' ? <span className="lp-quota-age" title="运行时间">{server.online ? '在线' : '离线'}：{age}</span> : <span>{size(quota.used)} / {quota.unlimited ? '不限' : size(quota.limit)}</span>}</div>
       <div className="lp-quota-meter"><SegmentMeter value={quota.percent} tone={quota.exceeded ? 'danger' : 'traffic'} label="已用计费额度" />{view === 'compact' && <span>{size(quota.used)} / {quota.unlimited ? '不限' : size(quota.limit)}</span>}</div>
     </div>}
     <ConnectionHistory server={server} serverIndex={index} />

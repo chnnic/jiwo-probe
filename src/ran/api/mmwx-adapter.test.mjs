@@ -66,3 +66,10 @@ test('keeps ping no-data buckets distinct from packet loss', () => {
   assert.deepEqual(history.records.map((record) => record.loss), [null, 0, 100])
   assert.deepEqual(history.records.map((record) => record.value), [-1, 31, -1])
 })
+
+test('renewal cycles map to Komari billing days, including multi-year terms', () => {
+  for (const [renewal_cycle, days] of [['month', 30], ['quarter', 90], ['half_year', 180], ['year', 365], ['two_year', 730], ['three_year', 1095], ['five_year', 1825], ['permanent', 30]]) {
+    assert.equal(toMmwxNode({ online: true, renewal_cycle }, 0).billing_cycle, days)
+  }
+  assert.equal(toMmwxNode({ online: true }, 0).billing_cycle, undefined)
+})

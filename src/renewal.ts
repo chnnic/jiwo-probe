@@ -2,12 +2,12 @@ import type { ProbeServer } from './types'
 
 export const CYCLE_LABELS = {
   month: '月', quarter: '季', half_year: '半年', year: '年',
-  two_year: '两年', three_year: '三年', permanent: '永久',
+  two_year: '两年', three_year: '三年', five_year: '五年', permanent: '永久',
 } as const
 
 // A buyout has no recurring monthly cost; its purchase price is still displayed.
-export const CYCLE_MONTHS = { month: 1, quarter: 3, half_year: 6, year: 12, two_year: 24, three_year: 36, permanent: Infinity } as const
-export const CYCLE_DAYS = { month: 30, quarter: 90, half_year: 180, year: 365, two_year: 730, three_year: 1095, permanent: Infinity } as const
+export const CYCLE_MONTHS = { month: 1, quarter: 3, half_year: 6, year: 12, two_year: 24, three_year: 36, five_year: 60, permanent: Infinity } as const
+export const CYCLE_DAYS = { month: 30, quarter: 90, half_year: 180, year: 365, two_year: 730, three_year: 1095, five_year: 1825, permanent: Infinity } as const
 /**
  * 汇总用的人民币续费价：优先主控换算的 renewal_price_cny；没有换算时（例如主控重启后汇率还没取到）
  * 只有原币种本来就是人民币才用原价，外币返回 undefined，免得把美元、欧元直接当人民币相加。

@@ -14,6 +14,7 @@ import { HorizontalChart } from './charts/HorizontalChart'
 import { serverHealth } from './server-health'
 import { computeMonthlyTrafficCost, computeRemainingValue, formatMoney } from './value'
 import { CYCLE_LABELS as cycleLabel, isPermanent } from './renewal'
+import { isOneTimeTraffic, trafficPeriodText } from './traffic-display'
 import { useProbeRange } from './use-probe-range'
 import { probeRangeBucketSec } from './probe-ranges'
 import { PING_IPV6_AVERAGE, aggregatePingGroup, historyPingSeries, inPingChartGroup, isIpv6Ping, type PingChartGroup } from './ping-groups'
@@ -57,12 +58,13 @@ function RemainingValueBlock({ server }: { server: ProbeServer }) {
 
 function MonthlyTrafficCostItem({ server }: { server: ProbeServer }) {
   if (isPermanent(server)) return <span className="detail-traffic-cost"><Database size={13} />每月每 TB 费用<strong>不适用（永久买断）</strong></span>
+  if (isOneTimeTraffic(server)) return <span className="detail-traffic-cost"><Database size={13} />每月每 TB 费用<strong>不适用（一次性流量）</strong></span>
   const cost = computeMonthlyTrafficCost(server)
   const value = !cost ? '无法计算' : cost.perTB > 0 && cost.perTB < 0.01
     ? `< ${formatMoney(0.01, cost.currency, cost.isCny, true)} / TB / 月`
     : `${formatMoney(cost.perTB, cost.currency, cost.isCny, true)} / TB / 月`
   return (
-    <span className="detail-traffic-cost" title="按配置额度为每月额度估算：续费价格先按 1 / 3 / 6 / 12 / 24 / 36 个月折算，再除以计费额度（1 TB = 1024 GB）。单向或取最大值计费不自动翻倍。非月度流量套餐不适用；不按实际已用流量计算。">
+    <span className="detail-traffic-cost" title="按配置额度估算：续费价格先按 1 / 3 / 6 / 12 / 24 / 36 / 60 个月折算成月费，计费额度按流量重置周期（一个月、三个月、半年、一年）摊成每月额度，再相除（1 TB = 1024 GB）。单向或取最大值计费不自动翻倍。一次性流量不适用；不按实际已用流量计算。">
       <Database size={13} />
       每月每 TB 费用
       <strong>{value}{cost && `（${cost.currency}）`}</strong>
@@ -384,7 +386,7 @@ export function ServerDetail({ server, index, onClose, showHealthScore = false }
                       (server.traffic_used_up !== undefined || server.traffic_used_down !== undefined)
                         ? `↑ ${bytes(server.traffic_used_up, false)} · ↓ ${bytes(server.traffic_used_down, false)}`
                         : null,
-                      server.period_start && server.period_end ? `${server.period_start.slice(5)} — ${server.period_end.slice(5)}` : null,
+                      trafficPeriodText(server) ?? null,
                     ].filter(Boolean).join(' · ')}
                   />
                 )}

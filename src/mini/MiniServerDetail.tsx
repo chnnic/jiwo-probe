@@ -9,6 +9,7 @@ import { ConnectionLabel } from '../ConnectionLabel'
 import { connectionCount } from '../unlocks'
 import { useNetworkSpeed } from '../use-network-speed'
 import { computeMonthlyTrafficCost, computeRemainingValue, formatMoney } from '../value'
+import { isOneTimeTraffic } from '../traffic-display'
 import { serverHealth } from '../server-health'
 import { Twemoji } from '../Twemoji'
 import { averageLatency, ratio, validNumber } from './mini-model'
@@ -39,7 +40,7 @@ export default function MiniServerDetail({ server, index, onClose, showHealthSco
   const name = server.name || `服务器 ${index + 1}`
   const flag = regionFlag(server.region || server.region_country)
   const latency = averageLatency(server)
-  const period = server.period_start && server.period_end ? `${server.period_start} ～ ${server.period_end}` : '未设置'
+  const period = isOneTimeTraffic(server) ? '一次性流量（不重置）' : server.period_start && server.period_end ? `${server.period_start} ～ ${server.period_end}` : '未设置'
   const quota = server.traffic_limit === 0 ? '不限' : size(server.traffic_limit)
   const monthly = computeMonthlyTrafficCost(server)
   const remaining = computeRemainingValue(server)
@@ -61,7 +62,7 @@ export default function MiniServerDetail({ server, index, onClose, showHealthSco
     ['网卡累计 上 / 下', `${size(server.cumulative_up)} / ${size(server.cumulative_down)}`],
     ['累计总流量', size(total)], ['到期时间', isPermanent(server) ? '永久' : server.expires_at || '未设置'],
     ['续费价格', renewal],
-    ['每月每 TB 费用', isPermanent(server) ? '不适用（永久买断）' : monthly ? `${monthly.perTB > 0 && monthly.perTB < .01 ? '< ' : ''}${formatMoney(monthly.perTB > 0 && monthly.perTB < .01 ? .01 : monthly.perTB, monthly.currency, monthly.isCny, true)} / TB / 月（${monthly.currency}）` : '无法计算'],
+    ['每月每 TB 费用', isPermanent(server) ? '不适用（永久买断）' : isOneTimeTraffic(server) ? '不适用（一次性流量）' : monthly ? `${monthly.perTB > 0 && monthly.perTB < .01 ? '< ' : ''}${formatMoney(monthly.perTB > 0 && monthly.perTB < .01 ? .01 : monthly.perTB, monthly.currency, monthly.isCny, true)} / TB / 月（${monthly.currency}）` : '无法计算'],
     ...(remaining ? [['剩余价值（估算）', formatMoney(remaining.value, remaining.currency, remaining.isCny)] as [string, ReactNode]] : []),
   ]
 

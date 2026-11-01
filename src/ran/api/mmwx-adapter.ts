@@ -1,5 +1,6 @@
 import type { ProbeServer } from '../../types'
 import { primaryPing } from '../../ping-groups.ts'
+import { CYCLE_DAYS } from '../../renewal.ts'
 import type { PingHistory, PingTask } from '@/api/client'
 import type { KomariNode, KomariRecord } from '@/types/komari'
 
@@ -9,7 +10,9 @@ export function uuidFor(index: number) {
 
 function billingCycleDays(cycle?: ProbeServer['renewal_cycle']) {
   if (!cycle) return undefined
-  return cycle === 'quarter' ? 90 : cycle === 'half_year' ? 180 : cycle === 'year' ? 365 : 30
+  // 永久买断没有周期，沿用以前的 30 天；其余按共用的周期天数表（含两年、三年、五年）
+  const days = CYCLE_DAYS[cycle]
+  return Number.isFinite(days) ? days : 30
 }
 
 function parseLoadAverage(value?: string) {

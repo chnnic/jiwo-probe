@@ -103,7 +103,7 @@ export interface ProbeServer {
   expires_at?: string
   renewal_price?: number
   renewal_price_cny?: number
-  renewal_cycle?: 'month' | 'quarter' | 'half_year' | 'year' | 'two_year' | 'three_year' | 'permanent'
+  renewal_cycle?: 'month' | 'quarter' | 'half_year' | 'year' | 'two_year' | 'three_year' | 'five_year' | 'permanent'
   renewal_currency?: string
   provider_name?: string
   provider_url?: string

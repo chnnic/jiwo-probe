@@ -1,5 +1,6 @@
 import type { ProbeServer } from './types'
 import { CYCLE_DAYS, CYCLE_MONTHS, expiryTimestamp, isPermanent } from './renewal.ts'
+import { isOneTimeTraffic, trafficPeriodMonths } from './traffic-display.ts'
 export { CYCLE_DAYS } from './renewal.ts'
 const BYTES_PER_TB = 1024 ** 4
 
@@ -11,10 +12,11 @@ export interface MonthlyTrafficCost {
   isCny: boolean
 }
 
-/** 套餐单价估算：将配置的流量额度视为每月额度，不使用实际已用流量。 */
+/** 套餐单价估算：配置的流量额度按流量周期（一个月、三个月、半年、一年）摊成每月额度，不使用实际已用流量。 */
 export function computeMonthlyTrafficCost(server: ProbeServer): MonthlyTrafficCost | null {
   // There is no finite renewal period over which to amortize a buyout.
-  if (isPermanent(server)) return null
+  // 一次性流量用完不重置，额度摊不到月上。
+  if (isPermanent(server) || isOneTimeTraffic(server)) return null
   const validPrice = (value: unknown): value is number => typeof value === 'number' && Number.isFinite(value) && value >= 0
   const price = validPrice(server.renewal_price_cny) ? server.renewal_price_cny : server.renewal_price
   const quota = server.traffic_limit
@@ -22,7 +24,7 @@ export function computeMonthlyTrafficCost(server: ProbeServer): MonthlyTrafficCo
   if (!validPrice(price) || typeof quota !== 'number' || !Number.isFinite(quota) || quota <= 0 || !months) return null
   const currency = validPrice(server.renewal_price_cny) ? 'CNY' : server.renewal_currency?.trim().toUpperCase() || 'CNY'
   const monthlyPrice = price / months
-  const quotaTB = quota / BYTES_PER_TB
+  const quotaTB = quota / BYTES_PER_TB / trafficPeriodMonths(server)
   const perTB = monthlyPrice / quotaTB
   if (!Number.isFinite(perTB)) return null
   return { monthlyPrice, quotaTB, perTB, currency, isCny: currency === 'CNY' }

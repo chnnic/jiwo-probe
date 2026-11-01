@@ -15,6 +15,7 @@ import { LEADERBOARD_ORDER } from './leaderboards'
 import { Leaderboard, formatUptime, monthlyCost } from './Leaderboard'
 import { ProbeHistoryDaysContext } from './use-probe-range'
 import { CYCLE_LABELS as cycleLabel, expiryTimestamp, isPermanent, renewalPriceCny, upcomingExpiries } from './renewal'
+import { isOneTimeTraffic, trafficPeriodText } from './traffic-display'
 import { bytes, expiring, expired, remainingDays, regionFlag, hasLeadingFlag, pct, averagePing, probeRegion } from './server-format'
 import { StaleDataBanner } from './StaleDataBanner'
 import { ForwardOverview, prefetchDeferred, ServerDetail, SystemTrendChart, TrafficDialog, TrendDialog } from './deferred'
@@ -444,7 +445,7 @@ function ServerCardLumina({ server, index }: { server: EnrichedServer; index: nu
                 <strong>{server.traffic_limit ? bytes(Math.max(0, server.traffic_limit - server.traffic_used)) : bytes(server.traffic_used)}</strong>
                 {(() => {
                   // 周期重置倒计时 + 重置日 (主控 period_end, 如 2026-08-31)
-                  if (!server.period_end) return null
+                  if (!server.period_end) return isOneTimeTraffic(server) ? <span className="lumina-quota-reset" title="一次性流量：用完不重置">一次性流量</span> : null
                   const days = Math.ceil((new Date(`${server.period_end}T23:59:59`).getTime() - Date.now()) / 86400000)
                   if (days < 0) return null
                   return <span className="lumina-quota-reset" title={`流量周期 ${server.period_start ?? ''} ~ ${server.period_end}`}>{`重置 ${server.period_end.slice(5)} · 剩 ${days} 天`}</span>
@@ -645,7 +646,7 @@ function ServerCard({ server, index, dense = false }: { server: ProbeServer; ind
             </div>
             <div className="metric-sub">
               <span>{server.traffic_limit ? `${trafficPct.toFixed(0)}%` : '不限量'}</span>
-              {server.period_end && <span>{server.period_end.slice(5, 10).replace('-', '/')} 重置</span>}
+              {server.period_end ? <span>{server.period_end.slice(5, 10).replace('-', '/')} 重置</span> : isOneTimeTraffic(server) && <span>一次性</span>}
             </div>
           </button>
         )}
@@ -858,8 +859,8 @@ function TrafficCell({ server }: { server: ProbeServer }) {
             ↑ {bytes(server.traffic_used_up, false)} · ↓ {bytes(server.traffic_used_down, false)}
           </small>
         )}
-        {server.period_start && server.period_end && (
-          <small className="table-traffic-period">{server.period_start.slice(5)} — {server.period_end.slice(5)}</small>
+        {trafficPeriodText(server) && (
+          <small className="table-traffic-period">{trafficPeriodText(server)}</small>
         )}
         {!!server.traffic_limit && (
           <div className="meter">

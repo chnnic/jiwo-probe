@@ -12,7 +12,7 @@ import { getThemeOverride, parseThemeName } from './use-probe'
 import { EXTRA_LICENSE_BADGES, HEADER_LICENSE_BADGES } from './license-badges'
 import { FLAG_OPTIONS } from './country-flag'
 import { displayServerName } from './server-name'
-import { dailyTrafficRows, hasMoreDailyTraffic, hasTrafficPeriod, trafficRuleLabel, type TrafficRange } from './traffic-display'
+import { dailyTrafficRows, hasMoreDailyTraffic, hasTrafficPeriod, trafficPeriodText, trafficRuleLabel, type TrafficRange } from './traffic-display'
 import { BlackGoldGlobe, type PremiumProbeRegion } from './BlackGoldGlobe'
 import { useProbeRange } from './use-probe-range'
 import { probeBucketLabel } from './probe-ranges'
@@ -2630,10 +2630,7 @@ function ServerDetailDrawer({
                   server.traffic_adjustment < 0 ? '−' : '+'
                 } ${formatTrafficCompact(Math.abs(server.traffic_adjustment))} = ${formatTrafficCompact(server.traffic_used)}`
               : null,
-          period:
-            server.period_start && server.period_end
-              ? `${server.period_start.slice(5)} — ${server.period_end.slice(5)}`
-              : null,
+          period: trafficPeriodText(server) ?? null,
           boot:
             (server.boot_traffic_up !== undefined ||
               server.boot_traffic_down !== undefined) &&

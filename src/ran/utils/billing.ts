@@ -61,6 +61,9 @@ export function parseBilling(node: KomariNode): ParsedBilling | null {
   } else if (days <= 366) {
     cycleStr = '/年'
     months = 12
+  } else if (days <= 731) {
+    cycleStr = '/两年'
+    months = 24
   } else if (days <= 1096) {
     cycleStr = '/三年'
     months = 36

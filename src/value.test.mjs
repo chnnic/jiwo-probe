@@ -6,11 +6,19 @@ import { CYCLE_MONTHS, expiryTimestamp, renewalPriceCny, upcomingExpiries } from
 const base = { online: true, renewal_currency: 'CNY', traffic_limit: 2 * 1024 ** 4 }
 
 test('monthly traffic cost normalizes monthly, quarterly, half-year and yearly renewal prices', () => {
-  for (const [renewal_cycle, renewal_price] of [['month', 10], ['quarter', 30], ['half_year', 60], ['year', 120], ['two_year', 240], ['three_year', 360]]) {
+  for (const [renewal_cycle, renewal_price] of [['month', 10], ['quarter', 30], ['half_year', 60], ['year', 120], ['two_year', 240], ['three_year', 360], ['five_year', 600]]) {
     assert.deepEqual(computeMonthlyTrafficCost({ ...base, renewal_cycle, renewal_price }), {
       monthlyPrice: 10, quotaTB: 2, perTB: 5, currency: 'CNY', isCny: true,
     })
   }
+})
+
+test('per-TB cost spreads the quota over the traffic reset period; one-time traffic has no monthly cost', () => {
+  const server = { ...base, renewal_cycle: 'five_year', renewal_price: 600, traffic_limit: 6 * 1024 ** 4 }
+  assert.equal(computeMonthlyTrafficCost({ ...server, period_start: '2026-10-30', period_end: '2027-04-30' }).perTB, 10)
+  assert.equal(computeMonthlyTrafficCost({ ...server, period_start: '2026-05-01', period_end: '2027-05-01' }).perTB, 20)
+  assert.equal(computeMonthlyTrafficCost({ ...server, period_start: '2026-10-17', period_end: '2026-11-17' }).perTB, 10 / 6)
+  assert.equal(computeMonthlyTrafficCost({ ...server, traffic_used_scope: 'counter_since_reset' }), null)
 })
 
 test('multi-year remaining value uses the full paid term', t => {

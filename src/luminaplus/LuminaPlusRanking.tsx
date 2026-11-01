@@ -4,7 +4,7 @@ import { createPortal } from 'react-dom'
 import type { ProbeServer } from '../types'
 import { useNetworkSpeed } from '../use-network-speed'
 import { bytes } from '../server-format'
-import { trafficRuleLabel, trafficUsageLabel } from '../traffic-display'
+import { trafficPeriodText, trafficRuleLabel, trafficUsageLabel } from '../traffic-display'
 import { rankLiveSpeeds, rankPeriodTraffic, speedTone, type LiveSpeedSort } from './luminaplus-model'
 import { trafficPopoverPosition } from './luminaplus-traffic'
 
@@ -88,7 +88,7 @@ export function LuminaPlusRanking({ servers, metric, children }: { servers: Prob
           <div className="lp-ranking-node"><div><strong title={row.server.name}>{row.server.name || `服务器 ${row.index + 1}`}</strong><b className={isTraffic ? 'lp-period-ranking-value' : 'lp-speed-tone'} data-tone={isTraffic ? undefined : speedTone(row.value)}>{format(row.value)}</b></div>
             <div className="lp-ranking-directions"><span><ArrowUp size={12} />{format(row.upload)}</span><span><ArrowDown size={12} />{format(row.download)}</span></div>
             {isTraffic && <p className="lp-ranking-period" title={`${row.server.period_start || '未知'} ～ ${row.server.period_end || '未知'} · ${trafficUsageLabel(row.server)} · ${trafficRuleLabel(row.server)}`}>
-              {!row.server.online && <span>离线 · </span>}{row.server.period_start && row.server.period_end ? `${row.server.period_start.slice(5, 10)}–${row.server.period_end.slice(5, 10)}` : '周期未提供'} · {trafficRuleLabel(row.server)}
+              {!row.server.online && <span>离线 · </span>}{trafficPeriodText(row.server, '–') ?? '周期未提供'} · {trafficRuleLabel(row.server)}
             </p>}
             <div className="lp-ranking-meter" aria-hidden="true"><i style={{ width: `${row.value / top * 100}%` }} /></div>
           </div><ChevronRight size={14} aria-hidden="true" />
