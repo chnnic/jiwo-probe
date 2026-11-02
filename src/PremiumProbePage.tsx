@@ -21,6 +21,7 @@ import './premium-probe.css'
 import { historyPingSeries, isIpv6Ping, primaryPing } from './ping-groups'
 import { serverHealth, averageLatency, percentage, resourcePercentage } from './server-health'
 import { availabilityCells, availabilityPct, chainLiveSpeed, formatAvailability, formatJitter, FORWARD_TRAFFIC_NOTE, FORWARD_TRAFFIC_SETTLE_MINUTES } from './forward-model'
+import { LazyCard } from './LazyCard'
 
 type ProbeData = ProbePayload
 
@@ -3379,13 +3380,19 @@ export function PremiumProbePage({
               ) : (
                 <div className='premium-probe-card-grid'>
                   {visibleServers.map((server, index) => (
-                    <PremiumServerCard
-                      server={server}
-                      index={index}
+                    <LazyCard
                       key={`${server.name || 'server'}-${index}`}
-                      onOpen={() => setSelectedServer(index)}
-                      showHealthScore={data?.show_health_score === true}
-                    />
+                      className='premium-probe-server-card'
+                      name={server.name || `服务器 ${index + 1}`}
+                      estimatedHeight={309}
+                    >
+                      <PremiumServerCard
+                        server={server}
+                        index={index}
+                        onOpen={() => setSelectedServer(index)}
+                        showHealthScore={data?.show_health_score === true}
+                      />
+                    </LazyCard>
                   ))}
                 </div>
               )}

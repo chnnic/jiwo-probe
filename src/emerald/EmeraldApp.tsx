@@ -41,6 +41,7 @@ import {
 } from 'lucide-react'
 import { RegionGlobe } from '../RegionGlobe'
 import { CardPingGroups } from '../CardPingGroups'
+import { LazyCard } from '../LazyCard'
 import { primaryPing } from '../ping-groups'
 import { ConnectionHistory } from '../ConnectionHistory'
 import { ForwardOverview, ServerDetail, TrafficDialog } from '../deferred'
@@ -661,7 +662,7 @@ export default function EmeraldApp({ data, onThemeChange }: { data: ProbePayload
             <section className="emerald-node-section">
               <div className="emerald-node-section-head"><div><span className="emerald-live-dot" />实时节点</div><span>显示 {visible.length} / {servers.length}</span></div>
               {visible.length === 0 ? <div className="emerald-empty"><Server size={24} />暂无符合条件的服务器</div> : view === 'card' ? (
-                <div className="emerald-node-grid">{visible.map((server) => <NodeCard key={server.name} server={server} index={servers.indexOf(server)} open={() => openDetail(servers.indexOf(server))} />)}</div>
+                <div className="emerald-node-grid">{visible.map((server) => <LazyCard key={server.name} className="emerald-glow-card emerald-node-card" name={server.name || '未命名服务器'} estimatedHeight={484}><NodeCard server={server} index={servers.indexOf(server)} open={() => openDetail(servers.indexOf(server))} /></LazyCard>)}</div>
               ) : view === 'table' ? <TableView servers={visible} allServers={servers} open={openDetail} /> : <StatusView servers={visible} allServers={servers} open={openDetail} />}
             </section>
           </div>

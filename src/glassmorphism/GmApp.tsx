@@ -33,6 +33,7 @@ import { flagToCountryCode } from '../country-flag'
 import { Twemoji } from '../Twemoji'
 import { PasskeyLogin } from '../PasskeyLogin'
 import { CardPingGroups } from '../CardPingGroups'
+import { LazyCard } from '../LazyCard'
 import { ConnectionHistory } from '../ConnectionHistory'
 import './gm.css'
 import { useVisitorInfo } from '../ran/hooks/useVisitorInfo'
@@ -646,7 +647,7 @@ export default function GmApp({
           view === 'card' ? (
             <div className="gm-node-grid">
               {visible.map((server) => (
-                <GmNodeCard key={server.name} server={server} index={servers.indexOf(server)} />
+                <LazyCard key={server.name} className="gm-node-card" name={server.name || '未命名服务器'} estimatedHeight={531}><GmNodeCard server={server} index={servers.indexOf(server)} /></LazyCard>
               ))}
             </div>
           ) : (

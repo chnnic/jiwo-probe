@@ -1,4 +1,4 @@
-import { lazy, Suspense, type ReactNode } from 'react'
+import { lazy, Suspense, useEffect, useState, type ReactNode } from 'react'
 import { Monitor } from 'lucide-react'
 import { siAlmalinux, siAlpinelinux, siApple, siArchlinux, siCentos, siDebian, siFedora, siFreebsd, siGentoo, siKalilinux, siLinux, siLinuxmint, siNixos, siOpensuse, siProxmox, siRedhat, siRockylinux, siUbuntu } from 'simple-icons'
 import type { ProbeReturnRoute, ProbeServer } from '../types'
@@ -86,8 +86,22 @@ export function displayReturnRoute(route: string): string {
 
 const RouteAnimation = lazy(() => import('./RouteAnimation'))
 
+// lottie-web 压缩后约 86 KB，初始化也慢：首屏稳定后再加载。之后渲染的勋章直接显示动画。
+const ROUTE_ANIMATION_DELAY_MS = 3_000
+let routeAnimationAllowed = false
+
 function ReturnRouteIcon({ premium }: { premium: boolean }) {
+  const [allowed, setAllowed] = useState(routeAnimationAllowed)
+  useEffect(() => {
+    if (allowed) return
+    const timer = window.setTimeout(() => {
+      routeAnimationAllowed = true
+      setAllowed(true)
+    }, ROUTE_ANIMATION_DELAY_MS)
+    return () => window.clearTimeout(timer)
+  }, [allowed])
   // 加载动画前先占同样大小的位置，勋章不会跳动
+  if (!allowed) return <span className="route-badge-icon" aria-hidden="true" />
   return <Suspense fallback={<span className="route-badge-icon" aria-hidden="true" />}><RouteAnimation premium={premium} /></Suspense>
 }
 

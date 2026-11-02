@@ -8,6 +8,7 @@ import { getThemeOverride, setDarkOverride } from '../use-probe'
 import { useNetworkSpeed } from '../use-network-speed'
 import { ConnectionCounts, UnlockButton } from '../ServerCapabilities'
 import { CardPingGroups } from '../CardPingGroups'
+import { LazyCard } from '../LazyCard'
 import { ConnectionHistory } from '../ConnectionHistory'
 import { ForwardOverview } from '../deferred'
 import { PasskeyLogin } from '../PasskeyLogin'
@@ -18,6 +19,7 @@ import './mini.css'
 
 const viewLabels: Record<MiniView, string> = { compact: '卡片', detailed: '详细', list: '列表' }
 const views = { compact: LayoutGrid, detailed: Rows3, list: List }
+const ESTIMATED_HEIGHT: Record<MiniView, number> = { compact: 340, detailed: 600, list: 90 }
 const sortLabels: Record<MiniSort, string> = { default: '默认排序', name: '名称 A–Z', cpu: 'CPU 占用 ↓', memory: '内存占用 ↓', traffic: '已用流量 ↓', latency: '延迟最低', expiry: '到期最近' }
 
 function size(value?: number) { return validNumber(value) === undefined ? '—' : bytes(value) }
@@ -158,7 +160,7 @@ export default function MiniApp({ data, error, onThemeChange }: { data: ProbePay
         <div className="mini-segment mini-view-switch" aria-label="显示方式">{(Object.keys(views) as MiniView[]).map(key => { const Icon = views[key]; return <button type="button" key={key} aria-pressed={view === key} aria-label={`${viewLabels[key]}视图`} onClick={() => changeView(key)}><Icon size={15} /><span>{viewLabels[key]}</span></button> })}</div>
       </section>
       <section className={`mini-nodes mini-view-${view}`} aria-label="节点列表">
-        {visible.map(({ server, index }) => <NodeCard key={index} server={server} index={index} view={view} />)}
+        {visible.map(({ server, index }) => <LazyCard key={index} className="mini-node-card" name={server.name || `服务器 ${index + 1}`} estimatedHeight={ESTIMATED_HEIGHT[view]}><NodeCard server={server} index={index} view={view} /></LazyCard>)}
         {!visible.length && <div className="mini-empty"><Search size={27} /><h3>{servers.length ? '没有匹配的节点' : '暂无服务器'}</h3><p>{servers.length ? '试试其他关键词，或清除筛选条件。' : '等待主控上报服务器数据。'}</p>{servers.length > 0 && <button type="button" onClick={() => { setQuery(''); setStatus('all'); setProvider('') }}>清除筛选</button>}</div>}
       </section>
       <footer className="mini-footer">Powered by <a href="https://github.com/chnnic/jiwo-probe" target="_blank" rel="noreferrer">Jiwo Probe</a><span>Lite</span></footer>

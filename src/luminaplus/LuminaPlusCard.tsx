@@ -19,7 +19,7 @@ import { trafficWeek } from './luminaplus-traffic'
 import { CYCLE_LABELS, isPermanent } from '../renewal'
 import { SystemTrendChart, TrafficDialog } from '../deferred'
 import { ProbeHistoryDialog } from '../components/ProbeHistoryDialog'
-import { useNearViewport } from '../use-near-viewport'
+import { LazyCard } from '../LazyCard'
 
 export const size = (value?: number) => validNumber(value) === undefined ? '—' : bytes(value)
 const percent = (value?: number) => validNumber(value) === undefined ? '—' : `${value!.toFixed(1)}%`
@@ -159,15 +159,10 @@ function LuminaPlusCardBody({ server, index, view, trail }: LuminaPlusCardProps)
 
 const MemoLuminaPlusCardBody = memo(LuminaPlusCardBody)
 
-/**
- * 一张卡约 500 个元素，几十台服务器就是几万个：屏幕外的卡片先只放占位（保留名称，页面内搜索还能命中），
- * 滚动到附近才渲染完整内容。这样首屏和每 3 秒一次的刷新都只计算看得到的卡片。
- */
+const ESTIMATED_HEIGHT: Record<LuminaPlusView, number> = { large: 706, compact: 580, mini: 465, list: 106 }
+
 function LuminaPlusCard(props: LuminaPlusCardProps) {
-  const [ref, near] = useNearViewport<HTMLElement>()
-  if (near) return <MemoLuminaPlusCardBody {...props} />
-  const name = props.server.name || `服务器 ${props.index + 1}`
-  return <article ref={ref} className={`${props.view === 'list' ? 'lp-list-row' : 'lp-card'} lp-card-pending`} aria-label={name}><h2>{name}</h2></article>
+  return <LazyCard className={props.view === 'list' ? 'lp-list-row' : 'lp-card'} name={props.server.name || `服务器 ${props.index + 1}`} estimatedHeight={ESTIMATED_HEIGHT[props.view]}><MemoLuminaPlusCardBody {...props} /></LazyCard>
 }
 
 export default memo(LuminaPlusCard)

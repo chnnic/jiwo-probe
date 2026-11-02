@@ -10,6 +10,7 @@ import { EnrichedServer, getActiveTheme, getDarkOverride, getThemeOverride, setD
 import { Twemoji } from './Twemoji'
 import { PasskeyLogin } from './PasskeyLogin'
 import { CardPingGroups } from './CardPingGroups'
+import { LazyCard } from './LazyCard'
 import { computeRemainingValue, formatMoney } from './value'
 import { LEADERBOARD_ORDER } from './leaderboards'
 import { Leaderboard, formatUptime, monthlyCost } from './Leaderboard'
@@ -1496,9 +1497,12 @@ function ProbeApp({ data, error }: ReturnType<typeof useProbe>) {
     ),
   ].filter(Boolean)
   const kpiCols = kpiColumns(kpis.length, kpiWidth)
-  const renderCard = (server: ProbeServer, index: number) => activeTheme === 'lumina'
-    ? <ServerCardLumina key={server.name || index} server={server} index={index} />
-    : <ServerCard key={server.name || index} server={server} index={index} dense={dense} />
+  const renderCard = (server: ProbeServer, index: number) => {
+    const name = server.name || `服务器 ${index + 1}`
+    return activeTheme === 'lumina'
+      ? <LazyCard key={server.name || index} className="server-card lumina-card" name={name} estimatedHeight={648}><ServerCardLumina server={server} index={index} /></LazyCard>
+      : <LazyCard key={server.name || index} className={`server-card probe-card${dense ? ' dense' : ''}`} name={name} estimatedHeight={!server.online ? 136 : dense ? 200 : activeTheme === 'anime' ? 495 : 462}><ServerCard server={server} index={index} dense={dense} /></LazyCard>
+  }
   return (
     <div className='app-shell'>
       <header className="topbar">
