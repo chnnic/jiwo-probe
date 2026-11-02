@@ -374,6 +374,12 @@
 .lp-app .lp-view-picker { width: auto; flex: 0 0 auto; }
 .lp-app .lp-view-picker button { width: 34px; height: 34px; padding: 0; justify-content: center; }
 /* Keep large-card data readable; reduce repeated chrome and vertical whitespace. */
+.lp-card-pending h2 { margin: 0; font-size: 15px; font-weight: 600; color: var(--lp-muted, inherit); }
+/* 占位高度取各视图卡片的常见高度，渲染出真实内容时页面基本不跳动 */
+.lp-view-large .lp-card-pending { min-height: 706px; }
+.lp-view-compact .lp-card-pending { min-height: 580px; }
+.lp-view-mini .lp-card-pending { min-height: 465px; }
+.lp-view-list .lp-card-pending { min-height: 106px; }
 .lp-view-large .lp-card { padding: 18px 20px; }
 .lp-view-large .lp-badges { margin: 8px 0 12px; gap: 4px; }
 .lp-view-large .lp-badges > span { font-size: 10px; padding: 3px 7px; }

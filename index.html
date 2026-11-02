@@ -5,9 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="color-scheme" content="light dark" />
     <title>服务器状态</title>
+    <!-- 不等主程序下载完才请求首帧数据：主程序和数据同时下载，慢线路上能省下一整段等待。use-probe.ts 会接手这个请求。 -->
+    <script>window.__probeFirstFetch = fetch('/api/probe', { cache: 'no-store' }).catch(function () { return null })</script>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root"><main class="center">正在加载…</main></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

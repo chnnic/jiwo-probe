@@ -63,7 +63,7 @@ export function ForwardOverview({ data }: { data: ProbePayload }) {
     <summary><Network size={17} /><h2>转发链拓扑与延迟</h2>
       <span className="probe-forward-summary">共 {summary.total} 条<b data-status="ok">正常 {summary.ok}</b><b data-status="warn">偏慢 {summary.warn}</b><b data-status="down">异常 {summary.down}</b></span>
       <ChevronDown size={16} /></summary>
-    {!chain || !current ? <p className="probe-forward-empty">暂无转发链数据，等待主控探测上报。</p> : <div className="probe-forward-content">
+    {!open ? null : !chain || !current ? <p className="probe-forward-empty">暂无转发链数据，等待主控探测上报。</p> : <div className="probe-forward-content">
       <div className="probe-forward-chains" role="group" aria-label="转发链列表（异常与偏慢置顶）">
         {chains.map((item) => {
           const total = chainTraffic(item.chain)?.total

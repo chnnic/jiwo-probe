@@ -27,12 +27,31 @@ import { PROBE_ALERT_PCT, PROBE_SORT_KEYS, PROBE_SORT_LABELS, connectionTotals, 
 
 // 与主控内置探针同款的地区地球（拱形弧线 + 亮点旁旗帜与台数）
 const RegionGlobe = lazy(() => import('./ProbeRegionGlobe').then((module) => ({ default: module.ProbeRegionGlobe })))
-const PremiumProbePage = lazy(() => import('./PremiumProbePage').then((module) => ({ default: module.PremiumProbePage })))
-const GmApp = lazy(() => import('./glassmorphism/GmApp').then((module) => ({ default: module.default })))
-const EmeraldApp = lazy(() => import('./emerald/EmeraldApp').then((module) => ({ default: module.default })))
-const MiniApp = lazy(() => import('./mini/MiniApp'))
-const LuminaPlusApp = lazy(() => import('./luminaplus/LuminaPlusApp'))
-const NezhaApp = lazy(() => import('./nezha/NezhaApp'))
+const loadPremium = () => import('./PremiumProbePage')
+const loadGlassmorphism = () => import('./glassmorphism/GmApp')
+const loadEmerald = () => import('./emerald/EmeraldApp')
+const loadLite = () => import('./mini/MiniApp')
+const loadLuminaPlus = () => import('./luminaplus/LuminaPlusApp')
+const loadNezha = () => import('./nezha/NezhaApp')
+const PremiumProbePage = lazy(() => loadPremium().then((module) => ({ default: module.PremiumProbePage })))
+const GmApp = lazy(() => loadGlassmorphism().then((module) => ({ default: module.default })))
+const EmeraldApp = lazy(() => loadEmerald().then((module) => ({ default: module.default })))
+const MiniApp = lazy(loadLite)
+const LuminaPlusApp = lazy(loadLuminaPlus)
+const NezhaApp = lazy(loadNezha)
+const THEME_CHUNKS: Record<string, () => Promise<unknown>> = {
+  premium: loadPremium,
+  glassmorphism: loadGlassmorphism,
+  emerald: loadEmerald,
+  lite: loadLite,
+  luminaplus: loadLuminaPlus,
+  nezha: loadNezha,
+}
+
+/** 回访时主题已知，不必等首帧数据到了才开始下载主题包。 */
+export function preloadActiveThemeChunk(): void {
+  THEME_CHUNKS[getActiveTheme()]?.().catch(() => { /* 真正渲染时会再加载一次 */ })
+}
 const MiniServerDetail = lazy(() => import('./mini/MiniServerDetail'))
 
 function RegionSelect({ regions, value, onChange }: { regions: string[]; value: string; onChange: (value: string) => void }) {
@@ -1156,7 +1175,7 @@ export function App() {
   const hasData = !!probe.data
   // 首帧数据渲染完再在空闲时预取图表模块，不和主题包、首帧数据抢带宽
   useEffect(() => { if (hasData) prefetchDeferred() }, [hasData])
-  return <ProbeHistoryDaysContext.Provider value={probe.data?.history_days}><StaleDataBanner error={probe.error} updatedAt={probe.updatedAt} /><ProbeApp {...probe} /></ProbeHistoryDaysContext.Provider>
+  return <ProbeHistoryDaysContext.Provider value={probe.data?.history_days}><StaleDataBanner error={probe.error} updatedAt={probe.updatedAt} fromSnapshot={probe.fromSnapshot} /><ProbeApp {...probe} /></ProbeHistoryDaysContext.Provider>
 }
 
 function ProbeApp({ data, error }: ReturnType<typeof useProbe>) {

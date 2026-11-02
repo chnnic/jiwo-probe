@@ -1,6 +1,6 @@
 import { lazy, StrictMode, Suspense, useEffect, useState } from 'react'
 import { createRoot } from 'react-dom/client'
-import { App } from './App'
+import { App, preloadActiveThemeChunk } from './App'
 import { applyAppearance, getActiveTheme, ProbeProvider, useProbe } from './use-probe'
 import './styles.css'
 import './server-capabilities.css'
@@ -40,6 +40,7 @@ function Root() {
 }
 
 applyAppearance()
+preloadActiveThemeChunk()
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <ProbeProvider>

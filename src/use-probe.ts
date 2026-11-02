@@ -7,6 +7,7 @@ import { canonicalThemeOverride, parseThemeName } from './theme-name'
 import { isLuminaPlusModeSetting, LUMINAPLUS_COLOR_KEY, LUMINAPLUS_MODE_KEY, LUMINAPLUS_PALETTE_KEY, resolveLuminaPlusAppearance, type LuminaPlusModeSetting, type LuminaPlusPalette } from './luminaplus/luminaplus-color'
 import { DEFAULT_SHOW_CONNECTION_CHART, parseShowConnectionChart } from './connection-chart'
 import { applyProbeDelta, isProbeDeltaFrame } from './probe-delta'
+import { readProbeSnapshot, rememberProbeSnapshot } from './probe-snapshot-cache'
 export { isBuiltinTheme, parseThemeName } from './theme-name'
 
 const APPEARANCE_CACHE = 'mmwx-probe-appearance'
@@ -428,12 +429,23 @@ export interface ProbeState {
   error?: string
   /** 最近一次收到数据的时间（毫秒时间戳），用于提示主控断联时页面数据有多旧 */
   updatedAt?: number
+  /** 正在显示上次打开时缓存的数据，实时数据还没到 */
+  fromSnapshot: boolean
   pingGroups: PingGroupConfig
   networkSpeedUnit: NetworkSpeedUnit
   connectionChartEnabled: boolean | undefined
 }
 
+declare global {
+  interface Window {
+    /** index.html 里提前发出的首帧请求，只用一次。 */
+    __probeFirstFetch?: Promise<Response | null>
+  }
+}
+
 const HIDDEN_PAUSE_MS = 60_000
+// 首帧 HTTP 迟迟没回来时，最多等这么久就连 WS，由 WS 兜底拿数据。
+const WS_CONNECT_FALLBACK_MS = 3_000
 const RECONNECT_DELAYS_MS = [2_000, 5_000, 15_000, 30_000]
 
 const ProbeContext = createContext<ProbeState | null>(null)
@@ -442,6 +454,7 @@ function useProbeConnection(): ProbeState {
   const [data, setData] = useState<ProbePayload>()
   const [error, setError] = useState<string>()
   const [updatedAt, setUpdatedAt] = useState<number>()
+  const [fromSnapshot, setFromSnapshot] = useState(false)
   const [pingGroups, setPingGroups] = useState(runtimePingGroups)
   const [networkSpeedUnit, setNetworkSpeedUnit] = useState(runtimeNetworkSpeedUnit)
   const [connectionChartEnabled, setConnectionChartEnabled] = useState(runtimeConnectionChartEnabled)
@@ -460,19 +473,29 @@ function useProbeConnection(): ProbeState {
     let reconnectTimer: number | undefined
     let reconnectAttempt = 0
 
-    const accept = (payload: ProbePayload) => {
-      if (stopped) return
+    let liveFrameSeen = false
+
+    const display = (payload: ProbePayload, receivedAt: number) => {
       applyAppearance(payload.appearance)
       applyFavicon(payload.icon)
       const visiblePayload = applyPayloadVisibility(enrichPayload(payload))
       setData(visiblePayload)
-      setError(undefined)
-      setUpdatedAt(Date.now())
+      setUpdatedAt(receivedAt)
       if (payload.title) document.title = payload.title
+    }
+    const accept = (payload: ProbePayload) => {
+      if (stopped) return
+      liveFrameSeen = true
+      display(payload, Date.now())
+      setError(undefined)
+      setFromSnapshot(false)
+      rememberProbeSnapshot(payload)
     }
     const poll = async () => {
       try {
-        const response = await fetch('/api/probe', { cache: 'no-store' })
+        const firstFetch = window.__probeFirstFetch
+        window.__probeFirstFetch = undefined
+        const response = await firstFetch ?? await fetch('/api/probe', { cache: 'no-store' })
         if (!response.ok) throw new Error(`HTTP ${response.status}`)
         accept(await response.json() as ProbePayload)
       } catch (cause) {
@@ -486,9 +509,9 @@ function useProbeConnection(): ProbeState {
       }
     }
     const startPolling = () => {
-      if (stopped || paused || timer.current) return
-      void poll()
+      if (stopped || paused || timer.current) return undefined
       timer.current = window.setInterval(poll, 5000)
+      return poll()
     }
 
     applyAppearance()
@@ -578,8 +601,18 @@ function useProbeConnection(): ProbeState {
       startPolling()
       connect()
     }
-    startPolling()
-    connect()
+    // 上次的快照和首帧请求同时开始，谁先到先显示；实时数据一旦到了，快照就不再用。
+    void readProbeSnapshot().then((snapshot) => {
+      if (!snapshot || stopped || liveFrameSeen) return
+      display(snapshot.payload, snapshot.savedAt)
+      setFromSnapshot(true)
+    })
+    // WS 连上后主控也会先推一整份快照，和首帧 HTTP 同时下载只会互相抢带宽，所以等首帧到了再连。
+    const wsFallbackTimer = window.setTimeout(connect, WS_CONNECT_FALLBACK_MS)
+    void startPolling()?.finally(() => {
+      window.clearTimeout(wsFallbackTimer)
+      connect()
+    })
     document.addEventListener('visibilitychange', onVisibilityChange)
     if (document.visibilityState === 'hidden') onVisibilityChange()
 
@@ -597,6 +630,7 @@ function useProbeConnection(): ProbeState {
 
     return () => {
       stopped = true
+      window.clearTimeout(wsFallbackTimer)
       document.removeEventListener('visibilitychange', onVisibilityChange)
       if (hiddenTimer !== undefined) window.clearTimeout(hiddenTimer)
       disconnect()
@@ -607,7 +641,7 @@ function useProbeConnection(): ProbeState {
     }
   }, [])
 
-  return { data, error, updatedAt, pingGroups, networkSpeedUnit, connectionChartEnabled }
+  return { data, error, updatedAt, fromSnapshot, pingGroups, networkSpeedUnit, connectionChartEnabled }
 }
 
 // 全站只在 Provider 内建立一套 HTTP/WS 连接。各主题调用 useProbe() 时只读取

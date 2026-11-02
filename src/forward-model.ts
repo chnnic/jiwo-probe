@@ -131,6 +131,10 @@ export function chainTrafficDay(chain: ForwardChainData, dayIndex: number) {
 export type CellTone = ForwardStatus | 'idle'
 
 /** 链路卡片状态条：每个 bucket 一格，判断口径与整条链一致（无数据为 idle）。 */
+// 状态条一条链几百格、每格两个时间：复用同一个格式化器，toLocaleTimeString 每次都要新建一个，慢得多。
+const CLOCK_FORMAT = new Intl.DateTimeFormat('zh-CN', { hour: '2-digit', minute: '2-digit', hour12: false })
+const clock = (ms: number) => CLOCK_FORMAT.format(ms)
+
 export function trendCells(chain: ForwardChainData): { ts: number; tone: CellTone; label: string }[] {
   return (chain.trend || []).map((point) => {
     const ms = finite(point.e2e_ms) ? point.e2e_ms : -1
@@ -139,7 +143,7 @@ export function trendCells(chain: ForwardChainData): { ts: number; tone: CellTon
       : lossPct >= FORWARD_DOWN_LOSS ? 'down'
       : lossPct >= FORWARD_WARN_LOSS || ms >= FORWARD_SLOW_MS ? 'warn'
       : 'ok'
-    const time = new Date(point.ts * 1000).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', hour12: false })
+    const time = clock(point.ts * 1000)
     const label = tone === 'idle' ? `${time} · 无数据` : `${time} · ${Math.round(ms)} ms · 丢包 ${lossPct.toFixed(1)}%`
     return { ts: point.ts, tone, label }
   })
@@ -149,7 +153,6 @@ export function trendCells(chain: ForwardChainData): { ts: number; tone: CellTon
 const CELL_TONE: Record<string, CellTone> = { o: 'ok', d: 'warn', b: 'down', n: 'idle' }
 const CELL_LABEL: Record<CellTone, string> = { ok: '正常', warn: '降级', down: '中断', idle: '无数据' }
 const DAY_MS = 24 * 3600 * 1000
-const clock = (ms: number) => new Date(ms).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', hour12: false })
 
 /**
  * 近 24 小时状态条（主控 v0.5.6-beta.6 起的 cells）：每个字符一格、按时间先后排列，最后一格是当前。
