@@ -11,7 +11,7 @@
 3. **Fork 本仓库**：在本页右上角点 **Fork**，复制到自己账号下。
 4. **在 Cloudflare 导入并部署**：
    - **Workers & Pages → Create application → Import a repository**，选你自己 fork 出来的仓库。不要用「Deploy with Workers」一键部署，它生成的复制仓库缺少自动同步配置，以后跟不上更新。
-   - 构建设置：Production branch `main`，Build command `npm run build`，Deploy command `./scripts/deploy.sh`，Root directory 留空。
+   - 构建设置：Project name 填 `mmwx-probe`（必须和 `wrangler.jsonc` 的 `name` 一致，否则构建会报错），Production branch `main`，Build command `npm run build`，Deploy command `./scripts/deploy.sh`，Preview command `npx wrangler versions upload`（必填，预览构建保持关闭时不会运行），Root directory 留空。
    - 首次部署后，在 Worker 的 **Settings → Variables and Secrets**（运行时变量，不是 Build Variables）添加 `MMWX_ORIGIN`（Text，主控地址，如 `https://panel.example.com`，结尾不带 `/`）和 `PROBE_TOKEN`（Secret，第 2 步的密钥），保存后再点一次 **Deploy**。
    - 打开 `xxx.workers.dev`，能看到服务器列表和实时数据就是装好了。
 5. **收尾**：回主控开启「仅允许独立探针访问」；需要时在 Worker 的 **Settings → Domains & Routes** 绑定自己的域名；想用 Passkey 登录，把探针完整地址加到主控的 `MMWX_WEBAUTHN_RELATED_ORIGINS` 并重启主控。
@@ -402,9 +402,11 @@ ProbeHub 连接或快照异常时会自动回退到原来的主控直连，不�
 1. 在 GitHub 上 fork `chnnic/jiwo-probe`（页面右上角 **Fork** 按钮）。
 2. 在 Cloudflare Dashboard 的 **Workers & Pages → Create application → Import a repository**，选择**你 fork 出来的仓库**（而不是原仓库）。
 3. 保持以下构建设置：
+   - Project name（项目名称）：`mmwx-probe`。必须和 `wrangler.jsonc` 的 `name` 一致，否则构建会报名称不匹配。如果账号里已有同名 Worker，先确认是否要更新它，不要直接部署。
    - Production branch：`main`
    - Build command：`npm run build`
    - Deploy command：`./scripts/deploy.sh`
+   - Preview command（预览命令）：`npx wrangler versions upload`。这一项必填，但预览构建保持关闭时不会运行。
    - Root directory：留空
 4. 首次部署后，进入 Worker 的 **Settings → Variables and Secrets**，添加运行时变量。连接主控需要配置 `MMWX_ORIGIN` 和 `PROBE_TOKEN`；**`PROBE_PING_*` 三项均已内置默认值，安装时全部跳过即可显示三组**，仅自定义时需要填写：
 
