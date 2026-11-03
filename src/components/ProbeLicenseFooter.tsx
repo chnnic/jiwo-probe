@@ -2,7 +2,9 @@ import { useEffect, useRef } from 'react'
 import type { ProbePayload } from '../types'
 import { EXTRA_LICENSE_BADGES } from '../license-badges'
 
-function ProbeLicenseNameplate({ name, displayName, animated = true }: { name?: string; displayName?: string; animated?: boolean }) {
+export const LICENSE_CYCLE_MS = 5596 // 主控 license-nameplate 实测周期
+
+export function ProbeLicenseNameplate({ name, displayName, animated = true }: { name?: string; displayName?: string; animated?: boolean }) {
   const label = [name?.trim(), displayName?.trim()].filter(Boolean).join(' · ')
   const plateRef = useRef<HTMLSpanElement>(null)
   const textRef = useRef<HTMLSpanElement>(null)
@@ -55,7 +57,7 @@ function ProbeLicenseNameplate({ name, displayName, animated = true }: { name?: 
     let frameID = 0
     const start = performance.now()
     const frame = (now: number) => {
-      const progress = ((now - start) % 5596) / 5596
+      const progress = ((now - start) % LICENSE_CYCLE_MS) / LICENSE_CYCLE_MS
       const reveal = clamp(progress / 0.36, 0, 1)
       let rotateX = 0
       let scale = 1
@@ -107,6 +109,8 @@ function ProbeLicenseNameplate({ name, displayName, animated = true }: { name?: 
 }
 
 
+export const prefersReducedMotion = () => typeof window !== 'undefined' && !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+
 // 共用原有名牌与动画，独立主题不再遗漏许可证页尾。
 export function ProbeLicenseFooter({ badges, animated = true }: { badges: ProbePayload['license_badge']; animated?: boolean }) {
   if (!badges && EXTRA_LICENSE_BADGES.length === 0) return null
@@ -115,7 +119,7 @@ export function ProbeLicenseFooter({ badges, animated = true }: { badges: ProbeP
   const merged = EXTRA_LICENSE_BADGES.map((badge) => live.find((item) => keyOf(item) === keyOf(badge)) || badge)
   const extras = live.filter((badge) => !EXTRA_LICENSE_BADGES.some((item) => keyOf(item) === keyOf(badge)))
   // 系统开启「减少动态效果」时直接显示静态铭牌（无障碍；README 截图也依赖这一点）
-  const motion = animated && !(typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches)
+  const motion = animated && !prefersReducedMotion()
   return <div className="probe-license-footer">
     {[...merged, ...extras]
       .filter((badge, index, all) => all.findIndex((item) => keyOf(item) === keyOf(badge)) === index)

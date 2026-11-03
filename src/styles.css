@@ -5190,6 +5190,23 @@ footer a:hover {
   backdrop-filter: none;
 }
 
+/* 像素、扁平、动漫、玻璃：标题旁的许可证铭牌。空间不够时先压缩铭牌，标题保持完整 */
+.probe-header-license {
+  display: inline-flex;
+  flex: 0 100 auto;
+  min-width: 0;
+}
+.probe-header-license .probe-license-nameplate {
+  max-width: 100%;
+}
+.topbar:has(.probe-header-license) h1 {
+  flex-shrink: 0;
+  max-width: 100%;
+}
+/* 手机放不下，只保留页面末尾那一排（Premium 页首也是这样） */
+@media (max-width: 640px) {
+  .probe-header-license { display: none; }
+}
 /* 经典界面：许可证放在页面末尾（与 LuminaPlus、Premium 一致），右侧带动画开关 */
 .probe-license-bar {
   display: flex;
