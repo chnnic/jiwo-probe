@@ -3455,12 +3455,14 @@ footer a:hover {
   --foreground: #102a35;
   --muted: #5a6f7a;
   --surface: rgba(255, 255, 255, 0.68);
-  --border: rgba(255, 255, 255, 0.78);
+  /* 卡片内部的分隔线、输入框边、刻度槽都走 --border：用淡墨色而不是白色，
+     白线叠在半透明白底上会像划痕。外框的白边单独走 --glass-border。 */
+  --border: rgba(16, 42, 53, 0.1);
   --shadow: 0 18px 44px rgba(30, 64, 79, 0.12);
   --glass-surface: linear-gradient(145deg, rgba(255, 255, 255, 0.78), rgba(244, 250, 252, 0.57));
   --glass-surface-strong: linear-gradient(145deg, rgba(255, 255, 255, 0.92), rgba(244, 250, 252, 0.78));
   --glass-surface-soft: rgba(255, 255, 255, 0.38);
-  --glass-border: rgba(255, 255, 255, 0.82);
+  --glass-border: rgba(255, 255, 255, 0.64);
   --glass-border-strong: rgba(122, 164, 179, 0.38);
   --glass-shadow: 0 18px 44px rgba(30, 64, 79, 0.12), 0 3px 10px rgba(30, 64, 79, 0.06);
   --glass-shadow-hover: 0 22px 52px rgba(23, 93, 116, 0.17), 0 5px 14px rgba(30, 64, 79, 0.08);
@@ -3547,6 +3549,32 @@ footer a:hover {
 :root.theme-glass .server-title,
 :root.theme-glass .server-detail-header {
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.38), rgba(255, 255, 255, 0.1));
+}
+/* 卡片内部不用线切块：标题带靠一层更亮的玻璃渐隐区分，网速三格做成小磨砂块，
+   延迟区和底部信息只留 --border 的淡发丝线，延迟目标下拉框改成软底色小胶囊。 */
+:root.theme-glass .server-title {
+  border-bottom-color: transparent;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.46), rgba(255, 255, 255, 0));
+}
+:root.theme-glass .net-boxes {
+  border-top: 0;
+  padding-top: 2px;
+}
+:root.theme-glass .net-box {
+  background: rgba(255, 255, 255, 0.46);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8), 0 1px 2px rgba(16, 42, 53, 0.05);
+}
+:root.theme-glass button.net-box:hover {
+  background: rgba(255, 255, 255, 0.64);
+}
+:root.theme-glass .card-ping-probe .card-ping-selector select {
+  border: 0;
+  border-radius: 6px;
+  padding: 1px 7px;
+  background: rgba(16, 42, 53, 0.06);
+}
+:root.theme-glass .card-ping-probe .card-ping-selector select:hover {
+  background: rgba(16, 42, 53, 0.1);
 }
 :root.theme-glass .detail-value-main,
 :root.theme-glass .detail-speed > span,
@@ -3705,7 +3733,7 @@ footer a:hover {
   --foreground: #edf8fb;
   --muted: #9eb4be;
   --surface: rgba(10, 28, 40, 0.68);
-  --border: rgba(164, 215, 230, 0.17);
+  --border: rgba(175, 224, 237, 0.11);
   --shadow: 0 20px 52px rgba(0, 0, 0, 0.32);
   --glass-surface: linear-gradient(145deg, rgba(24, 49, 63, 0.72), rgba(8, 25, 37, 0.6));
   --glass-surface-strong: linear-gradient(145deg, rgba(27, 52, 66, 0.94), rgba(8, 24, 35, 0.92));
@@ -3749,6 +3777,22 @@ footer a:hover {
 :root.dark.theme-glass .server-title,
 :root.dark.theme-glass .server-detail-header {
   background: linear-gradient(180deg, rgba(166, 226, 239, 0.07), rgba(5, 18, 28, 0.04));
+}
+:root.dark.theme-glass .server-title {
+  background: linear-gradient(180deg, rgba(166, 226, 239, 0.09), rgba(5, 18, 28, 0));
+}
+:root.dark.theme-glass .net-box {
+  background: rgba(142, 210, 226, 0.07);
+  box-shadow: inset 0 1px 0 rgba(224, 247, 252, 0.06);
+}
+:root.dark.theme-glass button.net-box:hover {
+  background: rgba(142, 210, 226, 0.12);
+}
+:root.dark.theme-glass .card-ping-probe .card-ping-selector select {
+  background: rgba(175, 224, 237, 0.09);
+}
+:root.dark.theme-glass .card-ping-probe .card-ping-selector select:hover {
+  background: rgba(175, 224, 237, 0.15);
 }
 :root.dark.theme-glass .detail-value-main,
 :root.dark.theme-glass .detail-speed > span,
