@@ -5247,9 +5247,23 @@ footer a:hover {
   flex-shrink: 0;
   max-width: 100%;
 }
-/* 手机放不下，只保留页面末尾那一排（Premium 页首也是这样） */
+/* 手机：顶栏分两行。第一行 logo + 标题 + 铭牌，第二行按钮均匀撑满，
+   标题和铭牌不再被按钮挡住；空间仍不够时先压缩铭牌，再省略标题。 */
 @media (max-width: 640px) {
-  .probe-header-license { display: none; }
+  .topbar {
+    flex-wrap: wrap;
+    row-gap: 8px;
+  }
+  .topbar > div {
+    flex: 1 1 100%;
+  }
+  .topbar nav {
+    flex: 1 1 100%;
+    justify-content: space-between;
+  }
+  .topbar:has(.probe-header-license) h1 {
+    flex-shrink: 1;
+  }
 }
 /* 经典界面：许可证放在页面末尾（与 LuminaPlus、Premium 一致），右侧带动画开关 */
 .probe-license-bar {
