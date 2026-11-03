@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { deployArgs, missingPingVars, readExistingBindings, readScriptDefaults, readSetupPlaceholder, setupPresets } from './deploy-worker.mjs'
+import { deployArgs, missingPingVars, readExistingBindings, readScriptDefaults, readSetupPlaceholder, setupPresets, targetWorkerName } from './deploy-worker.mjs'
 
 const defaults = {
   PROBE_PING_GROUP_COUNT: '3',
@@ -114,4 +114,34 @@ test('any existing binding means no setup placeholders, so a real token is never
   ]) {
     assert.equal(setupPresets(bindings, 'placeholder'), null)
   }
+})
+
+test('Workers Builds name override is used for every read, so an existing Worker is not mistaken for a new install', () => {
+  assert.equal(targetWorkerName({ WRANGLER_CI_OVERRIDE_NAME: 'my-probe' }), 'my-probe')
+  assert.equal(targetWorkerName({ WRANGLER_CI_OVERRIDE_NAME: '' }), undefined)
+  assert.equal(targetWorkerName({}), undefined)
+  const calls = []
+  // 账号里没有配置文件写的 mmwx-probe，只有 CI 指定的 my-probe：不带 --name 的查询会得到 10007
+  const account = args => {
+    calls.push(args)
+    if (args.at(-1) !== 'my-probe') throw Object.assign(new Error(), { cfCode: 10007 })
+    if (args[0] === 'deployments') return { versions: [{ version_id: 'active' }] }
+    return { resources: { bindings: [{ name: 'MMWX_ORIGIN', type: 'plain_text', text: 'https://panel.example.com' }, { name: 'PROBE_TOKEN', type: 'secret_text' }] } }
+  }
+  assert.deepEqual(readExistingBindings(account, undefined), [])
+  calls.length = 0
+  const bindings = readExistingBindings(account, 'my-probe')
+  assert.equal(setupPresets(bindings, 'placeholder'), null)
+  assert.deepEqual(calls, [['deployments', 'status', '--name', 'my-probe'], ['versions', 'view', 'active', '--name', 'my-probe']])
+})
+
+test('Workers Builds name override also applies to the undeployed version lookup', () => {
+  const calls = []
+  readExistingBindings(args => {
+    calls.push(args)
+    if (args[0] === 'deployments') throw Object.assign(new Error(), { noDeployments: true })
+    if (args[1] === 'list') return [{ id: 'v1', metadata: { created_on: '2026-09-01T00:00:00Z' } }]
+    return { resources: { bindings: [] } }
+  }, 'my-probe')
+  assert.deepEqual(calls.slice(1), [['versions', 'list', '--name', 'my-probe'], ['versions', 'view', 'v1', '--name', 'my-probe']])
 })

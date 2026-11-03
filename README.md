@@ -554,6 +554,7 @@ npm run screenshots # 用虚拟数据重新生成 README 截图（需本机安�
 ## 故障排查
 
 - 页面提示「还没填好 `MMWX_ORIGIN` / `PROBE_TOKEN`」（接口返回 `503 Probe setup incomplete`）：这一项没创建、还是 `待填写`，或者主控地址没写 `https://`。改好后重新部署。
+- 站点原本正常，同步更新后变成上面这个提示，后台 `MMWX_ORIGIN` 也变成了 `待填写`：这是 2026-11-03 的 `57c29c6` 部署脚本的问题，Cloudflare 里的 Worker 名不是 `mmwx-probe` 时，已有站点会被误判成全新安装，两项被占位值覆盖。先同步到最新代码（新版已修复，不会再覆盖），再恢复配置：到 Worker 的 **Deployments** 回滚到出问题之前的版本，遇到密钥变更的提示要确认；也可以直接在 **Settings → Variables and Secrets** 重新填写，`PROBE_TOKEN` 要在主控新建一个。
 - Worker 返回 `404`：Worker Secret 与主控生成的密钥不一致，或主控探针未启用。
 - 页面无实时更新：检查 Cloudflare 与源站反向代理是否允许 WebSocket；页面会自动使用 HTTP 轮询。
 - 想确认 ProbeHub 是否生效：检查 `/api/probe` 响应头是否为 `X-Probe-Source: hub`；`origin-fallback` 表示 Hub 当次异常并已自动直连主控。

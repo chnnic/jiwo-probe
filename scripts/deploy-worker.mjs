@@ -45,10 +45,18 @@ export async function readSetupPlaceholder() {
   return (await loadRuntimeDefaults()).SETUP_PLACEHOLDER
 }
 
-export function readExistingBindings(readJson = readWranglerJson) {
+// Workers Builds 用这个变量指定实际部署的 Worker（可能和配置文件的 name 不同）。
+// deploy 会采用它，但 deployments / versions 查询只看配置文件，必须显式传 --name，
+// 否则会查错 Worker，把已有站点误判成全新安装。
+export function targetWorkerName(env = process.env) {
+  return env.WRANGLER_CI_OVERRIDE_NAME || undefined
+}
+
+export function readExistingBindings(readJson = readWranglerJson, workerName = targetWorkerName()) {
+  const read = args => readJson(workerName ? [...args, '--name', workerName] : args)
   let ids
   try {
-    const deployment = readJson(['deployments', 'status'])
+    const deployment = read(['deployments', 'status'])
     if (!Array.isArray(deployment?.versions) || !deployment.versions.length) throw new Error('当前部署版本数据不完整，已停止部署。')
     ids = deployment.versions.map(version => version.version_id)
   } catch (error) {
@@ -56,7 +64,7 @@ export function readExistingBindings(readJson = readWranglerJson) {
     if (error.cfCode === 10007) return []
     if (!error.noDeployments) throw error
     // 已上传但尚未上线的 Worker 也可能已有配置，不能直接按全新安装处理。
-    const versions = readJson(['versions', 'list'])
+    const versions = read(['versions', 'list'])
     if (!Array.isArray(versions)) throw new Error('Worker 版本列表不完整，已停止部署。')
     if (!versions.length) return []
     if (versions.some(version => !Number.isFinite(Date.parse(version?.metadata?.created_on)))) {
@@ -66,7 +74,7 @@ export function readExistingBindings(readJson = readWranglerJson) {
   }
   if (ids.some(id => typeof id !== 'string' || !id)) throw new Error('Worker 版本 ID 不完整，已停止部署。')
   return [...new Set(ids)].flatMap(id => {
-    const bindings = readJson(['versions', 'view', id])?.resources?.bindings
+    const bindings = read(['versions', 'view', id])?.resources?.bindings
     if (!Array.isArray(bindings) || bindings.some(binding => typeof binding?.name !== 'string' || !binding.name)) {
       throw new Error('Worker 绑定信息不完整，已停止部署。')
     }
@@ -117,7 +125,7 @@ async function main() {
   console.log(names.length
     ? `将自动创建 CF 设置项：${names.join('、')}；已有设置保持不变。`
     : 'CF 设置项已存在，将保留后台当前值。')
-  if (presets) console.log('全新安装：已预建 MMWX_ORIGIN 和 PROBE_TOKEN（密钥），部署后请到 CF 后台把它们改成真实值。')
+  if (presets) console.log(`全新安装（Worker ${targetWorkerName() || '配置文件中的 name'} 还没有任何绑定）：已预建 MMWX_ORIGIN 和 PROBE_TOKEN（密钥），部署后请到 CF 后台把它们改成真实值。`)
   if (process.argv.includes('--check')) return
   deployWorker(missing, presets?.secrets)
 }
