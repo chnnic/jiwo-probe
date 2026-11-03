@@ -2,6 +2,7 @@ import { parsePingGroupConfig } from '../src/ping-groups'
 import { parseNetworkSpeedUnit } from '../src/network-speed'
 import { parseShowConnectionChart } from '../src/connection-chart'
 import { encodeProbeDelta } from '../src/probe-delta'
+import { SETUP_ERROR_HEADER, missingSetupVars } from '../src/probe-setup'
 import type { ProbePayload } from '../src/types'
 
 interface Env {
@@ -331,7 +332,7 @@ async function directUpstream(request: Request, env: Env, target: URL): Promise<
 }
 
 async function shouldBlockOriginLogin(request: Request, env: Env): Promise<boolean> {
-  if (!env.PROBE_TOKEN) return true
+  if (missingSetupVars(env).length) return true
   try {
     const response = await directUpstream(
       request,
@@ -692,6 +693,17 @@ export default {
       return Response.redirect(new URL('/login', env.MMWX_ORIGIN).toString(), 302)
     }
 
+    // 还没填好主控地址或密钥时直接说明缺哪项，不去连主控；响应只含设置项名称，不含它们的值。
+    if (authRoutes.has(incoming.pathname) || routes[incoming.pathname]) {
+      const missing = missingSetupVars(env).join(',')
+      if (missing) {
+        return new Response(`Probe setup incomplete: ${missing}`, {
+          status: 503,
+          headers: { 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff', [SETUP_ERROR_HEADER]: missing },
+        })
+      }
+    }
+
     if (authRoutes.has(incoming.pathname)) {
       return proxyAuth(request, incoming, env)
     }
@@ -755,9 +767,6 @@ export default {
     // 在读边缘缓存之前校验，免得别的站点借缓存拿到快照
     if (!fromOwnPage(request, incoming.origin)) {
       return new Response('Not found', { status: 404, headers: { 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' } })
-    }
-    if (!env.PROBE_TOKEN) {
-      return new Response('Probe access secret is not configured', { status: 503 })
     }
 
     const cacheKey = probeCacheKey(request)

@@ -21,10 +21,11 @@
    - 填写时注意：
      - Project name 必须和 `wrangler.jsonc` 的 `name` 一致，否则构建会报错。
      - Preview command 是必填项，预览构建保持关闭时不会运行。
-   - 首次部署后，在 Worker 的 **Settings → Variables and Secrets**（运行时变量，不是 Build Variables）添加两项：
-     - `MMWX_ORIGIN`：类型选 Text，填主控地址，如 `https://panel.example.com`，结尾不带 `/`。
-     - `PROBE_TOKEN`：类型选 Secret，填第 2 步的密钥。
+   - 首次部署会自动建好两项（值都是 `待填写`）。到 Worker 的 **Settings → Variables and Secrets**（运行时变量，不是 Build Variables）点铅笔图标改成真实值：
+     - `MMWX_ORIGIN`：主控地址，如 `https://panel.example.com`，结尾不带 `/`。
+     - `PROBE_TOKEN`：第 2 步的密钥。这一项已经是 Secret 类型，不要改成 Text。
    - 保存后再点一次 **Deploy**。
+   - 如果后台出现「更新您的 Wrangler 配置」提示，直接关掉，不要照做，否则密钥会被写进公开仓库。
    - 打开 `xxx.workers.dev`，能看到服务器列表和实时数据就是装好了。
 5. **收尾**：回主控开启「仅允许独立探针访问」；需要时在 Worker 的 **Settings → Domains & Routes** 绑定自己的域名；想用 Passkey 登录，把探针完整地址加到主控的 `MMWX_WEBAUTHN_RELATED_ORIGINS` 并重启主控。
 6. **开启自动更新（建议）**：在 fork 仓库的 **Settings → Actions → General** 勾选 *Allow all actions and reusable workflows*，Workflow permissions 选 *Read and write permissions*。之后每天北京时间 11:23 自动同步本仓库更新并重新部署。
@@ -427,7 +428,7 @@ ProbeHub 连接或快照异常时会自动回退到原来的主控直连，不�
    - 如果账号里已有同名 Worker，先确认是否要更新它，不要直接部署。
    - Preview command 是必填项，预览构建保持关闭时不会运行。
 
-4. 首次部署后，进入 Worker 的 **Settings → Variables and Secrets**，添加运行时变量。连接主控需要配置 `MMWX_ORIGIN` 和 `PROBE_TOKEN`；**`PROBE_PING_*` 三项均已内置默认值，安装时全部跳过即可显示三组**，仅自定义时需要填写：
+4. 首次部署会自动建好 `MMWX_ORIGIN`（Text）和 `PROBE_TOKEN`（Secret），值都是 `待填写`。进入 Worker 的 **Settings → Variables and Secrets**，把这两项改成真实值，其他变量按需添加；后台提示「更新您的 Wrangler 配置」时直接关掉，不要把密钥写进仓库。**`PROBE_PING_*` 三项均已内置默认值，安装时全部跳过即可显示三组**，仅自定义时需要填写：
 
    | 名称 | 类型 | 值 |
    | --- | --- | --- |
@@ -552,12 +553,12 @@ npm run screenshots # 用虚拟数据重新生成 README 截图（需本机安�
 
 ## 故障排查
 
-- `503 Probe access secret is not configured`：尚未设置 `PROBE_TOKEN`。
+- 页面提示「还没填好 `MMWX_ORIGIN` / `PROBE_TOKEN`」（接口返回 `503 Probe setup incomplete`）：这一项没创建、还是 `待填写`，或者主控地址没写 `https://`。改好后重新部署。
 - Worker 返回 `404`：Worker Secret 与主控生成的密钥不一致，或主控探针未启用。
 - 页面无实时更新：检查 Cloudflare 与源站反向代理是否允许 WebSocket；页面会自动使用 HTTP 轮询。
 - 想确认 ProbeHub 是否生效：检查 `/api/probe` 响应头是否为 `X-Probe-Source: hub`；`origin-fallback` 表示 Hub 当次异常并已自动直连主控。
 - 3 秒采集使 PostgreSQL 压力偏高：将 Worker 运行时变量 `PROBE_POLL_INTERVAL_SECONDS` 设为 `5` 并重新部署，即可回到 5 秒采集。
-- `MMWX_ORIGIN must use HTTPS`：生产源站不是 HTTPS。本地调试仅允许 `localhost` 或 `127.0.0.1`。
+- 主控地址必须是 HTTPS。本地调试仅允许 `localhost` 或 `127.0.0.1`。
 - 页面没有服务器：在主控探针设置中选择需要展示的服务器。
 - Passkey 提示“本域名未被主控承认”：把探针完整 HTTPS 来源加入主控 `MMWX_WEBAUTHN_RELATED_ORIGINS`，重启主控后再试。
 

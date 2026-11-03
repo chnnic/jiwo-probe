@@ -2,6 +2,8 @@ import { PING_GROUP_SCRIPT_VARS } from './ping-groups'
 import { DEFAULT_NETWORK_SPEED_UNIT } from './network-speed'
 import { DEFAULT_SHOW_CONNECTION_CHART } from './connection-chart'
 
+export { SETUP_PLACEHOLDER } from './probe-setup'
+
 export const RUNTIME_SCRIPT_VARS = {
   ...PING_GROUP_SCRIPT_VARS,
   PROBE_NETWORK_SPEED_UNIT: DEFAULT_NETWORK_SPEED_UNIT,

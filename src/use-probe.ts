@@ -8,6 +8,7 @@ import { isLuminaPlusModeSetting, LUMINAPLUS_COLOR_KEY, LUMINAPLUS_MODE_KEY, LUM
 import { DEFAULT_SHOW_CONNECTION_CHART, parseShowConnectionChart } from './connection-chart'
 import { applyProbeDelta, isProbeDeltaFrame } from './probe-delta'
 import { readProbeSnapshot, rememberProbeSnapshot } from './probe-snapshot-cache'
+import { SETUP_ERROR_HEADER, setupErrorMessage } from './probe-setup'
 export { isBuiltinTheme, parseThemeName } from './theme-name'
 
 const APPEARANCE_CACHE = 'mmwx-probe-appearance'
@@ -496,6 +497,8 @@ function useProbeConnection(): ProbeState {
         const firstFetch = window.__probeFirstFetch
         window.__probeFirstFetch = undefined
         const response = await firstFetch ?? await fetch('/api/probe', { cache: 'no-store' })
+        const missingSetup = response.headers.get(SETUP_ERROR_HEADER)
+        if (missingSetup) throw new Error(setupErrorMessage(missingSetup))
         if (!response.ok) throw new Error(`HTTP ${response.status}`)
         accept(await response.json() as ProbePayload)
       } catch (cause) {

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { deployArgs, missingPingVars, readExistingBindings, readScriptDefaults } from './deploy-worker.mjs'
+import { deployArgs, missingPingVars, readExistingBindings, readScriptDefaults, readSetupPlaceholder, setupPresets } from './deploy-worker.mjs'
 
 const defaults = {
   PROBE_PING_GROUP_COUNT: '3',
@@ -91,5 +91,27 @@ test('malformed deployment or binding data aborts instead of restoring defaults'
   }
   for (const bindings of [undefined, {}, [{ type: 'plain_text' }]]) {
     assert.throws(() => readExistingBindings(current(bindings)))
+  }
+})
+
+test('brand new Worker gets MMWX_ORIGIN as Text and PROBE_TOKEN as a secret placeholder', async () => {
+  const placeholder = await readSetupPlaceholder()
+  assert.ok(placeholder)
+  assert.deepEqual(setupPresets([], placeholder), {
+    vars: { MMWX_ORIGIN: placeholder },
+    secrets: { PROBE_TOKEN: placeholder },
+  })
+  const args = deployArgs(setupPresets([], placeholder).vars, '/tmp/secrets.json')
+  assert.deepEqual(args, ['deploy', '--keep-vars', '--var', `MMWX_ORIGIN:${placeholder}`, '--secrets-file', '/tmp/secrets.json'])
+  assert.ok(!args.join(' ').includes('PROBE_TOKEN'))
+})
+
+test('any existing binding means no setup placeholders, so a real token is never overwritten', () => {
+  for (const bindings of [
+    [{ name: 'PROBE_TOKEN', type: 'secret_text' }],
+    [{ name: 'MMWX_ORIGIN', type: 'plain_text', text: 'https://panel.example.com' }],
+    [{ name: 'PROBE_HUB', type: 'durable_object_namespace' }],
+  ]) {
+    assert.equal(setupPresets(bindings, 'placeholder'), null)
   }
 })

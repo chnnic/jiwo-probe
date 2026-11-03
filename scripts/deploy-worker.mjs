@@ -1,4 +1,7 @@
 import { execFileSync } from 'node:child_process'
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import path from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { build } from 'esbuild'
 
@@ -24,14 +27,22 @@ export function readWranglerJson(args) {
   return JSON.parse(output)
 }
 
-export async function readScriptDefaults() {
+async function loadRuntimeDefaults() {
   // 与前端 / Worker 使用同一份默认值，避免部署脚本另存一套而发生偏差。
   const bundle = await build({
     entryPoints: [fileURLToPath(new URL('../src/runtime-defaults.ts', import.meta.url))],
     bundle: true, write: false, format: 'esm', platform: 'node',
   })
-  const module = await import(`data:text/javascript;base64,${Buffer.from(bundle.outputFiles[0].text).toString('base64')}`)
+  return import(`data:text/javascript;base64,${Buffer.from(bundle.outputFiles[0].text).toString('base64')}`)
+}
+
+export async function readScriptDefaults() {
+  const module = await loadRuntimeDefaults()
   return Object.fromEntries(Object.entries(module.RUNTIME_SCRIPT_VARS).map(([name, value]) => [name, String(value)]))
+}
+
+export async function readSetupPlaceholder() {
+  return (await loadRuntimeDefaults()).SETUP_PLACEHOLDER
 }
 
 export function readExistingBindings(readJson = readWranglerJson) {
@@ -69,19 +80,46 @@ export function missingPingVars(defaults, bindings) {
   return Object.fromEntries(Object.entries(defaults).filter(([name]) => !names.has(name)))
 }
 
-export function deployArgs(missing) {
-  return ['deploy', '--keep-vars', ...Object.entries(missing).flatMap(([name, value]) => ['--var', `${name}:${value}`])]
+export function deployArgs(missing, secretsFile) {
+  return [
+    'deploy', '--keep-vars',
+    ...Object.entries(missing).flatMap(([name, value]) => ['--var', `${name}:${value}`]),
+    ...(secretsFile ? ['--secrets-file', secretsFile] : []),
+  ]
+}
+
+// 只给全新的 Worker 预建这两项。已有站点哪怕缺其中一项也不碰：
+// 真密钥只显示一次，一旦被占位值覆盖就找不回来了。
+export function setupPresets(bindings, placeholder) {
+  if (bindings.length) return null
+  return { vars: { MMWX_ORIGIN: placeholder }, secrets: { PROBE_TOKEN: placeholder } }
+}
+
+function deployWorker(missing, secrets) {
+  const run = secretsFile => execFileSync(process.execPath, [wrangler, ...deployArgs(missing, secretsFile)], { cwd: root, stdio: 'inherit' })
+  if (!secrets) return run()
+  const dir = mkdtempSync(path.join(tmpdir(), 'probe-deploy-'))
+  try {
+    const secretsFile = path.join(dir, 'secrets.json')
+    writeFileSync(secretsFile, JSON.stringify(secrets), { mode: 0o600 })
+    run(secretsFile)
+  } finally {
+    rmSync(dir, { recursive: true, force: true })
+  }
 }
 
 async function main() {
   const defaults = await readScriptDefaults()
-  const missing = missingPingVars(defaults, readExistingBindings())
+  const bindings = readExistingBindings()
+  const presets = setupPresets(bindings, await readSetupPlaceholder())
+  const missing = { ...missingPingVars(defaults, bindings), ...presets?.vars }
   const names = Object.keys(missing)
   console.log(names.length
     ? `将自动创建 CF 设置项：${names.join('、')}；已有设置保持不变。`
     : 'CF 设置项已存在，将保留后台当前值。')
+  if (presets) console.log('全新安装：已预建 MMWX_ORIGIN 和 PROBE_TOKEN（密钥），部署后请到 CF 后台把它们改成真实值。')
   if (process.argv.includes('--check')) return
-  execFileSync(process.execPath, [wrangler, ...deployArgs(missing)], { cwd: root, stdio: 'inherit' })
+  deployWorker(missing, presets?.secrets)
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {

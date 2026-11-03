@@ -139,3 +139,33 @@ test('Passkey 鉴权转发不携带只读探针密钥和访客 Cookie', async ()
     assert.equal(calls[0].headers.get('Cookie'), null)
   })
 })
+
+test('占位值或缺失的设置返回 503 并说明缺哪项，不连接主控也不暴露值', async () => {
+  const cases = [
+    [{ MMWX_ORIGIN: '待填写', PROBE_TOKEN: '待填写' }, 'MMWX_ORIGIN,PROBE_TOKEN'],
+    [{ MMWX_ORIGIN: undefined, PROBE_TOKEN: TOKEN }, 'MMWX_ORIGIN'],
+    [{ MMWX_ORIGIN: 'panel.test', PROBE_TOKEN: TOKEN }, 'MMWX_ORIGIN'],
+    [{ MMWX_ORIGIN: 'http://panel.test', PROBE_TOKEN: TOKEN }, 'MMWX_ORIGIN'],
+    [{ MMWX_ORIGIN: 'https://panel.test', PROBE_TOKEN: '待填写' }, 'PROBE_TOKEN'],
+  ]
+  for (const [settings, missing] of cases) {
+    await withUpstream(() => new Response('{}'), async calls => {
+      const response = await worker.fetch(new Request('https://probe.test/api/probe'), { ...env([]), ...settings }, {})
+      assert.equal(response.status, 503)
+      assert.equal(response.headers.get('X-Probe-Setup'), missing)
+      const body = await response.text()
+      assert.ok(body.includes(missing))
+      assert.ok(!body.includes(TOKEN))
+      assert.equal(calls.length, 0)
+    })
+  }
+})
+
+test('占位设置下静态页面仍能打开，登录入口回到探针首页', async () => {
+  const placeholders = { ...env([]), MMWX_ORIGIN: '待填写', PROBE_TOKEN: '待填写' }
+  const page = await worker.fetch(new Request('https://probe.test/'), placeholders, {})
+  assert.equal(page.status, 200)
+  const login = await worker.fetch(new Request('https://probe.test/login'), placeholders, {})
+  assert.equal(login.status, 302)
+  assert.equal(login.headers.get('Location'), 'https://probe.test/')
+})
