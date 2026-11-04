@@ -679,7 +679,7 @@ export default function EmeraldApp({ data, onThemeChange }: { data: ProbePayload
       </main>
 
       <footer className="emerald-footer">
-        <span><span className="emerald-live-dot" />{servers.filter((server) => server.online).length} 台在线 · 实时更新</span>
+        <span><span>Powered by <a href="https://github.com/chnnic/jiwo-probe" target="_blank" rel="noreferrer">Jiwo Probe</a></span><span aria-hidden="true">·</span><span className="emerald-live-dot" />{servers.filter((server) => server.online).length} 台在线 · 实时更新</span>
         <span>Emerald · inspired by <a href="https://github.com/Tokinx/komari-theme-emerald" target="_blank" rel="noreferrer">Komari Theme Emerald</a></span>
       </footer>
 

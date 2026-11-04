@@ -163,7 +163,7 @@ export default function MiniApp({ data, error, onThemeChange }: { data: ProbePay
         {visible.map(({ server, index }) => <LazyCard key={index} className="mini-node-card" name={server.name || `服务器 ${index + 1}`} estimatedHeight={ESTIMATED_HEIGHT[view]}><NodeCard server={server} index={index} view={view} /></LazyCard>)}
         {!visible.length && <div className="mini-empty"><Search size={27} /><h3>{servers.length ? '没有匹配的节点' : '暂无服务器'}</h3><p>{servers.length ? '试试其他关键词，或清除筛选条件。' : '等待主控上报服务器数据。'}</p>{servers.length > 0 && <button type="button" onClick={() => { setQuery(''); setStatus('all'); setProvider('') }}>清除筛选</button>}</div>}
       </section>
-      <footer className="mini-footer">Powered by <a href="https://github.com/chnnic/jiwo-probe" target="_blank" rel="noreferrer">Jiwo Probe</a><span>Lite</span></footer>
+      <footer className="mini-footer"><span>Powered by <a href="https://github.com/chnnic/jiwo-probe" target="_blank" rel="noreferrer">Jiwo Probe</a></span><span>Lite</span></footer>
     </main>
   </div>
 }

@@ -79,13 +79,22 @@ export function Footer({ version = 'v2.1.3', config }: FooterProps) {
         textTransform: 'uppercase',
         letterSpacing: '0.14em',
         display: 'flex',
-        justifyContent: 'flex-start',
+        justifyContent: 'space-between',
         alignItems: 'center',
-        gap: 0,
+        gap: '4px 16px',
         flexWrap: 'wrap',
         marginTop: 'auto',
       }}
     >
+      <a
+        href="https://github.com/chnnic/jiwo-probe"
+        target="_blank"
+        rel="noopener noreferrer"
+        style={linkStyle}
+        title="Jiwo Probe · GitHub 仓库"
+      >
+        POWERED BY JIWO PROBE
+      </a>
       <span style={{ display: 'inline-flex', alignItems: 'center', flexWrap: 'wrap' }}>
         <span>RAN · MMWX PROBE INTERFACE · {version}</span>
         <span style={sepStyle}>·</span>

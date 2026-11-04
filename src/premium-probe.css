@@ -2866,10 +2866,34 @@
 
 .premium-probe-footer {
   display: flex;
+  align-items: center;
   justify-content: center;
   flex-wrap: wrap;
   gap: 0.45rem;
   padding: 0 1rem 1.5rem;
+}
+
+/* 左侧署名；许可证勋章与动画开关留在右侧 */
+.premium-probe-footer-credit {
+  margin-right: auto;
+  color: #a69a7f;
+  font-size: 0.72rem;
+  white-space: nowrap;
+}
+.premium-probe-footer-credit a {
+  color: var(--pp-gold);
+  font-weight: 650;
+  text-decoration: none;
+}
+.premium-probe-footer-credit a:hover {
+  color: var(--pp-gold-bright);
+  text-decoration: underline;
+}
+:root.theme-premium.platinum .premium-probe-footer-credit {
+  color: #7d6f55;
+}
+:root.theme-premium.platinum .premium-probe-footer-credit a {
+  color: #8a6a1c;
 }
 
 .premium-probe-footer-badges {
@@ -3250,7 +3274,11 @@
   }
   /* 底部许可证: 单排横滚(替代三排换行) */
   .premium-probe-footer {
-    flex-wrap: nowrap;
+    flex-wrap: wrap;
+  }
+  .premium-probe-footer-credit {
+    flex: 1 0 100%;
+    margin-right: 0;
   }
   .premium-probe-footer-badges {
     flex: 1;

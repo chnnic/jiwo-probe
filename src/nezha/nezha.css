@@ -744,7 +744,7 @@
 .nz-footer {
   display: flex;
   flex-wrap: wrap;
-  justify-content: center;
+  justify-content: space-between;
   gap: 4px 16px;
   margin: 40px 0 8px;
   color: var(--nz-muted-fg);

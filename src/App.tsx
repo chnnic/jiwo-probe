@@ -1635,10 +1635,13 @@ function ProbeApp({ data, error }: ReturnType<typeof useProbe>) {
         )) : view === 'mini' ? visible.map(({ server, index }) => <ServerMiniCard key={server.name || index} server={server} index={index} expanded={miniExpanded} />) : <ServerTable servers={visible.map(({ server }) => server)} /> : <div className="empty">暂无符合条件的服务器</div>}
       </main>
       <footer>
-        Powered by{' '}
-        <a href="https://github.com/mmwx-group" target="_blank" rel="noreferrer">
-          MMWX Group
-        </a>
+        <span>Powered by <a href="https://github.com/chnnic/jiwo-probe" target="_blank" rel="noreferrer">Jiwo Probe</a></span>
+        <span>
+          主控{' '}
+          <a href="https://github.com/mmwx-group" target="_blank" rel="noreferrer">
+            MMWX Group
+          </a>
+        </span>
       </footer>
       {/* 许可证放在页面末尾并带动画开关（与 LuminaPlus、Premium 一致）；开关按主题分别记忆 */}
       <ProbeLicenseBar badges={data.license_badge} storageKey={`jiwo-${activeTheme}-license-anim`} className="probe-license-bar" toggleClassName="probe-license-toggle" />

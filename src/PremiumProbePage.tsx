@@ -3411,6 +3411,7 @@ export function PremiumProbePage({
       )}
 
       <footer className='premium-probe-footer'>
+        <span className='premium-probe-footer-credit'>Powered by <a href='https://github.com/chnnic/jiwo-probe' target='_blank' rel='noreferrer'>Jiwo Probe</a></span>
         <div className='premium-probe-footer-badges'>
           {(() => {
             // 与经典界面 Footer 同款去重: 本地 EXTRA 为主, 主控同名勋章覆盖, 其余主控勋章追加

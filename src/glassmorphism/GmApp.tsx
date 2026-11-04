@@ -699,8 +699,8 @@ export default function GmApp({
       <footer className="gm-footer">
         <div>
           Powered by{' '}
-          <a href="https://github.com/mmwx-group" target="_blank" rel="noreferrer">
-            <strong>妙妙屋</strong>
+          <a href="https://github.com/chnnic/jiwo-probe" target="_blank" rel="noreferrer">
+            <strong>Jiwo Probe</strong>
           </a>
         </div>
         <div>

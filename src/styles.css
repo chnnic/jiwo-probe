@@ -1659,10 +1659,16 @@ button.net-box:hover {
   height: 100%;
   padding: 0;
 }
+/* 页脚：左边 Powered by Jiwo Probe，右边主控链接；宽度与内容区对齐 */
 footer {
-  padding: 20px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 6px 16px;
+  width: min(1600px, calc(100% - 48px));
+  margin: 0 auto;
+  padding: 20px 0;
   color: var(--muted);
-  text-align: center;
   font-size: 12px;
 }
 footer a {

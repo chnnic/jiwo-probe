@@ -18,6 +18,7 @@ export const ZH_EXACT: Record<string, string> = {
   'PROBE ·': '探针 ·',
   'RAN · MMWX PROBE INTERFACE ·': '岚 · 妙妙屋探针界面 ·',
   'POWERED BY MMWX PROBE': '由妙妙屋探针驱动',
+  'POWERED BY JIWO PROBE': '由 Jiwo Probe 驱动',
   'MMWX Probe · Ran Interface': '妙妙屋探针 · 岚',
   'Ran · Geo Tracking': '岚 · 地理追踪',
   'LAYOUT': '布局',

@@ -170,8 +170,8 @@
 .mini-empty { grid-column: 1 / -1; padding: 65px 20px; display: grid; justify-items: center; gap: 10px; border: 1px dashed var(--mini-border); border-radius: 14px; color: var(--mini-muted); text-align: center; }
 .mini-empty h3 { font-size: 16px; color: var(--mini-text); }
 .mini-empty button { background: var(--mini-surface); color: var(--mini-accent); border: 1px solid var(--mini-border); border-radius: 8px; padding: 7px 12px; }
-.mini-app .mini-footer { display: flex; justify-content: center; gap: 6px; margin-top: 30px; padding: 15px 0; color: var(--mini-muted); font-size: 11px; }
-.mini-footer > span { margin-left: 8px; border-left: 1px solid var(--mini-border); padding-left: 12px; }
+.mini-app .mini-footer { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 6px; margin-top: 30px; padding: 15px 0; color: var(--mini-muted); font-size: 11px; }
+.mini-footer > span { margin-left: 8px; }
 :root:is(.theme-lite, .theme-nezha) .server-detail { color: var(--mini-text); background: var(--mini-page); }
 :root:is(.theme-lite, .theme-nezha) :is(.probe-unlock-dialog, .probe-unlock-panel, .probe-unlock-button) { --cap-bg: var(--mini-surface); --cap-fg: var(--mini-text); --cap-muted: var(--mini-muted); }
 /* 独立趋势 / 解锁弹窗保持原有可视区高度。 */
