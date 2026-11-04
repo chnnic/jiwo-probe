@@ -5257,13 +5257,16 @@ footer a:hover {
   .topbar > div {
     flex: 1 1 100%;
   }
+  /* 用等分网格而不是 flex 分配宽度：Passkey 和主题选择器各自带着 flex 设置，flex 下分不均 */
   .topbar nav {
     flex: 1 1 100%;
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(0, 1fr);
     gap: 0;
   }
   /* 按钮等宽铺满，相邻边框合并，只有两端留圆角；选中项抬高一层，边框不被邻居盖住 */
   .topbar nav > * {
-    flex: 1 1 0;
     min-width: 0;
   }
   .topbar nav > :not(:first-child) {
@@ -5285,6 +5288,20 @@ footer a:hover {
   .topbar nav button.active {
     position: relative;
     z-index: 1;
+  }
+  /* 主题选择器的触发按钮在 theme-picker.css 里固定 46px 宽、图标绝对定位，这里放开宽度并把图标组居中 */
+  :root:not(.theme-ran) .topbar nav .probe-theme-picker > .probe-theme-trigger {
+    width: 100%;
+    min-width: 0;
+    height: auto;
+    min-height: 40px;
+    flex: 1 1 auto;
+  }
+  :root:not(.theme-ran) .topbar nav .probe-theme-trigger > .probe-theme-palette {
+    left: calc(50% - 16px);
+  }
+  :root:not(.theme-ran) .topbar nav .probe-theme-trigger > .probe-theme-chevron {
+    right: calc(50% - 16px);
   }
   .topbar:has(.probe-header-license) h1 {
     flex-shrink: 1;
