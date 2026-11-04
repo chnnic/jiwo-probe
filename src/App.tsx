@@ -1637,7 +1637,7 @@ function ProbeApp({ data, error }: ReturnType<typeof useProbe>) {
       <footer>
         <span>Powered by <a href="https://github.com/chnnic/jiwo-probe" target="_blank" rel="noreferrer">Jiwo Probe</a></span>
         <span>
-          主控{' '}
+          Powered by{' '}
           <a href="https://github.com/mmwx-group" target="_blank" rel="noreferrer">
             MMWX Group
           </a>

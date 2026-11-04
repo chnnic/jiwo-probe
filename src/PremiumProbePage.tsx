@@ -3433,6 +3433,7 @@ export function PremiumProbePage({
         >
           <Sparkles />
         </button>
+        <span className='premium-probe-footer-credit is-controller'>Powered by <a href='https://github.com/mmwx-group' target='_blank' rel='noreferrer'>MMWX Group</a></span>
       </footer>
     </div>
   )

@@ -2864,16 +2864,16 @@
   border-radius: 0.75rem;
 }
 
-/* 三栏：左侧署名 | 居中的许可证勋章 | 紧跟勋章的动画开关。两侧等宽，勋章仍落在页面正中 */
+/* 四栏：左侧 Jiwo Probe 署名 | 居中的许可证勋章 + 动画开关 | 右侧主控署名。两侧等宽，勋章仍落在页面正中 */
 .premium-probe-footer {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr) auto auto minmax(0, 1fr);
   align-items: center;
   gap: 0.45rem;
   padding: 0 1rem 1.5rem;
 }
-.premium-probe-footer .premium-probe-license-anim-toggle {
-  justify-self: start;
+.premium-probe-footer-credit.is-controller {
+  justify-self: end;
 }
 
 /* 署名做成和勋章同款的深色小牌，照片背景上也看得清 */
@@ -3289,12 +3289,30 @@
     display: none;
   }
   /* 底部许可证: 单排横滚(替代三排换行) */
-  /* 手机：署名独占第一行，勋章横滚 + 开关在第二行 */
+  /* 手机：改回流式排布。两条署名在前（放不下时主控署名自己换到下一行靠右），
+     勋章横滚 + 开关固定占最后一行 */
   .premium-probe-footer {
-    grid-template-columns: minmax(0, 1fr) auto;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.35rem 0.4rem;
   }
   .premium-probe-footer-credit {
-    grid-column: 1 / -1;
+    padding: 0 0.5rem;
+    font-size: 0.68rem;
+  }
+  .premium-probe-footer-credit.is-controller {
+    order: 1;
+    margin-left: auto;
+  }
+  /* 勋章行不收缩，保证独占一行（只和开关同排）；特异性要压过下面的 flex: 1 */
+  .premium-probe-footer > .premium-probe-footer-badges {
+    order: 2;
+    flex: 1 0 calc(100% - 56px);
+  }
+  .premium-probe-footer .premium-probe-license-anim-toggle {
+    order: 3;
+    flex: 0 0 auto;
   }
   .premium-probe-footer-badges {
     flex: 1;
