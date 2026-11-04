@@ -2864,36 +2864,52 @@
   border-radius: 0.75rem;
 }
 
+/* 三栏：左侧署名 | 居中的许可证勋章 | 紧跟勋章的动画开关。两侧等宽，勋章仍落在页面正中 */
 .premium-probe-footer {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: center;
-  justify-content: center;
-  flex-wrap: wrap;
   gap: 0.45rem;
   padding: 0 1rem 1.5rem;
 }
+.premium-probe-footer .premium-probe-license-anim-toggle {
+  justify-self: start;
+}
 
-/* 左侧署名；许可证勋章与动画开关留在右侧 */
+/* 署名做成和勋章同款的深色小牌，照片背景上也看得清 */
 .premium-probe-footer-credit {
-  margin-right: auto;
-  color: #a69a7f;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  justify-self: start;
+  min-height: 28px;
+  padding: 0 0.7rem;
+  border: 1px solid var(--pp-border);
+  border-radius: 5px;
+  color: #cfc3a8;
+  background: rgba(14, 15, 14, 0.74);
   font-size: 0.72rem;
   white-space: nowrap;
 }
 .premium-probe-footer-credit a {
-  color: var(--pp-gold);
+  color: var(--pp-gold-bright);
   font-weight: 650;
   text-decoration: none;
 }
 .premium-probe-footer-credit a:hover {
-  color: var(--pp-gold-bright);
+  color: #fff3d0;
   text-decoration: underline;
 }
 :root.theme-premium.platinum .premium-probe-footer-credit {
-  color: #7d6f55;
+  border-color: #d7c8a7;
+  color: #6b5a36;
+  background: rgba(255, 251, 243, 0.86);
 }
 :root.theme-premium.platinum .premium-probe-footer-credit a {
   color: #8a6a1c;
+}
+:root.theme-premium.platinum .premium-probe-footer-credit a:hover {
+  color: #5c4610;
 }
 
 .premium-probe-footer-badges {
@@ -3273,12 +3289,12 @@
     display: none;
   }
   /* 底部许可证: 单排横滚(替代三排换行) */
+  /* 手机：署名独占第一行，勋章横滚 + 开关在第二行 */
   .premium-probe-footer {
-    flex-wrap: wrap;
+    grid-template-columns: minmax(0, 1fr) auto;
   }
   .premium-probe-footer-credit {
-    flex: 1 0 100%;
-    margin-right: 0;
+    grid-column: 1 / -1;
   }
   .premium-probe-footer-badges {
     flex: 1;
