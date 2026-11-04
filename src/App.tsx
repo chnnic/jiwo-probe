@@ -631,8 +631,9 @@ function ServerCard({ server, index, dense = false }: { server: ProbeServer; ind
       </article>
     )
   }
-  // 计费用量：按周期统计的写「本周期」，其余（计数器累计、按累计值估算）写「计数器重置以来」，与主控探针页同一叫法
-  const trafficLabel = server.traffic_used_scope && server.traffic_used_scope !== 'configured_period' ? '计数器重置以来计费用量' : '本周期计费用量'
+  // 计费口径：按周期统计的写「本周期」，其余（计数器累计、按累计值估算）写「计数器重置以来」，与主控探针页同一叫法。
+  // 卡片上标签只写「流量」，口径放在悬停提示里，否则手机上长标签会被数值挤成半截。
+  const trafficScope = server.traffic_used_scope && server.traffic_used_scope !== 'configured_period' ? '计数器重置以来计费用量' : '本周期计费用量'
   const bootDown = server.boot_traffic_down ?? server.cumulative_down
   const bootUp = server.boot_traffic_up ?? server.cumulative_up
   return (
@@ -647,7 +648,7 @@ function ServerCard({ server, index, dense = false }: { server: ProbeServer; ind
           <button
             type="button"
             className="metric metric-button"
-            title="查看日流量趋势"
+            title={`${trafficScope} · 点击查看日流量趋势`}
             onClick={(event) => {
               event.stopPropagation()
               setTrafficOpen(true)
@@ -656,7 +657,7 @@ function ServerCard({ server, index, dense = false }: { server: ProbeServer; ind
             <div className="metric-head">
               <span>
                 <PieChart size={14} />
-                <span className="metric-label">{trafficLabel}</span>
+                <span className="metric-label">流量</span>
               </span>
               <strong>
                 {server.traffic_limit ? `${bytes(server.traffic_used, false)} / ${bytes(server.traffic_limit, false)}` : bytes(server.traffic_used, false)}
