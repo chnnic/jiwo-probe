@@ -115,7 +115,7 @@ export function CardPingGroups({ ping = [], serverIndex, serverName, variant, av
             </div>
             <div className="card-ping-row-side">
               {!averageOnly && index === 0 && overrides.some(Boolean) && <button type="button" className="card-ping-reset" title="恢复后台默认目标" aria-label={`${name} 恢复后台默认目标`} onClick={event => { event.stopPropagation(); update([]) }}><RotateCcw size={11} /></button>}
-              <span className={`card-ping-loss${loss !== undefined && loss > 0 ? ' warning' : ''}`}><span>丢包率</span><strong>{valueText('loss', loss, !!current)}</strong></span>
+              <span className={`card-ping-loss${loss !== undefined && loss > 0 ? ' warning' : ''}`}><span><Unplug size={13} aria-hidden="true" />丢包率</span><strong>{valueText('loss', loss, !!current)}</strong></span>
             </div>
           </div>
           <div className="card-ping-bar-pair">

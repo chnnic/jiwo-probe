@@ -64,7 +64,8 @@
 .card-ping-probe .card-ping-selector select { flex: 1; min-width: 0; max-width: 120px; overflow: hidden; border: 1px solid var(--border); border-radius: 4px; padding: 1px 4px; background: transparent; color: inherit; font: inherit; font-size: 12px; text-overflow: ellipsis; white-space: nowrap; cursor: pointer; outline: none; }
 .card-ping-probe .card-ping-row-main > strong { flex-shrink: 0; font-weight: 500; white-space: nowrap; }
 .card-ping-probe .card-ping-loss { display: flex; flex: 1; align-items: center; justify-content: space-between; gap: 8px; min-width: 0; color: var(--muted); }
-.card-ping-probe .card-ping-loss > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.card-ping-probe .card-ping-loss > span { display: flex; align-items: center; gap: 4px; min-width: 0; overflow: hidden; white-space: nowrap; }
+.card-ping-probe .card-ping-loss > span svg { flex-shrink: 0; }
 .card-ping-probe .card-ping-loss > strong { flex-shrink: 0; color: var(--text); font-weight: 500; white-space: nowrap; }
 .card-ping-probe .card-ping-loss.warning > strong { color: #d97706; }
 .card-ping-probe button.card-ping-reset { display: inline-flex; flex-shrink: 0; align-items: center; border: 0; padding: 0; background: transparent; color: var(--muted); box-shadow: none; cursor: pointer; }
