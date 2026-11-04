@@ -2876,20 +2876,17 @@
   justify-self: end;
 }
 
-/* 署名做成和勋章同款的深色小牌，照片背景上也看得清 */
+/* 两条署名是纯文字，不带边框；黑金下加一点投影，照片背景上也看得清 */
 .premium-probe-footer-credit {
   display: inline-flex;
   align-items: center;
   gap: 0.3rem;
   justify-self: start;
   min-height: 28px;
-  padding: 0 0.7rem;
-  border: 1px solid var(--pp-border);
-  border-radius: 5px;
-  color: #cfc3a8;
-  background: rgba(14, 15, 14, 0.74);
+  color: #e6dcc3;
   font-size: 0.72rem;
   white-space: nowrap;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
 }
 .premium-probe-footer-credit a {
   color: var(--pp-gold-bright);
@@ -2900,10 +2897,10 @@
   color: #fff3d0;
   text-decoration: underline;
 }
+/* 白金：深色字 + 浅色光晕，米白底和照片背景上都能读 */
 :root.theme-premium.platinum .premium-probe-footer-credit {
-  border-color: #d7c8a7;
-  color: #6b5a36;
-  background: rgba(255, 251, 243, 0.86);
+  color: #4a3a1c;
+  text-shadow: 0 0 1px rgba(255, 250, 240, 0.95), 0 0 5px rgba(255, 250, 240, 0.85);
 }
 :root.theme-premium.platinum .premium-probe-footer-credit a {
   color: #8a6a1c;
@@ -3298,7 +3295,6 @@
     gap: 0.35rem 0.4rem;
   }
   .premium-probe-footer-credit {
-    padding: 0 0.5rem;
     font-size: 0.68rem;
   }
   .premium-probe-footer-credit.is-controller {
