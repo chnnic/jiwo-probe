@@ -5247,7 +5247,7 @@ footer a:hover {
   flex-shrink: 0;
   max-width: 100%;
 }
-/* 手机：顶栏分两行。第一行 logo + 标题 + 铭牌，第二行按钮按原顺序靠右，
+/* 手机：顶栏分两行。第一行 logo + 标题 + 铭牌，第二行六个按钮连成一条等宽分段栏，
    标题和铭牌不再被按钮挡住；空间仍不够时先压缩铭牌，再省略标题。 */
 @media (max-width: 640px) {
   .topbar {
@@ -5259,7 +5259,32 @@ footer a:hover {
   }
   .topbar nav {
     flex: 1 1 100%;
-    justify-content: flex-end;
+    gap: 0;
+  }
+  /* 按钮等宽铺满，相邻边框合并，只有两端留圆角；选中项抬高一层，边框不被邻居盖住 */
+  .topbar nav > * {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+  .topbar nav > :not(:first-child) {
+    margin-left: -1px;
+  }
+  .topbar nav button {
+    width: 100%;
+    min-height: 40px;
+    border-radius: 0;
+  }
+  .topbar nav > :first-child button,
+  .topbar nav > button:first-child {
+    border-radius: min(var(--radius), 12px) 0 0 min(var(--radius), 12px);
+  }
+  .topbar nav > :last-child button,
+  .topbar nav > button:last-child {
+    border-radius: 0 min(var(--radius), 12px) min(var(--radius), 12px) 0;
+  }
+  .topbar nav button.active {
+    position: relative;
+    z-index: 1;
   }
   .topbar:has(.probe-header-license) h1 {
     flex-shrink: 1;
