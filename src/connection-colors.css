@@ -11,8 +11,10 @@
 :root.theme-pixel:is(.dark, .gold) { --connection-tcp: #ffb36b; --connection-udp: #d9bf86; }
 :root.theme-anime { --connection-tcp: #8b5cf6; --connection-udp: #d15b9b; }
 :root.theme-anime:is(.dark, .gold) { --connection-tcp: #b8a0fa; --connection-udp: #ee9fcb; }
-:root.theme-glass { --connection-tcp: #087f9f; --connection-udp: #5984b6; }
-:root.theme-glass:is(.dark, .gold) { --connection-tcp: #4bd4f2; --connection-udp: #a7baf3; }
+:root.theme-glass { --connection-tcp: #0c6d92; --connection-udp: #c4702a; }
+:root.theme-glass:is(.dark, .gold) { --connection-tcp: #4cb8f5; --connection-udp: #f0a35b; }
+:root.theme-meow { --connection-tcp: #b02e63; --connection-udp: #7a5647; }
+:root.theme-meow:is(.dark, .gold) { --connection-tcp: #f7b6cb; --connection-udp: #d9b8a6; }
 :root.theme-sweet { --connection-tcp: #c9437f; --connection-udp: #8c6fdc; }
 :root.theme-sweet:is(.dark, .gold) { --connection-tcp: #ff9acb; --connection-udp: #c3b1ff; }
 :root.theme-lumina { --connection-tcp: var(--traffic-up); --connection-udp: var(--traffic-down); }

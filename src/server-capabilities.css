@@ -27,8 +27,10 @@ body.gm-body:not(.gm-light-body) :is(.probe-unlock-dialog, .probe-unlock-panel, 
   --cap-unlock-some: #34d399;
   --cap-unlock-none: #94a3b8;
 }
-:root.theme-glass :is(.probe-unlock-dialog, .probe-unlock-panel, .probe-unlock-button, .probe-connections) { --cap-bg: #f2fafc; }
-:root.theme-glass.dark :is(.probe-unlock-dialog, .probe-unlock-panel, .probe-unlock-button, .probe-connections) { --cap-bg: #142833; }
+:root.theme-glass :is(.probe-unlock-dialog, .probe-unlock-panel, .probe-unlock-button, .probe-connections) { --cap-bg: #eef3f8; }
+:root.theme-glass.dark :is(.probe-unlock-dialog, .probe-unlock-panel, .probe-unlock-button, .probe-connections) { --cap-bg: #141c2b; }
+:root.theme-meow :is(.probe-unlock-dialog, .probe-unlock-panel, .probe-unlock-button, .probe-connections) { --cap-bg: #fbf7f2; --cap-radius: 20px; }
+:root.theme-meow.dark :is(.probe-unlock-dialog, .probe-unlock-panel, .probe-unlock-button, .probe-connections) { --cap-bg: #1f1a25; }
 :root.theme-sweet :is(.probe-unlock-dialog, .probe-unlock-panel, .probe-unlock-button, .probe-connections) { --cap-bg: #fff6fa; --cap-radius: 18px; }
 :root.theme-sweet.dark :is(.probe-unlock-dialog, .probe-unlock-panel, .probe-unlock-button, .probe-connections) { --cap-bg: #2f2547; }
 :root.theme-lumina.gold :is(.probe-unlock-dialog, .probe-unlock-panel, .probe-unlock-button, .probe-connections) { --cap-bg: #1b1915; }

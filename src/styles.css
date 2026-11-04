@@ -3449,482 +3449,6 @@ footer a:hover {
   margin-top: 7px;
 }
 
-/* ===== 玻璃主题（Glass）=====
-   克制的环境光 + 可读性优先的磨砂层级。所有核心容器共用同一玻璃材质，
-   通过透明度、边框与阴影区分主面板、内层信息和浮层。 */
-:root.theme-glass {
-  color-scheme: light;
-  --primary: #087f9f;
-  --accent: #0e7490;
-  --radius: 18px;
-  --page-bg: #eaf2f5;
-  --foreground: #102a35;
-  --muted: #5a6f7a;
-  --surface: rgba(255, 255, 255, 0.68);
-  /* 卡片内部的分隔线、输入框边、刻度槽都走 --border：用淡墨色而不是白色，
-     白线叠在半透明白底上会像划痕。外框的白边单独走 --glass-border。 */
-  --border: rgba(16, 42, 53, 0.1);
-  --shadow: 0 18px 44px rgba(30, 64, 79, 0.12);
-  --glass-surface: linear-gradient(145deg, rgba(255, 255, 255, 0.78), rgba(244, 250, 252, 0.57));
-  --glass-surface-strong: linear-gradient(145deg, rgba(255, 255, 255, 0.92), rgba(244, 250, 252, 0.78));
-  --glass-surface-soft: rgba(255, 255, 255, 0.38);
-  --glass-border: rgba(255, 255, 255, 0.64);
-  --glass-border-strong: rgba(122, 164, 179, 0.38);
-  --glass-shadow: 0 18px 44px rgba(30, 64, 79, 0.12), 0 3px 10px rgba(30, 64, 79, 0.06);
-  --glass-shadow-hover: 0 22px 52px rgba(23, 93, 116, 0.17), 0 5px 14px rgba(30, 64, 79, 0.08);
-  --glass-inset: inset 0 1px 0 rgba(255, 255, 255, 0.92);
-  --glass-blur: blur(22px) saturate(130%);
-  --glass-focus: 0 0 0 3px rgba(8, 127, 159, 0.16);
-  --globe-ocean-light: #dff5fa;
-  --globe-ocean-dark: #b7e4ed;
-}
-:root.theme-glass .app-shell {
-  background:
-    radial-gradient(900px 560px at 8% -8%, rgba(60, 191, 221, 0.24), transparent 64%),
-    radial-gradient(800px 520px at 96% 12%, rgba(109, 152, 255, 0.18), transparent 63%),
-    radial-gradient(860px 600px at 42% 110%, rgba(82, 203, 177, 0.14), transparent 65%),
-    linear-gradient(145deg, #edf5f7 0%, #e7f0f4 52%, #eef4f7 100%);
-  background-attachment: fixed;
-}
-:root.theme-glass .app-shell ::selection {
-  color: #fff;
-  background: rgba(8, 127, 159, 0.72);
-}
-:root.theme-glass .topbar {
-  border-bottom-color: rgba(255, 255, 255, 0.66);
-  background: rgba(239, 248, 250, 0.7);
-  box-shadow: 0 8px 28px rgba(30, 64, 79, 0.09), inset 0 1px 0 rgba(255, 255, 255, 0.88);
-  backdrop-filter: blur(24px) saturate(130%);
-  -webkit-backdrop-filter: blur(24px) saturate(130%);
-}
-:root.theme-glass .probe-toolbar,
-:root.theme-glass .server-card,
-:root.theme-glass .server-mini-card,
-:root.theme-glass .globe-card,
-:root.theme-glass .leaderboard-card,
-:root.theme-glass .server-table-wrap,
-:root.theme-glass .modal,
-:root.theme-glass .detail-cols > div,
-:root.theme-glass .detail-panel,
-:root.theme-glass .kpi-panel {
-  position: relative;
-  border-color: var(--glass-border);
-  background: var(--glass-surface);
-  box-shadow: var(--glass-shadow), var(--glass-inset);
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
-}
-:root.theme-glass .probe-toolbar::before,
-:root.theme-glass .server-card::before,
-:root.theme-glass .server-mini-card::before,
-:root.theme-glass .globe-card::before,
-:root.theme-glass .leaderboard-card::before,
-:root.theme-glass .server-table-wrap::before,
-:root.theme-glass .modal::before,
-:root.theme-glass .detail-cols > div::before,
-:root.theme-glass .detail-panel::before,
-:root.theme-glass .server-detail::before,
-:root.theme-glass .kpi-panel::before {
-  content: '';
-  position: absolute;
-  z-index: 1;
-  top: 0;
-  right: 10%;
-  left: 10%;
-  height: 1px;
-  pointer-events: none;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.95), transparent);
-}
-:root.theme-glass .probe-toolbar > *,
-:root.theme-glass .server-card > *,
-:root.theme-glass .server-mini-card > *,
-:root.theme-glass .globe-card > *,
-:root.theme-glass .leaderboard-card > *,
-:root.theme-glass .modal > *,
-:root.theme-glass .detail-cols > div > *,
-:root.theme-glass .detail-panel > *,
-:root.theme-glass .kpi-panel > * {
-  position: relative;
-  z-index: 2;
-}
-:root.theme-glass .server-card:hover,
-:root.theme-glass .server-mini-card:hover {
-  border-color: color-mix(in srgb, var(--primary) 42%, var(--glass-border));
-  box-shadow: var(--glass-shadow-hover), var(--glass-inset);
-}
-:root.theme-glass .server-title,
-:root.theme-glass .server-detail-header {
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.38), rgba(255, 255, 255, 0.1));
-}
-/* 卡片内部不用线切块：标题带靠一层更亮的玻璃渐隐区分，网速三格做成小磨砂块，
-   延迟区和底部信息只留 --border 的淡发丝线，延迟目标下拉框改成软底色小胶囊。 */
-:root.theme-glass .server-title {
-  border-bottom-color: transparent;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.46), rgba(255, 255, 255, 0));
-}
-:root.theme-glass .net-boxes {
-  border-top: 0;
-  padding-top: 2px;
-}
-:root.theme-glass .net-box {
-  background: rgba(255, 255, 255, 0.46);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8), 0 1px 2px rgba(16, 42, 53, 0.05);
-}
-:root.theme-glass button.net-box:hover {
-  background: rgba(255, 255, 255, 0.64);
-}
-:root.theme-glass .card-ping-probe .card-ping-selector select {
-  border: 0;
-  border-radius: 6px;
-  padding: 1px 7px;
-  background: rgba(16, 42, 53, 0.06);
-}
-:root.theme-glass .card-ping-probe .card-ping-selector select:hover {
-  background: rgba(16, 42, 53, 0.1);
-}
-:root.theme-glass .detail-value-main,
-:root.theme-glass .detail-speed > span,
-:root.theme-glass .detail-hw > span {
-  border: 1px solid rgba(255, 255, 255, 0.56);
-  background: var(--glass-surface-soft);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.62);
-}
-
-:root.theme-glass .metric-head strong,
-:root.theme-glass .ping-head strong {
-  letter-spacing: -0.015em;
-}
-:root.theme-glass .meter {
-  background: rgba(91, 126, 139, 0.17);
-  box-shadow: inset 0 1px 2px rgba(16, 42, 53, 0.08);
-}
-:root.theme-glass .meter i {
-  background: linear-gradient(90deg, #14b8a6, #159ac2);
-}
-:root.theme-glass .filters button,
-:root.theme-glass .region-trigger,
-:root.theme-glass .server-search,
-:root.theme-glass .leaderboard-tabs button,
-:root.theme-glass .ranges button,
-:root.theme-glass .topbar button,
-:root.theme-glass .trend-mode-switch button,
-:root.theme-glass .ping-head select {
-  border-color: rgba(255, 255, 255, 0.66);
-  color: var(--muted);
-  background: rgba(255, 255, 255, 0.38);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.68);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-}
-:root.theme-glass button:not(:disabled),
-:root.theme-glass .region-trigger,
-:root.theme-glass .server-search {
-  transition: color 0.16s ease, border-color 0.16s ease, background 0.16s ease, box-shadow 0.16s ease, transform 0.16s ease;
-}
-:root.theme-glass .filters button:hover,
-:root.theme-glass .region-trigger:hover,
-:root.theme-glass .leaderboard-tabs button:hover,
-:root.theme-glass .ranges button:hover,
-:root.theme-glass .topbar button:hover {
-  border-color: color-mix(in srgb, var(--primary) 38%, var(--glass-border));
-  color: var(--foreground);
-  background: rgba(255, 255, 255, 0.56);
-}
-:root.theme-glass button:focus-visible,
-:root.theme-glass input:focus-visible,
-:root.theme-glass select:focus-visible,
-:root.theme-glass .server-search:focus-within,
-:root.theme-glass .region-trigger[aria-expanded='true'] {
-  outline: none;
-  border-color: color-mix(in srgb, var(--primary) 58%, transparent);
-  box-shadow: var(--glass-focus);
-}
-:root.theme-glass .filters button.active,
-:root.theme-glass .topbar button.active,
-:root.theme-glass .ranges button.active,
-:root.theme-glass .leaderboard-tabs button.active,
-:root.theme-glass .trend-mode-switch button.active {
-  border-color: rgba(255, 255, 255, 0.48);
-  color: #fff;
-  background: linear-gradient(145deg, #0d91b5, #08748f);
-  box-shadow: 0 7px 18px rgba(8, 127, 159, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.3);
-}
-:root.theme-glass .filters button.active.warning {
-  border-color: #d97706;
-  color: #fff !important;
-  background: linear-gradient(145deg, #f59e0b, #c96b04);
-  box-shadow: 0 7px 18px rgba(217, 119, 6, 0.2);
-}
-:root.theme-glass .filters button.active.danger {
-  border-color: #dc2626;
-  color: #fff !important;
-  background: linear-gradient(145deg, #ef4444, #c61f2b);
-  box-shadow: 0 7px 18px rgba(220, 38, 38, 0.2);
-}
-:root.theme-glass .region-menu {
-  border-color: var(--glass-border-strong);
-  background: var(--glass-surface-strong);
-  box-shadow: 0 18px 46px rgba(30, 64, 79, 0.2), var(--glass-inset);
-  backdrop-filter: blur(28px) saturate(135%);
-  -webkit-backdrop-filter: blur(28px) saturate(135%);
-}
-:root.theme-glass .region-menu button:hover {
-  color: var(--foreground);
-  background: rgba(8, 127, 159, 0.1);
-}
-:root.theme-glass .ping-head select option {
-  color: var(--foreground);
-  background: #eef6f8;
-}
-:root.theme-glass .route-badge-animation.gold,
-:root.theme-glass .route-badge-animation.silver,
-:root.theme-glass .route-badge-text.gold,
-:root.theme-glass .route-badge-text.silver {
-  border-color: rgba(8, 127, 159, 0.24);
-}
-:root.theme-glass .route-badge-animation.gold,
-:root.theme-glass .route-badge-animation.silver {
-  background: rgba(255, 255, 255, 0.34);
-}
-:root.theme-glass .route-badge-text.gold,
-:root.theme-glass .route-badge-text.silver {
-  color: #155e75;
-  background: linear-gradient(145deg, rgba(255, 255, 255, 0.72), rgba(207, 238, 243, 0.62));
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.76);
-}
-:root.theme-glass .server-table {
-  background: transparent;
-}
-:root.theme-glass .server-table th {
-  background: rgba(255, 255, 255, 0.28);
-}
-:root.theme-glass .server-table tbody tr {
-  background: transparent;
-}
-:root.theme-glass .server-table tbody tr:nth-child(even) {
-  background: rgba(255, 255, 255, 0.2);
-}
-:root.theme-glass .table-row-link:hover {
-  background: rgba(8, 127, 159, 0.09) !important;
-}
-:root.theme-glass .modal-backdrop,
-:root.theme-glass .server-detail-backdrop {
-  background: rgba(20, 48, 60, 0.25);
-  backdrop-filter: blur(14px) saturate(115%);
-  -webkit-backdrop-filter: blur(14px) saturate(115%);
-}
-:root.theme-glass .server-detail {
-  position: relative;
-  border-color: var(--glass-border-strong);
-  background: var(--glass-surface-strong);
-  box-shadow: 0 28px 72px rgba(20, 48, 60, 0.25), var(--glass-inset);
-  backdrop-filter: blur(32px) saturate(130%);
-  -webkit-backdrop-filter: blur(32px) saturate(130%);
-}
-:root.theme-glass .server-detail-header {
-  border-bottom-color: rgba(122, 164, 179, 0.24);
-  background: rgba(245, 251, 252, 0.8);
-  backdrop-filter: blur(22px) saturate(125%);
-  -webkit-backdrop-filter: blur(22px) saturate(125%);
-}
-:root.theme-glass .detail-cols > div,
-:root.theme-glass .detail-panel {
-  padding: 14px;
-}
-:root.dark.theme-glass {
-  color-scheme: dark;
-  --primary: #4bd4f2;
-  --accent: #67e8f9;
-  --page-bg: #07131d;
-  --foreground: #edf8fb;
-  --muted: #9eb4be;
-  --surface: rgba(10, 28, 40, 0.68);
-  --border: rgba(175, 224, 237, 0.11);
-  --shadow: 0 20px 52px rgba(0, 0, 0, 0.32);
-  --glass-surface: linear-gradient(145deg, rgba(24, 49, 63, 0.72), rgba(8, 25, 37, 0.6));
-  --glass-surface-strong: linear-gradient(145deg, rgba(27, 52, 66, 0.94), rgba(8, 24, 35, 0.92));
-  --glass-surface-soft: rgba(142, 210, 226, 0.055);
-  --glass-border: rgba(175, 224, 237, 0.18);
-  --glass-border-strong: rgba(175, 224, 237, 0.26);
-  --glass-shadow: 0 20px 52px rgba(0, 0, 0, 0.34), 0 3px 12px rgba(0, 0, 0, 0.24);
-  --glass-shadow-hover: 0 24px 62px rgba(0, 0, 0, 0.42), 0 7px 18px rgba(23, 154, 190, 0.08);
-  --glass-inset: inset 0 1px 0 rgba(224, 247, 252, 0.1);
-  --glass-focus: 0 0 0 3px rgba(75, 212, 242, 0.16);
-  --globe-ocean-light: #143446;
-  --globe-ocean-dark: #0b2332;
-  color: var(--foreground);
-}
-:root.dark.theme-glass .app-shell {
-  background:
-    radial-gradient(900px 560px at 8% -8%, rgba(22, 136, 166, 0.2), transparent 64%),
-    radial-gradient(820px 540px at 96% 10%, rgba(53, 101, 183, 0.17), transparent 64%),
-    radial-gradient(900px 620px at 40% 112%, rgba(20, 124, 101, 0.12), transparent 66%),
-    linear-gradient(145deg, #07131d 0%, #091923 50%, #07121c 100%);
-  background-attachment: fixed;
-}
-:root.dark.theme-glass .topbar {
-  border-bottom-color: rgba(175, 224, 237, 0.13);
-  background: rgba(7, 22, 32, 0.74);
-  box-shadow: 0 9px 30px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(224, 247, 252, 0.08);
-}
-:root.dark.theme-glass .probe-toolbar::before,
-:root.dark.theme-glass .server-card::before,
-:root.dark.theme-glass .server-mini-card::before,
-:root.dark.theme-glass .globe-card::before,
-:root.dark.theme-glass .leaderboard-card::before,
-:root.dark.theme-glass .server-table-wrap::before,
-:root.dark.theme-glass .modal::before,
-:root.dark.theme-glass .detail-cols > div::before,
-:root.dark.theme-glass .detail-panel::before,
-:root.dark.theme-glass .server-detail::before,
-:root.dark.theme-glass .kpi-panel::before {
-  background: linear-gradient(90deg, transparent, rgba(224, 247, 252, 0.28), transparent);
-}
-:root.dark.theme-glass .server-title,
-:root.dark.theme-glass .server-detail-header {
-  background: linear-gradient(180deg, rgba(166, 226, 239, 0.07), rgba(5, 18, 28, 0.04));
-}
-:root.dark.theme-glass .server-title {
-  background: linear-gradient(180deg, rgba(166, 226, 239, 0.09), rgba(5, 18, 28, 0));
-}
-:root.dark.theme-glass .net-box {
-  background: rgba(142, 210, 226, 0.07);
-  box-shadow: inset 0 1px 0 rgba(224, 247, 252, 0.06);
-}
-:root.dark.theme-glass button.net-box:hover {
-  background: rgba(142, 210, 226, 0.12);
-}
-:root.dark.theme-glass .card-ping-probe .card-ping-selector select {
-  background: rgba(175, 224, 237, 0.09);
-}
-:root.dark.theme-glass .card-ping-probe .card-ping-selector select:hover {
-  background: rgba(175, 224, 237, 0.15);
-}
-:root.dark.theme-glass .detail-value-main,
-:root.dark.theme-glass .detail-speed > span,
-:root.dark.theme-glass .detail-hw > span {
-  border-color: rgba(175, 224, 237, 0.11);
-  box-shadow: inset 0 1px 0 rgba(224, 247, 252, 0.06);
-}
-
-:root.dark.theme-glass .filters button,
-:root.dark.theme-glass .region-trigger,
-:root.dark.theme-glass .server-search,
-:root.dark.theme-glass .leaderboard-tabs button,
-:root.dark.theme-glass .ranges button,
-:root.dark.theme-glass .topbar button,
-:root.dark.theme-glass .trend-mode-switch button,
-:root.dark.theme-glass .ping-head select {
-  border-color: rgba(175, 224, 237, 0.14);
-  background: rgba(142, 210, 226, 0.06);
-  box-shadow: inset 0 1px 0 rgba(224, 247, 252, 0.06);
-}
-:root.dark.theme-glass .filters button:hover,
-:root.dark.theme-glass .region-trigger:hover,
-:root.dark.theme-glass .leaderboard-tabs button:hover,
-:root.dark.theme-glass .ranges button:hover,
-:root.dark.theme-glass .topbar button:hover {
-  border-color: rgba(75, 212, 242, 0.34);
-  background: rgba(75, 212, 242, 0.09);
-}
-:root.dark.theme-glass .filters button.active,
-:root.dark.theme-glass .topbar button.active,
-:root.dark.theme-glass .ranges button.active,
-:root.dark.theme-glass .leaderboard-tabs button.active,
-:root.dark.theme-glass .trend-mode-switch button.active {
-  border-color: rgba(174, 236, 248, 0.34);
-  color: #031319;
-  background: linear-gradient(145deg, #69def4, #24abc9);
-  box-shadow: 0 8px 20px rgba(31, 182, 216, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.38);
-}
-:root.dark.theme-glass .region-menu {
-  background: var(--glass-surface-strong);
-  box-shadow: 0 22px 58px rgba(0, 0, 0, 0.5), var(--glass-inset);
-}
-:root.dark.theme-glass .ping-head select option {
-  color: var(--foreground);
-  background: #102633;
-}
-:root.dark.theme-glass .route-badge-animation.gold,
-:root.dark.theme-glass .route-badge-animation.silver {
-  border-color: rgba(75, 212, 242, 0.18);
-  background: rgba(75, 212, 242, 0.05);
-}
-:root.dark.theme-glass .route-badge-text.gold,
-:root.dark.theme-glass .route-badge-text.silver {
-  border-color: rgba(75, 212, 242, 0.18);
-  color: #c8f4fb;
-  background: linear-gradient(145deg, rgba(58, 135, 151, 0.32), rgba(19, 62, 76, 0.36));
-  box-shadow: inset 0 1px 0 rgba(224, 247, 252, 0.08);
-}
-:root.dark.theme-glass .server-table th {
-  background: rgba(142, 210, 226, 0.055);
-}
-:root.dark.theme-glass .server-table tbody tr:nth-child(even) {
-  background: rgba(142, 210, 226, 0.035);
-}
-:root.dark.theme-glass .modal-backdrop,
-:root.dark.theme-glass .server-detail-backdrop {
-  background: rgba(1, 8, 13, 0.62);
-}
-:root.dark.theme-glass .server-detail {
-  background: var(--glass-surface-strong);
-  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.58), var(--glass-inset);
-}
-:root.dark.theme-glass .server-detail-header {
-  border-bottom-color: rgba(175, 224, 237, 0.13);
-  background: rgba(8, 27, 39, 0.86);
-}
-@media (max-width: 760px) {
-  :root.theme-glass {
-    --radius: 16px;
-    --glass-blur: blur(17px) saturate(122%);
-    --glass-shadow: 0 12px 30px rgba(30, 64, 79, 0.1), 0 2px 8px rgba(30, 64, 79, 0.05);
-  }
-  :root.dark.theme-glass {
-    --glass-shadow: 0 14px 34px rgba(0, 0, 0, 0.28), 0 2px 9px rgba(0, 0, 0, 0.2);
-  }
-  :root.theme-glass .topbar {
-    background: rgba(239, 248, 250, 0.84);
-    backdrop-filter: blur(19px) saturate(125%);
-    -webkit-backdrop-filter: blur(19px) saturate(125%);
-  }
-  :root.dark.theme-glass .topbar {
-    background: rgba(7, 22, 32, 0.86);
-  }
-  :root.theme-glass .probe-toolbar,
-:root.theme-glass .server-card,
-:root.theme-glass .server-mini-card,
-:root.theme-glass .globe-card,
-:root.theme-glass .leaderboard-card,
-:root.theme-glass .server-table-wrap,
-:root.theme-glass .detail-panel,
-:root.theme-glass .kpi-panel {
-    box-shadow: var(--glass-shadow), var(--glass-inset);
-  }
-  :root.theme-glass .server-card:hover,
-:root.theme-glass .server-mini-card:hover {
-    transform: none;
-  }
-  :root.theme-glass .server-detail-backdrop {
-    padding: 7px;
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-  }
-  :root.theme-glass .server-detail {
-    border-radius: 18px;
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  :root.theme-glass .server-card,
-  :root.theme-glass .server-mini-card,
-  :root.theme-glass button,
-  :root.theme-glass .region-trigger,
-  :root.theme-glass .server-search {
-    transition: none;
-  }
-}
-
 /* ===== Cloudflare 运行时自定义背景 =====
    URL/遮罩由 /api/theme-config 下发。所有布局只替换最底层画布，卡片与语义色保持主题原样。 */
 :root.probe-custom-background .app-shell {
@@ -5772,4 +5296,459 @@ footer a:hover {
   :root.theme-sweet .filters button:active {
     transform: none;
   }
+}
+
+/* ============================================================
+   液态玻璃（glass）—— 移植自上游 cfb69ea，与主控液态玻璃主题同一套：极光背景 + 半透明壳体。
+   材质三层：① blur + saturate（只模糊会把背景冲淡发灰，要把饱和拉回来）
+            ② 一像素顶部高光边（玻璃的厚度感）③ 左上角斜向折射高光。
+   材质整体放在各容器的 ::before 上，内容刷新时只重绘内容层，毛玻璃的合成结果可以缓存
+   （主控 #536：几十张卡同时刷新、材质画在元素自身上会整片频闪）。
+   主控还支持自定义壁纸与色调，探针接口目前只下发主题名，这里用默认极光；
+   Cloudflare 侧的自定义背景仍按 .probe-custom-background 盖在 .app-shell 上。
+   选择器按本 fork 改写：指标卡 .kpi-panel / .kpi-cell、榜单 .leaderboard-card、紧凑卡 .server-mini-card、
+   详情 .server-detail / .detail-panel、搜索框 .server-search、地区下拉 .region-trigger。
+   ============================================================ */
+:root.theme-glass {
+  color-scheme: light;
+  color: #16202b;
+  --foreground: #16202b;
+  --primary: #0c6d92;
+  --accent: #0c6d92;
+  --surface: rgba(255, 255, 255, 0.5);
+  --border: rgba(22, 32, 43, 0.14);
+  --muted: rgba(22, 32, 43, 0.66);
+  --radius: 14px;
+  --page-bg: #e8eef5;
+  --shadow: 0 18px 40px rgba(22, 32, 43, 0.16);
+  --g-card-base: rgba(232, 238, 245, 0.3);
+  --g-card-fill: rgba(255, 255, 255, 0.5);
+  --g-inset-fill: rgba(255, 255, 255, 0.42);
+  --g-edge: rgba(255, 255, 255, 0.75);
+  --g-ring: rgba(22, 32, 43, 0.09);
+  --g-sheen: linear-gradient(135deg, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0) 160px);
+  --g-scrim: rgba(232, 238, 245, 0.22);
+  --g-tone-a: 76, 184, 245;
+  --g-tone-b: 240, 163, 91;
+  --g-tone-c: 201, 214, 255;
+  --g-tone-a-alpha: 0.42;
+  --g-tone-b-alpha: 0.36;
+  --g-tone-c-alpha: 0.22;
+  --globe-ocean-light: #d6ebf8;
+  --globe-ocean-dark: #b4dbf2;
+}
+:root.dark.theme-glass {
+  color-scheme: dark;
+  color: #eef3f8;
+  --foreground: #eef3f8;
+  --primary: #4cb8f5;
+  --accent: #4cb8f5;
+  --surface: rgba(255, 255, 255, 0.085);
+  --border: rgba(255, 255, 255, 0.16);
+  --muted: rgba(238, 243, 248, 0.68);
+  --page-bg: #0b1220;
+  --shadow: 0 18px 40px rgba(2, 6, 14, 0.45);
+  --g-card-base: rgba(11, 18, 32, 0.46);
+  --g-card-fill: rgba(255, 255, 255, 0.085);
+  --g-inset-fill: rgba(255, 255, 255, 0.06);
+  --g-edge: rgba(255, 255, 255, 0.22);
+  --g-ring: rgba(255, 255, 255, 0.12);
+  --g-sheen: linear-gradient(135deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0) 160px);
+  --g-scrim: rgba(6, 10, 18, 0.22);
+  --g-tone-a-alpha: 0.55;
+  --g-tone-b-alpha: 0.42;
+  --g-tone-c-alpha: 0.3;
+  --globe-ocean-light: #14324c;
+  --globe-ocean-dark: #1d4a6c;
+}
+/* 背景层：极光 + 遮罩，挂在 body 伪元素上，整页固定不随滚动 */
+:root.theme-glass {
+  background: var(--page-bg);
+}
+/* body 必须透明：根元素有背景时 body 的背景不再传给画布，而是画在 body 盒子上，
+   正好压住下面 z-index 为负的极光层 */
+:root.theme-glass body {
+  background: transparent;
+}
+:root.theme-glass body::before,
+:root.theme-glass body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+}
+:root.theme-glass body::before {
+  background-image:
+    radial-gradient(1100px 620px at 8% 10%, rgba(var(--g-tone-a), var(--g-tone-a-alpha)), transparent 60%),
+    radial-gradient(900px 560px at 92% 18%, rgba(var(--g-tone-b), var(--g-tone-b-alpha)), transparent 60%),
+    radial-gradient(1000px 700px at 55% 100%, rgba(var(--g-tone-c), var(--g-tone-c-alpha)), transparent 62%);
+}
+:root.theme-glass body::after {
+  z-index: -1;
+  background-color: var(--g-scrim);
+  /* 极淡噪点抖动，打散大面积低对比渐变的 8 位色带（同主控） */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='128' height='128'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='128' height='128' filter='url(%23n)' opacity='0.022'/%3E%3C/svg%3E");
+  background-size: 128px 128px;
+}
+:root.theme-glass .app-shell {
+  background: transparent;
+}
+/* 壳体材质：卡片 / 汇总 / 榜单 / 工具条 / 表格 / 地球 / 弹窗 / 详情 / 顶栏 */
+:root.theme-glass .kpi-panel,
+:root.theme-glass .globe-mini,
+:root.theme-glass .probe-toolbar,
+:root.theme-glass .server-card,
+:root.theme-glass .server-mini-card,
+:root.theme-glass .leaderboard-card,
+:root.theme-glass .server-table-wrap,
+:root.theme-glass .globe-card,
+:root.theme-glass .modal,
+:root.theme-glass .server-detail,
+:root.theme-glass .detail-panel,
+:root.theme-glass .detail-cols > div,
+:root.theme-glass .region-menu,
+:root.theme-glass .topbar {
+  border-color: var(--g-ring);
+  background: transparent;
+  box-shadow:
+    inset 0 1px 0 var(--g-edge),
+    var(--shadow);
+  isolation: isolate;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+/* 本来不是定位元素的容器要先定位，::before 才能贴满；顶栏、工具条宽屏下是 sticky，不能改成 relative */
+:root.theme-glass .kpi-panel,
+:root.theme-glass .globe-mini,
+:root.theme-glass .globe-card,
+:root.theme-glass .server-mini-card,
+:root.theme-glass .leaderboard-card,
+:root.theme-glass .detail-panel,
+:root.theme-glass .detail-cols > div {
+  position: relative;
+}
+@media (max-width: 1023px) {
+  :root.theme-glass .probe-toolbar {
+    position: relative;
+  }
+}
+:root.theme-glass .kpi-panel::before,
+:root.theme-glass .globe-mini::before,
+:root.theme-glass .probe-toolbar::before,
+:root.theme-glass .server-card::before,
+:root.theme-glass .server-mini-card::before,
+:root.theme-glass .leaderboard-card::before,
+:root.theme-glass .server-table-wrap::before,
+:root.theme-glass .globe-card::before,
+:root.theme-glass .modal::before,
+:root.theme-glass .server-detail::before,
+:root.theme-glass .detail-panel::before,
+:root.theme-glass .detail-cols > div::before,
+:root.theme-glass .region-menu::before,
+:root.theme-glass .topbar::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background-color: var(--g-card-base);
+  background-image:
+    var(--g-sheen),
+    linear-gradient(0deg, var(--g-card-fill), var(--g-card-fill));
+  -webkit-backdrop-filter: blur(22px) saturate(1.6);
+  backdrop-filter: blur(22px) saturate(1.6);
+  pointer-events: none;
+}
+/* 顶栏贴着页面顶，不要圆角和外投影，只留底部一道细线 */
+:root.theme-glass .topbar {
+  box-shadow: none;
+  border-bottom-color: var(--g-ring);
+}
+/* 汇总格之间的分隔线换成玻璃细环 */
+:root.theme-glass .kpi-cell {
+  box-shadow: 1px 1px 0 0 var(--g-ring);
+}
+:root.theme-glass button.kpi-cell:hover {
+  background: var(--g-inset-fill);
+}
+/* 详情页的吸顶表头与卡片标题区：透明，露出下面的玻璃 */
+:root.theme-glass .server-detail-header {
+  border-bottom-color: var(--g-ring);
+  background: var(--g-inset-fill);
+  -webkit-backdrop-filter: blur(16px) saturate(1.4);
+  backdrop-filter: blur(16px) saturate(1.4);
+}
+/* 内嵌控件：更薄一层玻璃（卡中卡、搜索框、下拉、分段按钮、顶栏按钮） */
+:root.theme-glass .net-box,
+:root.theme-glass .server-search,
+:root.theme-glass .region-trigger,
+:root.theme-glass .toolbar-select,
+:root.theme-glass .filters .filter-seg,
+:root.theme-glass .topbar button:not(.active),
+:root.theme-glass .ranges button:not(.active),
+:root.theme-glass .leaderboard-tabs button:not(.active),
+:root.theme-glass .trend-mode-switch button:not(.active),
+:root.theme-glass .ping-head select,
+:root.theme-glass .card-ping-probe .card-ping-selector select,
+:root.theme-glass .detail-value-main,
+:root.theme-glass .detail-speed > span,
+:root.theme-glass .detail-hw > span {
+  border-color: var(--g-ring);
+  background: var(--g-inset-fill);
+}
+:root.theme-glass .card-ping-probe .card-ping-selector select {
+  border: 0;
+  border-radius: 6px;
+  padding: 1px 7px;
+}
+:root.theme-glass button.net-box:not(:disabled):hover,
+:root.theme-glass .topbar button:not(.active):hover,
+:root.theme-glass .ranges button:not(.active):hover,
+:root.theme-glass .leaderboard-tabs button:not(.active):hover,
+:root.theme-glass .region-trigger:hover,
+:root.theme-glass .region-menu button:hover {
+  background: var(--g-card-fill);
+}
+:root.theme-glass .filters .filter-seg > button.active {
+  background: var(--g-card-fill);
+  box-shadow:
+    inset 0 1px 0 var(--g-edge),
+    0 1px 2px rgb(0 0 0 / 0.08);
+}
+/* 深色下 --primary 是亮蓝，实心选中态的文字改深色才看得清 */
+:root.dark.theme-glass .topbar button.active,
+:root.dark.theme-glass .ranges button.active,
+:root.dark.theme-glass .filters button.active:not(.warning):not(.danger),
+:root.dark.theme-glass .leaderboard-tabs button.active,
+:root.dark.theme-glass .trend-mode-switch button.active {
+  color: #06111c;
+}
+:root.theme-glass .meter {
+  background: var(--g-ring);
+}
+:root.theme-glass .server-table td,
+:root.theme-glass .net-boxes,
+:root.theme-glass .ping-grid,
+:root.theme-glass .return-route-badges,
+:root.theme-glass .server-meta,
+:root.theme-glass .card-ping-classic,
+:root.theme-glass .server-title {
+  border-color: var(--g-ring);
+}
+:root.theme-glass .server-table th {
+  background: var(--g-inset-fill);
+}
+:root.theme-glass .server-table tbody tr:hover,
+:root.theme-glass .table-row-link:hover {
+  background: var(--g-inset-fill) !important;
+}
+/* 弹窗背后的遮罩：淡一点，让玻璃有东西可折射 */
+:root.theme-glass .modal-backdrop,
+:root.theme-glass .server-detail-backdrop {
+  background: rgba(15, 23, 42, 0.32);
+}
+:root.dark.theme-glass .modal-backdrop,
+:root.dark.theme-glass .server-detail-backdrop {
+  background: rgba(2, 6, 14, 0.5);
+}
+
+/* ============================================================
+   Meow —— 移植自上游 cfb69ea，与主控 Meow 主题（MeowX 客户端同一套品牌语言）一致：奶油底、玫红强调、
+   圆润大卡片。分层靠底色，不靠描边和硬阴影：页面奶油 → 卡片白 → 卡片里的控件回到奶油灰。
+   主控可另选「海派」字体，探针接口目前不下发该设置，这里用主题自带的圆体标题。
+   选择器同样按本 fork 改写（见上面液态玻璃的说明）。
+   ============================================================ */
+:root.theme-meow {
+  color-scheme: light;
+  color: #2a2130;
+  --foreground: #2a2130;
+  --primary: #b02e63;
+  --accent: #b02e63;
+  --surface: #ffffff;
+  --border: rgba(42, 33, 48, 0.1);
+  --muted: #665a69;
+  --radius: 24px;
+  --page-bg: #fbf7f2;
+  --shadow: none;
+  --meow-card2: #f3ece4;
+  --meow-hero: #fce4ec;
+  --meow-strong: #7a5647;
+  --meow-strong-ink: #fbf7f2;
+  --meow-float: 0 10px 30px rgba(42, 33, 48, 0.14);
+  --globe-ocean-light: #fce4ec;
+  --globe-ocean-dark: #f9cbda;
+}
+:root.dark.theme-meow {
+  color-scheme: dark;
+  color: #f7f0f3;
+  --foreground: #f7f0f3;
+  --primary: #f7b6cb;
+  --accent: #f7b6cb;
+  --surface: #1f1a25;
+  --border: rgba(255, 255, 255, 0.1);
+  --muted: #b9adbb;
+  --page-bg: #141118;
+  --meow-card2: #2a2431;
+  --meow-hero: #33202b;
+  --meow-strong: #f7f0f3;
+  --meow-strong-ink: #2a2130;
+  --meow-float: 0 10px 30px rgba(0, 0, 0, 0.45);
+  --globe-ocean-light: #2a2431;
+  --globe-ocean-dark: #33202b;
+}
+:root.theme-meow .topbar h1,
+:root.theme-meow .server-title h2,
+:root.theme-meow .modal h2,
+:root.theme-meow .kpi-value {
+  font-family:
+    ui-rounded,
+    'SF Pro Rounded',
+    'Hiragino Maru Gothic ProN',
+    Inter,
+    system-ui,
+    sans-serif;
+}
+/* 顶栏与页面同底、无分隔线；图标按钮去框，选中态是实心胶囊 */
+:root.theme-meow .topbar {
+  border-bottom-color: transparent;
+  background: color-mix(in srgb, var(--page-bg) 90%, transparent);
+}
+:root.theme-meow .topbar button,
+:root.theme-meow .ranges button {
+  border-color: transparent;
+  border-radius: 12px;
+  background: transparent;
+}
+:root.theme-meow .topbar button:hover,
+:root.theme-meow .ranges button:hover {
+  background: var(--meow-card2);
+}
+:root.theme-meow .topbar button.active,
+:root.theme-meow .ranges button.active {
+  border-color: var(--meow-strong);
+  color: var(--meow-strong-ink);
+  background: var(--meow-strong);
+}
+/* 手机顶栏：别的主题把按钮并成一条分段栏，Meow 的按钮没有描边，保持各自的圆角并留一点间距 */
+@media (max-width: 640px) {
+  :root.theme-meow .topbar nav {
+    gap: 4px;
+  }
+  :root.theme-meow .topbar nav > :not(:first-child) {
+    margin-left: 0;
+  }
+  :root.theme-meow .topbar nav button,
+  :root.theme-meow .topbar nav > :first-child button,
+  :root.theme-meow .topbar nav > :last-child button {
+    border-radius: 12px;
+  }
+}
+/* 卡片：白底大圆角、无描边无阴影，靠与奶油底的色差分层 */
+:root.theme-meow .kpi-panel,
+:root.theme-meow .globe-mini,
+:root.theme-meow .probe-toolbar,
+:root.theme-meow .server-card,
+:root.theme-meow .server-mini-card,
+:root.theme-meow .leaderboard-card,
+:root.theme-meow .server-table-wrap,
+:root.theme-meow .globe-card {
+  border-color: transparent;
+  border-radius: 28px;
+}
+:root.theme-meow .modal,
+:root.theme-meow .server-detail,
+:root.theme-meow .region-menu {
+  border-color: transparent;
+  border-radius: 28px;
+  box-shadow: var(--meow-float);
+}
+:root.theme-meow .region-menu {
+  border-radius: 20px;
+}
+:root.theme-meow .server-detail-header {
+  border-bottom-color: transparent;
+  border-radius: 28px 28px 0 0;
+}
+:root.theme-meow .detail-panel,
+:root.theme-meow .detail-cols > div {
+  border-color: transparent;
+  border-radius: 20px;
+  background: var(--meow-card2);
+}
+:root.theme-meow .server-card:hover,
+:root.theme-meow .server-mini-card:hover {
+  border-color: transparent;
+  box-shadow: var(--meow-float);
+}
+/* 有告警的卡片仍要一眼看出来：保留红色描边 */
+:root.theme-meow .server-card[data-alert='true'] {
+  border-color: color-mix(in srgb, #ef4444 55%, transparent);
+}
+/* 卡中卡与控件：回到奶油灰，圆角 18 / 12 */
+:root.theme-meow .net-box {
+  border-radius: 18px;
+  background: var(--meow-card2);
+}
+:root.theme-meow button.net-box:not(:disabled):hover,
+:root.theme-meow button.kpi-cell:hover {
+  background: var(--meow-hero);
+}
+:root.theme-meow .server-search,
+:root.theme-meow .region-trigger,
+:root.theme-meow .toolbar-select,
+:root.theme-meow .ping-head select,
+:root.theme-meow .card-ping-probe .card-ping-selector select,
+:root.theme-meow .leaderboard-tabs button,
+:root.theme-meow .trend-mode-switch button {
+  border-color: transparent;
+  border-radius: 999px;
+  background: var(--meow-card2);
+}
+:root.theme-meow .server-search input {
+  background: transparent;
+}
+:root.theme-meow .region-trigger:hover,
+:root.theme-meow .region-trigger[aria-expanded='true'],
+:root.theme-meow .leaderboard-tabs button:hover,
+:root.theme-meow .region-menu button:hover {
+  background: var(--meow-hero);
+}
+:root.theme-meow .leaderboard-tabs button.active,
+:root.theme-meow .trend-mode-switch button.active,
+:root.theme-meow .filters button.active {
+  border-color: var(--meow-strong);
+  color: var(--meow-strong-ink);
+  background: var(--meow-strong);
+}
+:root.theme-meow .filters .filter-seg {
+  border-radius: 999px;
+  background: var(--meow-card2);
+}
+:root.theme-meow .filters .filter-seg > button {
+  border-radius: 999px;
+}
+:root.theme-meow .filters .filter-seg > button.active {
+  border-color: transparent;
+  color: var(--foreground);
+  background: var(--surface);
+  box-shadow: 0 1px 3px rgb(42 33 48 / 0.12);
+}
+:root.theme-meow .meter {
+  background: var(--meow-card2);
+}
+:root.theme-meow .server-table th {
+  background: var(--meow-card2);
+}
+:root.theme-meow .server-table tbody tr:hover,
+:root.theme-meow .table-row-link:hover {
+  background: color-mix(in srgb, var(--meow-hero) 45%, transparent) !important;
+}
+:root.theme-meow .modal-backdrop,
+:root.theme-meow .server-detail-backdrop {
+  background: rgba(42, 33, 48, 0.4);
+}
+:root.dark.theme-meow .modal-backdrop,
+:root.dark.theme-meow .server-detail-backdrop {
+  background: rgba(0, 0, 0, 0.62);
 }

@@ -32,6 +32,10 @@
 /* 天真：面板跟着主题变量走（夜晚自动变成深紫蓝），2px 粉色描边 + 大圆角与卡片一致 */
 :root.theme-sweet .probe-theme-panel { --picker-bg: var(--surface); --picker-fg: var(--foreground); --picker-muted: var(--muted); --picker-border: var(--border); --picker-accent: var(--primary); border-width: 2px; border-radius: 20px; }
 :root.theme-sweet .probe-theme-panel .probe-theme-grid > button { border-radius: 999px; }
+/* 液态玻璃 / Meow：面板用主题自己的底色与文字色，深色下不再是白板 */
+:root.theme-glass .probe-theme-panel { --picker-bg: var(--page-bg); --picker-fg: var(--foreground); --picker-muted: var(--muted); --picker-border: var(--border); --picker-accent: var(--primary); }
+:root.theme-meow .probe-theme-panel { --picker-bg: var(--surface); --picker-fg: var(--foreground); --picker-muted: var(--muted); --picker-border: var(--border); --picker-accent: var(--primary); border-color: transparent; border-radius: 20px; box-shadow: var(--meow-float); }
+:root.theme-meow .probe-theme-panel .probe-theme-grid > button { border-color: transparent; border-radius: 999px; background: var(--meow-card2); }
 .probe-theme-panel-heading { display: flex; align-items: center; justify-content: space-between; padding: 2px 4px 12px; font-weight: 650; }
 .probe-theme-panel-heading small { font-size: 10px; font-weight: 400; color: var(--picker-muted); }
 .probe-theme-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 6px; }
