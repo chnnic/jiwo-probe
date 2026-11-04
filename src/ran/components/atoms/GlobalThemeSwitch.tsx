@@ -15,6 +15,7 @@ const GLOBAL_THEMES = [
   { value: 'flat', label: '扁平' },
   { value: 'anime', label: '动漫' },
   { value: 'glass', label: '玻璃' },
+  { value: 'sweet', label: '天真' },
   { value: 'lumina', label: 'Lumina' },
   { value: 'luminaplus', label: 'LuminaPlus' },
   { value: 'premium', label: 'Premium' },

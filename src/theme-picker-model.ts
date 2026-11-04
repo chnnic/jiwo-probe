@@ -6,6 +6,7 @@ export const THEME_OPTIONS: { value: ThemeName | null; label: string; color: str
   { value: 'flat', label: '扁平', color: '#518cbf' },
   { value: 'anime', label: '动漫', color: '#ce86b0' },
   { value: 'glass', label: '玻璃', color: '#7fa8bb' },
+  { value: 'sweet', label: '天真', color: '#e8508f' },
   { value: 'lumina', label: 'Lumina', color: '#a991cd' },
   { value: 'luminaplus', label: 'LuminaPlus', color: '#be7c61' },
   { value: 'premium', label: 'Premium', color: '#c6a254' },

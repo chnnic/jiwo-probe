@@ -13,6 +13,8 @@
 :root.theme-anime:is(.dark, .gold) { --connection-tcp: #b8a0fa; --connection-udp: #ee9fcb; }
 :root.theme-glass { --connection-tcp: #087f9f; --connection-udp: #5984b6; }
 :root.theme-glass:is(.dark, .gold) { --connection-tcp: #4bd4f2; --connection-udp: #a7baf3; }
+:root.theme-sweet { --connection-tcp: #c9437f; --connection-udp: #8c6fdc; }
+:root.theme-sweet:is(.dark, .gold) { --connection-tcp: #ff9acb; --connection-udp: #c3b1ff; }
 :root.theme-lumina { --connection-tcp: var(--traffic-up); --connection-udp: var(--traffic-down); }
 :root.theme-luminaplus { --connection-tcp: var(--lp-green); --connection-udp: var(--lp-blue); }
 :root.theme-lite { --connection-tcp: var(--mini-green); --connection-udp: var(--mini-blue); }

@@ -29,6 +29,8 @@ body.gm-body:not(.gm-light-body) :is(.probe-unlock-dialog, .probe-unlock-panel, 
 }
 :root.theme-glass :is(.probe-unlock-dialog, .probe-unlock-panel, .probe-unlock-button, .probe-connections) { --cap-bg: #f2fafc; }
 :root.theme-glass.dark :is(.probe-unlock-dialog, .probe-unlock-panel, .probe-unlock-button, .probe-connections) { --cap-bg: #142833; }
+:root.theme-sweet :is(.probe-unlock-dialog, .probe-unlock-panel, .probe-unlock-button, .probe-connections) { --cap-bg: #fff6fa; --cap-radius: 18px; }
+:root.theme-sweet.dark :is(.probe-unlock-dialog, .probe-unlock-panel, .probe-unlock-button, .probe-connections) { --cap-bg: #2f2547; }
 :root.theme-lumina.gold :is(.probe-unlock-dialog, .probe-unlock-panel, .probe-unlock-button, .probe-connections) { --cap-bg: #1b1915; }
 :root.theme-lumina.platinum :is(.probe-unlock-dialog, .probe-unlock-panel, .probe-unlock-button, .probe-connections) { --cap-bg: #fffefa; }
 :root.theme-emerald :is(.probe-unlock-dialog, .probe-unlock-panel, .probe-unlock-button, .probe-connections) {

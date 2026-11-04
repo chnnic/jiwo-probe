@@ -29,6 +29,9 @@
 :root.theme-glassmorphism .gm-light-body .probe-theme-panel { --picker-bg: #f8fafc; --picker-fg: #19212f; --picker-muted: #627086; --picker-border: #dce2e8; --picker-accent: #168464; }
 :root.theme-premium .probe-theme-panel { --picker-bg: #121311; --picker-fg: #f3ecdc; --picker-muted: #b9ac91; --picker-border: #655639; --picker-accent: #dbb967; }
 :root.theme-premium.platinum .probe-theme-panel { --picker-bg: #fffdf7; --picker-fg: #302b22; --picker-muted: #7d715b; --picker-border: #d7c8a7; --picker-accent: #977024; }
+/* 天真：面板跟着主题变量走（夜晚自动变成深紫蓝），2px 粉色描边 + 大圆角与卡片一致 */
+:root.theme-sweet .probe-theme-panel { --picker-bg: var(--surface); --picker-fg: var(--foreground); --picker-muted: var(--muted); --picker-border: var(--border); --picker-accent: var(--primary); border-width: 2px; border-radius: 20px; }
+:root.theme-sweet .probe-theme-panel .probe-theme-grid > button { border-radius: 999px; }
 .probe-theme-panel-heading { display: flex; align-items: center; justify-content: space-between; padding: 2px 4px 12px; font-weight: 650; }
 .probe-theme-panel-heading small { font-size: 10px; font-weight: 400; color: var(--picker-muted); }
 .probe-theme-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 6px; }

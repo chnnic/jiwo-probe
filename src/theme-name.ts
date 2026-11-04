@@ -1,6 +1,6 @@
 /** 内置主题与 Ran 变体统一忽略大小写；未知自定义 CSS 类名保持原样。 */
 const BUILTIN_THEMES = new Set([
-  'pixel', 'flat', 'anime', 'glass', 'lumina', 'luminaplus', 'premium',
+  'pixel', 'flat', 'anime', 'glass', 'sweet', 'lumina', 'luminaplus', 'premium',
   'ran', 'glassmorphism', 'emerald', 'lite', 'mini', 'nezha',
   'luminagold', 'luminaplatinum', 'premiumplatinum', 'premiumlight',
   'ran-night', 'ran-mist', 'ran-ember', 'ran-sakura', 'ran-lavender',
@@ -33,6 +33,8 @@ export function parseThemeName(raw: string): { theme: string; gold: boolean; pla
   if (lower === 'premiumplatinum' || lower === 'premiumlight') return { theme: 'premium', gold: false, platinum: true }
   if (lower === 'glassmorphismlight') return { theme: 'glassmorphism', gold: false, platinum: false, light: true }
   if (lower === 'glassmorphismdark') return { theme: 'glassmorphism', gold: false, platinum: false, light: false }
+  if (lower === 'sweetlight') return { theme: 'sweet', gold: false, platinum: false, light: true }
+  if (lower === 'sweetdark') return { theme: 'sweet', gold: false, platinum: false, light: false }
   if (lower === 'nezhalight') return { theme: 'nezha', gold: false, platinum: false, light: true }
   if (lower === 'nezhadark') return { theme: 'nezha', gold: false, platinum: false, light: false }
   if (lower === 'lite' || lower === 'mini') return { theme: 'lite', gold: false, platinum: false }

@@ -3,7 +3,7 @@ import assert from 'node:assert/strict'
 import { canonicalThemeOverride, isBuiltinTheme, parseThemeName } from './theme-name.ts'
 
 const themeNames = [
-  'pixel', 'flat', 'anime', 'glass', 'lumina', 'luminaplus', 'premium',
+  'pixel', 'flat', 'anime', 'glass', 'sweet', 'lumina', 'luminaplus', 'premium',
   'ran', 'glassmorphism', 'emerald', 'lite', 'nezha',
   'ran-night', 'ran-mist', 'ran-ember', 'ran-sakura', 'ran-lavender',
   'ran-tomcat', 'ran-teal', 'ran-midnight', 'ran-mint', 'ran-butter', 'ran-ji',
@@ -24,7 +24,7 @@ test('all built-in themes and Ran variants ignore case in controller names and s
 test('all existing color suffixes and legacy aliases ignore case without losing their modes', () => {
   for (const name of ['lumina-gold', 'lumina-platinum', 'premium-platinum', 'premium-light',
     'luminaplus-light', 'luminaplus-dark', 'glassmorphism-light', 'glassmorphism-dark',
-    'lite-light', 'lite-dark', 'mini-light', 'mini-dark', 'nezha-light', 'nezha-dark']) {
+    'lite-light', 'lite-dark', 'mini-light', 'mini-dark', 'nezha-light', 'nezha-dark', 'sweet-light', 'sweet-dark']) {
     const expected = parseThemeName(name)
     for (const input of [name.toUpperCase(), mixedCase(name), ` ${name.toUpperCase().replaceAll('-', '_')} `]) {
       assert.deepEqual(parseThemeName(input), expected, input)
@@ -101,4 +101,10 @@ test('nezha 及 -light / -dark：不带后缀跟随系统，后缀固定明暗',
   assert.deepEqual(parseThemeName('Nezha-Light'), { theme: 'nezha', gold: false, platinum: false, light: true })
   assert.deepEqual(parseThemeName('NEZHA_DARK'), { theme: 'nezha', gold: false, platinum: false, light: false })
   assert.equal(isBuiltinTheme('Nezha'), true)
+})
+
+test('sweet 及 -light / -dark：不带后缀按时间自动明暗，后缀固定明暗', () => {
+  assert.deepEqual(parseThemeName('sweet'), { theme: 'sweet', gold: false, platinum: false })
+  assert.deepEqual(parseThemeName('Sweet-Light'), { theme: 'sweet', gold: false, platinum: false, light: true })
+  assert.deepEqual(parseThemeName('SWEET_DARK'), { theme: 'sweet', gold: false, platinum: false, light: false })
 })
