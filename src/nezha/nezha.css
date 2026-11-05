@@ -747,6 +747,7 @@
   justify-content: space-between;
   gap: 4px 16px;
   margin: 40px 0 8px;
+  padding: 20px 0;
   color: var(--nz-muted-fg);
   font-size: 13px;
   font-weight: 500;

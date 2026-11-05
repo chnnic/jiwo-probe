@@ -1659,8 +1659,13 @@ button.net-box:hover {
   height: 100%;
   padding: 0;
 }
-/* 页脚：左边 Powered by Jiwo Probe，右边主控链接；宽度与内容区对齐 */
+/* 全局 footer 只给颜色和字号；布局只作用于经典主题的页脚（.app-shell > footer），其他主题和卡片内的 footer 各自定义 */
 footer {
+  color: var(--muted);
+  font-size: 12px;
+}
+/* 经典主题页脚：左边 Powered by Jiwo Probe，右边主控链接；宽度与内容区对齐 */
+.app-shell > footer {
   display: flex;
   flex-wrap: wrap;
   justify-content: space-between;
@@ -1668,8 +1673,6 @@ footer {
   width: min(1600px, calc(100% - 48px));
   margin: 0 auto;
   padding: 20px 0;
-  color: var(--muted);
-  font-size: 12px;
 }
 footer a {
   color: inherit;

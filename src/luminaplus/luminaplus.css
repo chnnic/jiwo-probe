@@ -357,7 +357,7 @@
 .lp-empty h3 { font-size: 16px; margin: 12px 0 8px; color: var(--lp-text); }
 .lp-empty p { font-size: 13px; }
 .lp-empty button { margin-top: 16px; padding: 8px 14px; border: 1px solid var(--lp-border); border-radius: 8px; background: var(--lp-surface); color: var(--lp-text); }
-.lp-footer { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px; margin: 32px 0 20px; color: var(--lp-muted); font-size: 11px; }
+.lp-footer { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px; margin: 32px 0 20px; padding: 20px 0; color: var(--lp-muted); font-size: 11px; }
 .lp-footer a:hover { color: var(--lp-accent); }
 /* Match Premium: page-end content, not a fixed overlay covering server cards. */
 .lp-license-footer { display: flex; justify-content: center; align-items: center; gap: 12px; width: 100%; padding: 0 28px calc(20px + env(safe-area-inset-bottom, 0px)); margin: 0; }
