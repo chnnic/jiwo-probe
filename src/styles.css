@@ -1839,7 +1839,10 @@ footer a:hover {
   cursor: pointer;
 }
 .chart-scroll-frame { position: relative; overflow: hidden; width: 100%; min-width: 0; max-width: 100%; height: 100%; }
-.chart-fixed-y-axis { pointer-events: none; position: absolute; inset: 0 auto 0 0; z-index: 2; overflow: hidden; width: 68px; background: var(--surface); }
+/* 固定纵轴不铺底色：原先用 --surface 遮住后面的滚动图，在面板底色不是 --surface 的主题（Meow 奶油面板、液态玻璃半透明面板）会露出一条白柱。
+   改成裁掉滚动图被纵轴盖住的 68px，纵轴直接透出面板背景，各主题一致。 */
+.chart-fixed-y-axis { pointer-events: none; position: absolute; inset: 0 auto 0 0; z-index: 2; overflow: hidden; width: 68px; background: transparent; }
+.chart-scroll-frame:has(> .chart-fixed-y-axis) > .chart-scroll { clip-path: inset(0 0 0 68px); }
 .chart-fixed-y-axis .recharts-xAxis,
 .chart-fixed-y-axis .recharts-cartesian-grid,
 .chart-fixed-y-axis .recharts-line,
@@ -4658,17 +4661,6 @@ footer a:hover {
   backdrop-filter: none;
 }
 
-/* 趋势弹窗的滚动图原本会延伸到固定纵轴下面，只能用独立底色遮挡，
-   白金毛玻璃下会形成明显的白色竖条。裁掉被纵轴覆盖的 68px 后，
-   纵轴可直接透出弹窗背景，延迟/丢包/流量/CPU/内存弹窗全部一致。 */
-:root.theme-lumina .chart-scroll {
-  clip-path: inset(0 0 0 68px);
-}
-
-:root.theme-lumina .chart-fixed-y-axis {
-  background: transparent !important;
-}
-
 :root.theme-lumina.gold .chart-fixed-y-axis text,
 :root.theme-lumina.gold .chart-fixed-y-axis .recharts-cartesian-axis-tick-value {
   color: #fff !important;
@@ -5739,6 +5731,11 @@ footer a:hover {
 }
 :root.theme-meow .meter {
   background: var(--meow-card2);
+}
+/* 详情里的「剩余价值」框：面板已是奶油底，再铺白色会突兀，改成樱粉卡中卡、去描边 */
+:root.theme-meow .detail-value {
+  border-color: transparent;
+  background: var(--meow-hero);
 }
 :root.theme-meow .server-table th {
   background: var(--meow-card2);
