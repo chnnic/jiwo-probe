@@ -138,6 +138,8 @@ export interface ProbePayload {
   show_traffic_quota?: boolean
   show_renewal_timeline?: boolean
   show_health_score?: boolean
+  /** 主控「三网延迟」：哪三个探测点代表电信 / 联通 / 移动（只带 isp / key / label）。开启时卡片延迟组优先用它，见 applyTriIsp。 */
+  tri_isp?: { enabled?: boolean; targets?: Array<{ isp?: string; key?: string; label?: string }> }
   /** Controller history retention in days (1–7); absent on older controllers. */
   history_days?: number
   title?: string

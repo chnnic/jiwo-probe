@@ -84,7 +84,7 @@ export function CardPingGroups({ ping = [], serverIndex, serverName, variant, av
       title={group.fallback ? `${options.find(option => option.key === group.requested)?.label || group.requested || '默认目标'} 未命中，使用 ${group.target?.label}` : group.target?.label || '没有可用的默认或国际备用目标'}
       onClick={event => event.stopPropagation()}
       onChange={event => {
-        const next = Array.from({ length: config.count }, (_, slot) => overrides[slot] ?? null)
+        const next = Array.from({ length: groups.length }, (_, slot) => overrides[slot] ?? null)
         next[index] = event.target.value
         update(next)
       }}>

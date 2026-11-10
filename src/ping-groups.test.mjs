@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { aggregatePingGroup, historyPingSeries, inPingChartGroup, isIpv6Ping, parsePingGroupConfig, PING_GROUP_SCRIPT_VARS, pingScope, pingTargetOptions, primaryPing, resolvePingGroups } from './ping-groups.ts'
+import { aggregatePingGroup, applyTriIsp, historyPingSeries, inPingChartGroup, isIpv6Ping, parsePingGroupConfig, PING_GROUP_SCRIPT_VARS, pingScope, pingTargetOptions, primaryPing, resolvePingGroups } from './ping-groups.ts'
 import { averagePing } from './server-format.ts'
 
 const line = (key, label, isp, ms = 50, loss = 0) => ({ key, label, isp, current_ms: ms, loss_pct: loss, buckets: [{ ms, loss }] })
@@ -179,4 +179,46 @@ test('趋势图分组：内地、海外不含 IPv6 线路，IPv6 一组含 IPv6 
   assert.equal(pick('all').length, 5)
   const plain = historyPingSeries({ key: 'x', label: '主控平均', current_ms: 90, loss_pct: 2, buckets: [] }, [cn, cf])
   assert.deepEqual(plain.map(item => [item.key, item.label, item.current_ms]), [['__avg__', '平均', 90], ['sh-ct-v4', '上海电信', 50], ['intl-web-cloudflare', 'Cloudflare', 200]])
+})
+
+test('主控开启三网延迟时优先用主控的三个代表点，没开时保留 Cloudflare 设置', () => {
+  const cf3 = parsePingGroupConfig({ count: 2, defaultTargets: '平均延迟,海外延迟' })
+  assert.equal(applyTriIsp(cf3, undefined), cf3)
+  assert.equal(applyTriIsp(cf3, { enabled: false, targets: [{ isp: 'telecom', key: 'bj-ct-v4' }] }), cf3)
+  assert.equal(applyTriIsp(cf3, { enabled: true, targets: [] }), cf3)
+  assert.equal(applyTriIsp(cf3, { enabled: true, targets: [{ isp: 'telecom', key: ' ' }] }), cf3)
+  const tri = applyTriIsp(cf3, { enabled: true, targets: [
+    { isp: 'mobile', key: 'bj-cm-v4', label: '北京移动' },
+    { isp: 'telecom', key: 'bj-ct-v4', label: '北京电信' },
+    { isp: 'unicom', key: 'bj-cu-v4', label: '北京联通' },
+  ] })
+  assert.equal(tri.count, 3)
+  assert.deepEqual(tri.defaultTargets, ['bj-ct-v4', 'bj-cu-v4', 'bj-cm-v4'])
+  assert.equal(tri.strict, true)
+  assert.equal(tri.fallback, cf3)
+  assert.deepEqual(tri.intlTargets, cf3.intlTargets)
+})
+
+test('三网延迟模式按 key 命中，缺的槽位留空不拿国际目标补位，手动选择仍然优先', () => {
+  const tri = applyTriIsp(parsePingGroupConfig(), { enabled: true, targets: [
+    { isp: 'telecom', key: 'sh-ct-v4' }, { isp: 'unicom', key: 'bj-cu-v4' }, { isp: 'mobile', key: 'bj-cm-v4' },
+  ] })
+  const groups = resolvePingGroups(all, tri)
+  assert.deepEqual(groups.map(group => group.target?.key), ['sh-ct-v4', undefined, undefined])
+  assert.equal(groups.some(group => group.fallback), false)
+  const picked = resolvePingGroups(all, tri, [null, 'intl-web-google', null])
+  assert.deepEqual(picked.map(group => group.target?.key), ['sh-ct-v4', 'intl-web-google', undefined])
+})
+
+test('三网延迟模式下，一个代表点都没探的服务器退回 Cloudflare 设置', () => {
+  const cfConfig = parsePingGroupConfig({ count: 2, defaultTargets: '平均延迟,海外延迟' })
+  const tri = applyTriIsp(cfConfig, { enabled: true, targets: [
+    { isp: 'telecom', key: 'bj-ct-v4' }, { isp: 'unicom', key: 'bj-cu-v4' }, { isp: 'mobile', key: 'bj-cm-v4' },
+  ] })
+  const intlOnly = pingTargetOptions([cf, google])
+  const groups = resolvePingGroups(intlOnly, tri)
+  assert.deepEqual(groups.map(group => group.target?.key), ['__avg__', '__avg_intl__'])
+  assert.deepEqual(groups, resolvePingGroups(intlOnly, cfConfig))
+  const none = resolvePingGroups(pingTargetOptions([]), tri)
+  assert.equal(none.length, 2)
 })

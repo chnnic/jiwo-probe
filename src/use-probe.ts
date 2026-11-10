@@ -1,7 +1,7 @@
-import { createContext, createElement, useContext, useEffect, useRef, useState } from 'react'
+import { createContext, createElement, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import type { ProbeAppearance, ProbeBackgroundAppearance, ProbePayload, ProbeServer, ThemeName } from './types'
-import { DEFAULT_PING_GROUP_CONFIG, parsePingGroupConfig, type PingGroupConfig } from './ping-groups'
+import { applyTriIsp, DEFAULT_PING_GROUP_CONFIG, parsePingGroupConfig, type PingGroupConfig } from './ping-groups'
 import { DEFAULT_NETWORK_SPEED_UNIT, parseNetworkSpeedUnit, type NetworkSpeedUnit } from './network-speed'
 import { canonicalThemeOverride, parseThemeName } from './theme-name'
 import { isLuminaPlusModeSetting, LUMINAPLUS_COLOR_KEY, LUMINAPLUS_MODE_KEY, LUMINAPLUS_PALETTE_KEY, resolveLuminaPlusAppearance, type LuminaPlusModeSetting, type LuminaPlusPalette } from './luminaplus/luminaplus-color'
@@ -644,7 +644,12 @@ function useProbeConnection(): ProbeState {
     }
   }, [])
 
-  return { data, error, updatedAt, fromSnapshot, pingGroups, networkSpeedUnit, connectionChartEnabled }
+  // 主控开了「三网延迟」就以主控选的三个代表点为准，没开才用 Cloudflare 运行时变量里的延迟组设置。
+  // 依赖用序列化后的字符串：tri_isp 每帧都是新对象，内容不变时不能让卡片重算。
+  const triIspKey = JSON.stringify(data?.tri_isp ?? null)
+  const effectivePingGroups = useMemo(() => applyTriIsp(pingGroups, JSON.parse(triIspKey)), [pingGroups, triIspKey])
+
+  return { data, error, updatedAt, fromSnapshot, pingGroups: effectivePingGroups, networkSpeedUnit, connectionChartEnabled }
 }
 
 // 全站只在 Provider 内建立一套 HTTP/WS 连接。各主题调用 useProbe() 时只读取

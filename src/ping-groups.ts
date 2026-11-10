@@ -4,6 +4,10 @@ export interface PingGroupConfig {
   count: 1 | 2 | 3
   defaultTargets: string[]
   intlTargets: string[]
+  /** 主控「三网延迟」生效时为 true：槽位没命中就显示「—」，不拿国际目标补位（与主控探针页一致）。 */
+  strict?: boolean
+  /** 主控「三网延迟」生效时带上 Cloudflare 的原设置：这台服务器一个三网代表点都没探（例如只探海外目标）时改用它。 */
+  fallback?: PingGroupConfig
 }
 
 /**
@@ -82,6 +86,25 @@ export function parsePingGroupConfig(input: { count?: unknown; defaultTargets?: 
 }
 
 export const DEFAULT_PING_GROUP_CONFIG = parsePingGroupConfig()
+
+const TRI_ISP_ORDER = ['telecom', 'unicom', 'mobile']
+
+/**
+ * 主控开了「三网延迟」（公开接口的 tri_isp）时，卡片延迟组以主控选的电信 / 联通 / 移动代表点为准，
+ * 覆盖 Cloudflare 运行时变量 PROBE_PING_* 的组数与默认目标；主控没开或没给出任何代表点时原样返回。
+ * 原设置留在 fallback 里，供没有任何三网代表点的服务器使用（见 resolvePingGroups）。
+ * 按 key 匹配（展示名可能被改），顺序固定为电信、联通、移动。
+ */
+export function applyTriIsp(config: PingGroupConfig, tri?: { enabled?: boolean; targets?: Array<{ isp?: string; key?: string }> } | null): PingGroupConfig {
+  if (tri?.enabled !== true || !Array.isArray(tri.targets)) return config
+  const slots = tri.targets
+    .filter(item => item && typeof item.key === 'string' && item.key.trim())
+    .map((item, index) => ({ key: item.key!.trim(), rank: TRI_ISP_ORDER.indexOf(String(item.isp || '').trim().toLowerCase()), index }))
+    .sort((a, b) => (a.rank < 0 ? 9 : a.rank) - (b.rank < 0 ? 9 : b.rank) || a.index - b.index)
+    .slice(0, 3)
+  if (!slots.length) return config
+  return { count: slots.length as 1 | 2 | 3, defaultTargets: slots.map(item => item.key), intlTargets: config.intlTargets, strict: true, fallback: config }
+}
 
 export function pingScope(series: ProbePingSeries): 'cn' | 'intl' | 'unknown' {
   const isp = series.isp?.trim().toLowerCase()
@@ -180,6 +203,8 @@ export interface ResolvedPingGroup {
 }
 
 export function resolvePingGroups(options: PingTargetOption[], config: PingGroupConfig, overrides: Array<string | null> = []): ResolvedPingGroup[] {
+  // 主控三网延迟：这台服务器一个代表点都没有时，整张卡片退回 Cloudflare 的设置，而不是三行全空。
+  if (config.fallback && !config.defaultTargets.some(value => matchTarget(value, options))) return resolvePingGroups(options, config.fallback, overrides)
   const used = new Set<string>()
   const groups = Array.from({ length: config.count }, (_, index): ResolvedPingGroup => ({
     requested: overrides[index] ?? config.defaultTargets[index] ?? '', fallback: false,
@@ -200,7 +225,7 @@ export function resolvePingGroups(options: PingTargetOption[], config: PingGroup
       return item?.scope === 'intl' ? [item] : []
     })
   for (const group of groups) {
-    if (group.target) continue
+    if (group.target || config.strict) continue
     const target = backups.find(item => !used.has(item.key))
     if (target) {
       group.target = target
