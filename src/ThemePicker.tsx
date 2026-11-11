@@ -2,7 +2,7 @@ import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Check, ChevronDown, Palette } from 'lucide-react'
 import type { ThemeName } from './types'
-import { THEME_OPTIONS, pickerNextIndex, pickerPosition } from './theme-picker-model'
+import { THEME_OPTIONS, THEME_PICKER_INTENT_EVENT, pickerNextIndex, pickerPosition } from './theme-picker-model'
 import './theme-picker.css'
 
 /** Shared by every Jiwo header except Ran, whose picker stays independent. */
@@ -12,6 +12,8 @@ export function ThemeSelect({ value, onChange, buttonClassName = 'theme-trigger'
   buttonClassName?: string
 }) {
   const [open, setOpen] = useState(false)
+  // 面板一打开（或指针移到按钮上）就通知外壳预取其他主题的包，点选时不用再等下载
+  useEffect(() => { if (open) window.dispatchEvent(new Event(THEME_PICKER_INTENT_EVENT)) }, [open])
   const [position, setPosition] = useState({ top: 8, left: 8, width: Math.min(344, innerWidth - 16), maxHeight: innerHeight - 16 })
   const trigger = useRef<HTMLButtonElement>(null)
   const menu = useRef<HTMLDivElement>(null)
@@ -60,6 +62,7 @@ export function ThemeSelect({ value, onChange, buttonClassName = 'theme-trigger'
   return <div className="theme-select probe-theme-picker">
     <button ref={trigger} type="button" className={`${buttonClassName} probe-theme-trigger`}
       aria-label="切换主题" title={`主题: ${label}`} aria-haspopup="menu" aria-expanded={open} aria-controls={open ? id : undefined}
+      onPointerEnter={() => window.dispatchEvent(new Event(THEME_PICKER_INTENT_EVENT))}
       onClick={() => setOpen(previous => !previous)}
       onKeyDown={event => { if (event.key === 'ArrowDown' || event.key === 'ArrowUp') { event.preventDefault(); setOpen(true) } }}>
       <Palette className="probe-theme-palette" size={18} aria-hidden="true" />

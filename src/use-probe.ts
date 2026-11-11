@@ -7,7 +7,7 @@ import { canonicalThemeOverride, parseThemeName } from './theme-name'
 import { isLuminaPlusModeSetting, LUMINAPLUS_COLOR_KEY, LUMINAPLUS_MODE_KEY, LUMINAPLUS_PALETTE_KEY, resolveLuminaPlusAppearance, type LuminaPlusModeSetting, type LuminaPlusPalette } from './luminaplus/luminaplus-color'
 import { DEFAULT_SHOW_CONNECTION_CHART, parseShowConnectionChart } from './connection-chart'
 import { applyProbeDelta, isProbeDeltaFrame } from './probe-delta'
-import { readProbeSnapshot, rememberProbeSnapshot } from './probe-snapshot-cache'
+import { readProbeSnapshot, rememberProbeSnapshot, staleSnapshot } from './probe-snapshot-cache'
 import { SETUP_ERROR_HEADER, setupErrorMessage } from './probe-setup'
 export { isBuiltinTheme, parseThemeName } from './theme-name'
 
@@ -430,7 +430,7 @@ export interface ProbeState {
   error?: string
   /** 最近一次收到数据的时间（毫秒时间戳），用于提示主控断联时页面数据有多旧 */
   updatedAt?: number
-  /** 正在显示上次打开时缓存的数据，实时数据还没到 */
+  /** 正在显示稍早的数据（本机缓存的上次快照，或 Worker 冷启动时给的上一份快照），实时数据还没到 */
   fromSnapshot: boolean
   pingGroups: PingGroupConfig
   networkSpeedUnit: NetworkSpeedUnit
@@ -475,6 +475,8 @@ function useProbeConnection(): ProbeState {
     let reconnectAttempt = 0
 
     let liveFrameSeen = false
+    // 已显示的快照（IndexedDB 或 Worker 给的旧快照）的时间，只让更新的那份顶替
+    let shownSnapshotAt = 0
 
     const display = (payload: ProbePayload, receivedAt: number) => {
       applyAppearance(payload.appearance)
@@ -500,6 +502,17 @@ function useProbeConnection(): ProbeState {
         const missingSetup = response.headers.get(SETUP_ERROR_HEADER)
         if (missingSetup) throw new Error(setupErrorMessage(missingSetup))
         if (!response.ok) throw new Error(`HTTP ${response.status}`)
+        // 冷启动时 Worker 先给上一份快照（X-Probe-Stale-Age 为它的秒数），按「上次的数据」显示，不算实时帧
+        const staleAge = Number(response.headers.get('X-Probe-Stale-Age'))
+        if (response.headers.has('X-Probe-Stale-Age') && Number.isFinite(staleAge) && staleAge > 0) {
+          const snapshot = staleSnapshot(await response.json() as ProbePayload, Date.now() - staleAge * 1000)
+          if (stopped || liveFrameSeen || !snapshot || snapshot.savedAt <= shownSnapshotAt) return
+          shownSnapshotAt = snapshot.savedAt
+          display(snapshot.payload, snapshot.savedAt)
+          setError(undefined)
+          setFromSnapshot(true)
+          return
+        }
         accept(await response.json() as ProbePayload)
       } catch (cause) {
         if (!stopped) setError(cause instanceof Error ? cause.message : String(cause))
@@ -541,8 +554,8 @@ function useProbeConnection(): ProbeState {
       if (stopped || paused || wsRef.current) return
       try {
         const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:'
-        // delta=1：声明支持增量帧（见 probe-delta.ts），基准是这条连接上一帧还原出的完整数据
-        const ws = new WebSocket(`${protocol}//${location.host}/api/stream?delta=1`)
+        // delta=2：声明支持第 2 版增量帧（见 probe-delta.ts），基准是这条连接上一帧还原出的完整数据
+        const ws = new WebSocket(`${protocol}//${location.host}/api/stream?delta=2`)
         let base: ProbePayload | undefined
         wsRef.current = ws
         ws.onmessage = (event) => {
@@ -606,7 +619,8 @@ function useProbeConnection(): ProbeState {
     }
     // 上次的快照和首帧请求同时开始，谁先到先显示；实时数据一旦到了，快照就不再用。
     void readProbeSnapshot().then((snapshot) => {
-      if (!snapshot || stopped || liveFrameSeen) return
+      if (!snapshot || stopped || liveFrameSeen || snapshot.savedAt <= shownSnapshotAt) return
+      shownSnapshotAt = snapshot.savedAt
       display(snapshot.payload, snapshot.savedAt)
       setFromSnapshot(true)
     })

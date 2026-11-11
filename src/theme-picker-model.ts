@@ -37,3 +37,6 @@ export function pickerNextIndex(index: number, key: string, count: number) {
   const delta = ({ ArrowDown: 2, ArrowUp: -2, ArrowRight: 1, ArrowLeft: -1 } as Record<string, number>)[key]
   return delta === undefined ? index : (index + delta + count) % count
 }
+
+/** 访客表现出要换主题（指针移到主题按钮或打开面板）时派发，外壳据此预取各主题的包。 */
+export const THEME_PICKER_INTENT_EVENT = 'jiwo:theme-picker-intent'

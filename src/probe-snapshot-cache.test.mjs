@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { parseCachedSnapshot, SNAPSHOT_MAX_AGE_MS } from './probe-snapshot-cache.ts'
+import { parseCachedSnapshot, SNAPSHOT_MAX_AGE_MS, staleSnapshot } from './probe-snapshot-cache.ts'
 
 const now = 1_800_000_000_000
 const record = (payload, savedAt = now - 60_000) => ({ savedAt, json: JSON.stringify(payload) })
@@ -26,4 +26,12 @@ test('记录缺失或损坏时返回 undefined，不抛异常', () => {
   for (const bad of [undefined, null, 'x', {}, { savedAt: now }, { savedAt: now, json: '{' }, { savedAt: now, json: 'null' }, { savedAt: now, json: '{"servers":1}' }]) {
     assert.equal(parseCachedSnapshot(bad, now), undefined)
   }
+})
+
+test('Worker 冷启动给的旧快照同样清零实时网速，结构不对时返回 undefined', () => {
+  const snapshot = staleSnapshot({ enabled: true, servers: [{ name: 'a', upload_speed: 5, download_speed: 9, cpu_pct: 3 }] }, now - 42_000)
+  assert.equal(snapshot.savedAt, now - 42_000)
+  assert.deepEqual(snapshot.payload.servers, [{ name: 'a', upload_speed: 0, download_speed: 0, cpu_pct: 3 }])
+  assert.equal(staleSnapshot(null, now), undefined)
+  assert.equal(staleSnapshot({ servers: 1 }, now), undefined)
 })

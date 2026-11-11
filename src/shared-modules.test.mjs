@@ -136,13 +136,14 @@ test('后台超过 1 分钟断开实时连接，回到前台补帧并重连', ()
 
 test('实时连接声明增量帧、断线按退避自动重连，主动断开不重连', () => {
   const source = readFileSync(new URL('./use-probe.ts', import.meta.url), 'utf8')
-  assert.match(source, /\/api\/stream\?delta=1/)
+  assert.match(source, /\/api\/stream\?delta=2/)
   assert.match(source, /isProbeDeltaFrame\(frame\) \? applyProbeDelta\(frame, base\)/)
   assert.match(source, /const RECONNECT_DELAYS_MS = \[2_000, 5_000, 15_000, 30_000\]/)
   assert.match(source, /if \(wsRef\.current !== ws\) return \/\/ 主动断开/)
   const worker = readFileSync(new URL('../worker/index.ts', import.meta.url), 'utf8')
   assert.match(worker, /probe-hub\.internal\/stream\$\{incoming\.search\}/)
-  assert.match(worker, /getTags\(client\)\.includes\(HUB_DELTA_TAG\)/)
+  assert.match(worker, /tags\.includes\(HUB_DELTA2_TAG\) \? delta2Payload/)
+  assert.match(worker, /tags\.includes\(HUB_DELTA_TAG\) \? deltaPayload : payload/)
 })
 
 test('丢包率刻度：整数刻度保留末尾 0，小数刻度去掉多余的 0', () => {

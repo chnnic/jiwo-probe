@@ -1,7 +1,7 @@
 import { parsePingGroupConfig } from '../src/ping-groups'
 import { parseNetworkSpeedUnit } from '../src/network-speed'
 import { parseShowConnectionChart } from '../src/connection-chart'
-import { encodeProbeDelta } from '../src/probe-delta'
+import { encodeProbeDelta, encodeProbeDeltaV2 } from '../src/probe-delta'
 import { SETUP_ERROR_HEADER, missingSetupVars } from '../src/probe-setup'
 import type { ProbePayload } from '../src/types'
 
@@ -24,6 +24,14 @@ interface Env {
 
 const PROBE_CACHE_TTL_SECONDS = 3
 const HUB_SNAPSHOT_MAX_AGE_MS = 12_000
+// 冷启动（一段时间没人看、ProbeHub 没在轮询）时主控要十来秒才返回快照。这期间先把上一份快照交给访客，
+// 响应头 X-Probe-Stale-Age 标明它有多旧，页面按「上次的数据」显示，实时帧到了自动替换。
+const HUB_STALE_SERVE_MAX_AGE_MS = 30 * 60 * 1_000
+const HUB_STALE_STORAGE_KEY = 'probe-last-snapshot-v1'
+const HUB_STALE_PERSIST_MS = 60_000
+// SQLite 存储单值上限 2 MB，留出余量；超过就不落盘，只影响 Durable Object 被回收后的首次访问。
+const HUB_STALE_MAX_BYTES = 1_800_000
+const STALE_AGE_HEADER = 'X-Probe-Stale-Age'
 const HUB_IDLE_CLOSE_MS = 30_000
 const HUB_DEFAULT_POLL_MS = 3_000
 const HUB_MIN_POLL_MS = 3_000
@@ -32,6 +40,8 @@ const HUB_NAME = 'global'
 const HUB_CLIENT_TAG = 'probe-client'
 // 声明支持增量帧的连接（/api/stream?delta=1）；未声明的旧页面始终收完整帧。
 const HUB_DELTA_TAG = 'probe-delta'
+// 第 2 版增量帧（/api/stream?delta=2）：没变的字段不发，见 src/probe-delta.ts
+const HUB_DELTA2_TAG = 'probe-delta2'
 const ESTIMATED_TRAFFIC_STORAGE_KEY = 'probe-estimated-daily-traffic-v1'
 const ESTIMATED_TRAFFIC_RETENTION_DAYS = 30
 const ESTIMATED_TRAFFIC_FLUSH_MS = 5 * 60 * 1_000
@@ -362,6 +372,7 @@ export class ProbeHub implements DurableObject {
   // 上一次广播的解析结果，作为增量帧的基准；Durable Object 休眠后清空，下一帧自动改发完整帧。
   private latestParsed: ProbePayload | null = null
   private latestAt = 0
+  private latestPersistedAt = 0
   private snapshotRequest: Promise<string> | null = null
   private estimatedTraffic: EstimatedTrafficState = {}
   private estimatedTrafficReady: Promise<void>
@@ -375,6 +386,13 @@ export class ProbeHub implements DurableObject {
     this.estimatedTrafficReady = this.state.blockConcurrencyWhile(async () => {
       const stored = await this.state.storage.get<EstimatedTrafficState>(ESTIMATED_TRAFFIC_STORAGE_KEY)
       if (stored && typeof stored === 'object') this.estimatedTraffic = stored
+      // Durable Object 被回收后内存里的快照没了：从存储取回上一份，冷启动时仍能立即应答
+      const last = await this.state.storage.get<{ at?: number; payload?: string }>(HUB_STALE_STORAGE_KEY)
+      if (last && typeof last.at === 'number' && typeof last.payload === 'string' && !this.latestPayload) {
+        this.latestPayload = last.payload
+        this.latestAt = last.at
+        this.latestPersistedAt = last.at
+      }
       if (await this.state.storage.getAlarm() === null) {
         await this.state.storage.setAlarm(Date.now() + ESTIMATED_TRAFFIC_FLUSH_MS)
       }
@@ -421,8 +439,8 @@ export class ProbeHub implements DurableObject {
 
     const pair = new WebSocketPair()
     const [client, server] = Object.values(pair)
-    const delta = new URL(request.url).searchParams.get('delta') === '1'
-    this.state.acceptWebSocket(server, delta ? [HUB_CLIENT_TAG, HUB_DELTA_TAG] : [HUB_CLIENT_TAG])
+    const delta = new URL(request.url).searchParams.get('delta')
+    this.state.acceptWebSocket(server, delta === '2' ? [HUB_CLIENT_TAG, HUB_DELTA2_TAG] : delta === '1' ? [HUB_CLIENT_TAG, HUB_DELTA_TAG] : [HUB_CLIENT_TAG])
     this.cancelIdleClose()
 
     if (this.latestPayload && Date.now() - this.latestAt <= HUB_SNAPSHOT_MAX_AGE_MS) {
@@ -443,6 +461,19 @@ export class ProbeHub implements DurableObject {
 
   private async snapshot(): Promise<Response> {
     try {
+      const age = Date.now() - this.latestAt
+      if (this.latestPayload && age > HUB_SNAPSHOT_MAX_AGE_MS && age <= HUB_STALE_SERVE_MAX_AGE_MS) {
+        // 有一份不太旧的快照：立即返回，后台去主控取新的（取到后会广播给已连上的 WebSocket）
+        this.state.waitUntil(this.forceSnapshotRefresh())
+        return new Response(this.latestPayload, {
+          headers: {
+            'Cache-Control': 'private, no-store',
+            'Content-Type': 'application/json; charset=utf-8',
+            'X-Probe-Source': 'hub',
+            [STALE_AGE_HEADER]: String(Math.round(age / 1000)),
+          },
+        })
+      }
       const payload = await this.ensureSnapshot()
       return new Response(payload, {
         headers: {
@@ -634,17 +665,30 @@ export class ProbeHub implements DurableObject {
     this.latestPayload = payload
     this.latestParsed = parsed
     this.latestAt = Date.now()
+    if (this.latestAt - this.latestPersistedAt >= HUB_STALE_PERSIST_MS && payload.length <= HUB_STALE_MAX_BYTES) {
+      this.latestPersistedAt = this.latestAt
+      this.state.waitUntil(this.state.storage.put(HUB_STALE_STORAGE_KEY, { at: this.latestAt, payload }).catch((error) => {
+        console.warn('ProbeHub snapshot persist failed', error)
+      }))
+    }
     let deltaPayload: string | null = null
     if (parsed && previous && this.state.getWebSockets(HUB_DELTA_TAG).length) {
       const frame = encodeProbeDelta(parsed, previous)
       if (frame) deltaPayload = JSON.stringify(frame)
     }
+    let delta2Payload: string | null = null
+    if (parsed && previous && this.state.getWebSockets(HUB_DELTA2_TAG).length) {
+      const frame = encodeProbeDeltaV2(parsed, previous)
+      if (frame) delta2Payload = JSON.stringify(frame)
+    }
     for (const client of this.clients()) {
       try {
         const needsFull = (client.deserializeAttachment() as { needsFull?: boolean } | null)?.needsFull === true
         if (needsFull) client.serializeAttachment(null)
-        const wantsDelta = deltaPayload !== null && !needsFull && this.state.getTags(client).includes(HUB_DELTA_TAG)
-        client.send(wantsDelta ? deltaPayload! : payload)
+        const tags = needsFull ? [] : this.state.getTags(client)
+        const frame = delta2Payload !== null && tags.includes(HUB_DELTA2_TAG) ? delta2Payload
+          : deltaPayload !== null && tags.includes(HUB_DELTA_TAG) ? deltaPayload : payload
+        client.send(frame)
       } catch {
         try {
           client.close(1011, 'broadcast failed')
@@ -808,6 +852,11 @@ export default {
     // WebSocket 的 101 Response 必须原样返回，不能重新构造 body/headers。
     if (upstream.status === 101 || upstream.webSocket) return upstream
     const response = sanitizedResponse(upstream)
+
+    // 旧快照只给这一位访客应急，不进 3 秒微缓存，免得后面的人在新数据已到时还拿到它
+    if (cacheKey && upstream.ok && response.headers.has(STALE_AGE_HEADER)) {
+      return clientResponse(response, 'BYPASS', source)
+    }
 
     if (cacheKey && upstream.ok) {
       const cacheCopy = response.clone()

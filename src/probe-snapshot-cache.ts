@@ -22,12 +22,17 @@ export function parseCachedSnapshot(record: unknown, now: number): CachedProbeSn
   if (savedAt > now || now - savedAt > SNAPSHOT_MAX_AGE_MS) return undefined
   try {
     const payload = JSON.parse(json) as ProbePayload
-    if (!payload || !Array.isArray(payload.servers)) return undefined
-    // 实时网速不能隔着时间显示，否则还会被算进「本页打开后」的网速曲线和峰值。
-    return { savedAt, payload: { ...payload, servers: payload.servers.map((server) => ({ ...server, upload_speed: 0, download_speed: 0 })) } }
+    return staleSnapshot(payload, savedAt)
   } catch {
     return undefined
   }
+}
+
+/** 把一份过去的数据整理成可显示的快照（IndexedDB 记录和 Worker 冷启动给的旧快照共用）。 */
+export function staleSnapshot(payload: ProbePayload | null | undefined, savedAt: number): CachedProbeSnapshot | undefined {
+  if (!payload || !Array.isArray(payload.servers)) return undefined
+  // 实时网速不能隔着时间显示，否则还会被算进「本页打开后」的网速曲线和峰值。
+  return { savedAt, payload: { ...payload, servers: payload.servers.map((server) => ({ ...server, upload_speed: 0, download_speed: 0 })) } }
 }
 
 function openDatabase(): Promise<IDBDatabase> {

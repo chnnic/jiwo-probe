@@ -1,6 +1,7 @@
 import { lazy, StrictMode, Suspense, useEffect, useState } from 'react'
 import { createRoot } from 'react-dom/client'
-import { App, preloadActiveThemeChunk } from './App'
+import { App, prefetchThemeChunks, preloadActiveThemeChunk } from './App'
+import { THEME_PICKER_INTENT_EVENT } from './theme-picker-model'
 import { applyAppearance, getActiveTheme, ProbeProvider, useProbe } from './use-probe'
 import './styles.css'
 import './server-capabilities.css'
@@ -41,6 +42,7 @@ function Root() {
 
 applyAppearance()
 preloadActiveThemeChunk()
+window.addEventListener(THEME_PICKER_INTENT_EVENT, prefetchThemeChunks, { once: true })
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <ProbeProvider>

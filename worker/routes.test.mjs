@@ -4,7 +4,7 @@ import { build } from 'esbuild'
 
 // 打包真实 Worker，用替身 fetch 记录发往主控的请求，不连接主控也不使用真实密钥。
 const bundle = await build({ entryPoints: [new URL('./index.ts', import.meta.url).pathname], bundle: true, write: false, format: 'esm', platform: 'neutral' })
-const { default: worker } = await import(`data:text/javascript;base64,${Buffer.from(bundle.outputFiles[0].text).toString('base64')}`)
+const { default: worker, ProbeHub } = await import(`data:text/javascript;base64,${Buffer.from(bundle.outputFiles[0].text).toString('base64')}`)
 
 const TOKEN = 'test-probe-token'
 // 模拟 not_found_handling 为 none 的静态资源：只有列出的文件存在，其余返回 404
@@ -168,4 +168,138 @@ test('占位设置下静态页面仍能打开，登录入口回到探针首页',
   const login = await worker.fetch(new Request('https://probe.test/login'), placeholders, {})
   assert.equal(login.status, 302)
   assert.equal(login.headers.get('Location'), 'https://probe.test/')
+})
+
+// ProbeHub 的替身运行环境：内存存储、收集 waitUntil、没有 WebSocket 连接
+function hubState(storage = new Map()) {
+  const pending = []
+  return {
+    storage,
+    pending,
+    state: {
+      storage: {
+        get: async key => storage.get(key),
+        put: async (key, value) => { storage.set(key, structuredClone(value)) },
+        getAlarm: async () => 1,
+        setAlarm: async () => {},
+      },
+      blockConcurrencyWhile: fn => fn(),
+      waitUntil: promise => { pending.push(Promise.resolve(promise).catch(() => {})) },
+      getWebSockets: () => [],
+      getTags: () => [],
+    },
+  }
+}
+
+test('ProbeHub 冷启动先返回上一份快照并标明年龄，后台刷新后恢复实时数据', async () => {
+  const realNow = Date.now
+  let now = 1_800_000_000_000
+  Date.now = () => now
+  const hubEnv = { MMWX_ORIGIN: 'https://panel.test', PROBE_TOKEN: TOKEN }
+  const snapshotRequest = () => new Request('https://probe-hub.internal/snapshot')
+  let version = 1
+  let release
+  try {
+    await withUpstream(async () => {
+      if (release === null) await new Promise(resolve => { release = resolve })
+      return Response.json({ enabled: true, version: version++, servers: [] })
+    }, async calls => {
+      const first = hubState()
+      const hub = new ProbeHub(first.state, hubEnv)
+      // 从没取过数据：只能等主控
+      const cold = await hub.fetch(snapshotRequest())
+      assert.equal(cold.headers.has('X-Probe-Stale-Age'), false)
+      assert.equal((await cold.json()).version, 1)
+      await Promise.all(first.pending)
+      assert.equal(first.storage.has('probe-last-snapshot-v1'), true)
+
+      // 12 秒内算新鲜，不标旧也不再访问主控
+      now += 5_000
+      const fresh = await hub.fetch(snapshotRequest())
+      assert.equal(fresh.headers.has('X-Probe-Stale-Age'), false)
+      assert.equal(calls.length, 1)
+
+      // 闲置 5 分钟后主控变慢：立即拿到旧快照，主控请求在后台进行
+      now += 300_000
+      release = null
+      const stale = await hub.fetch(snapshotRequest())
+      assert.equal(stale.headers.get('X-Probe-Stale-Age'), '305')
+      assert.equal((await stale.json()).version, 1)
+      assert.equal(calls.length, 2)
+      // 刷新还没回来时再来一位访客：仍是旧快照，不重复打主控
+      const again = await hub.fetch(snapshotRequest())
+      assert.equal(again.headers.get('X-Probe-Stale-Age'), '305')
+      assert.equal(calls.length, 2)
+      release()
+      await Promise.all(first.pending)
+      const refreshed = await hub.fetch(snapshotRequest())
+      assert.equal(refreshed.headers.has('X-Probe-Stale-Age'), false)
+      assert.equal((await refreshed.json()).version, 2)
+
+      // Durable Object 被回收后的新实例：从存储取回快照，照样立即应答
+      now += 120_000
+      const second = hubState(first.storage)
+      const revived = new ProbeHub(second.state, hubEnv)
+      await new Promise(resolve => setTimeout(resolve, 0))
+      release = null
+      const fromStorage = await revived.fetch(snapshotRequest())
+      assert.ok(Number(fromStorage.headers.get('X-Probe-Stale-Age')) >= 120)
+      release()
+      await Promise.all(second.pending)
+
+      // 超过 30 分钟的快照不再拿出来，宁可等主控
+      now += 31 * 60_000
+      release = undefined
+      const tooOld = await revived.fetch(snapshotRequest())
+      assert.equal(tooOld.headers.has('X-Probe-Stale-Age'), false)
+    })
+  } finally {
+    Date.now = realNow
+  }
+})
+
+test('/api/probe 透传旧快照年龄且不写入微缓存', async () => {
+  const puts = []
+  const originalCaches = globalThis.caches
+  globalThis.caches = { default: { match: async () => undefined, put: async (...args) => { puts.push(args) } } }
+  try {
+    const hub = { fetch: async () => new Response('{"servers":[]}', { headers: { 'Content-Type': 'application/json', 'X-Probe-Stale-Age': '42' } }) }
+    const response = await worker.fetch(new Request('https://probe.test/api/probe', { headers: ownPage }), { ...env([]), PROBE_HUB: { getByName: () => hub } }, { waitUntil() {} })
+    assert.equal(response.status, 200)
+    assert.equal(response.headers.get('X-Probe-Stale-Age'), '42')
+    assert.equal(response.headers.get('X-Probe-Cache'), 'BYPASS')
+    assert.equal(puts.length, 0)
+  } finally {
+    globalThis.caches = originalCaches
+  }
+})
+
+test('ProbeHub 广播：delta=2 的连接收第 2 版增量帧，delta=1 收第 1 版，其余和刚连上的收完整帧', async () => {
+  const client = (tags, attachment = null) => ({ tags, attachment, sent: [], readyState: WebSocket.OPEN,
+    send(data) { this.sent.push(JSON.parse(data)) }, deserializeAttachment() { return this.attachment }, serializeAttachment(value) { this.attachment = value } })
+  const v2 = client(['probe-client', 'probe-delta2'])
+  const v1 = client(['probe-client', 'probe-delta'])
+  const plain = client(['probe-client'])
+  const fresh = client(['probe-client', 'probe-delta2'], { needsFull: true })
+  const sockets = [v2, v1, plain, fresh]
+  const base = hubState()
+  base.state.getWebSockets = tag => sockets.filter(socket => !tag || socket.tags.includes(tag))
+  base.state.getTags = socket => socket.tags
+  const server = cpu => ({ name: 'a', cpu_pct: cpu, os: 'Debian', cumulative_up: 1, cumulative_down: 1, ping: [{ key: 'k', label: 'K', current_ms: 10, loss_pct: 0, buckets: [{ ms: 10, loss: 0 }] }] })
+  let cpu = 1
+  await withUpstream(() => Response.json({ enabled: true, title: 't', servers: [server(cpu++)] }), async () => {
+    const hub = new ProbeHub(base.state, { MMWX_ORIGIN: 'https://panel.test', PROBE_TOKEN: TOKEN })
+    await hub.alarm()
+    for (const socket of sockets) assert.equal(socket.sent.at(-1).delta, undefined)
+    assert.equal(fresh.attachment, null)
+    await hub.alarm()
+    assert.equal(v2.sent.at(-1).delta, 2)
+    assert.deepEqual(v2.sent.at(-1).servers, [{ cpu_pct: 2 }])
+    assert.equal('title' in v2.sent.at(-1), false)
+    assert.equal(v1.sent.at(-1).delta, 1)
+    assert.equal(v1.sent.at(-1).servers[0].os, 'Debian')
+    assert.equal(plain.sent.at(-1).delta, undefined)
+    assert.equal(plain.sent.at(-1).servers[0].cpu_pct, 2)
+    assert.equal(fresh.sent.at(-1).delta, 2)
+  })
 })

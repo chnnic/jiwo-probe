@@ -54,6 +54,15 @@ const THEME_CHUNKS: Record<string, () => Promise<unknown>> = {
 export function preloadActiveThemeChunk(): void {
   THEME_CHUNKS[getActiveTheme()]?.().catch(() => { /* 真正渲染时会再加载一次 */ })
 }
+
+let themeChunksPrefetched = false
+/** 访客要换主题时一次性预取所有主题包（压缩后合计约 110 KB），点选后直接渲染，不出现「正在加载…」。省流量模式不预取。 */
+export function prefetchThemeChunks(): void {
+  if (themeChunksPrefetched) return
+  themeChunksPrefetched = true
+  if ((navigator as Navigator & { connection?: { saveData?: boolean } }).connection?.saveData) return
+  for (const load of Object.values(THEME_CHUNKS)) load().catch(() => { /* 点选时会再加载 */ })
+}
 const MiniServerDetail = lazy(() => import('./mini/MiniServerDetail'))
 
 function RegionSelect({ regions, value, onChange }: { regions: string[]; value: string; onChange: (value: string) => void }) {

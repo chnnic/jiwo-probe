@@ -13,7 +13,8 @@ export const SNAPSHOT_HINT_DELAY_MS = 1_500
 
 export function snapshotHintLabel(savedAt: number): string {
   const time = new Date(savedAt).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', hour12: false })
-  return `正在显示上次打开时（${time}）的数据，实时数据加载中`
+  // 快照可能来自本机上次打开时的缓存，也可能是 Worker 冷启动时给的上一份数据，文案不区分来源
+  return `正在显示 ${time} 的数据，实时数据加载中`
 }
 
 export function isStale(error: string | undefined, updatedAt: number | undefined, now: number): boolean {
