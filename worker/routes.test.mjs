@@ -303,3 +303,55 @@ test('ProbeHub 广播：delta=2 的连接收第 2 版增量帧，delta=1 收第 
     assert.equal(fresh.sent.at(-1).delta, 2)
   })
 })
+
+test('同名的两台机器各自估算流量，原先混在一起累加出来的日流量被清掉', async () => {
+  const today = new Date().toISOString().slice(0, 10)
+  const storage = new Map([['probe-estimated-daily-traffic-v1', {
+    Twin: { lastUp: 5, lastDown: 5, lastSeenAt: 1, days: { '2020-01-01': { uplink: 1, downlink: 1, total: 2 }, [today]: { uplink: 6e12, downlink: 5e12, total: 11e12 } } },
+  }]])
+  // 保留期外的日期会被清理，换成昨天
+  const yesterday = new Date(Date.now() - 86_400_000).toISOString().slice(0, 10)
+  const twin = storage.get('probe-estimated-daily-traffic-v1').Twin
+  twin.days = { [yesterday]: { uplink: 100, downlink: 200, total: 300 }, [today]: twin.days[today] }
+  const base = hubState(storage)
+  let round = 0
+  const servers = () => {
+    round++
+    return [
+      // 主控有真实日流量的新机器，累计计数器比老机器大得多
+      { name: 'Twin', mem_total: 1, expires_at: '2027-11-11', traffic_limit: 1e12, cumulative_up: 19e9 + round, cumulative_down: 19e9, traffic_used_total: 9, daily_traffic: [{ date: today, uplink: 4, downlink: 5, total: 9 }] },
+      { name: 'Twin', mem_total: 2, expires_at: '2027-10-25', traffic_limit: 1e12, cumulative_up: 5e9 + round * 10, cumulative_down: 7e9 + round, traffic_used_total: 0 },
+    ]
+  }
+  await withUpstream(() => Response.json({ enabled: true, servers: servers() }), async () => {
+    const hub = new ProbeHub(base.state, { MMWX_ORIGIN: 'https://panel.test', PROBE_TOKEN: TOKEN })
+    await hub.alarm()
+    await hub.alarm()
+    await hub.alarm()
+    const payload = await (await hub.fetch(new Request('https://probe-hub.internal/snapshot'))).json()
+    const [fresh, old] = payload.servers
+    assert.equal(fresh.traffic_used_total, 9)
+    assert.equal(fresh.daily_traffic_estimated, undefined)
+    assert.equal(old.daily_traffic_estimated, true)
+    assert.deepEqual(old.daily_traffic.map(row => row.total), [300, 22])
+    assert.equal(old.traffic_used_total, 322)
+  })
+})
+
+test('同名且指纹也相同的机器分不出彼此，不做估算', async () => {
+  const base = hubState()
+  let round = 0
+  await withUpstream(() => {
+    round++
+    return Response.json({ enabled: true, servers: [
+      { name: 'Same', mem_total: 1, cumulative_up: 100 + round, cumulative_down: 1 },
+      { name: 'Same', mem_total: 1, cumulative_up: 9000 + round, cumulative_down: 1 },
+    ] })
+  }, async () => {
+    const hub = new ProbeHub(base.state, { MMWX_ORIGIN: 'https://panel.test', PROBE_TOKEN: TOKEN })
+    await hub.alarm()
+    await hub.alarm()
+    const payload = await (await hub.fetch(new Request('https://probe-hub.internal/snapshot'))).json()
+    for (const server of payload.servers) assert.equal(server.daily_traffic_estimated, undefined)
+  })
+})
