@@ -43,6 +43,7 @@ const HUB_DELTA_TAG = 'probe-delta'
 // 第 2 版增量帧（/api/stream?delta=2）：没变的字段不发，见 src/probe-delta.ts
 const HUB_DELTA2_TAG = 'probe-delta2'
 const ESTIMATED_TRAFFIC_STORAGE_KEY = 'probe-estimated-daily-traffic-v1'
+const ESTIMATED_TRAFFIC_REPAIR_KEY = 'probe-estimated-traffic-repair-v1'
 const ESTIMATED_TRAFFIC_RETENTION_DAYS = 30
 const ESTIMATED_TRAFFIC_FLUSH_MS = 5 * 60 * 1_000
 const BACKGROUND_POSITIONS = new Set(['center', 'top', 'bottom', 'left', 'right'])
@@ -220,6 +221,28 @@ export function migrateEstimatedTraffic(
       changed = true
     }
   }
+  return changed
+}
+
+/**
+ * 一次性修复：同名机器共用记录期间累加出来的日流量，改名后会留在按名字存的那份里。
+ * 只删明显不可能的日子：单日超过整期额度，且是该机其它日子最大值的 10 倍以上。
+ */
+export function repairEstimatedOutliers(state: EstimatedTrafficState, servers: MutableProbeServer[], keys: Array<string | null>): boolean {
+  let changed = false
+  servers.forEach((server, index) => {
+    const key = keys[index]
+    const estimate = key ? state[key] : undefined
+    const limit = finiteCounter(server.traffic_limit) || 0
+    if (!estimate || limit <= 0) return
+    for (const [date, row] of Object.entries(estimate.days)) {
+      if (row.total <= limit) continue
+      const others = Object.entries(estimate.days).filter(([other]) => other !== date).map(([, other]) => other.total)
+      if (!others.length || row.total < Math.max(...others) * 10) continue
+      delete estimate.days[date]
+      changed = true
+    }
+  })
   return changed
 }
 
@@ -447,6 +470,7 @@ export class ProbeHub implements DurableObject {
   private estimatedTraffic: EstimatedTrafficState = {}
   private estimatedTrafficReady: Promise<void>
   private estimatedTrafficDirty = false
+  private estimatedTrafficRepaired = false
   private estimatedTrafficLastFlushAt = 0
 
   constructor(state: DurableObjectState, env: Env) {
@@ -618,6 +642,14 @@ export class ProbeHub implements DurableObject {
     const keys = estimatedTrafficKeys(payload.servers)
     if (migrateEstimatedTraffic(this.estimatedTraffic, payload.servers, keys, today)) {
       this.estimatedTrafficDirty = true
+    }
+
+    if (!this.estimatedTrafficRepaired) {
+      this.estimatedTrafficRepaired = true
+      if (!(await this.state.storage.get<boolean>(ESTIMATED_TRAFFIC_REPAIR_KEY))) {
+        if (repairEstimatedOutliers(this.estimatedTraffic, payload.servers, keys)) this.estimatedTrafficDirty = true
+        await this.state.storage.put(ESTIMATED_TRAFFIC_REPAIR_KEY, true)
+      }
     }
 
     for (const [index, server] of payload.servers.entries()) {

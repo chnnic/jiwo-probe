@@ -355,3 +355,24 @@ test('同名且指纹也相同的机器分不出彼此，不做估算', async ()
     for (const server of payload.servers) assert.equal(server.daily_traffic_estimated, undefined)
   })
 })
+
+test('改名后留下的离谱日流量只修复一次：超过整期额度且远高于其它日子的才删', async () => {
+  const today = new Date().toISOString().slice(0, 10)
+  const yesterday = new Date(Date.now() - 86_400_000).toISOString().slice(0, 10)
+  const storage = new Map([['probe-estimated-daily-traffic-v1', {
+    Solo: { lastUp: 5, lastDown: 5, lastSeenAt: 1, days: { [yesterday]: { uplink: 100, downlink: 200, total: 300 }, [today]: { uplink: 6e12, downlink: 5e12, total: 11e12 } } },
+    Busy: { lastUp: 5, lastDown: 5, lastSeenAt: 1, days: { [yesterday]: { uplink: 1e12, downlink: 1e12, total: 2e12 }, [today]: { uplink: 1e12, downlink: 2e12, total: 3e12 } } },
+  }]])
+  const base = hubState(storage)
+  await withUpstream(() => Response.json({ enabled: true, servers: [
+    { name: 'Solo', traffic_limit: 1e12, cumulative_up: 15, cumulative_down: 6 },
+    { name: 'Busy', traffic_limit: 1e12, cumulative_up: 5, cumulative_down: 5 },
+  ] }), async () => {
+    const hub = new ProbeHub(base.state, { MMWX_ORIGIN: 'https://panel.test', PROBE_TOKEN: TOKEN })
+    await hub.alarm()
+    const payload = await (await hub.fetch(new Request('https://probe-hub.internal/snapshot'))).json()
+    assert.deepEqual(payload.servers[0].daily_traffic.map(row => row.total), [300, 11])
+    assert.deepEqual(payload.servers[1].daily_traffic.map(row => row.total), [2e12, 3e12])
+    assert.equal(storage.get('probe-estimated-traffic-repair-v1'), true)
+  })
+})
