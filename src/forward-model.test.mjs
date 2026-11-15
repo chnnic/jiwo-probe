@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { availabilityCells, availabilityPct, chainLiveSpeed, formatAvailability, formatJitter, chainStatus, chainTraffic, chainTrafficDay, flowDuration, flowLevel, formatGb, groupTrafficByRole, FORWARD_TRAFFIC_NOTE, FORWARD_TRAFFIC_SETTLE_MINUTES, forwardSummary, hopTone, latencyTone, mayHaveRouteSelection, routeFork, sortChains, trendCells } from './forward-model.ts'
+import { availabilityCells, availabilityPct, chainLiveSpeed, formatAvailability, formatJitter, chainStatus, chainTraffic, chainTrafficDay, flowDuration, flowLevel, formatGb, groupTrafficByRole, hopMatrices, FORWARD_TRAFFIC_NOTE, FORWARD_TRAFFIC_SETTLE_MINUTES, forwardSummary, hopTone, latencyTone, mayHaveRouteSelection, routeFork, sortChains, trendCells } from './forward-model.ts'
 
 test('选路段：按 route_hop 分叉，带策略说明与各路状态；有 routes 时不再提示可能是选路', () => {
   const chain = {
@@ -176,4 +176,27 @@ test('链级实时网速：负数和缺失按 0 处理并给出合计', () => {
   assert.deepEqual(chainLiveSpeed({ speed_up: 632, speed_down: 3397 }), { up: 632, down: 3397, total: 4029 })
   assert.deepEqual(chainLiveSpeed({ speed_up: 100 }), { up: 100, down: 0, total: 100 })
   assert.deepEqual(chainLiveSpeed({ speed_up: -5, speed_down: 0 }), { up: 0, down: 0, total: 0 })
+})
+
+test('逐台延迟矩阵：下一组两台以上才出表，缺的格子留空，不可达与高丢包标红', () => {
+  const chain = {
+    name: 'm', end_to_end_ms: 10, loss_pct: 0, bucket_sec: 300, trend: [],
+    groups: [
+      { name: '入口', role: 'entry', to_next_ms: 5, servers: [
+        { name: 'a', to_next_ms: 5, healthy: true, ups: [{ name: 'x', ms: 5, loss_pct: 0, healthy: true }, { name: 'y', ms: 200, loss_pct: 60, healthy: true }] },
+        { name: 'b', to_next_ms: 9, healthy: true, ups: [{ name: 'y', ms: 0, healthy: false }] },
+      ] },
+      { name: '中转', role: 'mid', to_next_ms: 3, servers: [
+        { name: 'x', to_next_ms: 3, healthy: true, ups: [{ name: 'z', ms: 3, healthy: true }] },
+        { name: 'y', to_next_ms: 3, healthy: true },
+      ] },
+      { name: '出口', role: 'exit', to_next_ms: 0, servers: [{ name: 'z', to_next_ms: 0, healthy: true }] },
+    ],
+  }
+  const matrices = hopMatrices(chain)
+  assert.equal(matrices.length, 1, '下一组只有一台的那一跳不出表')
+  assert.deepEqual([matrices[0].from, matrices[0].to, matrices[0].targets], ['入口', '中转', ['x', 'y']])
+  assert.deepEqual(matrices[0].rows[0].cells, [{ ms: 5, loss: 0, tone: 'good' }, { ms: 200, loss: 60, tone: 'down' }])
+  assert.deepEqual(matrices[0].rows[1].cells, [null, { ms: 0, loss: 0, tone: 'down' }])
+  assert.deepEqual(hopMatrices({ ...chain, groups: chain.groups.map(g => ({ ...g, servers: g.servers.map(({ ups, ...s }) => s) })) }), [], '主控没开矩阵开关')
 })

@@ -235,6 +235,45 @@ export function routeFork(chain: ForwardChainData) {
   }
 }
 
+export interface HopMatrixCell { ms: number; loss: number; tone: HopTone }
+export interface HopMatrix {
+  from: string
+  to: string
+  targets: string[]
+  rows: Array<{ name: string; cells: Array<HopMatrixCell | null> }>
+}
+
+/**
+ * 逐台延迟矩阵（主控 v0.6.2 起的 server.ups）：每一跳一张表，行是本组每台，列是下一组每台。
+ * 下一组只有一台时与每台自己的 to_next_ms 重复，不出表；主控没开矩阵开关时返回空数组。
+ */
+export function hopMatrices(chain: ForwardChainData): HopMatrix[] {
+  const result: HopMatrix[] = []
+  chain.groups.forEach((group, index) => {
+    const targets: string[] = []
+    for (const server of group.servers) {
+      for (const up of server.ups || []) if (up?.name && !targets.includes(up.name)) targets.push(up.name)
+    }
+    if (targets.length < 2) return
+    result.push({
+      from: group.name,
+      to: chain.groups[index + 1]?.name || '下一组',
+      targets,
+      rows: group.servers.map((server) => ({
+        name: server.name,
+        cells: targets.map((target) => {
+          const up = server.ups?.find((item) => item.name === target)
+          if (!up) return null
+          const lossPct = finite(up.loss_pct) ? up.loss_pct : 0
+          const down = up.healthy === false || lossPct >= FORWARD_DOWN_LOSS
+          return { ms: up.ms, loss: lossPct, tone: down ? 'down' : latencyTone(up.ms) }
+        }),
+      })),
+    })
+  })
+  return result
+}
+
 export type FlowLevel = 0 | 1 | 2 | 3
 
 /** 按一组服务器的实时上下行合计（主控下发为 byte/s，按 bit/s 分档）划分连线流动档位。 */

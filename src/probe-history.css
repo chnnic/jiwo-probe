@@ -192,6 +192,20 @@ body.gm-light-body .probe-forward { --fw-ok: #0d946e; }
 .probe-forward-route[data-selected] .probe-forward-route-by { color: var(--ph-accent); }
 .probe-forward-route-tag { flex: none; font-size: 10px; color: var(--ph-accent); }
 .probe-forward-server-loss { flex: none; font-size: 10px; color: var(--fw-down); }
+/* 逐台延迟矩阵：首列固定，列多时只在表内横向滚动 */
+.probe-forward-matrix { display: grid; gap: 6px; min-width: 0; }
+.probe-forward-matrix h4 { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 8px; margin: 0; font-size: 12px; font-weight: 600; }
+.probe-forward-matrix h4 small { font-size: 10px; font-weight: 400; color: var(--ph-muted); }
+.probe-forward-matrix-scroll { overflow-x: auto; border: 1px solid var(--ph-line); border-radius: 8px; }
+.probe-forward-matrix table { width: 100%; border-collapse: collapse; font-size: 11px; font-variant-numeric: tabular-nums; }
+.probe-forward-matrix th, .probe-forward-matrix td { padding: 5px 8px; border-bottom: 1px solid color-mix(in srgb, var(--ph-line) 60%, transparent); text-align: right; white-space: nowrap; }
+.probe-forward-matrix tbody tr:last-child > * { border-bottom: 0; }
+.probe-forward-matrix th { font-weight: 500; color: var(--ph-muted); }
+.probe-forward-matrix th span { display: block; overflow: hidden; max-width: 150px; text-overflow: ellipsis; }
+.probe-forward-matrix thead th span { margin-left: auto; }
+.probe-forward-matrix th:first-child { position: sticky; left: 0; z-index: 1; text-align: left; color: inherit; background: var(--ph-bg); }
+.probe-forward-matrix td { font-weight: 600; color: var(--fw-tone); }
+.probe-forward-matrix td small { margin-left: 4px; font-size: 10px; font-weight: 400; color: var(--fw-down); }
 .probe-forward-note { margin: 0; padding: 8px 10px; border: 1px dashed color-mix(in srgb, var(--fw-warn) 45%, var(--ph-line)); border-radius: 8px; font-size: 11px; line-height: 1.6; color: var(--ph-muted); background: color-mix(in srgb, var(--fw-warn) 6%, var(--ph-bg)); }
 @media (prefers-reduced-motion: reduce) {
   .probe-forward-hop i::before, .probe-forward-hop[data-tone="down"] i { animation: none; }

@@ -157,6 +157,14 @@ export interface ProbePayload {
   servers?: ProbeServer[]
 }
 
+/** 主控 v0.6.2 起（开了「转发链全服务器延迟矩阵」）：本台到下一组某一台的实测延迟 */
+export interface ForwardChainUpstream {
+  name: string
+  ms: number
+  loss_pct?: number
+  healthy?: boolean
+}
+
 export interface ForwardChainServerData {
   name: string
   to_next_ms: number
@@ -165,6 +173,8 @@ export interface ForwardChainServerData {
   loss_pct?: number
   /** 选路段分叉组成员当前走的路名（如「路1」） */
   route?: string
+  /** 主控 v0.6.2 起：本台到下一组每一台的逐对延迟；主控没开矩阵开关时没有 */
+  ups?: ForwardChainUpstream[]
 }
 
 export interface ForwardChainGroupData {

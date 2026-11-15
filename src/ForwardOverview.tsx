@@ -1,7 +1,7 @@
 import { Fragment, useMemo, useState, type CSSProperties } from 'react'
 import { ChevronDown, Network } from 'lucide-react'
 import type { ProbePayload, ProbeServer } from './types'
-import { availabilityCells, availabilityPct, chainLiveSpeed, chainTraffic, chainTrafficDay, type TrafficRoleGroup, flowDuration, FORWARD_TRAFFIC_NOTE, formatAvailability, formatJitter, flowLevel, formatGb, forwardSummary, groupHealth, hopTone, latencyTone, mayHaveRouteSelection, routeFork, sortChains, trendCells, type ForwardStatus } from './forward-model'
+import { availabilityCells, availabilityPct, chainLiveSpeed, chainTraffic, chainTrafficDay, type TrafficRoleGroup, flowDuration, FORWARD_TRAFFIC_NOTE, formatAvailability, formatJitter, flowLevel, formatGb, forwardSummary, groupHealth, hopMatrices, hopTone, latencyTone, mayHaveRouteSelection, routeFork, sortChains, trendCells, type ForwardStatus } from './forward-model'
 import { useNetworkSpeed } from './use-network-speed'
 import { ForwardTrendChart } from './deferred'
 import './probe-history.css'
@@ -49,6 +49,7 @@ export function ForwardOverview({ data }: { data: ProbePayload }) {
   const chain = current?.chain
   const traffic = chain ? chainTraffic(chain) : null
   const fork = chain ? routeFork(chain) : null
+  const matrices = useMemo(() => chain ? hopMatrices(chain) : [], [chain])
   const chainSpeed = chain ? chainLiveSpeed(chain) : null
   const chainAvailability = chain ? availabilityPct(chain) : null
   const jitter = chain ? formatJitter(chain.jitter_ms) : null
@@ -146,6 +147,18 @@ export function ForwardOverview({ data }: { data: ProbePayload }) {
             </Fragment>
           })}
         </div>
+        {matrices.map((matrix) => <div className="probe-forward-matrix" key={`${matrix.from}>${matrix.to}`}>
+          <h4>逐台延迟 · {matrix.from} → {matrix.to}<small>行是本组每台，列是下一组每台</small></h4>
+          <div className="probe-forward-matrix-scroll"><table>
+            <thead><tr><th scope="col" />{matrix.targets.map((target) => <th scope="col" key={target} title={target}><span>{target}</span></th>)}</tr></thead>
+            <tbody>{matrix.rows.map((row, i) => <tr key={`${row.name}-${i}`}>
+              <th scope="row" title={row.name}><span>{row.name}</span></th>
+              {row.cells.map((cell, j) => cell
+                ? <td key={j} data-tone={cell.tone} title={`${row.name} → ${matrix.targets[j]}${cell.loss > 0 ? ` · 丢包 ${loss(cell.loss)}` : ''}`}>{cell.tone === 'down' && !(cell.ms > 0) ? '不可达' : latency(cell.ms)}{cell.loss > 0 && <small>丢 {loss(cell.loss)}</small>}</td>
+                : <td key={j} data-tone="idle">—</td>)}
+            </tr>)}</tbody>
+          </table></div>
+        </div>)}
         {mayHaveRouteSelection(chain) && <p className="probe-forward-note">主控接口暂未提供选路结构：连续多个中转组可能是「选路段」里的并行路线（按最低延迟择一），此处按顺序画出，端到端延迟按各段相加，可能偏高。</p>}
         <div className="probe-forward-panels">
           {!!chain.trend?.length && <div className="probe-forward-panel"><h4>端到端延迟与丢包 · 近 {Math.round(chain.trend.length * (chain.bucket_sec || 300) / 60)} 分钟

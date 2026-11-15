@@ -4711,6 +4711,52 @@
 .premium-probe-forward .slat.is-idle {
   color: #776e60;
 }
+.premium-probe-forward .fmx {
+  overflow-x: auto;
+}
+.premium-probe-forward .fmx table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
+  font-variant-numeric: tabular-nums;
+}
+.premium-probe-forward .fmx th,
+.premium-probe-forward .fmx td {
+  padding: 7px 10px;
+  border-bottom: 1px solid color-mix(in srgb, currentColor 10%, transparent);
+  text-align: right;
+  white-space: nowrap;
+}
+.premium-probe-forward .fmx tbody tr:last-child > * {
+  border-bottom: 0;
+}
+.premium-probe-forward .fmx th {
+  font-weight: 500;
+}
+.premium-probe-forward .fmx thead th {
+  opacity: 0.7;
+}
+.premium-probe-forward .fmx th span {
+  display: block;
+  overflow: hidden;
+  max-width: 170px;
+  text-overflow: ellipsis;
+}
+.premium-probe-forward .fmx thead th span {
+  margin-left: auto;
+}
+.premium-probe-forward .fmx th:first-child {
+  text-align: left;
+}
+.premium-probe-forward .fmx td {
+  font-weight: 600;
+}
+.premium-probe-forward .fmx td small {
+  margin-left: 5px;
+  font-size: 11px;
+  font-weight: 400;
+  color: #e6884a;
+}
 .premium-probe-forward .tconn {
   flex: 0 0 80px;
   display: flex;
