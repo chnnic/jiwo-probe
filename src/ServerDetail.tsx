@@ -1,3 +1,4 @@
+import { ProviderLogo } from './ProviderLogo'
 import { useNetworkSpeed } from './use-network-speed'
 import { ConnectionCounts, UnlockDetails } from './ServerCapabilities'
 import { useEffect, useMemo, useRef, useState } from 'react'
@@ -498,7 +499,7 @@ export function ServerDetail({ server, index, onClose, showHealthScore = false }
                     {server.provider_name && (
                       <span>
                         <Wifi size={13} />
-                        服务商: {server.provider_name}
+                        服务商: <ProviderLogo path={server.provider_logo} size={14} />{server.provider_name}
                       </span>
                     )}
                   </div>

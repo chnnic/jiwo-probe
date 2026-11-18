@@ -20,6 +20,7 @@ import { CYCLE_LABELS, CYCLE_MONTHS, expiryTimestamp, isPermanent } from './rene
 import './premium-probe.css'
 import { historyPingSeries, isIpv6Ping, primaryPing } from './ping-groups'
 import { serverHealth, averageLatency, percentage, resourcePercentage } from './server-health'
+import { ProviderLogo } from './ProviderLogo'
 import { availabilityCells, availabilityPct, chainLiveSpeed, formatAvailability, formatJitter, hopMatrices, FORWARD_TRAFFIC_NOTE, FORWARD_TRAFFIC_SETTLE_MINUTES } from './forward-model'
 import { LazyCard } from './LazyCard'
 
@@ -1895,9 +1896,9 @@ function ForwardChainView({ wsChains }: { wsChains?: ForwardChainData[] }) {
                       {row.cells.map((cell, j) => (
                         <td
                           key={j}
-                          className={`slat ${!cell ? "is-idle" : cell.tone === "down" ? "is-hi" : forwardLatencyClass(cell.ms)}`}
+                          className={`slat ${!cell ? "is-idle" : cell.tone === "down" ? "is-hi" : forwardLatencyClass(cell.ms ?? 0)}`}
                         >
-                          {!cell ? "—" : cell.ms > 0 ? `${cell.ms} ms` : cell.tone === "down" ? "不可达" : "—"}
+                          {!cell ? "—" : cell.ms && cell.ms > 0 ? `${cell.ms} ms` : cell.tone === "down" ? "不可达" : "—"}
                           {cell && cell.loss > 0 && <small>丢 {cell.loss}%</small>}
                         </td>
                       ))}
@@ -2527,6 +2528,7 @@ function PremiumServerCard({
           </span>
         )}
         <UnlockButton server={server} />
+        <ProviderLogo path={server.provider_logo} name={server.provider_name} url={server.provider_url} />
         <span className='premium-probe-server-status'>
           <i
             className={cn(

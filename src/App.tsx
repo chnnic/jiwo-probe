@@ -1,3 +1,4 @@
+import { ProviderLogo, providerLogoSrc } from './ProviderLogo'
 import { ThemeSelect } from './ThemePicker'
 import { useNetworkSpeed } from './use-network-speed'
 import { ConnectionCounts, UnlockButton } from './ServerCapabilities'
@@ -356,7 +357,7 @@ function ServerCardLumina({ server, index }: { server: EnrichedServer; index: nu
             </h2>
           </div>
           <span className="lumina-card-actions">
-            <UnlockButton server={server} />
+            <ProviderLogo path={server.provider_logo} name={server.provider_name} url={server.provider_url} /><UnlockButton server={server} />
             <span title={systemTitle(server)}>
               <SystemIcon server={server} />
             </span>
@@ -610,6 +611,7 @@ function ServerCard({ server, index, dense = false }: { server: ProbeServer; ind
         </em>
       ) : server.online && hasMetric && <em className="health-badge ok">健康</em>}
       <i className="server-title-gap" />
+      <ProviderLogo path={server.provider_logo} name={server.provider_name} url={server.provider_url} />
       <UnlockButton server={server} />
       <span title={systemTitle(server)} onClick={(event) => event.stopPropagation()}>
         <SystemIcon server={server} />
@@ -780,7 +782,7 @@ function ServerMiniCard({ server, index, expanded }: { server: ProbeServer; inde
           </span>
         )}
         {dying && <span className="mini-expiry">{remainingDays(server.expires_at)}</span>}
-        <UnlockButton server={server} />
+        <ProviderLogo path={server.provider_logo} name={server.provider_name} url={server.provider_url} /><UnlockButton server={server} />
       </div>
       {expanded && (
         <div className="mini-detail mini-resources">
@@ -955,6 +957,8 @@ function ServerTable({ servers }: { servers: ProbeServer[] }) {
   const networkSpeed = useNetworkSpeed()
   const [sortKey, setSortKey] = useState<SortKey>('name')
   const [sortDir, setSortDir] = useState<SortDir>('asc')
+  // 有别的服务器带 logo 时，没 logo 的留同宽空位，名称对齐
+  const anyProviderLogo = useMemo(() => servers.some((server) => !!providerLogoSrc(server.provider_logo)), [servers])
 
   const rows = useMemo(() => {
     const dir = sortDir === 'asc' ? 1 : -1
@@ -1011,7 +1015,7 @@ function ServerTable({ servers }: { servers: ProbeServer[] }) {
               return (
                 <tr key={`${server.name}-${index}`} className="table-row-link" onClick={() => { location.hash = `#/server/${index}` }} role="button" tabIndex={0} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); location.hash = `#/server/${index}` } }}>
                   <td className="table-name">
-                    <div className="probe-unlock-name-line"><Twemoji>{server.name || `服务器 ${index + 1}`}</Twemoji><UnlockButton server={server} /></div>
+                    <div className="probe-unlock-name-line">{providerLogoSrc(server.provider_logo) ? <ProviderLogo path={server.provider_logo} name={server.provider_name} /> : anyProviderLogo && <span style={{ width: 18, flexShrink: 0 }} />}<Twemoji>{server.name || `服务器 ${index + 1}`}</Twemoji><UnlockButton server={server} /></div>
                     {server.region && <small>{server.region}</small>}
                     {isPermanent(server) && <small>永久</small>}
                     {!isPermanent(server) && server.expires_at &&

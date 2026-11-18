@@ -1,3 +1,4 @@
+import { ProviderLogo } from '../ProviderLogo'
 import { useMemo, useState } from 'react'
 import { Activity, ArrowDown, ArrowUp, CalendarClock, Cpu, HardDrive, LayoutGrid, List, MemoryStick, Moon, Network, PieChart, Rows3, Search, Server, Sun, Wallet } from 'lucide-react'
 import type { ProbePayload, ProbeServer, ThemeName } from '../types'
@@ -79,7 +80,7 @@ function NodeCard({ server, index, view }: { server: ProbeServer; index: number;
           {flag && <Twemoji className="mini-flag">{flag}</Twemoji>}
           <h3>{name}</h3>
         </a>
-        <div className="mini-node-actions"><UnlockButton server={server} /><span className="mini-system" title={server.os || '系统未上报'}><SystemIcon server={server} /><span>{server.os?.split(' ')[0] || '未知'}</span></span></div>
+        <div className="mini-node-actions"><ProviderLogo path={server.provider_logo} name={server.provider_name} url={server.provider_url} /><UnlockButton server={server} /><span className="mini-system" title={server.os || '系统未上报'}><SystemIcon server={server} /><span>{server.os?.split(' ')[0] || '未知'}</span></span></div>
       </div>
       <div className="mini-node-meta"><span>{server.online ? uptime(server.uptime) : '离线'}</span><span title={providerName(server)}>{providerName(server)}</span>{isExpiring(server) && <span className="mini-expiring">{expiry(server)}</span>}</div>
     </div>

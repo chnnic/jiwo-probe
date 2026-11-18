@@ -1,3 +1,4 @@
+import { ProviderLogo } from '../ProviderLogo'
 import { THEME_OPTIONS } from '../theme-picker-model'
 import { ThemeSelect } from '../ThemePicker'
 import { useNetworkSpeed } from '../use-network-speed'
@@ -415,7 +416,7 @@ function NodeCard({ server, index, open }: { server: EnrichedServer; index: numb
           {flag && <Twemoji className="emerald-node-flag">{flag}</Twemoji>}
           <strong>{name}</strong>
         </div>
-        <span className="probe-unlock-tools"><UnlockButton server={server} /><Monitor size={15} className="emerald-node-os" /></span>
+        <span className="probe-unlock-tools"><ProviderLogo path={server.provider_logo} name={server.provider_name} url={server.provider_url} /><UnlockButton server={server} /><Monitor size={15} className="emerald-node-os" /></span>
       </header>
       <p className="emerald-node-system">{server.cpu_cores ? `${server.cpu_cores} 核 · ` : ''}{server.cpu_model || server.os || '系统信息暂缺'}</p>
       <div className="emerald-node-metrics">

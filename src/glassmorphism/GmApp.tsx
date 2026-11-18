@@ -1,3 +1,4 @@
+import { ProviderLogo } from '../ProviderLogo'
 import { THEME_OPTIONS } from '../theme-picker-model'
 import { ThemeSelect } from '../ThemePicker'
 import { useNetworkSpeed } from '../use-network-speed'
@@ -184,7 +185,7 @@ function GmNodeCard({ server, index }: { server: EnrichedServer; index: number }
             <h2 className="gm-node-title" title={name}>{name}</h2>
           </div>
           <div className="gm-node-icons">
-            <UnlockButton server={server} />
+            <ProviderLogo path={server.provider_logo} name={server.provider_name} url={server.provider_url} /><UnlockButton server={server} />
             <span className="gm-node-os" title={systemTitle(server)} onClick={(event) => event.stopPropagation()}>
               <SystemIcon server={server} />
             </span>

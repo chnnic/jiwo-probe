@@ -107,6 +107,8 @@ export interface ProbeServer {
   renewal_currency?: string
   provider_name?: string
   provider_url?: string
+  /** 服务商 logo（主控缓存地址，主控 v0.6.3 起）；主控没匹配到或关了展示时不下发 */
+  provider_logo?: string
   telecom_paid_peer?: boolean
   return_routes?: ProbeReturnRoute[]
 }
@@ -160,9 +162,11 @@ export interface ProbePayload {
 /** 主控 v0.6.2 起（开了「转发链全服务器延迟矩阵」）：本台到下一组某一台的实测延迟 */
 export interface ForwardChainUpstream {
   name: string
-  ms: number
+  /** 不通或还没有数据时为 null */
+  ms: number | null
   loss_pct?: number
-  healthy?: boolean
+  /** true 通、false 不通、null 还没有这条的数据 */
+  healthy?: boolean | null
 }
 
 export interface ForwardChainServerData {

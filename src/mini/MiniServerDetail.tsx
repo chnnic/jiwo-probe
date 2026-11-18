@@ -1,3 +1,4 @@
+import { ProviderLogo } from '../ProviderLogo'
 import { useEffect, useId, useRef, useState, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { X } from 'lucide-react'
@@ -85,7 +86,7 @@ export default function MiniServerDetail({ server, index, onClose, showHealthSco
     }}>
       <header className="mini-detail-header">
         <div className="mini-detail-heading"><i className={`mini-status-dot${server.online ? '' : ' is-offline'}`} /><h2 id={`${id}-title`} title={name}><Twemoji>{flag && !hasLeadingFlag(name) ? `${flag} ${name}` : name}</Twemoji></h2><button type="button" className="mini-detail-close" aria-label="关闭详情" onClick={onClose}><X size={22} /></button></div>
-        <div className="mini-detail-subtitle"><span>{server.provider_name || '未标注服务商'}</span>{regionLabel(server) && <span>{regionLabel(server)}</span>}<span>{server.online ? '在线' : '离线'} · {duration(server.uptime)}</span></div>
+        <div className="mini-detail-subtitle"><span><ProviderLogo path={server.provider_logo} size={14} style={{ marginRight: 5, verticalAlign: '-2px' }} />{server.provider_name || '未标注服务商'}</span>{regionLabel(server) && <span>{regionLabel(server)}</span>}<span>{server.online ? '在线' : '离线'} · {duration(server.uptime)}</span></div>
       </header>
       <div className="mini-detail-tablist" role="tablist" aria-label="服务器详情项目">
         {tabs.map((item, slot) => <button type="button" key={item.key} role="tab" id={`${id}-tab-${item.key}`} aria-controls={`${id}-panel-${item.key}`} aria-selected={tab === item.key} tabIndex={tab === item.key ? 0 : -1} onClick={() => setTab(item.key)} onKeyDown={event => {

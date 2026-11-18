@@ -235,7 +235,7 @@ export function routeFork(chain: ForwardChainData) {
   }
 }
 
-export interface HopMatrixCell { ms: number; loss: number; tone: HopTone }
+export interface HopMatrixCell { ms: number | null; loss: number; tone: HopTone }
 export interface HopMatrix {
   from: string
   to: string
@@ -266,7 +266,7 @@ export function hopMatrices(chain: ForwardChainData): HopMatrix[] {
           if (!up) return null
           const lossPct = finite(up.loss_pct) ? up.loss_pct : 0
           const down = up.healthy === false || lossPct >= FORWARD_DOWN_LOSS
-          return { ms: up.ms, loss: lossPct, tone: down ? 'down' : latencyTone(up.ms) }
+          return { ms: up.ms, loss: lossPct, tone: down ? 'down' : latencyTone(up.ms ?? undefined) }
         }),
       })),
     })

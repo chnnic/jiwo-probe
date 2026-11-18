@@ -154,7 +154,7 @@ export function ForwardOverview({ data }: { data: ProbePayload }) {
             <tbody>{matrix.rows.map((row, i) => <tr key={`${row.name}-${i}`}>
               <th scope="row" title={row.name}><span>{row.name}</span></th>
               {row.cells.map((cell, j) => cell
-                ? <td key={j} data-tone={cell.tone} title={`${row.name} → ${matrix.targets[j]}${cell.loss > 0 ? ` · 丢包 ${loss(cell.loss)}` : ''}`}>{cell.tone === 'down' && !(cell.ms > 0) ? '不可达' : latency(cell.ms)}{cell.loss > 0 && <small>丢 {loss(cell.loss)}</small>}</td>
+                ? <td key={j} data-tone={cell.tone} title={`${row.name} → ${matrix.targets[j]}${cell.loss > 0 ? ` · 丢包 ${loss(cell.loss)}` : ''}`}>{cell.tone === 'down' && !(cell.ms && cell.ms > 0) ? '不可达' : latency(cell.ms ?? undefined)}{cell.loss > 0 && <small>丢 {loss(cell.loss)}</small>}</td>
                 : <td key={j} data-tone="idle">—</td>)}
             </tr>)}</tbody>
           </table></div>

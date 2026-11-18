@@ -376,3 +376,22 @@ test('改名后留下的离谱日流量只修复一次：超过整期额度且�
     assert.equal(storage.get('probe-estimated-traffic-repair-v1'), true)
   })
 })
+
+test('服务商 logo 只转发带哈希的 PNG 文件名，不带探针令牌，长期缓存', async () => {
+  await withUpstream(() => new Response('png', { headers: { 'Content-Type': 'text/html' } }), async calls => {
+    const ok = await worker.fetch(new Request('https://probe.test/api/provider-logo/51.3e6910e1e9.png'), env([]), {})
+    assert.equal(ok.status, 200)
+    assert.equal(ok.headers.get('Content-Type'), 'image/png')
+    assert.match(ok.headers.get('Cache-Control'), /immutable/)
+    assert.equal(calls.length, 1)
+    assert.equal(new URL(calls[0].url).pathname, '/api/public/provider-logo/51.3e6910e1e9.png')
+    assert.equal(calls[0].headers.get('X-MMwx-Probe-Token'), null)
+    for (const path of ['/api/provider-logo/..%2Fadmin.png', '/api/provider-logo/a.png', '/api/provider-logo/51.3e6910e1e9.svg']) {
+      const bad = await worker.fetch(new Request(`https://probe.test${path}`), env([]), {})
+      assert.notEqual(bad.headers.get('Content-Type'), 'image/png', path)
+    }
+    assert.equal(calls.length, 1, '不合规的文件名不会连主控')
+    const post = await worker.fetch(new Request('https://probe.test/api/provider-logo/51.3e6910e1e9.png', { method: 'POST' }), env([]), {})
+    assert.equal(post.status, 405)
+  })
+})
