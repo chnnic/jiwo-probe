@@ -867,10 +867,18 @@ export default {
     if (logo) {
       if (request.method !== 'GET' && request.method !== 'HEAD') return new Response('Method not allowed', { status: 405 })
       if (missingSetupVars(env).length) return new Response('Not found', { status: 404 })
-      const upstream = await fetch(new Request(originURL(env, `/api/public/provider-logo/${logo[1]}`).toString()), {
-        cf: { cacheEverything: true, cacheTtl: 31_536_000 },
+      // 只把成功的图片放进边缘缓存；失败（主控刚重启、限流）不缓存，隔一会儿再取一次，
+      // 仍失败就让浏览器下次打开页面时重试，不把一次偶发失败记住。
+      const target = originURL(env, `/api/public/provider-logo/${logo[1]}`).toString()
+      const load = () => fetch(new Request(target), {
+        cf: { cacheEverything: true, cacheTtlByStatus: { '200-299': 31_536_000, '300-599': 0 } },
       } as RequestInit)
-      if (!upstream.ok) return new Response('Not found', { status: 404, headers: { 'Cache-Control': 'public, max-age=300' } })
+      let upstream = await load()
+      if (!upstream.ok) {
+        await new Promise((resolve) => setTimeout(resolve, 300))
+        upstream = await load()
+      }
+      if (!upstream.ok) return new Response('Not found', { status: 404, headers: { 'Cache-Control': 'no-store' } })
       return new Response(upstream.body, {
         status: 200,
         headers: {

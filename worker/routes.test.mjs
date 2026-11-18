@@ -395,3 +395,18 @@ test('服务商 logo 只转发带哈希的 PNG 文件名，不带探针令牌，
     assert.equal(post.status, 405)
   })
 })
+
+test('服务商 logo 主控偶发失败时重试一次，仍失败不让浏览器记住', async () => {
+  let n = 0
+  await withUpstream(() => (++n === 1 ? new Response('busy', { status: 429 }) : new Response('png')), async calls => {
+    const ok = await worker.fetch(new Request('https://probe.test/api/provider-logo/9.b2cc6fa58e.png'), env([]), {})
+    assert.equal(ok.status, 200)
+    assert.equal(calls.length, 2)
+  })
+  await withUpstream(() => new Response('busy', { status: 429 }), async calls => {
+    const bad = await worker.fetch(new Request('https://probe.test/api/provider-logo/9.b2cc6fa58e.png'), env([]), {})
+    assert.equal(bad.status, 404)
+    assert.equal(bad.headers.get('Cache-Control'), 'no-store')
+    assert.equal(calls.length, 2)
+  })
+})

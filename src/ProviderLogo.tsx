@@ -17,6 +17,8 @@ export function ProviderLogo({ path, name, url, size = 18, style }: { path?: str
   if (!src) return null
   const wrap: CSSProperties = { display: 'inline-flex', flexShrink: 0, verticalAlign: 'middle', ...style }
   const img = <img src={src} alt={name || ''} title={name || undefined} loading="lazy" decoding="async" width={size} height={size}
+    // 图片取不到（主控临时失败）时整个收起，不留裂图
+    onError={(event) => { const box = event.currentTarget.parentElement; if (box) box.style.display = 'none' }}
     style={{ width: size, height: size, flexShrink: 0, borderRadius: 4, background: '#fff', objectFit: 'contain' }} />
   if (!url) return <span className="provider-logo" style={wrap}>{img}</span>
   return <a className="provider-logo" href={url} target="_blank" rel="noopener noreferrer" style={wrap} onClick={(event) => event.stopPropagation()}>{img}</a>
