@@ -5752,3 +5752,18 @@ footer a:hover {
 :root.dark.theme-meow .server-detail-backdrop {
   background: rgba(0, 0, 0, 0.62);
 }
+
+/* 服务商 logo（上游 e1a487d）：浅色配色透明显示，深色配色垫白底，深色 logo 才看得清。
+   深色的判定按各主题自己的开关：经典主题 / LuminaPlus / 哪吒用 :root.dark，黑金用 :root.gold，
+   Premium 基础样式就是黑金（白金除外），Glassmorphism 与 Emerald 用自己挂在 body 上的类。 */
+:root.dark .provider-logo-img,
+:root.gold .provider-logo-img,
+:root.theme-premium:not(.platinum) .provider-logo-img,
+body.gm-body .provider-logo-img,
+body.emerald-dark-body .provider-logo-img {
+  background: #fff;
+}
+body.gm-body.gm-light-body .provider-logo-img,
+body.emerald-body:not(.emerald-dark-body) .provider-logo-img {
+  background: transparent;
+}
