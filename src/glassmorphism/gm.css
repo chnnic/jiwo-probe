@@ -7,7 +7,7 @@
 .gm-app {
   min-height: 100vh;
   color: oklch(0.985 0 0);
-  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  font-family: "Twemoji Country Flags", system-ui, -apple-system, 'Segoe UI', Roboto, 'PingFang SC', 'Microsoft YaHei', sans-serif;
   display: flex;
   flex-direction: column;
   background: oklch(0.141 0.005 285.823);

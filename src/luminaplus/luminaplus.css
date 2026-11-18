@@ -4,7 +4,7 @@
  */
 :root.theme-luminaplus {
   /* 统一设计基础：原版的清爽卡片与彩色资源条，保留纸面式不透明表面。 */
-  --lp-heading-font: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  --lp-heading-font: "Twemoji Country Flags", -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
   --lp-page: #f3f3f5; --lp-surface: #fff; --lp-soft: #f5f5f7; --lp-text: #222327;
   --lp-secondary: #60616c; --lp-muted: #757782; --lp-border: #e4e4e9; --lp-track: #eeeeF1;
   --lp-cpu: #83aaf3; --lp-memory: #9a79dd; --lp-disk: #e8a27a; --lp-load: #dfa2bf;
@@ -71,7 +71,7 @@
 :root.theme-luminaplus:is(.dark, .gold) .lp-app input::placeholder { color: var(--lp-muted); opacity: 1; }
 :root.theme-luminaplus:is(.dark, .gold) .mini-trend-targets button[aria-pressed="false"] { opacity: 1; color: var(--lp-muted); background: transparent; border-style: dashed; }
 :root.theme-luminaplus:is(.dark, .gold) .lp-card .card-ping-head strong.warning { color: var(--lp-warn) !important; }
-:root.theme-luminaplus body { margin: 0; background: var(--lp-page); color: var(--lp-text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; }
+:root.theme-luminaplus body { margin: 0; background: var(--lp-page); color: var(--lp-text); font-family: "Twemoji Country Flags", -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; }
 :root.theme-luminaplus body::before, :root.theme-luminaplus body::after { display: none; }
 :root.theme-luminaplus .lp-app { min-height: 100vh; min-height: 100dvh; display: flex; flex-direction: column; background: var(--lp-page); color: var(--lp-text); }
 .lp-app *, :root.theme-luminaplus .mini-detail-dialog * { box-sizing: border-box; }

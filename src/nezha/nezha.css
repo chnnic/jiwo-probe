@@ -17,7 +17,7 @@
   --nz-green: #22c55e;
   --nz-orange: #fb923c;
   --nz-red: #ef4444;
-  --nz-font: Inter, system-ui, -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  --nz-font: "Twemoji Country Flags", Inter, system-ui, -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
   /* 共用组件（转发链、许可证栏、主题选择、详情页）读这些通用变量 */
   --bg: var(--nz-bg); --surface: var(--nz-card); --card: var(--nz-card); --panel: var(--nz-card);
   --text: var(--nz-fg); --foreground: var(--nz-fg); --muted: var(--nz-muted-fg); --border: var(--nz-border);

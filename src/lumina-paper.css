@@ -3,7 +3,7 @@
  * Warm paper, muted clay and mist-blue / sage / mauve charts; no layout changes.
  */
 :root.theme-lumina:not(.gold):not(.platinum) {
-  --paper-heading-font: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, "Songti SC", "Noto Serif CJK SC", serif;
+  --paper-heading-font: "Twemoji Country Flags", "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, "Songti SC", "Noto Serif CJK SC", serif;
   --page-bg: #f1efeb; --surface: #fbfaf7; --foreground: #373935;
   --muted: #70726b; --border: #deddd5; --hover-bg: #eae8e2;
   --primary: #947769; --paper-tint: #eae1d9; --paper-on-tint: #705a50;
@@ -37,7 +37,7 @@
 }
 :root.theme-lumina:not(.gold):not(.platinum) body {
   color: var(--foreground); background-color: var(--page-bg);
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  font-family: "Twemoji Country Flags", -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
 }
 :root.theme-lumina:not(.gold):not(.platinum) :is(.topbar h1,.lumina-title,.globe-card h2,.leaderboard-card h2,.server-detail-header h2,.probe-unlock-dialog-head h2) {
   font-family: var(--paper-heading-font);

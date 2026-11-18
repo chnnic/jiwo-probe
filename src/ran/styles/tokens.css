@@ -9,9 +9,9 @@
 
 :root {
   /* Type stacks */
-  --font-mono: 'JetBrains Mono', 'IBM Plex Mono', ui-monospace, 'SFMono-Regular', monospace;
-  --font-sans: 'Inter Tight', 'Inter', -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', sans-serif;
-  --font-display: 'Inter Tight', 'Inter', sans-serif;
+  --font-mono: "Twemoji Country Flags", 'JetBrains Mono', 'IBM Plex Mono', ui-monospace, 'SFMono-Regular', monospace;
+  --font-sans: "Twemoji Country Flags", 'Inter Tight', 'Inter', -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  --font-display: "Twemoji Country Flags", 'Inter Tight', 'Inter', sans-serif;
 
   /* Type scale (px) */
   --t-micro: 9px;

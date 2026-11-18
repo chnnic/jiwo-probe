@@ -4,7 +4,7 @@
 }
 :root {
   font-family:
-    Inter,
+    "Twemoji Country Flags", Inter,
     ui-sans-serif,
     system-ui,
     -apple-system,
@@ -2551,7 +2551,7 @@ footer a:hover {
 }
 .region-label-text {
   fill: currentColor;
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-family: "Twemoji Country Flags", ui-monospace, SFMono-Regular, Menlo, monospace;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
 }
@@ -4919,7 +4919,7 @@ footer a:hover {
 :root.theme-sweet {
   color-scheme: light;
   font-family:
-    ui-rounded,
+    "Twemoji Country Flags", ui-rounded,
     'SF Pro Rounded',
     'Hiragino Maru Gothic ProN',
     Nunito,
@@ -5597,7 +5597,7 @@ footer a:hover {
 :root.theme-meow .modal h2,
 :root.theme-meow .kpi-value {
   font-family:
-    ui-rounded,
+    "Twemoji Country Flags", ui-rounded,
     'SF Pro Rounded',
     'Hiragino Maru Gothic ProN',
     Inter,

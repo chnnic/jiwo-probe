@@ -4,6 +4,9 @@ import MapApp from './MapApp'
 import { ProbeProvider } from '../use-probe'
 import { startRanTranslation } from './i18n/translate-dom'
 import './styles/tokens.css'
+import { installFlagFont } from '../flag-font'
+
+installFlagFont()
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

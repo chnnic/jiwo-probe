@@ -1,0 +1,10 @@
+TwemojiCountryFlags.woff2
+
+A flags-only subset of the "Twemoji Mozilla" colour font, taken unmodified from
+country-flag-emoji-polyfill 0.1.10 (https://github.com/talkjs/country-flag-emoji-polyfill).
+
+- Subsetting work and polyfill code: Copyright (c) 2022 TalkJS, MIT License.
+- Twemoji Mozilla font: Copyright Mozilla Foundation, Apache License 2.0
+  (https://github.com/mozilla/twemoji-colr).
+- Flag graphics: Twemoji, Copyright Twitter, Inc and other contributors,
+  CC-BY 4.0 (https://creativecommons.org/licenses/by/4.0/).
