@@ -33,6 +33,11 @@ body,
 button {
   font: inherit;
 }
+/* 原生下拉框默认用系统字体，不继承就用不上国旗字体（上游 309a4cf） */
+select,
+option {
+  font-family: inherit;
+}
 .center {
   min-height: 100vh;
   display: grid;
@@ -5753,17 +5758,18 @@ footer a:hover {
   background: rgba(0, 0, 0, 0.62);
 }
 
-/* 服务商 logo（上游 e1a487d）：浅色配色透明显示，深色配色垫白底，深色 logo 才看得清。
-   深色的判定按各主题自己的开关：经典主题 / LuminaPlus / 哪吒用 :root.dark，黑金用 :root.gold，
+/* 服务商 logo：各配色都透明显示；本身是黑 / 深色的 logo（ProviderLogo 量出来后加 provider-logo-invert）
+   在深色配色下反色（黑白对调，彩色基本保持原色相），移植自上游 434e33d。
+   深色配色的标记各主题不同：经典与多数主题用 :root.dark，黑金用 :root.gold，
    Premium 基础样式就是黑金（白金除外），Glassmorphism 与 Emerald 用自己挂在 body 上的类。 */
-:root.dark .provider-logo-img,
-:root.gold .provider-logo-img,
-:root.theme-premium:not(.platinum) .provider-logo-img,
-body.gm-body .provider-logo-img,
-body.emerald-dark-body .provider-logo-img {
-  background: #fff;
+:root.dark .provider-logo-invert,
+:root.gold .provider-logo-invert,
+:root.theme-premium:not(.platinum) .provider-logo-invert,
+body.gm-body .provider-logo-invert,
+body.emerald-dark-body .provider-logo-invert {
+  filter: invert(1) hue-rotate(180deg);
 }
-body.gm-body.gm-light-body .provider-logo-img,
-body.emerald-body:not(.emerald-dark-body) .provider-logo-img {
-  background: transparent;
+body.gm-body.gm-light-body .provider-logo-invert,
+body.emerald-body:not(.emerald-dark-body) .provider-logo-invert {
+  filter: none;
 }
