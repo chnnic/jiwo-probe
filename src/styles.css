@@ -5758,6 +5758,173 @@ footer a:hover {
   background: rgba(0, 0, 0, 0.62);
 }
 
+/* ============================================================
+   素墨（mono）—— 移植自上游 888245c，与主控素墨主题同一套：纯中性灰阶、1px 细线描边、克制圆角
+   （卡片 14px / 控件 10px），主色是黑白反差（亮色炭黑、暗色近白），无纹理、无硬阴影。
+   主控里用户自选的主题色存在面板浏览器的 cookie 里，探针拿不到，这里只用默认黑白。
+   选择器按本 fork 的经典界面改写（见上面液态玻璃的说明）。
+   ============================================================ */
+:root.theme-mono {
+  color-scheme: light;
+  color: #111113;
+  --foreground: #111113;
+  --primary: #18181b;
+  --accent: #18181b;
+  --surface: #ffffff;
+  --border: #e4e4e7;
+  --muted: #666670;
+  --radius: 14px;
+  --page-bg: #f7f7f8;
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --mono-card2: #f1f1f3;
+  --mono-line2: #d4d4d8;
+  --mono-strong: #18181b;
+  --mono-strong-ink: #fafafa;
+  --mono-float: 0 12px 32px rgba(0, 0, 0, 0.09);
+  --globe-ocean-light: #ececef;
+  --globe-ocean-dark: #d4d4d8;
+}
+:root.dark.theme-mono {
+  color-scheme: dark;
+  color: #f4f4f5;
+  --foreground: #f4f4f5;
+  --primary: #f4f4f5;
+  --accent: #f4f4f5;
+  --surface: #141417;
+  --border: #26262c;
+  --muted: #94949f;
+  --page-bg: #0b0b0d;
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --mono-card2: #1c1c21;
+  --mono-line2: #36363f;
+  --mono-strong: #f4f4f5;
+  --mono-strong-ink: #111113;
+  --mono-float: 0 12px 32px rgba(0, 0, 0, 0.5);
+  --globe-ocean-light: #1c1c21;
+  --globe-ocean-dark: #26262c;
+}
+/* 顶栏：与页面同底半透明，细线分隔；图标按钮去框，选中态是实心黑 / 白 */
+:root.theme-mono .topbar {
+  background: color-mix(in srgb, var(--page-bg) 88%, transparent);
+}
+:root.theme-mono .topbar button,
+:root.theme-mono .ranges button {
+  border-color: transparent;
+  border-radius: 10px;
+  background: transparent;
+}
+:root.theme-mono .topbar button:hover,
+:root.theme-mono .ranges button:hover {
+  background: var(--mono-card2);
+}
+:root.theme-mono .topbar button.active,
+:root.theme-mono .ranges button.active {
+  border-color: var(--mono-strong);
+  color: var(--mono-strong-ink);
+  background: var(--mono-strong);
+}
+/* 手机顶栏：别的主题把按钮并成一条分段栏，素墨的按钮没有描边，保持各自的圆角并留一点间距 */
+@media (max-width: 640px) {
+  :root.theme-mono .topbar nav {
+    gap: 4px;
+  }
+  :root.theme-mono .topbar nav > :not(:first-child) {
+    margin-left: 0;
+  }
+  :root.theme-mono .topbar nav button,
+  :root.theme-mono .topbar nav > :first-child button,
+  :root.theme-mono .topbar nav > :last-child button {
+    border-radius: 10px;
+  }
+}
+/* 卡片：白底细线，圆角 14 */
+:root.theme-mono .kpi-panel,
+:root.theme-mono .globe-mini,
+:root.theme-mono .probe-toolbar,
+:root.theme-mono .server-card,
+:root.theme-mono .server-mini-card,
+:root.theme-mono .leaderboard-card,
+:root.theme-mono .server-table-wrap,
+:root.theme-mono .globe-card {
+  border-radius: 14px;
+}
+:root.theme-mono .modal,
+:root.theme-mono .server-detail {
+  border-radius: 18px;
+  box-shadow: var(--mono-float);
+}
+:root.theme-mono .server-detail-header {
+  border-radius: 18px 18px 0 0;
+}
+:root.theme-mono .region-menu {
+  border-radius: 12px;
+  box-shadow: var(--mono-float);
+}
+:root.theme-mono .server-card[data-alert='true'] {
+  border-color: color-mix(in srgb, #ef4444 55%, transparent);
+}
+/* 卡中卡与控件：浅灰底，圆角 10 */
+:root.theme-mono .net-box,
+:root.theme-mono .detail-panel,
+:root.theme-mono .detail-cols > div {
+  border-radius: 10px;
+}
+:root.theme-mono .net-box {
+  background: var(--mono-card2);
+}
+:root.theme-mono button.net-box:not(:disabled):hover {
+  background: color-mix(in srgb, var(--mono-card2) 60%, var(--mono-line2));
+}
+:root.theme-mono button.kpi-cell:hover {
+  background: var(--mono-card2);
+}
+:root.theme-mono .server-search,
+:root.theme-mono .region-trigger,
+:root.theme-mono .toolbar-select,
+:root.theme-mono .ping-head select,
+:root.theme-mono .card-ping-probe .card-ping-selector select,
+:root.theme-mono .leaderboard-tabs button,
+:root.theme-mono .trend-mode-switch button {
+  border-color: var(--mono-line2);
+  border-radius: 10px;
+}
+:root.theme-mono .server-search input {
+  background: transparent;
+}
+:root.theme-mono .region-trigger:hover,
+:root.theme-mono .region-trigger[aria-expanded='true'],
+:root.theme-mono .leaderboard-tabs button:hover,
+:root.theme-mono .region-menu button:hover {
+  background: var(--mono-card2);
+}
+:root.theme-mono .leaderboard-tabs button.active,
+:root.theme-mono .trend-mode-switch button.active,
+:root.theme-mono .filters button.active {
+  border-color: var(--mono-strong);
+  color: var(--mono-strong-ink);
+  background: var(--mono-strong);
+}
+:root.theme-mono .filters .filter-seg {
+  border-radius: 10px;
+  background: var(--mono-card2);
+}
+:root.theme-mono .filters .filter-seg > button {
+  border-radius: 8px;
+}
+:root.theme-mono .filters .filter-seg > button.active {
+  border-color: transparent;
+  color: var(--foreground);
+  background: var(--surface);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.08);
+}
+:root.theme-mono .meter {
+  background: var(--mono-card2);
+}
+:root.theme-mono .server-table tbody tr:hover,
+:root.theme-mono .table-row-link:hover {
+  background: color-mix(in srgb, var(--mono-card2) 70%, transparent) !important;
+}
+
 /* 服务商 logo：各配色都透明显示；本身是黑 / 深色的 logo（ProviderLogo 量出来后加 provider-logo-invert）
    在深色配色下反色（黑白对调，彩色基本保持原色相），移植自上游 434e33d。
    深色配色的标记各主题不同：经典与多数主题用 :root.dark，黑金用 :root.gold，

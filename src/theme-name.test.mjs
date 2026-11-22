@@ -3,7 +3,7 @@ import assert from 'node:assert/strict'
 import { canonicalThemeOverride, isBuiltinTheme, parseThemeName } from './theme-name.ts'
 
 const themeNames = [
-  'pixel', 'flat', 'anime', 'glass', 'sweet', 'meow', 'lumina', 'luminaplus', 'premium',
+  'pixel', 'flat', 'anime', 'glass', 'sweet', 'meow', 'mono', 'lumina', 'luminaplus', 'premium',
   'ran', 'glassmorphism', 'emerald', 'lite', 'nezha',
   'ran-night', 'ran-mist', 'ran-ember', 'ran-sakura', 'ran-lavender',
   'ran-tomcat', 'ran-teal', 'ran-midnight', 'ran-mint', 'ran-butter', 'ran-ji',
@@ -24,7 +24,7 @@ test('all built-in themes and Ran variants ignore case in controller names and s
 test('all existing color suffixes and legacy aliases ignore case without losing their modes', () => {
   for (const name of ['lumina-gold', 'lumina-platinum', 'premium-platinum', 'premium-light',
     'luminaplus-light', 'luminaplus-dark', 'glassmorphism-light', 'glassmorphism-dark',
-    'lite-light', 'lite-dark', 'mini-light', 'mini-dark', 'nezha-light', 'nezha-dark', 'sweet-light', 'sweet-dark', 'meow-light', 'meow-dark', 'glass-light', 'glass-dark']) {
+    'lite-light', 'lite-dark', 'mini-light', 'mini-dark', 'nezha-light', 'nezha-dark', 'sweet-light', 'sweet-dark', 'meow-light', 'meow-dark', 'mono-light', 'mono-dark', 'glass-light', 'glass-dark']) {
     const expected = parseThemeName(name)
     for (const input of [name.toUpperCase(), mixedCase(name), ` ${name.toUpperCase().replaceAll('-', '_')} `]) {
       assert.deepEqual(parseThemeName(input), expected, input)
@@ -113,6 +113,12 @@ test('meow 及 -light / -dark：不带后缀按时间自动明暗，后缀固定
   assert.deepEqual(parseThemeName('meow'), { theme: 'meow', gold: false, platinum: false })
   assert.deepEqual(parseThemeName('Meow-Light'), { theme: 'meow', gold: false, platinum: false, light: true })
   assert.deepEqual(parseThemeName('MEOW_DARK'), { theme: 'meow', gold: false, platinum: false, light: false })
+})
+
+test('mono 及 -light / -dark：素墨不带后缀按时间自动明暗，后缀固定明暗', () => {
+  assert.deepEqual(parseThemeName('mono'), { theme: 'mono', gold: false, platinum: false })
+  assert.deepEqual(parseThemeName('Mono-Light'), { theme: 'mono', gold: false, platinum: false, light: true })
+  assert.deepEqual(parseThemeName('MONO_DARK'), { theme: 'mono', gold: false, platinum: false, light: false })
 })
 
 test('glass 及 -light / -dark：液态玻璃不带后缀按时间自动明暗，后缀固定明暗', () => {

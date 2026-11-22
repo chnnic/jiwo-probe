@@ -8,6 +8,7 @@ export const THEME_OPTIONS: { value: ThemeName | null; label: string; color: str
   { value: 'glass', label: '液态玻璃', color: '#4cb8f5' },
   { value: 'sweet', label: '天真', color: '#e8508f' },
   { value: 'meow', label: 'Meow', color: '#b02e63' },
+  { value: 'mono', label: '素墨', color: '#52525b' },
   { value: 'lumina', label: 'Lumina', color: '#a991cd' },
   { value: 'luminaplus', label: 'LuminaPlus', color: '#be7c61' },
   { value: 'premium', label: 'Premium', color: '#c6a254' },

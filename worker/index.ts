@@ -47,7 +47,7 @@ const ESTIMATED_TRAFFIC_REPAIR_KEY = 'probe-estimated-traffic-repair-v1'
 const ESTIMATED_TRAFFIC_RETENTION_DAYS = 30
 const ESTIMATED_TRAFFIC_FLUSH_MS = 5 * 60 * 1_000
 const BACKGROUND_POSITIONS = new Set(['center', 'top', 'bottom', 'left', 'right'])
-const DEFAULT_BACKGROUND_THEMES = 'pixel,flat,anime,glass,sweet,meow,lumina,premium,ran,glassmorphism,emerald'
+const DEFAULT_BACKGROUND_THEMES = 'pixel,flat,anime,glass,sweet,meow,mono,lumina,premium,ran,glassmorphism,emerald'
 
 function runtimeThemeConfig(env: Env): Record<string, unknown> {
   return {

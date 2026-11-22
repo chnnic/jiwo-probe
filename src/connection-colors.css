@@ -15,6 +15,8 @@
 :root.theme-glass:is(.dark, .gold) { --connection-tcp: #4cb8f5; --connection-udp: #f0a35b; }
 :root.theme-meow { --connection-tcp: #b02e63; --connection-udp: #7a5647; }
 :root.theme-meow:is(.dark, .gold) { --connection-tcp: #f7b6cb; --connection-udp: #d9b8a6; }
+:root.theme-mono { --connection-tcp: #18181b; --connection-udp: #8b8b96; }
+:root.theme-mono:is(.dark, .gold) { --connection-tcp: #f4f4f5; --connection-udp: #85858f; }
 :root.theme-sweet { --connection-tcp: #c9437f; --connection-udp: #8c6fdc; }
 :root.theme-sweet:is(.dark, .gold) { --connection-tcp: #ff9acb; --connection-udp: #c3b1ff; }
 :root.theme-lumina { --connection-tcp: var(--traffic-up); --connection-udp: var(--traffic-down); }

@@ -40,6 +40,8 @@ const SHOTS = [
   ['glass-dark', 'glass-dark', null, 1440, 1000],
   ['meow-light', 'meow-light', null, 1440, 1000],
   ['meow-dark', 'meow-dark', null, 1440, 1000],
+  ['mono-light', 'mono-light', null, 1440, 1000],
+  ['mono-dark', 'mono-dark', null, 1440, 1000],
   ['mobile-luminaplus', 'luminaplus-paper', null, 390, 844],
 ]
 

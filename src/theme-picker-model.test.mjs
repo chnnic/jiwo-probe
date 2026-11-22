@@ -2,14 +2,15 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import { THEME_OPTIONS, pickerPosition, pickerNextIndex } from './theme-picker-model.ts'
 
-test('picker exposes all 14 themes and automatic choice exactly once', () => {
-  assert.equal(THEME_OPTIONS.length, 15)
-  assert.equal(new Set(THEME_OPTIONS.map(option => option.value)).size, 15)
+test('picker exposes all 15 themes and automatic choice exactly once', () => {
+  assert.equal(THEME_OPTIONS.length, 16)
+  assert.equal(new Set(THEME_OPTIONS.map(option => option.value)).size, 16)
   assert.equal(THEME_OPTIONS[0].value, null)
   assert.ok(THEME_OPTIONS.some(option => option.value === 'ran'))
   assert.ok(THEME_OPTIONS.some(option => option.value === 'nezha'))
   assert.ok(THEME_OPTIONS.some(option => option.value === 'sweet'))
   assert.ok(THEME_OPTIONS.some(option => option.value === 'meow'))
+  assert.ok(THEME_OPTIONS.some(option => option.value === 'mono'))
 })
 test('picker stays inside narrow and short viewports at either edge', () => {
   for (const width of [280, 320, 390, 1280]) for (const height of [240, 844]) {

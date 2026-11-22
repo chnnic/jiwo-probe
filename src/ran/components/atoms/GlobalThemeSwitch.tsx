@@ -17,6 +17,7 @@ const GLOBAL_THEMES = [
   { value: 'glass', label: '液态玻璃' },
   { value: 'sweet', label: '天真' },
   { value: 'meow', label: 'Meow' },
+  { value: 'mono', label: '素墨' },
   { value: 'lumina', label: 'Lumina' },
   { value: 'luminaplus', label: 'LuminaPlus' },
   { value: 'premium', label: 'Premium' },
