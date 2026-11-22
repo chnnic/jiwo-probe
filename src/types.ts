@@ -179,6 +179,8 @@ export interface ForwardChainServerData {
   route?: string
   /** 主控 v0.6.2 起：本台到下一组每一台的逐对延迟；主控没开矩阵开关时没有 */
   ups?: ForwardChainUpstream[]
+  /** 主控 v0.6.4-beta.1 起：入口机连不上国内探测点、已从入口域名摘掉（入口 IP 多半被墙）。只有入口组成员会带 */
+  walled?: boolean
 }
 
 export interface ForwardChainGroupData {

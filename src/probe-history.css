@@ -192,6 +192,8 @@ body.gm-light-body .probe-forward { --fw-ok: #0d946e; }
 .probe-forward-route[data-selected] .probe-forward-route-by { color: var(--ph-accent); }
 .probe-forward-route-tag { flex: none; font-size: 10px; color: var(--ph-accent); }
 .probe-forward-server-loss { flex: none; font-size: 10px; color: var(--fw-down); }
+/* 被墙的入口（主控 v0.6.4-beta.1 起下发 walled）：红色小标签，与「不可达」区分开 */
+.probe-forward-walled { flex: none; padding: 0 5px; border-radius: 4px; font-size: 10px; font-weight: 600; line-height: 16px; color: var(--fw-down); background: color-mix(in srgb, var(--fw-down) 12%, transparent); }
 /* 逐台延迟矩阵：首列固定，列多时只在表内横向滚动 */
 .probe-forward-matrix { display: grid; gap: 6px; min-width: 0; }
 .probe-forward-matrix h4 { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 8px; margin: 0; font-size: 12px; font-weight: 600; }

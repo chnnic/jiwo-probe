@@ -1,7 +1,7 @@
 import { Fragment, useMemo, useState, type CSSProperties } from 'react'
 import { ChevronDown, Network } from 'lucide-react'
 import type { ProbePayload, ProbeServer } from './types'
-import { availabilityCells, availabilityPct, chainLiveSpeed, chainTraffic, chainTrafficDay, type TrafficRoleGroup, flowDuration, FORWARD_TRAFFIC_NOTE, formatAvailability, formatJitter, flowLevel, formatGb, forwardSummary, groupHealth, hopMatrices, hopTone, latencyTone, mayHaveRouteSelection, routeFork, sortChains, trendCells, type ForwardStatus } from './forward-model'
+import { availabilityCells, availabilityPct, chainLiveSpeed, chainTraffic, chainTrafficDay, type TrafficRoleGroup, flowDuration, FORWARD_TRAFFIC_NOTE, FORWARD_WALLED_NOTE, formatAvailability, formatJitter, flowLevel, formatGb, forwardSummary, groupHealth, hopMatrices, hopTone, latencyTone, mayHaveRouteSelection, routeFork, sortChains, trendCells, type ForwardStatus } from './forward-model'
 import { useNetworkSpeed } from './use-network-speed'
 import { ForwardTrendChart } from './deferred'
 import './probe-history.css'
@@ -107,12 +107,13 @@ export function ForwardOverview({ data }: { data: ProbePayload }) {
             const flow = tone === 'down' ? 0 : flowLevel(hopBytes)
             return <Fragment key={`${group.name}-${index}`}>
               <section className="probe-forward-group" data-status={groupStatus}>
-                <h3><small>{roles[group.role]}</small><span title={group.name}>{group.name}</span>{health && <em>{health.healthy}/{health.total} 可用</em>}</h3>
+                <h3><small>{roles[group.role]}</small><span title={group.name}>{group.name}</span>{health && <em>{health.healthy}/{health.total} 可用{health.walled > 0 && ` · ${health.walled} 被墙`}</em>}</h3>
                 <ul>{group.servers.map((server, i) => {
                   const live = liveByName.get(server.name)
                   return <li key={`${server.name}-${i}`}>
-                    {group.role !== 'exit' && <i data-healthy={server.healthy} title={server.healthy ? '探测正常' : '探测异常'} />}
+                    {group.role !== 'exit' && <i data-healthy={server.healthy && !server.walled} title={server.walled ? '被墙' : server.healthy ? '探测正常' : '探测异常'} />}
                     <span title={server.name}>{server.name}</span>
+                    {server.walled && <small className="probe-forward-walled" title={FORWARD_WALLED_NOTE}>被墙</small>}
                     {live && <em className="probe-forward-speed" data-active={flowLevel(liveBytes(live)) > 0 || undefined} title="实时上行 / 下行">
                       <span>↑ {networkSpeed(live.upload_speed)}</span><span>↓ {networkSpeed(live.download_speed)}</span>
                     </em>}

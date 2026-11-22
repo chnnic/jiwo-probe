@@ -20,10 +20,22 @@ export function latencyTone(ms: number | undefined): Exclude<HopTone, 'down'> {
   return 'hi'
 }
 
-/** 一个组的可用情况；出口组返回 null（不参与判断）。 */
-export function groupHealth(group: ForwardChainGroupData): { healthy: number; total: number } | null {
+/** 被墙的入口：入口机连不上国内探测点，主控已把它从入口域名摘掉（v0.6.4-beta.1 起下发 walled）。 */
+export const FORWARD_WALLED_NOTE = '入口机连不上国内探测点，主控已把它从入口域名摘掉，入口 IP 多半被墙'
+
+/** 一个组的可用情况；出口组返回 null（不参与判断）。
+ *  被墙的入口到下一跳可能仍然探测正常，但已不接流量，不算可用；abnormal 是没被墙但探测异常的台数。 */
+export function groupHealth(group: ForwardChainGroupData): { healthy: number; total: number; walled: number; abnormal: number } | null {
   if (group.role === 'exit') return null
-  return { healthy: group.servers.filter((server) => server.healthy).length, total: group.servers.length }
+  let healthy = 0
+  let walled = 0
+  let abnormal = 0
+  for (const server of group.servers) {
+    if (server.walled === true) walled++
+    else if (server.healthy) healthy++
+    else abnormal++
+  }
+  return { healthy, total: group.servers.length, walled, abnormal }
 }
 
 /** 组到下一组的连线状态：组内无可用服务器时为 down，否则按延迟着色。 */
@@ -43,8 +55,11 @@ export function chainStatus(chain: ForwardChainData): { status: ForwardStatus; r
     const health = groupHealth(group)
     if (!health || health.total === 0) continue
     const label = ROLE_LABEL[group.role] ?? group.name
-    if (health.healthy === 0) down.push(`${label}无可用服务器`)
-    else if (health.healthy < health.total) warn.push(`${label} ${health.total - health.healthy}/${health.total} 台探测异常`)
+    if (health.healthy === 0) down.push(health.walled === health.total ? `${label}全部被墙` : `${label}无可用服务器`)
+    else {
+      if (health.walled > 0) warn.push(`${label} ${health.walled}/${health.total} 台被墙`)
+      if (health.abnormal > 0) warn.push(`${label} ${health.abnormal}/${health.total} 台探测异常`)
+    }
   }
   if (finite(chain.loss_pct) && chain.loss_pct >= FORWARD_DOWN_LOSS) down.push(`丢包 ${chain.loss_pct.toFixed(1)}%`)
   else if (finite(chain.loss_pct) && chain.loss_pct >= FORWARD_WARN_LOSS) warn.push(`丢包 ${chain.loss_pct.toFixed(1)}%`)

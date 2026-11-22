@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { availabilityCells, availabilityPct, chainLiveSpeed, formatAvailability, formatJitter, chainStatus, chainTraffic, chainTrafficDay, flowDuration, flowLevel, formatGb, groupTrafficByRole, hopMatrices, FORWARD_TRAFFIC_NOTE, FORWARD_TRAFFIC_SETTLE_MINUTES, forwardSummary, hopTone, latencyTone, mayHaveRouteSelection, routeFork, sortChains, trendCells } from './forward-model.ts'
+import { availabilityCells, availabilityPct, chainLiveSpeed, formatAvailability, formatJitter, chainStatus, chainTraffic, chainTrafficDay, flowDuration, flowLevel, formatGb, groupTrafficByRole, hopMatrices, FORWARD_TRAFFIC_NOTE, FORWARD_TRAFFIC_SETTLE_MINUTES, forwardSummary, groupHealth, hopTone, latencyTone, mayHaveRouteSelection, routeFork, sortChains, trendCells } from './forward-model.ts'
 
 test('选路段：按 route_hop 分叉，带策略说明与各路状态；有 routes 时不再提示可能是选路', () => {
   const chain = {
@@ -77,6 +77,21 @@ test('无有效延迟、某组全部不可用或丢包过半为异常', () => {
   assert.equal(chainStatus(chain('c', { loss: 60 })).status, 'down')
   // 端到端暂时为 0 但近期趋势有数据：不算无数据
   assert.equal(chainStatus(chain('d', { e2e: 0 })).status, 'ok')
+})
+
+test('被墙的入口不算可用：部分被墙为偏慢并单独写明，全部被墙为异常；被墙与探测异常分开计数', () => {
+  const walled = (base, list) => ({ ...base, groups: base.groups.map(group => group.role !== 'entry' ? group : { ...group, servers: group.servers.map((s, i) => list.includes(i) ? { ...s, walled: true } : s) }) })
+  // 被墙的入口到下一跳仍然探测正常（healthy: true），照样不算可用
+  const partial = walled(chain('a', { entry: [true, true, true] }), [1])
+  assert.deepEqual(groupHealth(partial.groups[0]), { healthy: 2, total: 3, walled: 1, abnormal: 0 })
+  assert.deepEqual(chainStatus(partial), { status: 'warn', reasons: ['入口组 1/3 台被墙'] })
+  const mixed = walled(chain('b', { entry: [true, false, false] }), [2])
+  assert.deepEqual(chainStatus(mixed).reasons, ['入口组 1/3 台被墙', '入口组 1/3 台探测异常'])
+  const all = walled(chain('c', { entry: [true, true] }), [0, 1])
+  assert.deepEqual(chainStatus(all), { status: 'down', reasons: ['入口组全部被墙'] })
+  assert.equal(hopTone(all.groups[0]), 'down')
+  // 没有 walled 字段（旧主控）或为 false 时与从前一致
+  assert.deepEqual(groupHealth(chain('d', { entry: [true, false] }).groups[0]), { healthy: 1, total: 2, walled: 0, abnormal: 1 })
 })
 
 test('异常置顶、偏慢其次，同状态保持原顺序；汇总计数', () => {

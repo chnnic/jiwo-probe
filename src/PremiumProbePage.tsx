@@ -21,7 +21,7 @@ import './premium-probe.css'
 import { historyPingSeries, isIpv6Ping, primaryPing } from './ping-groups'
 import { serverHealth, averageLatency, percentage, resourcePercentage } from './server-health'
 import { ProviderLogo } from './ProviderLogo'
-import { availabilityCells, availabilityPct, chainLiveSpeed, formatAvailability, formatJitter, hopMatrices, FORWARD_TRAFFIC_NOTE, FORWARD_TRAFFIC_SETTLE_MINUTES } from './forward-model'
+import { availabilityCells, availabilityPct, chainLiveSpeed, formatAvailability, formatJitter, hopMatrices, FORWARD_TRAFFIC_NOTE, FORWARD_WALLED_NOTE, FORWARD_TRAFFIC_SETTLE_MINUTES } from './forward-model'
 import { LazyCard } from './LazyCard'
 
 type ProbeData = ProbePayload
@@ -1830,12 +1830,18 @@ function ForwardChainView({ wsChains }: { wsChains?: ForwardChainData[] }) {
                   {group.servers.map((srv) => (
                     <div className="srv" key={srv.name}>
                       <span
-                        className={`dot ${srv.healthy ? "is-up" : "is-down"}`}
+                        className={`dot ${srv.healthy && !srv.walled ? "is-up" : "is-down"}`}
                       />
                       <span className="sn">
                         <Twemoji>{srv.name}</Twemoji>
                         {srv.route && <span className="srt">{srv.route}</span>}
                       </span>
+                      {/* 放在名称外面：名称过长会被截断，标签不能跟着被裁掉 */}
+                      {srv.walled && (
+                        <span className="swall" title={FORWARD_WALLED_NOTE}>
+                          被墙
+                        </span>
+                      )}
                       {(srv.loss_pct ?? 0) > 0 && (
                         <span className="sloss">丢 {srv.loss_pct}%</span>
                       )}
