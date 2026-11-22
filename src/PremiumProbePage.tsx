@@ -23,6 +23,7 @@ import { serverHealth, averageLatency, percentage, resourcePercentage } from './
 import { ProviderLogo } from './ProviderLogo'
 import { availabilityCells, availabilityPct, chainLiveSpeed, formatAvailability, formatJitter, hopMatrices, FORWARD_TRAFFIC_NOTE, FORWARD_WALLED_NOTE, FORWARD_TRAFFIC_SETTLE_MINUTES } from './forward-model'
 import { LazyCard } from './LazyCard'
+import { LICENSE_CYCLE_MS, startNameplateMotion } from './license-nameplate-motion'
 
 type ProbeData = ProbePayload
 
@@ -30,122 +31,28 @@ function cn(...values: Array<string | false | null | undefined>): string {
   return values.filter(Boolean).join(' ')
 }
 
-const LICENSE_CYCLE_MS = 5596 // 主控 license-nameplate 实测周期(2026-08-17)
-const LICENSE_REVEAL_END = 0.36
 const licenseStarPalette = ['#8c5d17', '#d7a63d', '#f2d78a', '#fff1b9', '#c78e24']
-const licenseClamp = (value: number, min: number, max: number) =>
-  value < min ? min : value > max ? max : value
-const licenseRandom = (min: number, max: number) => min + Math.random() * (max - min)
-const licenseEaseOutBack = (value: number) => {
-  const strength = 1.70158
-  return (
-    1 +
-    (strength + 1) * Math.pow(value - 1, 3) +
-    strength * Math.pow(value - 1, 2)
-  )
-}
-const licenseEaseInBack = (value: number) => {
-  const strength = 1.70158
-  return (strength + 1) * value * value * value - strength * value * value
-}
 
 function LicenseNameplate({ label }: { label: string }) {
   const plateRef = useRef<HTMLSpanElement>(null)
   const textRef = useRef<HTMLSpanElement>(null)
+  const innerRef = useRef<HTMLSpanElement>(null)
   const starsRef = useRef<HTMLSpanElement>(null)
   const shineRef = useRef<HTMLSpanElement>(null)
 
   useEffect(() => {
     const plate = plateRef.current
     const text = textRef.current
+    const inner = innerRef.current
     const stars = starsRef.current
     const shine = shineRef.current
-    if (!plate || !text || !stars || !shine) return
-
-    stars.innerHTML = ''
-    const height = stars.clientHeight || 24
-    const makeStar = (topFor: (size: number) => number) => {
-      const star = document.createElement('i')
-      star.className = 'spark'
-      star.style.color =
-        licenseStarPalette[Math.floor(Math.random() * licenseStarPalette.length)]
-      const size = Math.round(licenseRandom(8, 13))
-      star.style.width = `${size}px`
-      star.style.height = `${size}px`
-      star.style.top = `${Math.round(topFor(size))}px`
-      star.style.left = `${Math.round(licenseRandom(0, 12))}px`
-      stars.appendChild(star)
-    }
-    for (let index = 0; index < 5; index++) {
-      makeStar((size) => licenseRandom(0, Math.max(0, height - size)))
-    }
-    makeStar((size) => -size * 0.6)
-    makeStar((size) => height - size * 0.4)
-
-    let width = plate.offsetWidth
-    const updateWidth = () => {
-      width = plate.offsetWidth
-    }
-    window.addEventListener('resize', updateWidth)
-
-    let frameID = 0
-    const start = performance.now()
-    const frame = (now: number) => {
-      const progress = ((now - start) % LICENSE_CYCLE_MS) / LICENSE_CYCLE_MS
-      const reveal = licenseClamp(progress / LICENSE_REVEAL_END, 0, 1)
-      let rotateX = 0
-      let scale = 1
-      let opacity = 1
-      if (progress < 0.08) {
-        const amount = progress / 0.08
-        const eased = licenseEaseOutBack(amount)
-        rotateX = -92 * (1 - eased)
-        scale = 0.86 + 0.14 * eased
-        opacity = licenseClamp(amount * 2.2, 0, 1)
-      } else if (progress > 0.85) {
-        const amount = (progress - 0.85) / 0.15
-        const eased = licenseEaseInBack(amount)
-        rotateX = 84 * eased
-        scale = 1 - 0.14 * eased
-        opacity = licenseClamp(1 - amount * 1.5, 0, 1)
-      }
-      const starOpacity =
-        progress < 0.04
-          ? progress / 0.04
-          : progress < 0.32
-            ? 1
-            : progress < 0.37
-              ? licenseClamp(1 - (progress - 0.32) / 0.05, 0, 1)
-              : 0
-      const shineProgress = licenseClamp((progress - 0.42) / 0.28, 0, 1)
-      const shineActive = progress >= 0.42 && progress <= 0.7
-      const shineOpacity = shineActive
-        ? shineProgress < 0.1
-          ? shineProgress / 0.1
-          : shineProgress > 0.85
-            ? licenseClamp((1 - shineProgress) / 0.15, 0, 1)
-            : 1
-        : 0
-
-      plate.style.opacity = String(opacity)
-      plate.style.transform = `perspective(340px) rotateX(${rotateX.toFixed(2)}deg) scale(${scale.toFixed(3)})`
-      text.style.clipPath = `inset(0 ${((1 - reveal) * 100).toFixed(2)}% 0 0)`
-      stars.style.transform = `translateX(${(13 + reveal * (width - 26)).toFixed(1)}px)`
-      stars.style.opacity = String(starOpacity)
-      shine.style.transform = `translateX(${(((-55 + shineProgress * 165) / 100) * width).toFixed(1)}px) skewX(-16deg)`
-      shine.style.opacity = String(shineOpacity)
-      frameID = requestAnimationFrame(frame)
-    }
-    frameID = requestAnimationFrame(frame)
-    return () => {
-      cancelAnimationFrame(frameID)
-      window.removeEventListener('resize', updateWidth)
-    }
+    if (!plate || !text || !inner || !stars || !shine) return
+    return startNameplateMotion({ plate, text, inner, stars, shine }, licenseStarPalette)
   }, [])
 
   return (
     <span ref={plateRef} className='license-nameplate'>
-      <span ref={textRef} className='np-text'>{label}</span>
+      <span ref={textRef} className='np-text'><span ref={innerRef}>{label}</span></span>
       <span className='np-shine-clip' aria-hidden='true'>
         <span ref={shineRef} className='np-shine' />
       </span>

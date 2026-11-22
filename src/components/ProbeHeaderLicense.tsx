@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
 import type { ProbePayload } from '../types'
 import { HEADER_LICENSE_BADGES } from '../license-badges'
-import { LICENSE_CYCLE_MS, ProbeLicenseNameplate, prefersReducedMotion } from './ProbeLicenseFooter'
+import { LICENSE_CYCLE_MS } from '../license-nameplate-motion'
+import { ProbeLicenseNameplate, prefersReducedMotion } from './ProbeLicenseFooter'
 
 /** 标题旁的许可证铭牌：本地列表逐个轮播；公开版列表为空时显示主控返回的第一枚（和 Premium 页首一致）。 */
 export function ProbeHeaderLicense({ badges }: { badges: ProbePayload['license_badge'] }) {

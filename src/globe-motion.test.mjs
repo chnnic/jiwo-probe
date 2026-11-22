@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { MOTION_STEP_MS, dashOffset, motionProgress, shouldRunMotion } from './globe-motion.ts'
+import { MOTION_STEP_MS, dashOffset, motionProgress, shouldRunMotion, pulseAt } from './globe-motion.ts'
 
 test('每 50ms 推一步（20fps）', () => {
   assert.equal(MOTION_STEP_MS, 50)
@@ -29,4 +29,18 @@ test('不在视口、页面在后台、系统开了减少动态效果时都停�
   assert.equal(shouldRunMotion({ inView: false, pageHidden: false, reducedMotion: false }), false)
   assert.equal(shouldRunMotion({ inView: true, pageHidden: true, reducedMotion: false }), false)
   assert.equal(shouldRunMotion({ inView: true, pageHidden: false, reducedMotion: true }), false)
+})
+
+test('亮点光晕脉冲：从小而亮缓出到大而透明，最后 20% 保持不可见', () => {
+  assert.deepEqual(pulseAt(0, 1150), { opacity: 0.8, scale: 0.5 })
+  const middle = pulseAt(1150 * 0.4, 1150)
+  // 缓出：时间走到一半时已经走过一半以上
+  assert.ok(middle.opacity < 0.4 && middle.opacity > 0)
+  assert.ok(middle.scale > 1.1 && middle.scale < 1.7)
+  for (const progress of [0.8, 0.9, 0.99]) {
+    const { opacity, scale } = pulseAt(1150 * progress, 1150)
+    assert.ok(Math.abs(opacity) < 1e-9 && Math.abs(scale - 1.7) < 1e-9, `progress ${progress}`)
+  }
+  // 下一个周期从头开始
+  assert.deepEqual(pulseAt(1150, 1150), { opacity: 0.8, scale: 0.5 })
 })

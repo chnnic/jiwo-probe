@@ -1715,18 +1715,25 @@ footer a:hover {
   box-shadow: 2px 2px 0 rgba(0, 0, 0, .25), inset 0 1px 0 rgba(255, 255, 255, .1);
   color: #f4cd9c;
 }
+/* 动画播放期间（见 license-nameplate-motion.ts）：翻入、翻出两段之外铭牌完整显示 */
+.probe-license-nameplate[data-motion] {
+  opacity: 1;
+}
+/* 文字自左向右显现：外层向左平移并裁切，内层反向平移抵消，两层都只动 transform（见 license-nameplate-motion.ts） */
 .probe-license-text {
   position: relative;
   z-index: 2;
   min-width: 0;
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
   font-size: 13px;
   font-weight: 600;
   letter-spacing: .02em;
-  clip-path: inset(0 100% 0 0);
-  will-change: clip-path;
+}
+.probe-license-text > span {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .probe-license-stars {
   pointer-events: none;
@@ -2645,36 +2652,15 @@ footer a:hover {
   fill: var(--primary);
   stroke: #fff;
 }
+/* 光晕脉冲由 ProbeRegionGlobe 每 50ms 写一次 opacity 和 transform；脚本不走时（系统开了「减少动态效果」）显示这里的静态光晕 */
 .region-point-halo {
   fill: color-mix(in srgb, var(--primary) 42%, transparent);
   transform-box: fill-box;
   transform-origin: center;
-  animation: region-pulse 1.8s ease-out infinite;
-}
-.laser-origin .region-point-halo {
-  animation-duration: 1.15s;
+  opacity: 0.35;
 }
 .globe-points {
   pointer-events: none;
-}
-@keyframes region-pulse {
-  0% {
-    opacity: 0.8;
-    transform: scale(0.5);
-  }
-  80%,
-  100% {
-    opacity: 0;
-    transform: scale(1.7);
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .region-point-halo {
-    animation: none;
-  }
-  .region-point-halo {
-    opacity: 0.35;
-  }
 }
 :root.theme-anime .globe-card {
   position: relative;

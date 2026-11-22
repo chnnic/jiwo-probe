@@ -187,6 +187,11 @@
   will-change: transform, opacity;
 }
 
+/* 动画播放期间（见 license-nameplate-motion.ts）：翻入、翻出两段之外铭牌完整显示 */
+.license-nameplate[data-motion] {
+  opacity: 1;
+}
+
 /* 静态模式（footer 关闭动画）: 同尺寸铭牌, 透明底, 文字静止, 无星尘/扫光 */
 .license-nameplate.is-static {
   opacity: 1;
@@ -196,7 +201,6 @@
   transform: none;
 }
 .license-nameplate.is-static .np-text {
-  clip-path: none;
   color: #cfc3a8;
   text-shadow: none;
 }
@@ -214,8 +218,12 @@
   letter-spacing: 0.02em;
   text-shadow: 0 1px #4b3009;
   white-space: nowrap;
-  clip-path: inset(0 100% 0 0);
-  will-change: clip-path;
+  overflow: hidden;
+}
+
+/* 文字显现靠外层平移裁切、内层反向平移，两层都只动 transform（见 license-nameplate-motion.ts） */
+.license-nameplate .np-text > span {
+  display: block;
 }
 
 .license-nameplate .np-stars {

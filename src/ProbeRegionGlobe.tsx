@@ -1,5 +1,5 @@
 // 经典主题（像素 / 扁平 / 动漫 / 玻璃 / Lumina）的地区地球：与主控内置探针同款（拱形弧线 + 流动光点 + 亮点旁旗帜与台数），
-// 移植自上游 989b8e7 的 src/RegionGlobe.tsx，改了导出名；弧线光点改为每 50ms 推一步（见 use-motion-ticker）。Emerald 仍用 RegionGlobe.tsx（Premium 地球）。
+// 移植自上游 989b8e7 的 src/RegionGlobe.tsx，改了导出名；弧线光点和亮点光晕改为每 50ms 推一步（见 use-motion-ticker）。Emerald 仍用 RegionGlobe.tsx（Premium 地球）。
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { geoCentroid, geoDistance, geoGraticule10, geoOrthographic, geoPath } from 'd3-geo'
 import type { GeoProjection } from 'd3-geo'
@@ -10,6 +10,7 @@ import type { Feature, FeatureCollection, Geometry } from 'geojson'
 import type { GeometryCollection, Topology } from 'topojson-specification'
 import { arcPath, arcPointAt, pickArcPairs, sampleArc } from './globe-arcs'
 import { flagTwemojiFile, layoutGlobeLabels, type GlobeLabelMetrics } from './globe-labels'
+import { pulseAt } from './globe-motion'
 import { useMotionTicker } from './use-motion-ticker'
 
 function countryCode(region: string): string {
@@ -24,6 +25,9 @@ function countryCode(region: string): string {
 const regionCoordinates: Record<string, [number, number]> = {
   HK: [114.17, 22.32], MO: [113.54, 22.20], SG: [103.82, 1.35],
 }
+
+// 亮点光晕一次脉冲的时长
+const HALO_PULSE_MS = 1150
 
 // 地球默认朝向(对着东亚)
 const DEFAULT_ROTATION: [number, number] = [-105, -18]
@@ -151,6 +155,16 @@ export function ProbeRegionGlobe({ regions, compact = false }: { regions: string
     ro.observe(el)
     return () => ro.disconnect()
   }, [viewWidth, viewHeight])
+  // 亮点光晕的脉冲也每 50ms 推一步：原先的 CSS 动画作用在 SVG 路径上，交不到合成线程，
+  // 地球滚出视口后仍让整页按屏幕刷新率出帧
+  const pointsRef = useRef<SVGGElement>(null)
+  useMotionTicker(pointsRef, (elapsed) => {
+    const { opacity, scale } = pulseAt(elapsed, HALO_PULSE_MS)
+    for (const halo of pointsRef.current?.querySelectorAll<SVGPathElement>('.region-point-halo') ?? []) {
+      halo.style.opacity = opacity.toFixed(2)
+      halo.style.transform = `scale(${scale.toFixed(2)})`
+    }
+  })
   return <div className={compact ? 'globe-stage compact' : 'globe-stage'}>
     <svg ref={svgRef} className="region-globe" viewBox={compact ? '120 -12 400 400' : '0 -40 640 460'} role="img" aria-label="服务器地区地球分布"
       onPointerDown={event => { event.currentTarget.setPointerCapture(event.pointerId); drag.current = { x: event.clientX, y: event.clientY, rotation } }}
@@ -167,7 +181,7 @@ export function ProbeRegionGlobe({ regions, compact = false }: { regions: string
         return <path key={id} className={count ? 'globe-country active' : 'globe-country'} d={path(country) || ''}><title>{country.properties?.name || id}{count ? ` · ${count} 台服务器` : ''}</title></path>
       })}
       <RegionArcs arcs={arcs} projection={projection} />
-      <g className="globe-points">{locations.map(location => <g key={location.code} className="laser-origin"><path className="region-point-halo" d={haloPath({ type: 'Point', coordinates: location.coordinates }) || ''} /><path className="region-point" d={pointPath({ type: 'Point', coordinates: location.coordinates }) || ''}><title>{location.code} · {location.count} 台服务器</title></path></g>)}</g>
+      <g className="globe-points" ref={pointsRef}>{locations.map(location => <g key={location.code} className="laser-origin"><path className="region-point-halo" d={haloPath({ type: 'Point', coordinates: location.coordinates }) || ''} /><path className="region-point" d={pointPath({ type: 'Point', coordinates: location.coordinates }) || ''}><title>{location.code} · {location.count} 台服务器</title></path></g>)}</g>
       <path className="globe-outline" d={path({ type: 'Sphere' }) || ''} />
       <RegionLabels locations={locations} projection={projection} rotation={rotation} unitsPerPx={unitsPerPx} />
     </svg>
