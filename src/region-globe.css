@@ -40,18 +40,15 @@
   stroke-width: 1;
   stroke-dasharray: 7 8;
   vector-effect: non-scaling-stroke;
-  animation: premium-probe-orbit 14s linear infinite;
+  /* 流动由 BlackGoldGlobe 的 paintGlobeMotion 每 50ms 写 stroke-dashoffset，不用 CSS 无限动画（见 globe-motion.ts） */
 }
 
 .premium-probe-orbits ellipse:nth-child(2) {
   opacity: 0.7;
-  animation-direction: reverse;
-  animation-duration: 18s;
 }
 
 .premium-probe-orbits ellipse:nth-child(3) {
   opacity: 0.48;
-  animation-duration: 22s;
 }
 
 .premium-probe-globe-glow {
@@ -108,12 +105,6 @@
   stroke-width: 1.15;
   stroke-dasharray: 3 7;
   vector-effect: non-scaling-stroke;
-  animation: premium-probe-connection-flow 2.4s linear infinite;
-}
-
-.premium-probe-node-connections g:nth-child(even) path {
-  animation-direction: reverse;
-  animation-duration: 3.2s;
 }
 
 .premium-probe-node-connections circle {
@@ -193,18 +184,6 @@
   line-height: 1;
 }
 
-@keyframes premium-probe-orbit {
-  to {
-    stroke-dashoffset: -120;
-  }
-}
-
-@keyframes premium-probe-connection-flow {
-  to {
-    stroke-dashoffset: -40;
-  }
-}
-
 /* Premium keeps its black-gold/platinum palette; other themes use their own tokens. */
 :root.theme-premium.platinum .premium-probe-ocean-start { stop-color: #fffaf0; }
 :root.theme-premium.platinum .premium-probe-ocean-middle { stop-color: #f0e5ce; }
@@ -269,8 +248,10 @@
 .emerald-globe-wrap .shared-region-globe { grid-template-rows: minmax(0, 1fr); padding: 0; }
 .emerald-globe-wrap .shared-region-globe svg { width: 100%; height: 100%; max-height: 100%; }
 
+/* 光点的位置由脚本写 transform：还没定位（刚渲染出来而动画停着）或正在拖动（脚本暂停，连线却跟着地球转）时不显示 */
+.premium-probe-node-connections circle:not([transform]),
+.premium-probe-globe-stage svg.is-dragging .premium-probe-node-connections circle { visibility: hidden; }
+
 @media (prefers-reduced-motion: reduce) {
-  .premium-probe-orbits ellipse,
-  .premium-probe-node-connections path { animation: none; }
   .premium-probe-node-connections circle { display: none; }
 }

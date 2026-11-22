@@ -1,5 +1,5 @@
 // 经典主题（像素 / 扁平 / 动漫 / 玻璃 / Lumina）的地区地球：与主控内置探针同款（拱形弧线 + 流动光点 + 亮点旁旗帜与台数），
-// 原样移植自上游 989b8e7 的 src/RegionGlobe.tsx，只改了导出名。Emerald 仍用 RegionGlobe.tsx（Premium 地球）。
+// 移植自上游 989b8e7 的 src/RegionGlobe.tsx，改了导出名；弧线光点改为每 50ms 推一步（见 use-motion-ticker）。Emerald 仍用 RegionGlobe.tsx（Premium 地球）。
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { geoCentroid, geoDistance, geoGraticule10, geoOrthographic, geoPath } from 'd3-geo'
 import type { GeoProjection } from 'd3-geo'
@@ -10,6 +10,7 @@ import type { Feature, FeatureCollection, Geometry } from 'geojson'
 import type { GeometryCollection, Topology } from 'topojson-specification'
 import { arcPath, arcPointAt, pickArcPairs, sampleArc } from './globe-arcs'
 import { flagTwemojiFile, layoutGlobeLabels, type GlobeLabelMetrics } from './globe-labels'
+import { useMotionTicker } from './use-motion-ticker'
 
 function countryCode(region: string): string {
   const points = [...region.trim()].map(char => char.codePointAt(0) || 0)
@@ -39,26 +40,21 @@ function RegionArcs({ arcs, projection }: { arcs: RegionArc[]; projection: GeoPr
   const packets = useRef<Array<SVGGElement | null>>([])
   const latest = useRef(geometry)
   useEffect(() => { latest.current = geometry }, [geometry])
-  useEffect(() => {
-    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return
-    let frame = 0
-    const render = (now: number) => {
-      latest.current.forEach((arc, index) => {
-        const el = packets.current[index]
-        if (!el) return
-        const t = (now / arc.duration + arc.phase) % 1
-        const at = arcPointAt(arc.points, t)
-        if (!at) { el.setAttribute('opacity', '0'); return }
-        // 两头淡入淡出,别从端点上「蹦」出来
-        el.setAttribute('opacity', Math.min(1, t / .08, (1 - t) / .08).toFixed(2))
-        el.setAttribute('transform', `translate(${at.x.toFixed(1)} ${at.y.toFixed(1)})`)
-      })
-      frame = requestAnimationFrame(render)
-    }
-    frame = requestAnimationFrame(render)
-    return () => cancelAnimationFrame(frame)
-  }, [])
-  return <g className="globe-arcs">
+  // 光点每 50ms 推一步（原先每帧都算）；地球不在视口 / 页面在后台 / 系统开了「减少动态效果」时停掉，见 use-motion-ticker
+  const root = useRef<SVGGElement>(null)
+  useMotionTicker(root, (elapsed) => {
+    latest.current.forEach((arc, index) => {
+      const el = packets.current[index]
+      if (!el) return
+      const t = (elapsed / arc.duration + arc.phase) % 1
+      const at = arcPointAt(arc.points, t)
+      if (!at) { el.setAttribute('opacity', '0'); return }
+      // 两头淡入淡出,别从端点上「蹦」出来
+      el.setAttribute('opacity', Math.min(1, t / .08, (1 - t) / .08).toFixed(2))
+      el.setAttribute('transform', `translate(${at.x.toFixed(1)} ${at.y.toFixed(1)})`)
+    })
+  })
+  return <g className="globe-arcs" ref={root}>
     <defs>{geometry.map(arc => {
       const first = arc.points[0]
       const last = arc.points[arc.points.length - 1]
