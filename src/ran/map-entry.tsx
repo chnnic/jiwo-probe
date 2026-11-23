@@ -5,8 +5,10 @@ import { ProbeProvider } from '../use-probe'
 import { startRanTranslation } from './i18n/translate-dom'
 import './styles/tokens.css'
 import { installFlagFont } from '../flag-font'
+import { skipAnimationIterationEvents } from '../skip-iteration-events'
 
 installFlagFont()
+skipAnimationIterationEvents()
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

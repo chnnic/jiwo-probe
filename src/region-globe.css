@@ -43,6 +43,14 @@
   /* 流动由 BlackGoldGlobe 的 paintGlobeMotion 每 50ms 写 stroke-dashoffset，不用 CSS 无限动画（见 globe-motion.ts） */
 }
 
+/* 轨道和连线每 50ms 动一步。和地球画在同一层时，每一步都连带把带阴影滤镜的海洋、发光的国家
+   重新栅格化一遍；这两组各自单独成层后，静止的地球只栅格化一次。
+   will-change 在这里只用来分层，两组本身不做透明度动画 */
+.premium-probe-orbits,
+.premium-probe-node-connections {
+  will-change: opacity;
+}
+
 .premium-probe-orbits ellipse:nth-child(2) {
   opacity: 0.7;
 }

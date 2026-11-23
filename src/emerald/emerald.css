@@ -630,11 +630,21 @@
 .emerald-node-section { min-width: 0; }
 .emerald-node-section-head { margin: 0 2px 11px; display: flex; justify-content: space-between; align-items: center; color: var(--em-text-3); font-size: 11px; }
 .emerald-node-section-head > div { display: flex; align-items: center; gap: 7px; color: var(--em-text-2); font-size: 13px; font-weight: 750; }
-.emerald-live-dot { display: inline-block; width: 6px; height: 6px; box-shadow: none; animation: emerald-live-pulse 2s ease-out infinite; }
+.emerald-live-dot { display: inline-block; position: relative; z-index: 1; width: 16px; height: 16px; margin: -5px; border-radius: 0; background: none; box-shadow: none; overflow: hidden; }
+/* 圆点和它向外扩散的光圈。原先是给圆点本身做 box-shadow 动画：box-shadow 交不到合成线程，整页因此按屏幕刷新率
+   一帧帧重绘（滚到哪都一样）。现在圆点画在 ::before 上，光圈是同色的 ::after，只动 transform 和 opacity，
+   画面相同：6px 的圆放大到 16px 即原来的 5px 外扩，盖在圆点上的那部分和圆点同色，看不出来。
+   外框是 16px 的裁剪框，用 -5px 外边距抵掉多出来的尺寸，排版仍按 6px 算。
+   裁剪框和 z-index 都不能省：光圈是单独的合成图层，没有边界、又画在卡片前面的话，
+   浏览器会把排在它后面的内容拆成一个个整屏大的图层（实测多出 9 个），显存和合成开销都上去 */
+.emerald-live-dot::before,
+.emerald-live-dot::after { content: ''; position: absolute; inset: 5px; border-radius: 50%; }
+.emerald-live-dot::before { background: #10b981; }
+.emerald-live-dot::after { background: rgba(16, 185, 129, 0.34); animation: emerald-live-pulse 2s ease-out infinite; }
 
 @keyframes emerald-live-pulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.34); }
-  60% { box-shadow: 0 0 0 5px rgba(16, 185, 129, 0); }
+  0%, 100% { transform: scale(1); opacity: 1; }
+  60% { transform: scale(2.667); opacity: 0; }
 }
 
 .emerald-node-grid {
