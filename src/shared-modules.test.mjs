@@ -102,7 +102,7 @@ test('公共模块和主题不反向导入 App/Premium，静态依赖无环', ()
   for (const file of graph.keys()) visit(file)
 })
 
-test('首屏静态依赖不含 recharts / lottie，图表与勋章动画按需加载', () => {
+test('首屏静态依赖不含 recharts，图表按需加载；页面不再打包 lottie（勋章动画是预渲染的帧图）', () => {
   const root = path.dirname(fileURLToPath(import.meta.url))
   const heavy = new Set(['recharts', 'lottie-react', 'lottie-web'])
   const seen = new Set()

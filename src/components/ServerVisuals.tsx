@@ -1,8 +1,10 @@
-import { lazy, Suspense, useEffect, useState, type ReactNode } from 'react'
+import { useEffect, useRef, type ReactNode } from 'react'
 import { Monitor } from 'lucide-react'
 import { siAlmalinux, siAlpinelinux, siApple, siArchlinux, siCentos, siDebian, siFedora, siFreebsd, siGentoo, siKalilinux, siLinux, siLinuxmint, siNixos, siOpensuse, siProxmox, siRedhat, siRockylinux, siUbuntu } from 'simple-icons'
 import type { ProbeReturnRoute, ProbeServer } from '../types'
 import { meterTone } from '../probe-overview'
+import { routeBadgeSources, watchRouteBadge } from '../route-badge-motion'
+import routeBadgeSheet from '../assets/return-route/sprite.json'
 
 /** 经典卡片的占用条：超过 70% 变黄、超过 90% 变红；sub / subRight 是条下的小字（核心数、已用 / 总量等） */
 export function Meter({ icon, label, value, percent, sub, subRight, title }: { icon: React.ReactNode; label: string; value: string; percent: number; sub?: ReactNode; subRight?: ReactNode; title?: string }) {
@@ -84,25 +86,26 @@ export function displayReturnRoute(route: string): string {
 }
 
 
-const RouteAnimation = lazy(() => import('./RouteAnimation'))
-
-// lottie-web 压缩后约 86 KB，初始化也慢：首屏稳定后再加载。之后渲染的勋章直接显示动画。
-const ROUTE_ANIMATION_DELAY_MS = 3_000
-let routeAnimationAllowed = false
+// 回程勋章动画是一张帧图，外层只露出一格（见 route-badge-motion.ts）。勋章 20px，窄屏 16px（styles.css）
+const routeBadgeFiles = import.meta.glob<string>('../assets/return-route/*.webp', { eager: true, query: '?url', import: 'default' })
+const ROUTE_BADGES = {
+  common: routeBadgeSources(routeBadgeFiles, 'common', routeBadgeSheet.columns, [20, 16], '(max-width: 640px)'),
+  premium: routeBadgeSources(routeBadgeFiles, 'premium', routeBadgeSheet.columns, [20, 16], '(max-width: 640px)'),
+}
+const ROUTE_BADGE_SHEET_STYLE = { width: `${routeBadgeSheet.columns * 100}%`, height: `${routeBadgeSheet.rows * 100}%` }
 
 function ReturnRouteIcon({ premium }: { premium: boolean }) {
-  const [allowed, setAllowed] = useState(routeAnimationAllowed)
+  const boxRef = useRef<HTMLSpanElement>(null)
+  const imageRef = useRef<HTMLImageElement>(null)
   useEffect(() => {
-    if (allowed) return
-    const timer = window.setTimeout(() => {
-      routeAnimationAllowed = true
-      setAllowed(true)
-    }, ROUTE_ANIMATION_DELAY_MS)
-    return () => window.clearTimeout(timer)
-  }, [allowed])
-  // 加载动画前先占同样大小的位置，勋章不会跳动
-  if (!allowed) return <span className="route-badge-icon" aria-hidden="true" />
-  return <Suspense fallback={<span className="route-badge-icon" aria-hidden="true" />}><RouteAnimation premium={premium} /></Suspense>
+    if (boxRef.current && imageRef.current) return watchRouteBadge(boxRef.current, imageRef.current, routeBadgeSheet)
+  }, [])
+  const badge = premium ? ROUTE_BADGES.premium : ROUTE_BADGES.common
+  return (
+    <span ref={boxRef} className="route-badge-icon" aria-hidden="true">
+      <img ref={imageRef} src={badge.src} srcSet={badge.srcSet} sizes={badge.sizes} style={ROUTE_BADGE_SHEET_STYLE} alt="" decoding="async" draggable={false} />
+    </span>
+  )
 }
 
 

@@ -1388,6 +1388,12 @@ button.net-box:hover {
   width: 20px;
   height: 20px;
   flex: none;
+  display: block;
+  overflow: hidden;
+}
+.route-badge-icon > img {
+  display: block;
+  max-width: none;
 }
 .route-badge-text {
   min-width: 0;
