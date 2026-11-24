@@ -1,4 +1,5 @@
-// 地球上的持续动画（轨道虚线、连线流动、连线光点、亮点光晕）的时间换算，供 use-motion-ticker 每一步调用。
+// 地球上的持续动画（轨道虚线、连线流动、连线光点、亮点光晕）的时间换算。Premium 地球由 use-motion-ticker 每一步调用；
+// 经典地球的弧线光点和亮点光晕按同样的步长预先算成关键帧，交给合成线程播放（见 globe-overlay-motion）。
 // 原先是 CSS 无限动画改 stroke-dashoffset 加 SVG animateMotion：两者都交不到合成线程，浏览器按屏幕刷新率
 // 每帧重绘整张地球（连同 mask 与 drop-shadow）。主控内置探针在 v0.6.4-beta.1 改成每 50ms 推一步，这里同样处理。
 

@@ -86,4 +86,7 @@ test('经典主题改用主控同款地球（弧线 + 亮点旁旗帜与台数�
   const source = readFileSync(new URL('./ProbeRegionGlobe.tsx', import.meta.url), 'utf8')
   assert.match(source, /<RegionArcs /)
   assert.match(source, /<RegionLabels /)
+  // 光点和光晕在动效层由合成线程播放，地球不再用定时器逐步重绘
+  assert.match(source, /<GlobeMotion /)
+  assert.doesNotMatch(source, /useMotionTicker/)
 })

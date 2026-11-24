@@ -2544,15 +2544,34 @@ footer a:hover {
   justify-items: center;
   padding: 0 18px 16px;
 }
+.region-globe,
+.globe-motion {
+  --arc-from: #3b82f6;
+  --arc-to: #a855f7;
+}
 .region-globe {
   width: min(100%, 680px);
   /* viewBox 上下各留了 40 给伸出地球的弧线,高度跟着放宽,地球本身大小不变 */
   max-height: 496px;
-  --arc-from: #3b82f6;
-  --arc-to: #a855f7;
   touch-action: none;
   cursor: grab;
   user-select: none;
+}
+/* 叠在底层 SVG 上的两层：动效层（弧线光点、亮点光晕）和顶层 SVG（亮点、轮廓、标签），位置和尺寸由 ProbeRegionGlobe 按底层 SVG 量出来 */
+.globe-motion,
+.region-globe-top {
+  position: absolute;
+  pointer-events: none;
+  user-select: none;
+}
+/* 和 SVG 视口一样裁掉出界的部分；有了裁剪边界，合成器不必把地球之后的内容都当成可能被动画盖住 */
+.globe-motion {
+  overflow: hidden;
+}
+/* 内层坐标是 SVG 用户单位，按显示比例整体缩放 */
+.globe-motion-space {
+  position: absolute;
+  transform-origin: 0 0;
 }
 .region-globe:active {
   cursor: grabbing;
@@ -2641,11 +2660,23 @@ footer a:hover {
 .arc-to {
   stop-color: var(--arc-to);
 }
+/* 弧线上的光点：外圈光晕半径 5、白芯半径 2.2（SVG 单位），圆心在容器原点，位置和显隐由关键帧给；不播动画时不显示 */
 .arc-packet {
-  fill: #fff;
+  position: absolute;
+  left: -5px;
+  top: -5px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--arc-from) 55%, transparent);
+  opacity: 0;
 }
-.arc-packet-glow {
-  fill: color-mix(in srgb, var(--arc-from) 55%, transparent);
+.arc-packet::after {
+  content: '';
+  position: absolute;
+  inset: 2.8px;
+  border-radius: 50%;
+  background: #fff;
 }
 .region-point {
   fill: #fff;
@@ -2658,11 +2689,14 @@ footer a:hover {
   fill: var(--primary);
   stroke: #fff;
 }
-/* 光晕脉冲由 ProbeRegionGlobe 每 50ms 写一次 opacity 和 transform；脚本不走时（系统开了「减少动态效果」）显示这里的静态光晕 */
+/* 亮点光晕：半径 8（SVG 单位）的圆，脉冲由 ProbeRegionGlobe 挂的关键帧动画播；不播时（屏幕外、系统开了「减少动态效果」）显示这里的静态光晕 */
 .region-point-halo {
-  fill: color-mix(in srgb, var(--primary) 42%, transparent);
-  transform-box: fill-box;
-  transform-origin: center;
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  margin: -8px 0 0 -8px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--primary) 42%, transparent);
   opacity: 0.35;
 }
 .globe-points {
