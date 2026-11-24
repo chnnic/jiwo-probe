@@ -5,6 +5,7 @@ import { THEME_PICKER_INTENT_EVENT } from './theme-picker-model'
 import { applyAppearance, getActiveTheme, ProbeProvider, useProbe } from './use-probe'
 import { installFlagFont } from './flag-font'
 import { skipAnimationIterationEvents } from './skip-iteration-events'
+import { pauseOffscreenAnimations } from './offscreen-animations'
 import './styles.css'
 import './server-capabilities.css'
 import './connection-colors.css'
@@ -13,6 +14,8 @@ import './lumina-paper.css'
 installFlagFont()
 // 必须在 createRoot 之前：React 挂载时才注册事件监听
 skipAnimationIterationEvents()
+// 同样在挂载之前：动画开始时只通知一次，错过了就盯不上
+pauseOffscreenAnimations()
 
 // Ran 主题界面（复刻 Komari-Ran-Theme · 精密金工质感），懒加载保持首屏体积。
 // 主控下发 theme 为 ran 系列（ran/ran-night/ran-mist/...）时渲染金工界面，
