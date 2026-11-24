@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { MOTION_STEP_MS, dashOffset, motionProgress, pointAlongTrack, shouldRunMotion, pulseAt } from './globe-motion.ts'
+import { MOTION_STEP_MS, dashOffset, motionProgress, shouldRunMotion, pulseAt } from './globe-motion.ts'
 
 test('每 50ms 推一步（20fps）', () => {
   assert.equal(MOTION_STEP_MS, 50)
@@ -43,18 +43,4 @@ test('亮点光晕脉冲：从小而亮缓出到大而透明，最后 20% 保持
   }
   // 下一个周期从头开始
   assert.deepEqual(pulseAt(1150, 1150), { opacity: 0.8, scale: 0.5 })
-})
-
-test('连线光点沿取样轨迹插值：端点落在首尾取样点上，中间线性过渡，越界的进度夹到两端', () => {
-  const track = [{ x: 0, y: 0 }, { x: 10, y: 0 }, { x: 10, y: 20 }]
-  assert.deepEqual(pointAlongTrack(track, 0), { x: 0, y: 0 })
-  assert.deepEqual(pointAlongTrack(track, 0.25), { x: 5, y: 0 })
-  assert.deepEqual(pointAlongTrack(track, 0.5), { x: 10, y: 0 })
-  assert.deepEqual(pointAlongTrack(track, 0.75), { x: 10, y: 10 })
-  assert.deepEqual(pointAlongTrack(track, 1), { x: 10, y: 20 })
-  assert.deepEqual(pointAlongTrack(track, 1.4), { x: 10, y: 20 })
-  assert.deepEqual(pointAlongTrack(track, -0.2), { x: 0, y: 0 })
-  assert.deepEqual(pointAlongTrack(track, NaN), { x: 0, y: 0 })
-  assert.deepEqual(pointAlongTrack([{ x: 3, y: 4 }], 0.6), { x: 3, y: 4 })
-  assert.equal(pointAlongTrack([], 0.5), undefined)
 })

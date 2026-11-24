@@ -1,5 +1,6 @@
-// 地球上的持续动画（轨道虚线、连线流动、连线光点、亮点光晕）的时间换算。Premium 地球由 use-motion-ticker 每一步调用；
-// 经典地球的弧线光点和亮点光晕按同样的步长预先算成关键帧，交给合成线程播放（见 globe-overlay-motion）。
+// 地球上的持续动画（轨道虚线、连线流动、连线光点、亮点光晕）的时间换算。Premium 地球由 use-motion-ticker 每一步
+// 调用一次、画到画布上（见 globe-canvas-motion）；经典地球的弧线光点和亮点光晕按同样的步长预先算成关键帧，
+// 交给合成线程播放（见 globe-overlay-motion）。
 // 原先是 CSS 无限动画改 stroke-dashoffset 加 SVG animateMotion：两者都交不到合成线程，浏览器按屏幕刷新率
 // 每帧重绘整张地球（连同 mask 与 drop-shadow）。主控内置探针在 v0.6.4-beta.1 改成每 50ms 推一步，这里同样处理。
 
@@ -39,19 +40,6 @@ function easeOut(x: number): number {
 export function pulseAt(elapsedMs: number, durationMs: number): { opacity: number; scale: number } {
   const eased = easeOut(Math.min(1, motionProgress(elapsedMs, durationMs) / 0.8))
   return { opacity: 0.8 * (1 - eased), scale: 0.5 + 1.2 * eased }
-}
-
-export type TrackPoint = { x: number; y: number }
-
-/** 沿等距取样的轨迹走到 progress（0～1）处的位置，相邻取样点之间线性插值；轨迹为空时返回 undefined */
-export function pointAlongTrack(points: readonly TrackPoint[], progress: number): TrackPoint | undefined {
-  if (points.length === 0) return undefined
-  const at = Math.min(Math.max(Number.isFinite(progress) ? progress : 0, 0), 1) * (points.length - 1)
-  const index = Math.min(Math.floor(at), points.length - 1)
-  const from = points[index]
-  const to = points[Math.min(index + 1, points.length - 1)]
-  const part = at - index
-  return { x: from.x + (to.x - from.x) * part, y: from.y + (to.y - from.y) * part }
 }
 
 /** 是否该推进动画：不在视口、页面在后台、系统开了「减少动态效果」时停掉 */

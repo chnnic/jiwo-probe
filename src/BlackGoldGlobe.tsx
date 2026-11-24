@@ -1,4 +1,5 @@
 import {
+  useCallback,
   useEffect,
   useId,
   useImperativeHandle,
@@ -15,7 +16,17 @@ import type { GeometryCollection, Topology } from 'topojson-specification'
 import world from 'world-atlas/countries-110m.json'
 import { Twemoji } from './Twemoji'
 import './region-globe.css'
-import { dashOffset, motionProgress, pointAlongTrack, type TrackPoint } from './globe-motion'
+import {
+  clockwiseArc,
+  drawGlobeMotion,
+  GLOBE_ORBITS,
+  globeCanvasPlacement,
+  globeMotionView,
+  readGlobeMotionStyle,
+  type GlobeArc,
+  type GlobeCanvasPlacement,
+  type GlobeMotionStyle,
+} from './globe-canvas-motion'
 import { useMotionTicker } from './use-motion-ticker'
 import {
   CITY_REGION_COORDINATES,
@@ -38,47 +49,11 @@ const GLOBE_VIEWBOX_HEIGHT = 340
 const GLOBE_LABEL_HEIGHT = 26
 const GLOBE_LABEL_MARGIN = 8
 const INITIAL_ROTATION: [number, number] = [-108, -16]
-// 三条轨道虚线各自的周期（毫秒），第二条反向；连线流动的周期见 paintGlobeMotion
-const ORBIT_DURATIONS = [14000, 18000, 22000]
-
-// 连线光点的轨迹：沿连线等距取样一次存起来，之后每一步只做插值。
-// 原先每一步都对每条连线调 getTotalLength / getPointAtLength：前面刚写过 stroke-dashoffset，
-// 这两个调用会逼浏览器当场把样式和布局重算一遍，每秒二十次。连线的 d 只在地球转动或地区变化时才变。
-const CONNECTION_TRACK_SEGMENTS = 64
-const connectionTracks = new WeakMap<SVGPathElement, { d: string; points: TrackPoint[] }>()
-
-function connectionTrack(line: SVGPathElement): TrackPoint[] {
-  const d = line.getAttribute('d') || ''
-  const cached = connectionTracks.get(line)
-  if (cached?.d === d) return cached.points
-  const length = line.getTotalLength()
-  const points: TrackPoint[] = []
-  for (let step = 0; step <= CONNECTION_TRACK_SEGMENTS; step++) {
-    const point = line.getPointAtLength((length * step) / CONNECTION_TRACK_SEGMENTS)
-    points.push({ x: point.x, y: point.y })
-  }
-  connectionTracks.set(line, { d, points })
-  return points
-}
-
-/** 把轨道虚线、连线流动和连线上的光点推到 elapsedMs 这一刻（时长、方向与原 CSS / animateMotion 动画一致）。 */
-function paintGlobeMotion(svg: SVGSVGElement, elapsedMs: number) {
-  const links = [...svg.querySelectorAll<SVGGElement>('.premium-probe-node-connections > g')].map((link) => ({ line: link.querySelector('path'), dot: link.querySelector('circle') }))
-  // 先读后写：轨迹要量路径长度，放在改样式之前，不触发强制重排
-  const tracks = links.map(({ line, dot }) => (line && dot ? connectionTrack(line) : undefined))
-  svg.querySelectorAll<SVGElement>('.premium-probe-orbits ellipse').forEach((orbit, index) => {
-    orbit.style.strokeDashoffset = dashOffset(elapsedMs, ORBIT_DURATIONS[index] ?? ORBIT_DURATIONS[0], 120, index === 1).toFixed(2)
-  })
-  links.forEach(({ line, dot }, index) => {
-    if (!line) return
-    // 原样式：偶数个（nth-child(even)，下标为奇数）反向、周期 3.2s，其余 2.4s
-    const even = index % 2 === 1
-    line.style.strokeDashoffset = dashOffset(elapsedMs, even ? 3200 : 2400, 40, even).toFixed(2)
-    const point = pointAlongTrack(tracks[index] ?? [], motionProgress(elapsedMs, 3200 + index * 450))
-    if (!dot || !point) return
-    dot.setAttribute('transform', `translate(${point.x.toFixed(1)} ${point.y.toFixed(1)})`)
-  })
-}
+const GLOBE_VIEW = { width: GLOBE_VIEWBOX_WIDTH, height: GLOBE_VIEWBOX_HEIGHT }
+// 轨道和连线在地球外圈这么远以内不画，免得压在地球上
+const GLOBE_HOLE_MARGIN = 11
+// 主题切换后画布上的颜色最多晚这么久跟上（样式探针每隔这么久重读一次）
+const STYLE_REFRESH_MS = 500
 
 export function BlackGoldGlobe({ regions, themed = false }: { regions: PremiumProbeRegion[]; themed?: boolean }) {
   const rotation = useRef<[number, number]>(INITIAL_ROTATION)
@@ -92,16 +67,105 @@ export function BlackGoldGlobe({ regions, themed = false }: { regions: PremiumPr
   const activeCountryPaths = useRef<Array<SVGPathElement | null>>([])
   const orbitLabels = useRef<OrbitLabelsHandle>(null)
   const svgRef = useRef<SVGSVGElement>(null)
-  // 轨道、连线、光点每 50ms 推一步；地球不在视口 / 页面在后台 / 系统开了「减少动态效果」/ 正在拖动时停掉
+  const stageRef = useRef<HTMLDivElement>(null)
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const probeRef = useRef<SVGGElement>(null)
+  // 画布垫在 SVG 正下方：位置和尺寸照 SVG 量出来，对齐到设备像素
+  const [box, setBox] = useState<GlobeCanvasPlacement>()
+  const boxRef = useRef<GlobeCanvasPlacement | undefined>(undefined)
+  const motion = useRef<{ elapsed: number; links: GlobeArc[]; style?: GlobeMotionStyle; styleAt: number }>({ elapsed: 0, links: [], styleAt: 0 })
+  const reducedMotion = useRef<MediaQueryList | undefined>(undefined)
+
+  // 把轨道、连线、光点画到当前这一刻（见 globe-canvas-motion）。refreshStyle 为真时先重读一遍主题颜色
+  const paint = useCallback((refreshStyle = false) => {
+    const canvas = canvasRef.current
+    const probe = probeRef.current
+    const placed = boxRef.current
+    const ctx = canvas?.getContext('2d')
+    if (!canvas || !probe || !placed || !ctx) return
+    // 改画布尺寸会清空画布，只在真的变了时改
+    if (canvas.width !== placed.width) canvas.width = placed.width
+    if (canvas.height !== placed.height) canvas.height = placed.height
+    const state = motion.current
+    const now = performance.now()
+    if (refreshStyle || !state.style || now - state.styleAt > STYLE_REFRESH_MS) {
+      const line = probe.querySelector('path')
+      const dot = probe.querySelector('circle')
+      if (!line || !dot) return
+      state.style = readGlobeMotionStyle({ orbits: [...probe.querySelectorAll('ellipse')], link: line, dot })
+      state.styleAt = now
+    }
+    reducedMotion.current ??= window.matchMedia?.('(prefers-reduced-motion: reduce)')
+    drawGlobeMotion(ctx, {
+      ...globeMotionView(placed, GLOBE_VIEW),
+      center: GLOBE_CENTER,
+      hole: GLOBE_RADIUS + GLOBE_HOLE_MARGIN,
+      orbits: GLOBE_ORBITS,
+      links: state.links,
+      showDots: drag.current === undefined && !reducedMotion.current?.matches,
+    }, state.style, state.elapsed)
+  }, [])
+
+  // 量 SVG 的位置摆画布；变了才重渲染
+  const measure = useCallback(() => {
+    const svg = svgRef.current
+    const stage = stageRef.current
+    if (!svg || !stage) return
+    const next = globeCanvasPlacement(
+      svg.getBoundingClientRect(),
+      stage.getBoundingClientRect(),
+      { width: stage.offsetWidth, height: stage.offsetHeight, borderLeft: stage.clientLeft, borderTop: stage.clientTop },
+      window.devicePixelRatio || 1
+    )
+    if (JSON.stringify(next) === JSON.stringify(boxRef.current)) return
+    boxRef.current = next
+    setBox(next)
+    paint()
+  }, [paint])
+  useLayoutEffect(() => {
+    const svg = svgRef.current
+    const stage = stageRef.current
+    if (!svg || !stage) return
+    measure()
+    if (typeof ResizeObserver === 'undefined') return
+    const observer = new ResizeObserver(measure)
+    observer.observe(svg)
+    observer.observe(stage)
+    return () => observer.disconnect()
+  }, [measure])
+
+  // 每 50ms 推一步；地球不在视口 / 页面在后台 / 系统开了「减少动态效果」/ 正在拖动时停掉，画面停在当时那一步
   useMotionTicker(
     svgRef,
-    (elapsed) => { if (svgRef.current) paintGlobeMotion(svgRef.current, elapsed) },
+    (elapsed) => { motion.current.elapsed = elapsed; paint() },
     () => drag.current !== undefined
   )
+  // 每次重渲染后的下一帧补量、补画一遍（页面每收到一次数据就会重渲染）：
+  // - 舞台只挪了位置、没变尺寸时 ResizeObserver 不会通知，祖先的入场动画结束时也不会，画布靠这里重新对齐设备像素；
+  // - 没在走的时候（屏幕外、减少动态效果）没有定时器替它重读颜色，主题切换靠这里跟上。
+  // 放到下一帧，是等祖先组件在自己的 effect 里把主题 class 换完
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => {
+      measure()
+      paint(true)
+    })
+    return () => cancelAnimationFrame(frame)
+  })
+  // 系统的「减少动态效果」中途打开或关掉：定时器由 useMotionTicker 自己停、起，这里补画一遍，把光点去掉或放回来
+  useEffect(() => {
+    const query = window.matchMedia?.('(prefers-reduced-motion: reduce)')
+    if (!query?.addEventListener) return
+    const repaint = () => paint()
+    query.addEventListener('change', repaint)
+    return () => query.removeEventListener('change', repaint)
+  }, [paint])
+  const setLinks = useCallback((links: GlobeArc[]) => {
+    motion.current.links = links
+    paint()
+  }, [paint])
   const id = useId().replace(/:/g, '')
   const oceanID = `premium-probe-ocean-${id}`
   const glowID = `premium-probe-glow-${id}`
-  const outsideMaskID = `premium-probe-outside-${id}`
   const center = GLOBE_CENTER
   const radius = GLOBE_RADIUS
 
@@ -211,7 +275,13 @@ export function BlackGoldGlobe({ regions, themed = false }: { regions: PremiumPr
   }
 
   return (
-    <div className={`premium-probe-globe-stage${themed ? ' shared-region-globe' : ''}`}>
+    <div ref={stageRef} className={`premium-probe-globe-stage${themed ? ' shared-region-globe' : ''}`}>
+      <canvas
+        ref={canvasRef}
+        className='premium-probe-globe-motion'
+        aria-hidden='true'
+        style={box ? { left: box.left, top: box.top, width: box.cssWidth, height: box.cssHeight } : { display: 'none' }}
+      />
       <svg
         ref={svgRef}
         viewBox={`0 0 ${GLOBE_VIEWBOX_WIDTH} ${GLOBE_VIEWBOX_HEIGHT}`}
@@ -226,6 +296,8 @@ export function BlackGoldGlobe({ regions, themed = false }: { regions: PremiumPr
             y: event.clientY,
             rotation: rotation.current,
           }
+          // 拖动时不画光点
+          paint()
         }}
         onPointerMove={(event) => {
           if (!drag.current) return
@@ -241,12 +313,14 @@ export function BlackGoldGlobe({ regions, themed = false }: { regions: PremiumPr
           event.currentTarget.classList.remove('is-dragging')
           projection.precision(0.4)
           queueRotation(pendingRotation.current || rotation.current)
+          paint()
         }}
         onPointerCancel={(event) => {
           drag.current = undefined
           event.currentTarget.classList.remove('is-dragging')
           projection.precision(0.4)
           queueRotation(pendingRotation.current || rotation.current)
+          paint()
         }}
       >
         <defs>
@@ -270,28 +344,18 @@ export function BlackGoldGlobe({ regions, themed = false }: { regions: PremiumPr
           <filter id={glowID} x='-40%' y='-40%' width='180%' height='180%'>
             <feGaussianBlur stdDeviation='7' />
           </filter>
-          <mask id={outsideMaskID}>
-            <rect width='560' height='340' fill='white' />
-            <circle cx={center.x} cy={center.y} r={radius + 11} fill='black' />
-          </mask>
         </defs>
 
-        <g className='premium-probe-orbits' mask={`url(#${outsideMaskID})`}>
-          <ellipse cx={center.x} cy={center.y} rx='174' ry='124' />
-          <ellipse
-            cx={center.x}
-            cy={center.y}
-            rx='182'
-            ry='90'
-            transform={`rotate(-25 ${center.x} ${center.y})`}
-          />
-          <ellipse
-            cx={center.x}
-            cy={center.y}
-            rx='166'
-            ry='112'
-            transform={`rotate(34 ${center.x} ${center.y})`}
-          />
+        {/* 样式探针：轨道、连线、光点画在画布上（见 globe-canvas-motion），颜色和线型读这组不显示的元素的计算样式，
+            各主题给这些类名写的样式规则照旧生效 */}
+        <g ref={probeRef} display='none' aria-hidden='true'>
+          <g className='premium-probe-orbits'>
+            {GLOBE_ORBITS.map((orbit) => <ellipse key={orbit.duration} />)}
+          </g>
+          <g className='premium-probe-node-connections'>
+            <path />
+            <circle />
+          </g>
         </g>
 
         <circle
@@ -339,8 +403,7 @@ export function BlackGoldGlobe({ regions, themed = false }: { regions: PremiumPr
           regions={visibleRegions}
           coordinates={regionCoordinates}
           orbitRadius={orbitRadius}
-          maskID={outsideMaskID}
-          idPrefix={id}
+          onLinks={setLinks}
         />
       </svg>
       <span>拖动地球查看地区</span>
@@ -354,15 +417,14 @@ function OrbitLabels({
   regions,
   coordinates,
   orbitRadius,
-  maskID,
-  idPrefix,
+  onLinks,
   ref,
 }: {
   regions: PremiumProbeRegion[]
   coordinates: Map<string, [number, number]>
   orbitRadius: number
-  maskID: string
-  idPrefix: string
+  /** 相邻标签之间的连线（画在画布上），标签每挪一次就报一次 */
+  onLinks: (links: GlobeArc[]) => void
   ref: React.Ref<OrbitLabelsHandle>
 }) {
   const [rotation, setRotation] = useState<[number, number]>(INITIAL_ROTATION)
@@ -424,25 +486,20 @@ function OrbitLabels({
     }
   })
 
+  // 相邻标签之间沿环连一段弧，首尾相接；只有一个地区时不连
+  useLayoutEffect(() => {
+    const links: GlobeArc[] = []
+    if (orbitPoints.length > 1) {
+      orbitPoints.forEach((point, index) => {
+        const link = clockwiseArc(point, orbitPoints[(index + 1) % orbitPoints.length], orbitRadius)
+        if (link) links.push(link)
+      })
+    }
+    onLinks(links)
+  })
+
   return (
     <>
-      {orbitPoints.length > 1 && (
-        <g className='premium-probe-node-connections' mask={`url(#${maskID})`}>
-          {orbitPoints.map((point, index) => {
-            const next = orbitPoints[(index + 1) % orbitPoints.length]
-            const connectionID = `premium-probe-connection-${idPrefix}-${index}`
-            const connection = `M ${point.x} ${point.y} A ${orbitRadius} ${orbitRadius} 0 0 1 ${next.x} ${next.y}`
-            return (
-              <g key={point.region.code}>
-                <path id={connectionID} d={connection} />
-                {/* 位置由 paintGlobeMotion 写 transform；还没定位或正在拖动时由样式隐藏 */}
-                <circle r='2.6' />
-              </g>
-            )
-          })}
-        </g>
-      )}
-
       <g className='premium-probe-orbit-labels'>
         {orbitPoints.map(({ region, radians, rimX, rimY, front }) => {
           const anchorX = GLOBE_CENTER.x + Math.cos(radians) * orbitRadius

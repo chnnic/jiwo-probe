@@ -71,6 +71,9 @@ test('Emerald 和 Glassmorphism 地球复用 Premium 新组件，不再保留旧
   const source = readFileSync(new URL('./BlackGoldGlobe.tsx', import.meta.url), 'utf8')
   assert.match(source, /orbitLabels\.current\?\.update\(next\)/)
   assert.match(source, /y=\{boxY\}/)
+  // 轨道、连线、光点画在画布上，不再逐步改 SVG 属性
+  assert.match(source, /drawGlobeMotion\(/)
+  assert.doesNotMatch(source, /strokeDashoffset|getPointAtLength/)
 })
 
 test('地区分组标题：旗帜、代码、「代码 · 名称」都统一成「旗帜 中文名」，认不出的原样显示', () => {
