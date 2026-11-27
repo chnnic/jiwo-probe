@@ -6,6 +6,7 @@ import { UnlockButton } from '../ServerCapabilities'
 import { ConnectionLabel } from '../ConnectionLabel'
 import {
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -41,6 +42,8 @@ import {
   LockOpen,
 } from 'lucide-react'
 import { RegionGlobe } from '../RegionGlobe'
+import { stepHoldFor } from '../step-hold'
+import { ORB_GLOW_SIZE, paintOrbGlow } from './orb-glow'
 import { CardPingGroups } from '../CardPingGroups'
 import { LazyCard } from '../LazyCard'
 import { primaryPing } from '../ping-groups'
@@ -60,6 +63,18 @@ import './emerald.css'
 
 type ViewMode = 'card' | 'table' | 'status'
 type ColorMode = 'auto' | 'light' | 'dark'
+
+/** 背景里的一个光斑：小画布上画一次，位置、颜色、漂移都在 emerald.css 里（见 orb-glow） */
+function OrbGlow() {
+  const ref = useRef<HTMLCanvasElement>(null)
+  useLayoutEffect(() => {
+    if (ref.current) paintOrbGlow(ref.current)
+  }, [])
+  return <canvas ref={ref} width={ORB_GLOW_SIZE} height={ORB_GLOW_SIZE} />
+}
+
+// 背景光斑的漂移按台阶走（见 emerald.css 的 .is-stepped）：只在合成器认阶梯缓动的浏览器上开
+const STEPPED_ORBS = typeof navigator !== 'undefined' && stepHoldFor(navigator.userAgent) === 'step'
 
 const cycleLabels: Record<string, string> = {
   month: '月',
@@ -617,7 +632,7 @@ export default function EmeraldApp({ data, onThemeChange }: { data: ProbePayload
 
   return (
     <div className={`emerald-app${isDark ? ' is-dark' : ' is-light'}`}>
-      <div className="emerald-background" aria-hidden="true"><span /><span /><span /></div>
+      <div className={`emerald-background${STEPPED_ORBS ? ' is-stepped' : ''}`} aria-hidden="true"><OrbGlow /><OrbGlow /><OrbGlow /></div>
       <header className="emerald-header">
         <a className="emerald-brand" href="#/" onClick={() => setDetailIndex(null)}>
           {data.logo ? <img src={data.logo} alt="" /> : <span className="emerald-brand-mark"><Activity size={17} /></span>}
